@@ -959,8 +959,13 @@
                 if (success) {
                     currentProps[config.attrKey] = newValue;
                     renderFloatBar();
-                    try { globalThis.__taskHorizonRefresh?.(); } catch (e) {}
                     showMessage(`已更新${config.name}`, false, 1500);
+                    // 通知任务管理器刷新该任务
+                    try {
+                        window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
+                            detail: { taskId: currentBlockId, attrKey: config.attrKey, value: newValue }
+                        }));
+                    } catch (e) {}
                 } else {
                     showMessage('更新失败', true, 2000);
                 }
@@ -986,8 +991,13 @@
                         currentProps[config.attrKey] = newValue;
                         renderFloatBar();
                     }
-                    try { globalThis.__taskHorizonRefresh?.(); } catch (e) {}
                     showMessage(`已更新${config.name}`, false, 1500);
+                    // 通知任务管理器刷新该任务
+                    try {
+                        window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
+                            detail: { taskId: blockIdAtOpen, attrKey: config.attrKey, value: newValue }
+                        }));
+                    } catch (e) {}
                 } else {
                     showMessage('更新失败', true, 2000);
                 }
@@ -1107,12 +1117,17 @@
                 if (success) {
                     currentProps[config.attrKey] = newValue;
                     renderFloatBar();
-                    try { globalThis.__taskHorizonRefresh?.(); } catch (e) {}
                     if (newValue) {
                         showMessage(`已更新${config.name}`, false, 1500);
                     } else {
                         showMessage(`已清除${config.name}`, false, 1500);
                     }
+                    // 通知任务管理器刷新该任务
+                    try {
+                        window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
+                            detail: { taskId: currentBlockId, attrKey: config.attrKey, value: newValue }
+                        }));
+                    } catch (e) {}
                 } else {
                     showMessage('更新失败', true, 2000);
                 }
@@ -1207,17 +1222,42 @@
 
             // ========== 新增：检测是否选中了文字 ==========
             const selection = window.getSelection();
-            const hasTextSelection = selection && 
-                selection.toString().length > 0 && 
-                selection.anchorNode &&
-                document.querySelector('.protyle-wysiwyg, .protyle-content')?.contains(selection.anchorNode);
-
-            // 如果选中了文字，隐藏自定义悬浮条，让思源笔记原生悬浮条正常工作
+            const selectedText = selection?.toString() || '';
+            const hasTextSelection = selectedText.length > 0 && selection?.anchorNode;
+            
+            // 如果选中了文字，检查是否在任何可见的编辑器内
             if (hasTextSelection) {
-                if (floatBar.style.display !== 'none') {
-                    hideFloatBar();
+                let inVisibleEditor = false;
+                const anchorNode = selection.anchorNode;
+                
+                // 向上遍历 DOM 树，检查是否在任何可见的编辑器区域内
+                let current = anchorNode;
+                while (current && current !== document.body) {
+                    const style = window.getComputedStyle(current);
+                    const isVisible = style.display !== 'none' && style.visibility !== 'hidden';
+                    
+                    // 检查是否在思源编辑器区域内
+                    if (current.classList) {
+                        if (current.classList.contains('protyle-wysiwyg') || 
+                            current.classList.contains('protyle-content') ||
+                            current.classList.contains('protyle')) {
+                            if (isVisible) {
+                                inVisibleEditor = true;
+                            }
+                        }
+                    }
+                    // 检查父元素是否可见
+                    if (!isVisible) break;
+                    current = current.parentElement;
                 }
-                return;
+                
+                // 如果选中了文字且在可见编辑器内，隐藏自定义悬浮条
+                if (inVisibleEditor) {
+                    if (floatBar.style.display !== 'none') {
+                        hideFloatBar();
+                    }
+                    return;
+                }
             }
             // ========== 新增结束 ==========
 
@@ -1264,19 +1304,52 @@
 
             initStatusOptionsListener();
 
-            // ========== 新增：监听文字选择变化 ==========
-            selectionChangeHandler = () => {
-                const selection = window.getSelection();
-                const hasSelection = selection && selection.toString().length > 0;
+            // ========== 新增：检测文字选择并隐藏悬浮条 ==========
+            const checkAndHideForTextSelection = () => {
+                if (floatBar.style.display === 'none') return;
                 
-                // 检查选择是否在编辑器内
-                const inEditor = document.querySelector('.protyle-wysiwyg, .protyle-content')?.contains(selection?.anchorNode);
-                
-                if (hasSelection && inEditor && floatBar.style.display !== 'none') {
-                    hideFloatBar();
+                try {
+                    const selection = window.getSelection();
+                    if (!selection) return;
+                    
+                    const selectedText = selection.toString();
+                    if (!selectedText || selectedText.length === 0) return;
+                    
+                    // 简单检查：选中的节点是否在任何 protyle 编辑器内
+                    let node = selection.anchorNode;
+                    while (node && node !== document) {
+                        if (node.classList) {
+                            const className = node.className || '';
+                            if (className.includes('protyle-wysiwyg') || 
+                                className.includes('protyle-content') ||
+                                className.includes('protyle')) {
+                                // 检查元素是否可见（通过 offsetParent）
+                                if (node.offsetParent !== null) {
+                                    hideFloatBar();
+                                    return;
+                                }
+                            }
+                        }
+                        node = node.parentNode;
+                    }
+                } catch (e) {
+                    // 忽略错误
                 }
             };
-            document.addEventListener('selectionchange', selectionChangeHandler);
+            
+            // 监听多种事件
+            selectionChangeHandler = () => {
+                checkAndHideForTextSelection();
+            };
+            document.addEventListener('selectionchange', selectionChangeHandler, { passive: true });
+            
+            // mouseup 事件 - 当用户释放鼠标时检测（选择文字后）
+            let mouseUpHandler = null;
+            mouseUpHandler = (e) => {
+                // 延迟一点执行，确保 selection 已经更新
+                setTimeout(checkAndHideForTextSelection, 10);
+            };
+            document.addEventListener('mouseup', mouseUpHandler, true);
             // ========== 新增结束 ==========
 
             document.addEventListener('pointerup', handleTrigger, true);
@@ -1305,6 +1378,8 @@
             // ========== 新增：移除文字选择变化监听 ==========
             try { if (selectionChangeHandler) document.removeEventListener('selectionchange', selectionChangeHandler); } catch (e) {}
             selectionChangeHandler = null;
+            try { if (mouseUpHandler) document.removeEventListener('mouseup', mouseUpHandler, true); } catch (e) {}
+            mouseUpHandler = null;
             // ========== 新增结束 ==========
 
             try { if (storageHandler) window.removeEventListener('storage', storageHandler); } catch (e) {}

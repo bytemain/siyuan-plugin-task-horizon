@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.5.7
+// @version      1.5.8
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -3798,14 +3798,27 @@
             // 排除 'null' 字符串（SQL 查询返回的 null 会被转成字符串 'null'）
             const isValidValue = (val) => val !== undefined && val !== null && val !== '' && val !== 'null';
 
-            if ('priority' in v && isValidValue(v.priority)) task.priority = v.priority;
-            if ('pinned' in v && isValidValue(v.pinned)) task.pinned = v.pinned;
-            if ('milestone' in v && isValidValue(v.milestone)) task.milestone = v.milestone;
-            if ('duration' in v && isValidValue(v.duration)) task.duration = v.duration;
-            if ('remark' in v && isValidValue(v.remark)) task.remark = v.remark;
-            if ('completionTime' in v && isValidValue(v.completionTime)) task.completionTime = v.completionTime;
-            if ('customTime' in v && isValidValue(v.customTime)) task.customTime = v.customTime;
-            if ('customStatus' in v && isValidValue(v.customStatus)) task.customStatus = v.customStatus;
+            // 对于从数据库查询的字段，如果数据库已有有效值，则优先使用数据库的值
+            // 这样可以确保悬浮条修改后，切换页签时能获取到最新数据
+            // 注意：数据库返回的字段名是 custom_priority, custom_status 等，会被规范化为 priority, customStatus
+            const dbHasPriority = isValidValue(task.priority) || isValidValue(task.custom_priority);
+            const dbHasPinned = isValidValue(task.pinned);
+            const dbHasMilestone = isValidValue(task.milestone);
+            const dbHasDuration = isValidValue(task.duration);
+            const dbHasRemark = isValidValue(task.remark);
+            const dbHasCompletionTime = isValidValue(task.completionTime) || isValidValue(task.completion_time);
+            const dbHasCustomTime = isValidValue(task.customTime) || isValidValue(task.custom_time);
+            const dbHasCustomStatus = isValidValue(task.customStatus) || isValidValue(task.custom_status);
+
+            // 只有当数据库没有有效值时，才使用 MetaStore 的缓存值
+            if (!dbHasPriority && 'priority' in v && isValidValue(v.priority)) task.priority = v.priority;
+            if (!dbHasPinned && 'pinned' in v && isValidValue(v.pinned)) task.pinned = v.pinned;
+            if (!dbHasMilestone && 'milestone' in v && isValidValue(v.milestone)) task.milestone = v.milestone;
+            if (!dbHasDuration && 'duration' in v && isValidValue(v.duration)) task.duration = v.duration;
+            if (!dbHasRemark && 'remark' in v && isValidValue(v.remark)) task.remark = v.remark;
+            if (!dbHasCompletionTime && 'completionTime' in v && isValidValue(v.completionTime)) task.completionTime = v.completionTime;
+            if (!dbHasCustomTime && 'customTime' in v && isValidValue(v.customTime)) task.customTime = v.customTime;
+            if (!dbHasCustomStatus && 'customStatus' in v && isValidValue(v.customStatus)) task.customStatus = v.customStatus;
         },
 
         mergeFromTaskIfMissing(task) {
@@ -3914,6 +3927,13 @@
             calendarFirstDay: 1,
             calendarMonthAggregate: true,
             calendarShowSchedule: true,
+            calendarScheduleReminderEnabled: true,
+            calendarScheduleReminderSystemEnabled: true,
+            calendarScheduleReminderDefaultMode: '0',
+            calendarAllDayReminderEnabled: true,
+            calendarAllDayReminderTime: '09:00',
+            calendarTaskDateAllDayReminderEnabled: true,
+            calendarAllDaySummaryIncludeExtras: true,
             calendarShowFocus: true,
             calendarShowBreak: true,
             calendarShowStopwatch: true,
@@ -4150,6 +4170,13 @@
                                 if (typeof cloudData.calendarFirstDay === 'number') this.data.calendarFirstDay = cloudData.calendarFirstDay;
                                 if (typeof cloudData.calendarMonthAggregate === 'boolean') this.data.calendarMonthAggregate = cloudData.calendarMonthAggregate;
                                 if (typeof cloudData.calendarShowSchedule === 'boolean') this.data.calendarShowSchedule = cloudData.calendarShowSchedule;
+                                if (typeof cloudData.calendarScheduleReminderEnabled === 'boolean') this.data.calendarScheduleReminderEnabled = cloudData.calendarScheduleReminderEnabled;
+                                if (typeof cloudData.calendarScheduleReminderSystemEnabled === 'boolean') this.data.calendarScheduleReminderSystemEnabled = cloudData.calendarScheduleReminderSystemEnabled;
+                                if (typeof cloudData.calendarScheduleReminderDefaultMode === 'string') this.data.calendarScheduleReminderDefaultMode = cloudData.calendarScheduleReminderDefaultMode;
+                                if (typeof cloudData.calendarAllDayReminderEnabled === 'boolean') this.data.calendarAllDayReminderEnabled = cloudData.calendarAllDayReminderEnabled;
+                                if (typeof cloudData.calendarAllDayReminderTime === 'string') this.data.calendarAllDayReminderTime = cloudData.calendarAllDayReminderTime;
+                                if (typeof cloudData.calendarTaskDateAllDayReminderEnabled === 'boolean') this.data.calendarTaskDateAllDayReminderEnabled = cloudData.calendarTaskDateAllDayReminderEnabled;
+                                if (typeof cloudData.calendarAllDaySummaryIncludeExtras === 'boolean') this.data.calendarAllDaySummaryIncludeExtras = cloudData.calendarAllDaySummaryIncludeExtras;
                                 if (typeof cloudData.calendarShowTomatoMaster === 'boolean') this.data.calendarShowTomatoMaster = cloudData.calendarShowTomatoMaster;
                                 if (typeof cloudData.calendarShowFocus === 'boolean') this.data.calendarShowFocus = cloudData.calendarShowFocus;
                                 if (typeof cloudData.calendarShowBreak === 'boolean') this.data.calendarShowBreak = cloudData.calendarShowBreak;
@@ -4356,6 +4383,13 @@
             this.data.calendarFirstDay = Number(Storage.get('tm_calendar_first_day', this.data.calendarFirstDay));
             this.data.calendarMonthAggregate = Storage.get('tm_calendar_month_aggregate', this.data.calendarMonthAggregate);
             this.data.calendarShowSchedule = Storage.get('tm_calendar_show_schedule', this.data.calendarShowSchedule);
+            this.data.calendarScheduleReminderEnabled = !!Storage.get('tm_calendar_schedule_reminder_enabled', this.data.calendarScheduleReminderEnabled);
+            this.data.calendarScheduleReminderSystemEnabled = !!Storage.get('tm_calendar_schedule_reminder_system_enabled', this.data.calendarScheduleReminderSystemEnabled);
+            this.data.calendarScheduleReminderDefaultMode = String(Storage.get('tm_calendar_schedule_reminder_default_mode', this.data.calendarScheduleReminderDefaultMode) || '');
+            this.data.calendarAllDayReminderEnabled = !!Storage.get('tm_calendar_all_day_reminder_enabled', this.data.calendarAllDayReminderEnabled);
+            this.data.calendarAllDayReminderTime = String(Storage.get('tm_calendar_all_day_reminder_time', this.data.calendarAllDayReminderTime) || '');
+            this.data.calendarTaskDateAllDayReminderEnabled = !!Storage.get('tm_calendar_taskdate_all_day_reminder_enabled', this.data.calendarTaskDateAllDayReminderEnabled);
+            this.data.calendarAllDaySummaryIncludeExtras = !!Storage.get('tm_calendar_all_day_summary_include_extras', this.data.calendarAllDaySummaryIncludeExtras);
             this.data.calendarShowTomatoMaster = Storage.get('tm_calendar_show_tomato_master', this.data.calendarShowTomatoMaster);
             this.data.calendarShowFocus = Storage.get('tm_calendar_show_focus', this.data.calendarShowFocus);
             this.data.calendarShowBreak = Storage.get('tm_calendar_show_break', this.data.calendarShowBreak);
@@ -4528,6 +4562,13 @@
             Storage.set('tm_calendar_first_day', Number(this.data.calendarFirstDay) === 0 ? 0 : 1);
             Storage.set('tm_calendar_month_aggregate', !!this.data.calendarMonthAggregate);
             Storage.set('tm_calendar_show_schedule', !!this.data.calendarShowSchedule);
+            Storage.set('tm_calendar_schedule_reminder_enabled', !!this.data.calendarScheduleReminderEnabled);
+            Storage.set('tm_calendar_schedule_reminder_system_enabled', !!this.data.calendarScheduleReminderSystemEnabled);
+            Storage.set('tm_calendar_schedule_reminder_default_mode', String(this.data.calendarScheduleReminderDefaultMode || '').trim());
+            Storage.set('tm_calendar_all_day_reminder_enabled', !!this.data.calendarAllDayReminderEnabled);
+            Storage.set('tm_calendar_all_day_reminder_time', String(this.data.calendarAllDayReminderTime || '').trim());
+            Storage.set('tm_calendar_taskdate_all_day_reminder_enabled', !!this.data.calendarTaskDateAllDayReminderEnabled);
+            Storage.set('tm_calendar_all_day_summary_include_extras', !!this.data.calendarAllDaySummaryIncludeExtras);
             Storage.set('tm_calendar_show_tomato_master', !!this.data.calendarShowTomatoMaster);
             Storage.set('tm_calendar_show_focus', !!this.data.calendarShowFocus);
             Storage.set('tm_calendar_show_break', !!this.data.calendarShowBreak);
@@ -5639,7 +5680,7 @@
                     doc.hpath as doc_path,
                     
                     -- 自定义属性
-                    attr.priority,
+                    attr.custom_priority,
                     attr.duration,
                     attr.remark,
                     attr.start_date,
@@ -5663,7 +5704,7 @@
                 LEFT JOIN (
                     SELECT 
                         a.block_id,
-                        MAX(CASE WHEN a.name = 'custom-priority' THEN a.value ELSE NULL END) as priority,
+                        MAX(CASE WHEN a.name = 'custom-priority' THEN a.value ELSE NULL END) as custom_priority,
                         MAX(CASE WHEN a.name = 'custom-duration' THEN a.value ELSE NULL END) as duration,
                         MAX(CASE WHEN a.name = 'custom-remark' THEN a.value ELSE NULL END) as remark,
                         MAX(CASE WHEN a.name = 'custom-start-date' THEN a.value ELSE NULL END) as start_date,
@@ -5770,7 +5811,7 @@
                 attr AS (
                     SELECT
                         a.block_id,
-                        MAX(CASE WHEN a.name = 'custom-priority' THEN a.value ELSE NULL END) AS priority,
+                        MAX(CASE WHEN a.name = 'custom-priority' THEN a.value ELSE NULL END) AS custom_priority,
                         MAX(CASE WHEN a.name = 'custom-duration' THEN a.value ELSE NULL END) AS duration,
                         MAX(CASE WHEN a.name = 'custom-remark' THEN a.value ELSE NULL END) AS remark,
                         MAX(CASE WHEN a.name = 'custom-start-date' THEN a.value ELSE NULL END) AS start_date,
@@ -5802,7 +5843,7 @@
                     t.updated,
                     t.doc_name,
                     t.doc_path,
-                    attr.priority,
+                    attr.custom_priority,
                     attr.duration,
                     attr.remark,
                     attr.start_date,
@@ -5853,7 +5894,7 @@
                     task.updated,
                     doc.content as doc_name,
                     doc.hpath as doc_path,
-                    attr.priority,
+                    attr.custom_priority,
                     attr.duration,
                     attr.remark,
                     attr.start_date,
@@ -5869,7 +5910,7 @@
                 LEFT JOIN (
                     SELECT 
                         block_id,
-                        MAX(CASE WHEN name = 'custom-priority' THEN value ELSE NULL END) as priority,
+                        MAX(CASE WHEN name = 'custom-priority' THEN value ELSE NULL END) as custom_priority,
                         MAX(CASE WHEN name = 'custom-duration' THEN value ELSE NULL END) as duration,
                         MAX(CASE WHEN name = 'custom-remark' THEN value ELSE NULL END) as remark,
                         MAX(CASE WHEN name = 'custom-start-date' THEN value ELSE NULL END) as start_date,
@@ -6634,6 +6675,10 @@
         // 操作状态
         isRefreshing: false,
         openToken: 0,
+        // 悬浮条修改的任务ID列表（用于切换页签时强制刷新）
+        quickbarModifiedTaskIds: new Set(),
+        // 悬浮条最后更新时间（用于判断是否需要刷新）
+        lastQuickbarUpdateTime: 0,
 
         // 设置（从 SettingsStore 读取）
         selectedDocIds: [],
@@ -6816,6 +6861,10 @@
     let __tmVisibilityHandler = null;
     let __tmFocusHandler = null;
     let __tmWhiteboardViewSaveTimer = null;
+    // 存储被悬浮条修改过的任务 ID
+    let __tmModifiedTaskIds = new Set();
+    // 追踪最小化前插件页面是否正在显示（用于控制是否在恢复后刷新）
+    let __tmWasPluginVisibleBeforeHide = false;
 
     function __tmSetMount(el) {
         if (el && !document.body.contains(el)) {
@@ -6890,6 +6939,7 @@
     let __tmQuickAddGlobalClickHandler = null;
     let __tmCalendarScheduleUpdatedHandler = null;
     let __tmTodayScheduleRefreshTimer = null;
+    let __tmQuickbarTaskUpdateHandler = null;
 
     async function __tmSafeOpenManager(reason) {
         try {
@@ -6963,6 +7013,11 @@ async function __tmRefreshAfterWake(reason) {
 
         try {
             await SettingsStore.load();
+            try {
+                if (globalThis.__tmCalendar && typeof globalThis.__tmCalendar.setSettingsStore === 'function') {
+                    globalThis.__tmCalendar.setSettingsStore(SettingsStore);
+                }
+            } catch (e2) {}
             const allow = new Set(['list', 'timeline', 'kanban', 'calendar', 'whiteboard']);
             const isMobileDevice = __tmIsMobileDevice();
             const current = String(state.viewMode || '').trim();
@@ -6993,24 +7048,232 @@ async function __tmRefreshAfterWake(reason) {
     function __tmBindWakeReload() {
         if (__tmWakeReloadBound) return;
         __tmWakeReloadBound = true;
-        __tmVisibilityHandler = () => {
+        
+        // 检查插件页面是否正在显示
+        const isPluginVisible = () => {
+            // 首先检查 state.modal 是否存在且已添加到 DOM
+            if (!state.modal || !document.body.contains(state.modal)) {
+                return false;
+            }
+            
+            // 检查弹窗是否可见（display 不为 none，opacity 大于 0）
+            const style = window.getComputedStyle(state.modal);
+            if (style.display === 'none' || style.opacity === '0') {
+                return false;
+            }
+            
+            // 关键：检查插件是否在当前激活的思源窗口中
+            // 思源使用 .layout__wnd--active 标记当前激活的窗口
+            const activeWindow = document.querySelector('.layout__wnd--active');
+            if (activeWindow) {
+                // 检查插件的挂载元素是否在活动窗口中
+                const mountEl = __tmGetMountRoot();
+                if (mountEl && mountEl !== document.body && activeWindow.contains(mountEl)) {
+                    return true;
+                }
+                // 也检查 modal 元素是否在活动窗口中
+                if (activeWindow.contains(state.modal)) {
+                    return true;
+                }
+            }
+            
+            // 如果没有找到活动窗口（可能是在移动端或其他特殊布局），则回退到原来的检查
+            return true;
+        };
+        
+        __tmVisibilityHandler = async () => {
             try {
                 if (document.visibilityState === 'hidden') {
                     __tmWasHiddenAt = Date.now();
                     // 标记页面曾被隐藏，用于下次打开时跳过加载提示
                     state.wasHidden = true;
+                    // 记录最小化前插件页面是否正在显示
+                    __tmWasPluginVisibleBeforeHide = isPluginVisible();
                     return;
                 }
-                // 不再在页面切换前台时刷新日历视图，完全不操作，避免闪烁
+                
+                // 只有当最小化前插件页面正在显示时才继续处理
+                if (!__tmWasPluginVisibleBeforeHide) {
+                    return;
+                }
+                
+                const hasQuickbarModifications = __tmHasQuickbarModificationsSync();
+                
+                // 只有当有悬浮条修改时才刷新，否则保持现状
+                if (hasQuickbarModifications) {
+                    if (typeof window.tmRefresh === 'function') {
+                        // 清除修改标记，等待数据库同步，然后执行完整刷新
+                        __tmClearQuickbarModifications();
+                        // 等待数据库同步（思源笔记的setBlockAttrs可能有时延）
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        window.tmRefresh();
+                    }
+                }
+                // 如果没有悬浮条修改，则不刷新，保持当前显示状态
 			} catch (e) {}
 		};
-		__tmFocusHandler = () => {
+		__tmFocusHandler = async () => {
 			try {
-				// 不再在获得焦点时刷新日历视图
+                const hasQuickbarModifications = __tmHasQuickbarModificationsSync();
+                if (typeof window.tmRefresh === 'function' && __tmWasPluginVisibleBeforeHide && hasQuickbarModifications) {
+                    __tmClearQuickbarModifications();
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    window.tmRefresh();
+                }
             } catch (e) {}
         };
         try { document.addEventListener('visibilitychange', __tmVisibilityHandler); } catch (e) {}
         try { window.addEventListener('focus', __tmFocusHandler); } catch (e) {}
+    }
+
+    let __tmOriginalCenterSwitchTab = null;
+    let __tmTabEnterAutoRefreshBound = false;
+    let __tmTabEnterAutoRefreshInFlight = false;
+    let __tmTabEnterAutoRefreshLastTs = 0;
+    let __tmTabEnterAutoRefreshTimer = null;
+    let __tmTabEnterAutoRefreshTryCount = 0;
+
+    function __tmHasQuickbarModificationsSync() {
+        let has = false;
+        try {
+            has = !!(state.quickbarModifiedTaskIds && state.quickbarModifiedTaskIds.size > 0);
+        } catch (e) {
+            has = false;
+        }
+        if (has) return true;
+        try {
+            const stored = JSON.parse(localStorage.getItem('__tmQuickbarModifiedTasks') || '[]');
+            if (Array.isArray(stored) && stored.length > 0) {
+                stored.forEach(taskId => {
+                    const id = String(taskId || '').trim();
+                    if (id) state.quickbarModifiedTaskIds.add(id);
+                });
+                has = state.quickbarModifiedTaskIds.size > 0;
+            }
+        } catch (ex) {}
+        return has;
+    }
+
+    function __tmClearQuickbarModifications() {
+        try { state.quickbarModifiedTaskIds && state.quickbarModifiedTaskIds.clear(); } catch (e) {}
+        try { localStorage.removeItem('__tmQuickbarModifiedTasks'); } catch (ex) {}
+    }
+
+    async function __tmSilentRefreshAfterQuickbarUpdate() {
+        try {
+            const mode = String(state.viewMode || '').trim();
+            if (mode === 'calendar' && typeof window.tmRefreshCalendarInPlace === 'function') {
+                try { await window.tmRefreshCalendarInPlace({ silent: true }); } catch (e) {}
+                return;
+            }
+        } catch (e) {}
+        if (state.isRefreshing) {
+            setTimeout(() => { try { __tmSilentRefreshAfterQuickbarUpdate(); } catch (e) {} }, 300);
+            return;
+        }
+        state.isRefreshing = true;
+        try {
+            try { window.__tmCalendarAllTasksCache = null; } catch (e) {}
+            await loadSelectedDocuments();
+            let removedCount = 0;
+            try {
+                removedCount = Number(__tmSyncWhiteboardFrozenTasksWithLiveTasks()) || 0;
+            } catch (e) {}
+            if (removedCount > 0) {
+                try { applyFilters(); } catch (e) {}
+            }
+            try { if (state.modal) render(); } catch (e) {}
+        } catch (e) {
+            try { if (state.modal) render(); } catch (e2) {}
+        } finally {
+            state.isRefreshing = false;
+        }
+    }
+
+    function __tmIsPluginVisibleNow() {
+        try {
+            if (!state.modal || !document.body.contains(state.modal)) return false;
+        } catch (e) {
+            return false;
+        }
+        try {
+            const style = window.getComputedStyle(state.modal);
+            if (style.display === 'none' || style.opacity === '0' || style.visibility === 'hidden') return false;
+        } catch (e) {}
+        try {
+            const activeWindow = document.querySelector('.layout__wnd--active');
+            if (activeWindow) {
+                const mountEl = __tmGetMountRoot();
+                if (mountEl && mountEl !== document.body && activeWindow.contains(mountEl)) return true;
+                if (activeWindow.contains(state.modal)) return true;
+                return false;
+            }
+        } catch (e) {}
+        return true;
+    }
+
+    async function __tmMaybeAutoRefreshOnEnter(source) {
+        try {
+            if (!__tmIsPluginVisibleNow()) return;
+            if (!__tmHasQuickbarModificationsSync()) return;
+            const now = Date.now();
+            if (__tmTabEnterAutoRefreshInFlight) return;
+            if (now - (Number(__tmTabEnterAutoRefreshLastTs) || 0) < 800) return;
+            __tmTabEnterAutoRefreshLastTs = now;
+            __tmTabEnterAutoRefreshInFlight = true;
+            __tmClearQuickbarModifications();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            await __tmSilentRefreshAfterQuickbarUpdate();
+        } catch (e) {} finally {
+            __tmTabEnterAutoRefreshInFlight = false;
+        }
+    }
+
+    function __tmScheduleMaybeAutoRefreshOnEnter(source) {
+        if (__tmTabEnterAutoRefreshTimer) return;
+        __tmTabEnterAutoRefreshTryCount = 0;
+        const tick = async () => {
+            __tmTabEnterAutoRefreshTimer = null;
+            __tmTabEnterAutoRefreshTryCount += 1;
+            try {
+                if (!__tmHasQuickbarModificationsSync()) return;
+                if (__tmIsPluginVisibleNow()) {
+                    await __tmMaybeAutoRefreshOnEnter(source);
+                    return;
+                }
+            } catch (e) {}
+            if (__tmTabEnterAutoRefreshTryCount < 16 && __tmHasQuickbarModificationsSync()) {
+                __tmTabEnterAutoRefreshTimer = setTimeout(tick, 120);
+            }
+        };
+        __tmTabEnterAutoRefreshTimer = setTimeout(tick, 80);
+    }
+
+    function __tmBindTabEnterAutoRefresh() {
+        if (__tmTabEnterAutoRefreshBound) return;
+        __tmTabEnterAutoRefreshBound = true;
+        try {
+            const centerLayout = window.siyuan?.layout?.centerLayout;
+            const original = centerLayout?.switchTab;
+            if (typeof original === 'function' && !original.__tmTaskHorizonWrapped) {
+                __tmOriginalCenterSwitchTab = original;
+                const wrapped = function(tab, ...rest) {
+                    const res = original.apply(this, [tab, ...rest]);
+                    try {
+                        const type0 = String(globalThis.__taskHorizonTabType || '').trim();
+                        const isMine = !!(
+                            (type0 && tab && tab.type === type0) ||
+                            (tab && tab?.tab?.id && String(tab.tab.id) === String(globalThis.__taskHorizonCustomTabId || '')) ||
+                            (tab && ((tab?.tab?.title && String(tab.tab.title).includes('任务管理器')) || (tab?.title && String(tab.title).includes('任务管理器'))))
+                        );
+                        if (isMine) __tmScheduleMaybeAutoRefreshOnEnter('switchTab');
+                    } catch (e) {}
+                    return res;
+                };
+                wrapped.__tmTaskHorizonWrapped = true;
+                try { centerLayout.switchTab = wrapped; } catch (e) {}
+            }
+        } catch (e) {}
     }
 
     function __tmHookTomatoTimer() {
@@ -10462,12 +10725,34 @@ async function __tmRefreshAfterWake(reason) {
         const excludeCompleted = state.excludeCompletedTasks && !currentRuleIncludesCompleted() && !currentRuleAllStatuses();
 
         // 过滤逻辑：
-        // 1. 未完成父任务下的所有子任务（无论是否完成）保留显示
+        // 1. 父任务全部完成时，子任务不显示（无论子任务是否完成）
         // 2. 如果 excludeCompleted 开启，仅已完成根任务：过滤
-        // 3. 不再因“祖先已完成”级联隐藏后代，避免深层子任务消失
+        // 3. 未完成父任务下的所有子任务（无论是否完成）保留显示
         // 4. 如果 excludeCompleted 开启且当前规则没有排除已完成，则已完成子任务（父任务未完成）保留显示
         const ruleExcludesCompleted = currentRuleExcludesCompleted();
+        
+        // 检查是否所有祖先任务都已完成
+        const hasIncompleteAncestor = (task) => {
+            let parentId = task?.parentTaskId;
+            const seen = new Set();
+            while (parentId) {
+                if (seen.has(parentId)) break;
+                seen.add(parentId);
+                const parent = taskMap[parentId];
+                if (!parent) break;
+                // 如果有一个祖先未完成，返回 true
+                if (!parent.done) return true;
+                parentId = parent.parentTaskId;
+            }
+            return false;
+        };
+        
         tasks = tasks.filter(t => {
+            // 如果有父任务，且所有祖先任务都已完成，则子任务不显示
+            if (t.parentTaskId && !hasIncompleteAncestor(t)) {
+                return false;
+            }
+
             // 排除已完成任务时，已完成根任务才过滤
             if (excludeCompleted && t.done && !t.parentTaskId) return false;
 
@@ -13804,6 +14089,8 @@ async function __tmRefreshAfterWake(reason) {
         state.isRefreshing = true;
         hint('🔄 正在刷新...', 'info');
         try {
+            // 清除日历缓存，确保获取最新数据
+            try { window.__tmCalendarAllTasksCache = null; } catch (e) {}
             await loadSelectedDocuments();
             let removedCount = 0;
             try {
@@ -13896,14 +14183,13 @@ async function __tmRefreshAfterWake(reason) {
         const dateKey = __tmCalendarDockGetDateKey();
         return `
             <div class="tm-calendar-dock-head">
-                <div class="tm-calendar-dock-title">日历日视图</div>
+                <div class="tm-calendar-dock-title">${esc(__tmCalendarDockLabel(dateKey))}</div>
                 <div class="tm-calendar-dock-nav">
                     <button class="tm-btn tm-btn-info" onclick="tmCalendarDockShiftDay(-1)" style="padding:2px 8px;">◀</button>
                     <button class="tm-btn tm-btn-info" onclick="tmCalendarDockToday()" style="padding:2px 8px;">今天</button>
                     <button class="tm-btn tm-btn-info" onclick="tmCalendarDockShiftDay(1)" style="padding:2px 8px;">▶</button>
                 </div>
             </div>
-            <div class="tm-calendar-dock-date">${esc(__tmCalendarDockLabel(dateKey))}</div>
             <div id="tmCalendarSideDockTimeline" style="flex:1 1 auto;min-height:0;"></div>
         `;
     }
@@ -13944,7 +14230,7 @@ async function __tmRefreshAfterWake(reason) {
             const pad = (n) => String(n).padStart(2, '0');
             state.calendarDockDate = `${base.getFullYear()}-${pad(base.getMonth() + 1)}-${pad(base.getDate())}`;
         }
-        const labelEl = state.modal?.querySelector?.('.tm-calendar-dock-date');
+        const labelEl = state.modal?.querySelector?.('.tm-calendar-dock-title');
         if (labelEl) labelEl.textContent = __tmCalendarDockLabel(__tmCalendarDockGetDateKey());
     };
 
@@ -13955,7 +14241,7 @@ async function __tmRefreshAfterWake(reason) {
         if (globalThis.__tmCalendar && typeof globalThis.__tmCalendar.setSideDayDate === 'function') {
             globalThis.__tmCalendar.setSideDayDate(state.calendarDockDate);
         }
-        const labelEl = state.modal?.querySelector?.('.tm-calendar-dock-date');
+        const labelEl = state.modal?.querySelector?.('.tm-calendar-dock-title');
         if (labelEl) labelEl.textContent = __tmCalendarDockLabel(state.calendarDockDate);
     };
 
@@ -18919,9 +19205,9 @@ async function __tmRefreshAfterWake(reason) {
             if (Object.prototype.hasOwnProperty.call(map, lower)) return map[lower];
             return '';
         };
-        const p0 = task.priority ?? task.customPriority ?? task.custom_priority ?? '';
+        const p0 = task.custom_priority ?? task.customPriority ?? task.priority ?? '';
         task.priority = normalizePriority(p0);
-        const milestone0 = task.milestone ?? task.customMilestone ?? task.custom_milestone ?? '';
+        const milestone0 = task.custom_milestone ?? task.customMilestone ?? task.milestone ?? '';
         if (typeof milestone0 === 'boolean') {
             task.milestone = milestone0;
         } else {
@@ -18933,10 +19219,10 @@ async function __tmRefreshAfterWake(reason) {
         task.completionTime = isValidValue(task.completionTime) ? String(task.completionTime) : (isValidValue(task.completion_time) ? String(task.completion_time) : '');
         task.startDate = isValidValue(task.startDate) ? String(task.startDate) : (isValidValue(task.start_date) ? String(task.start_date) : '');
         task.customTime = isValidValue(task.customTime) ? String(task.customTime) : (isValidValue(task.custom_time) ? String(task.custom_time) : '');
-        task.customStatus = isValidValue(task.customStatus) ? String(task.customStatus) : (isValidValue(task.custom_status) ? String(task.custom_status) : '');
+        task.customStatus = isValidValue(task.custom_status) ? String(task.custom_status) : (isValidValue(task.customStatus) ? String(task.customStatus) : '');
         task.tomatoMinutes = isValidValue(task.tomatoMinutes) ? String(task.tomatoMinutes) : (isValidValue(task.tomato_minutes) ? String(task.tomato_minutes) : '');
         task.tomatoHours = isValidValue(task.tomatoHours) ? String(task.tomatoHours) : (isValidValue(task.tomato_hours) ? String(task.tomato_hours) : '');
-        const pin0 = task.pinned ?? task.customPinned ?? task.custom_pinned ?? '';
+        const pin0 = task.custom_pinned ?? task.customPinned ?? task.pinned ?? '';
         if (typeof pin0 === 'boolean') {
             task.pinned = pin0;
         } else {
@@ -23192,7 +23478,21 @@ async function __tmRefreshAfterWake(reason) {
 
     // 删除任务
     window.tmDelete = async function(id) {
-        if (!confirm('确定要删除这个任务吗？此操作不可恢复。')) return;
+        let ok = false;
+        try {
+            if (__tmIsMobileDevice()) {
+                ok = await showConfirm('删除任务', '确定要删除这个任务吗？此操作不可恢复。');
+            } else {
+                ok = !!confirm('确定要删除这个任务吗？此操作不可恢复。');
+            }
+        } catch (e) {
+            try {
+                ok = await showConfirm('删除任务', '确定要删除这个任务吗？此操作不可恢复。');
+            } catch (e2) {
+                ok = false;
+            }
+        }
+        if (!ok) return;
 
         try {
             await API.deleteBlock(id);
@@ -23264,7 +23564,7 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     // 任务右键菜单
-    window.tmShowTaskContextMenu = function(event, taskId) {
+    window.tmShowTaskContextMenu = function(event, taskId, extra) {
         event.preventDefault();
         event.stopPropagation();
 
@@ -23279,6 +23579,7 @@ async function __tmRefreshAfterWake(reason) {
 
         const menu = document.createElement('div');
         menu.id = 'tm-task-context-menu';
+        const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
         menu.style.cssText = `
             position: fixed;
             top: ${event.clientY}px;
@@ -23317,6 +23618,8 @@ async function __tmRefreshAfterWake(reason) {
 
         const task = state.flatTasks[taskId];
         const taskName = task?.content || '任务';
+        const extra0 = (extra && typeof extra === 'object') ? extra : {};
+        const scheduleId0 = String(extra0.scheduleId || '').trim();
         const tomatoEnabled = !!SettingsStore.data.enableTomatoIntegration;
         const timer = tomatoEnabled ? globalThis.__tomatoTimer : null;
         if (tomatoEnabled && timer && typeof timer === 'object') {
@@ -23391,6 +23694,17 @@ async function __tmRefreshAfterWake(reason) {
             }
         }
 
+        if (globalThis.__tmCalendar && (typeof globalThis.__tmCalendar.openScheduleEditorById === 'function' || typeof globalThis.__tmCalendar.openScheduleEditorByTaskId === 'function')) {
+            menu.appendChild(createItem('📅 编辑日程', () => {
+                if (scheduleId0 && typeof globalThis.__tmCalendar.openScheduleEditorById === 'function') {
+                    try { globalThis.__tmCalendar.openScheduleEditorById(scheduleId0); } catch (e) {}
+                    return;
+                }
+                if (typeof globalThis.__tmCalendar.openScheduleEditorByTaskId === 'function') {
+                    try { globalThis.__tmCalendar.openScheduleEditorByTaskId(taskId, extra0); } catch (e) {}
+                }
+            }));
+        }
         menu.appendChild(createItem('✏️ 编辑', () => tmEdit(taskId)));
         if (tomatoEnabled) {
             menu.appendChild(createItem('⏰ 提醒', () => tmReminder(taskId)));
@@ -23398,6 +23712,22 @@ async function __tmRefreshAfterWake(reason) {
         menu.appendChild(createItem('🗑️ 删除', () => tmDelete(taskId), true));
 
         document.body.appendChild(menu);
+        requestAnimationFrame(() => {
+            try {
+                const rect = menu.getBoundingClientRect();
+                const vw = Math.max(0, window.innerWidth || document.documentElement.clientWidth || 0);
+                const vh = Math.max(0, window.innerHeight || document.documentElement.clientHeight || 0);
+                const margin = 8;
+                let x = Number(event.clientX) || 0;
+                let y = Number(event.clientY) || 0;
+                if (x + rect.width > vw - margin) x = x - rect.width;
+                if (y + rect.height > vh - margin) y = y - rect.height;
+                x = clamp(x, margin, Math.max(margin, vw - rect.width - margin));
+                y = clamp(y, margin, Math.max(margin, vh - rect.height - margin));
+                menu.style.left = `${Math.round(x)}px`;
+                menu.style.top = `${Math.round(y)}px`;
+            } catch (e) {}
+        });
 
         // Click outside to close
         const closeHandler = () => {
@@ -23538,18 +23868,36 @@ async function __tmRefreshAfterWake(reason) {
     // 注册全局刷新回调，供悬浮条调用
     globalThis.__taskHorizonRefresh = () => {
         try {
-            if (!state.modal || !document.body.contains(state.modal)) return;
-            // 重新加载当前文档或选中文档的任务数据（如果需要完全同步）
-            // 但为了性能，这里先尝试只重新应用过滤器和渲染
-            // 如果数据源是实时更新的（例如引用了同一个对象），这应该够了
-            // 如果需要从 block 重新读取，可能需要更重的刷新
-            // 考虑到悬浮条修改的是属性，而插件读取的是内存中的 state 或 block 属性
-            // 我们可能需要触发一次轻量级的重载，或者直接调用 tmRefresh
-            // 这里先试用 applyFilters + render，如果不行再调用 tmRefresh
-            applyFilters();
-            render();
+            // 当悬浮条修改任务属性后，需要从数据库重新加载任务数据
+            // 否则内存中的 state.flatTasks 仍保留旧数据，导致显示不同步
+            // 调用 tmRefresh 会重新加载所有任务数据，确保插件内数据与自定义属性一致
+            if (typeof window.tmRefresh === 'function') {
+                // 如果正在刷新，等待当前刷新完成
+                if (state.isRefreshing) {
+                    // 等待一小段时间后重试
+                    setTimeout(() => window.tmRefresh(), 500);
+                }
+                window.tmRefresh();
+            } else {
+                // 备用方案：如果 tmRefresh 不可用，至少重新应用过滤器和渲染
+                applyFilters();
+                render();
+            }
         } catch (e) {
+            console.error('__taskHorizonRefresh error:', e);
         }
+    };
+    
+    // 标记任务被修改，供悬浮条调用
+    globalThis.__taskHorizonMarkModified = (taskId) => {
+        if (taskId) {
+            __tmModifiedTaskIds.add(String(taskId));
+        }
+    };
+    
+    // 清除修改标记，供刷新后调用
+    globalThis.__taskHorizonClearModified = () => {
+        __tmModifiedTaskIds.clear();
     };
 
     window.tmQuickAddClose = function() {
@@ -24225,6 +24573,11 @@ async function __tmRefreshAfterWake(reason) {
         try { state.doneOverrides = {}; } catch (e) {}
         // 加载设置（包括文档ID列表）
         await SettingsStore.load();
+        try {
+            if (globalThis.__tmCalendar && typeof globalThis.__tmCalendar.setSettingsStore === 'function') {
+                globalThis.__tmCalendar.setSettingsStore(SettingsStore);
+            }
+        } catch (e) {}
         await MetaStore.load();
         await WhiteboardStore.load();
         try { globalThis.__taskHorizonQuickbarToggle?.(!!SettingsStore.data.enableQuickbar); } catch (e) {}
@@ -24354,6 +24707,7 @@ async function __tmRefreshAfterWake(reason) {
                     // 标准化字段
                     const docName = task.docName || '未命名文档';
                     normalizeTaskFields(task, docName);
+                    
                     const h2ctx = h2ContextMap.get(task.id);
                     if (h2ctx && typeof h2ctx === 'object') {
                         task.h2 = String(h2ctx.content || '').trim();
@@ -24516,6 +24870,9 @@ async function __tmRefreshAfterWake(reason) {
                 try { __tmUpsertWhiteboardTaskSnapshots(Object.values(state.flatTasks || {})); } catch (e) {}
                 
                 applyFilters();
+                // 调试：打印筛选后的任务信息
+                const currentRule = state.currentRule ? state.filterRules?.find(r => r.id === state.currentRule) : null;
+                
                 if (!skipRender && state.modal && token === (Number(state.openToken) || 0)) render();
             }
         } catch (e) {
@@ -27766,11 +28123,52 @@ async function __tmRefreshAfterWake(reason) {
 
     async function init() {
         try { __tmBindWakeReload(); } catch (e) {}
+        try { __tmBindTabEnterAutoRefresh(); } catch (e) {}
         try { __tmBindCalendarScheduleUpdated(); } catch (e) {}
+
+        // 监听悬浮条修改任务事件
+        try {
+            if (__tmQuickbarTaskUpdateHandler) {
+                try { window.removeEventListener('tm-task-attr-updated', __tmQuickbarTaskUpdateHandler); } catch (e) {}
+            }
+            __tmQuickbarTaskUpdateHandler = (e) => {
+                if (!e || !e.detail || !e.detail.taskId) return;
+                const taskId = String(e.detail.taskId || '').trim();
+                if (!taskId) return;
+                
+                // 使用 localStorage 持久化存储，以便在插件重新加载后仍能检测到
+                try {
+                    const stored = JSON.parse(localStorage.getItem('__tmQuickbarModifiedTasks') || '[]');
+                    if (!stored.includes(taskId)) {
+                        stored.push(taskId);
+                        localStorage.setItem('__tmQuickbarModifiedTasks', JSON.stringify(stored));
+                    }
+                } catch (ex) {}
+                
+                // 同时更新内存中的状态
+                state.quickbarModifiedTaskIds.add(taskId);
+                state.lastQuickbarUpdateTime = Date.now();
+            };
+            window.addEventListener('tm-task-attr-updated', __tmQuickbarTaskUpdateHandler);
+        } catch (e) {}
+        
+        // 检查是否有悬浮条修改的任务需要刷新（从 localStorage 恢复）
+        try {
+            const stored = JSON.parse(localStorage.getItem('__tmQuickbarModifiedTasks') || '[]');
+            if (stored.length > 0) {
+                stored.forEach(taskId => state.quickbarModifiedTaskIds.add(taskId));
+                state.lastQuickbarUpdateTime = Date.now();
+            }
+        } catch (ex) {}
 
         // 1. 先加载设置（包括文档ID）
         try {
             await SettingsStore.load();
+            try {
+                if (globalThis.__tmCalendar && typeof globalThis.__tmCalendar.setSettingsStore === 'function') {
+                    globalThis.__tmCalendar.setSettingsStore(SettingsStore);
+                }
+            } catch (e) {}
             await WhiteboardStore.load();
 
             // 初始化状态
@@ -28040,16 +28438,30 @@ async function __tmRefreshAfterWake(reason) {
             }
         }
 
-        // 仅在主动打开时显示加载提示；页签挂载恢复/静默恢复不提示
+        let hasDataReadyForSoftReuse0 = false;
+        try {
+            const treeReady = Array.isArray(state.taskTree) && state.taskTree.length > 0;
+            const flatReady = state.flatTasks && Object.keys(state.flatTasks).length > 0;
+            hasDataReadyForSoftReuse0 = !!(treeReady || flatReady);
+        } catch (e) {
+            hasDataReadyForSoftReuse0 = false;
+        }
+        const quickbarDirty0 = __tmHasQuickbarModificationsSync();
         const shouldShowLoadingHint = !state.wasHidden
             && !(options && options.skipLoadingHint)
-            && !(options && options.skipEnsureTabOpened);
+            && !(options && options.skipEnsureTabOpened)
+            && !(reusedExistingModal && hasDataReadyForSoftReuse0 && !quickbarDirty0);
         if (shouldShowLoadingHint) {
             hint('🔄 加载任务中...', 'info');
         }
         state.wasHidden = false;
 
         await SettingsStore.load();
+        try {
+            if (globalThis.__tmCalendar && typeof globalThis.__tmCalendar.setSettingsStore === 'function') {
+                globalThis.__tmCalendar.setSettingsStore(SettingsStore);
+            }
+        } catch (e) {}
         try {
             const allow = new Set(['list', 'timeline', 'kanban', 'calendar', 'whiteboard']);
             const isMobileDevice = __tmIsMobileDevice();
@@ -28100,7 +28512,21 @@ async function __tmRefreshAfterWake(reason) {
                 return false;
             }
         })();
-        const canSkipRenderOnReuse = reusedExistingModal && hasDataReadyForSoftReuse;
+        const quickbarDirty = __tmHasQuickbarModificationsSync();
+        const canSkipRenderOnReuse = reusedExistingModal && hasDataReadyForSoftReuse && !quickbarDirty;
+        if (canSkipRenderOnReuse) {
+            try {
+                if (String(state.viewMode || '').trim() === 'calendar' && globalThis.__tmCalendar?.refreshInPlace) {
+                    globalThis.__tmCalendar.refreshInPlace({ layoutOnly: true, hard: false });
+                }
+            } catch (e) {}
+            return;
+        }
+        if (quickbarDirty) {
+            __tmClearQuickbarModifications();
+            try { await new Promise(resolve => setTimeout(resolve, 200)); } catch (e) {}
+            try { window.__tmCalendarAllTasksCache = null; } catch (e) {}
+        }
         loadSelectedDocuments({ skipRender: canSkipRenderOnReuse }).then(() => {
             if (!canSkipRenderOnReuse) return;
             try {
@@ -28132,6 +28558,27 @@ async function __tmRefreshAfterWake(reason) {
                 window.removeEventListener('click', __tmGlobalClickHandler);
                 __tmGlobalClickHandler = null;
             }
+        } catch (e) {}
+        try {
+            if (__tmQuickbarTaskUpdateHandler) {
+                window.removeEventListener('tm-task-attr-updated', __tmQuickbarTaskUpdateHandler);
+                __tmQuickbarTaskUpdateHandler = null;
+            }
+        } catch (e) {}
+        try {
+            const centerLayout = window.siyuan?.layout?.centerLayout;
+            if (centerLayout && __tmOriginalCenterSwitchTab && typeof __tmOriginalCenterSwitchTab === 'function') {
+                if (centerLayout.switchTab && centerLayout.switchTab.__tmTaskHorizonWrapped) {
+                    centerLayout.switchTab = __tmOriginalCenterSwitchTab;
+                }
+            }
+            __tmOriginalCenterSwitchTab = null;
+            __tmTabEnterAutoRefreshBound = false;
+            if (__tmTabEnterAutoRefreshTimer) {
+                clearTimeout(__tmTabEnterAutoRefreshTimer);
+                __tmTabEnterAutoRefreshTimer = null;
+            }
+            __tmTabEnterAutoRefreshTryCount = 0;
         } catch (e) {}
         try {
             if (__tmTopBarClickCaptureHandler) {

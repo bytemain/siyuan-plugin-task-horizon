@@ -48,6 +48,15 @@
             loadedAt: 0,
             inflight: null,
         },
+        scheduleReminder: {
+            enabled: false,
+            refreshTimer: null,
+            periodicTimer: null,
+            timers: new Map(),
+            scheduleUpdatedListener: null,
+            toastHost: null,
+            toastStyleEl: null,
+        },
         sideDay: {
             rootEl: null,
             calendar: null,
@@ -64,6 +73,65 @@
 
     function esc(s) {
         return String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch] || ch));
+    }
+
+    function ensureFcCompactAllDayStyle() {
+        const id = 'tm-fc-compact-allday-style';
+        const css = `
+.tm-calendar-host .fc .fc-timegrid-divider,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-divider{padding:0 !important;height:1px !important;}
+.tm-calendar-host .fc .fc-timegrid-divider td,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-divider td{padding:0 !important;}
+.tm-calendar-host .fc .fc-timegrid-divider div,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-divider div{margin:0 !important;}
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-daygrid-body,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-daygrid-body{min-height:0 !important;}
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-scroller-harness,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-scroller-harness{height:auto !important;max-height:none !important;}
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-scroller,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-scroller{height:auto !important;max-height:none !important;overflow:hidden !important;}
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-scrollgrid-sync-table,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-scrollgrid-sync-table{height:auto !important;}
+.tm-calendar-host .fc .fc-timegrid-all-day table,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day table{height:auto !important;}
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-daygrid-body,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-daygrid-body{height:auto !important;}
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-daygrid-day-frame,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-daygrid-day-frame{min-height:0 !important;padding-bottom:0 !important;}
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-daygrid-day-events,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-daygrid-day-events{margin-bottom:0 !important;min-height:0 !important;}
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-daygrid-day-bottom,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-daygrid-day-bottom{margin-top:0 !important;padding-top:0 !important;line-height:1 !important;}
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-daygrid-more-link,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-daygrid-more-link{margin:0 !important;}
+.fc .fc-daygrid-body-natural .fc-daygrid-day-events{margin-bottom:0 !important;}
+.fc .fc-timegrid-all-day .fc-daygrid-event,
+.fc .fc-popover .fc-daygrid-event{padding-top:0 !important;padding-bottom:0 !important;}
+.fc .fc-timegrid-all-day .fc-daygrid-event .fc-event-main,
+.fc .fc-popover .fc-daygrid-event .fc-event-main{padding-top:0 !important;padding-bottom:0 !important;}
+.fc .fc-timegrid-all-day .fc-daygrid-event .fc-event-main-frame,
+.fc .fc-popover .fc-daygrid-event .fc-event-main-frame{display:flex !important;align-items:center !important;height:100%;}
+.fc .fc-timegrid-all-day .fc-daygrid-event .fc-event-main,
+.fc .fc-popover .fc-daygrid-event .fc-event-main{display:flex !important;align-items:center !important;height:100%;}
+.fc .fc-timegrid-all-day .tm-cal-task-event,
+.fc .fc-popover .tm-cal-task-event{height:100% !important;}
+.fc .fc-timegrid-all-day .tm-cal-task-event-title,
+.fc .fc-popover .tm-cal-task-event-title{line-height:1.1 !important;}
+.fc .fc-timegrid-all-day .tm-cal-task-event-title-text,
+.fc .fc-popover .tm-cal-task-event-title-text{line-height:1.1 !important;}
+.fc a.fc-event:focus,
+.fc .fc-daygrid-event:focus,
+.fc .fc-daygrid-event:focus-within{outline:none !important;box-shadow:none !important;}
+        `.trim();
+        const existing = document.getElementById(id);
+        if (existing && existing.tagName === 'STYLE') {
+            existing.textContent = css;
+            return;
+        }
+        const st = document.createElement('style');
+        st.id = id;
+        st.textContent = css;
+        document.head.appendChild(st);
     }
 
     function pad2(n) {
@@ -213,13 +281,22 @@
     function getSettings() {
         const s = state.settingsStore?.data || state.sideDay?.settingsStore?.data || {};
         const tomatoMaster = s.calendarShowTomatoMaster !== false;
+        const allDayTime0 = String(s.calendarAllDayReminderTime || '09:00').trim();
+        const defaultMode0 = String(s.calendarScheduleReminderDefaultMode || '0').trim() || '0';
         return {
             enabled: !!s.calendarEnabled,
             linkDockTomato: !!s.calendarLinkDockTomato,
             firstDay: Number(s.calendarFirstDay) === 0 ? 0 : 1,
             monthAggregate: !!s.calendarMonthAggregate,
             showSchedule: s.calendarShowSchedule !== false,
+            scheduleReminderEnabled: !!s.calendarScheduleReminderEnabled,
+            scheduleReminderSystemEnabled: !!s.calendarScheduleReminderSystemEnabled,
+            scheduleReminderDefaultMode: defaultMode0,
+            allDayReminderEnabled: !!s.calendarAllDayReminderEnabled,
+            allDayReminderTime: allDayTime0 || '09:00',
             showTaskDates: s.calendarShowTaskDates !== false,
+            taskDateAllDayReminderEnabled: !!s.calendarTaskDateAllDayReminderEnabled,
+            allDaySummaryIncludeExtras: s.calendarAllDaySummaryIncludeExtras !== false,
             taskDateColorMode: String(s.calendarTaskDateColorMode || 'group').trim() || 'group',
             scheduleColor: String(s.calendarScheduleColor || '').trim(),
             taskDatesColor: String(s.calendarTaskDatesColor || '').trim(),
@@ -1151,10 +1228,21 @@
                 const id = id0 || uuid();
                 if (id !== id0) changed = true;
                 if (taskId0 && taskId0 !== String(base.taskId || '').trim()) changed = true;
+                const reminderMode0 = String(base.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
+                const allowed = new Set([0, 5, 10, 15, 30, 60]);
+                const reminderEnabled0 = reminderMode0 === 'custom' ? (base.reminderEnabled === true) : null;
+                const reminderOffsetRaw = Number(base.reminderOffsetMin);
+                const reminderOffsetMin0 = reminderMode0 === 'custom'
+                    ? ((Number.isFinite(reminderOffsetRaw) && allowed.has(reminderOffsetRaw)) ? reminderOffsetRaw : 0)
+                    : null;
+                if (String(base.reminderMode || '').trim() !== reminderMode0) changed = true;
                 return {
                     ...base,
                     id,
                     taskId: taskId0,
+                    reminderMode: reminderMode0,
+                    reminderEnabled: reminderEnabled0,
+                    reminderOffsetMin: reminderOffsetMin0,
                 };
             });
             return { out, changed };
@@ -1224,6 +1312,467 @@
         try { state.sideDay?.calendar?.refetchEvents?.(); } catch (e) {}
     }
 
+    function scheduleReminderFiredStorageKey(dateKey) {
+        return `tm-calendar-schedule-reminder-fired:${String(dateKey || '').trim()}`;
+    }
+
+    function loadScheduleReminderFiredSet(dateKey) {
+        const set = new Set();
+        const key = scheduleReminderFiredStorageKey(dateKey);
+        try {
+            const raw = String(localStorage.getItem(key) || '');
+            if (!raw.trim()) return set;
+            const parsed = JSON.parse(raw);
+            const arr = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.items) ? parsed.items : []);
+            for (const it of arr) {
+                const s = String(it || '').trim();
+                if (s) set.add(s);
+            }
+        } catch (e) {}
+        return set;
+    }
+
+    function saveScheduleReminderFiredSet(dateKey, set) {
+        const key = scheduleReminderFiredStorageKey(dateKey);
+        try {
+            const arr = Array.from(set || []);
+            localStorage.setItem(key, JSON.stringify(arr.slice(-200)));
+        } catch (e) {}
+    }
+
+    function buildScheduleReminderKey(scheduleId, atMs) {
+        return `schedule:${String(scheduleId || '').trim()}:${String(atMs || '')}`;
+    }
+
+    function buildTaskDateReminderKey(taskId, atMs) {
+        return `taskdate:${String(taskId || '').trim()}:${String(atMs || '')}`;
+    }
+
+    function ensureScheduleReminderToastHost() {
+        const sr = state.scheduleReminder;
+        if (sr.toastHost && document.body.contains(sr.toastHost)) return sr.toastHost;
+        const host = document.createElement('div');
+        host.className = 'tm-calendar-reminder-host';
+        document.body.appendChild(host);
+        sr.toastHost = host;
+        if (!sr.toastStyleEl) {
+            const st = document.createElement('style');
+            st.textContent = `
+.tm-calendar-reminder-host{position:fixed;top:12px;right:12px;z-index:100020;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+.tm-calendar-reminder-toast{min-width:240px;max-width:420px;background:var(--b3-theme-background);color:var(--b3-theme-on-background);border:1px solid var(--b3-border-color);border-radius:10px;padding:10px 12px;box-shadow:0 10px 28px rgba(0,0,0,.22);backdrop-filter:saturate(1.2) blur(8px);-webkit-backdrop-filter:saturate(1.2) blur(8px);opacity:0;transform:translateY(-6px);transition:opacity .16s ease,transform .16s ease;pointer-events:auto;cursor:pointer;}
+.tm-calendar-reminder-toast.is-in{opacity:1;transform:translateY(0);}
+.tm-calendar-reminder-head{display:flex;align-items:flex-start;gap:10px;}
+.tm-calendar-reminder-title{flex:1 1 auto;font-size:14px;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tm-calendar-reminder-close{flex:0 0 auto;width:22px;height:22px;border:none;border-radius:6px;background:transparent;color:inherit;opacity:.65;cursor:pointer;padding:0;line-height:22px;font-size:16px;}
+.tm-calendar-reminder-close:hover{opacity:1;background:var(--b3-theme-surface-light);}
+.tm-calendar-reminder-title{font-size:14px;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tm-calendar-reminder-body{margin-top:4px;font-size:12px;line-height:1.35;opacity:.86;word-break:break-word;white-space:pre-line;}
+            `.trim();
+            document.head.appendChild(st);
+            sr.toastStyleEl = st;
+        }
+        return host;
+    }
+
+    function showScheduleReminderToast(title, body) {
+        try {
+            const host = ensureScheduleReminderToastHost();
+            const toastEl = document.createElement('div');
+            toastEl.className = 'tm-calendar-reminder-toast';
+            toastEl.innerHTML = `<div class="tm-calendar-reminder-head"><div class="tm-calendar-reminder-title">${esc(String(title || '日程提醒'))}</div><button class="tm-calendar-reminder-close" type="button" aria-label="关闭">×</button></div><div class="tm-calendar-reminder-body">${esc(String(body || ''))}</div>`;
+            host.appendChild(toastEl);
+            requestAnimationFrame(() => { try { toastEl.classList.add('is-in'); } catch (e) {} });
+            const close = () => {
+                try { toastEl.classList.remove('is-in'); } catch (e) {}
+                setTimeout(() => { try { toastEl.remove(); } catch (e) {} }, 180);
+            };
+            toastEl.addEventListener('click', (e) => {
+                const t = e?.target;
+                if (t && t instanceof Element) {
+                    if (t.closest('a,button,input,textarea,select,option')) return;
+                }
+                try { e.preventDefault?.(); } catch (e2) {}
+                close();
+            });
+            const closeBtn = toastEl.querySelector('.tm-calendar-reminder-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', (e) => {
+                    try { e.stopPropagation?.(); } catch (e2) {}
+                    try { e.preventDefault?.(); } catch (e2) {}
+                    close();
+                });
+            }
+            setTimeout(() => { try { close(); } catch (e2) {} }, 10000);
+        } catch (e) {}
+    }
+
+    function showScheduleSystemNotification(title, body) {
+        try {
+            if (typeof Notification === 'undefined' || !Notification) return false;
+            if (String(Notification.permission || '') !== 'granted') return false;
+            const n = new Notification(String(title || '日程提醒'), { body: String(body || ''), requireInteraction: true, silent: false });
+            try {
+                n.onclick = () => {
+                    try { n.close(); } catch (e) {}
+                };
+            } catch (e) {}
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function clearScheduleReminderTimers() {
+        const sr = state.scheduleReminder;
+        try {
+            if (sr.refreshTimer) {
+                clearTimeout(sr.refreshTimer);
+                sr.refreshTimer = null;
+            }
+        } catch (e) {}
+        try {
+            if (sr.periodicTimer) {
+                clearTimeout(sr.periodicTimer);
+                sr.periodicTimer = null;
+            }
+        } catch (e) {}
+        try {
+            if (sr.timers && typeof sr.timers.forEach === 'function') {
+                sr.timers.forEach((t) => {
+                    try { clearTimeout(t); } catch (e) {}
+                });
+            }
+        } catch (e) {}
+        try { sr.timers = new Map(); } catch (e) {}
+    }
+
+    async function refreshScheduleReminderTimers(reason) {
+        const sr = state.scheduleReminder;
+        const hasStore = !!(state.settingsStore && state.settingsStore.data) || !!(state.sideDay?.settingsStore && state.sideDay.settingsStore.data);
+        if (!hasStore) return;
+        const settings = getSettings();
+        if (!settings.scheduleReminderEnabled) {
+            sr.enabled = false;
+            clearScheduleReminderTimers();
+            return;
+        }
+        sr.enabled = true;
+        const now = Date.now();
+        const windowEnd = now + 36 * 60 * 60000;
+        const list = await loadScheduleAll();
+        const desired = new Map();
+        const allDayTime = parseReminderTime(settings.allDayReminderTime) || { hh: 9, mm: 0, key: '09:00' };
+        const defaultMode = String(settings.scheduleReminderDefaultMode || '0').trim() || '0';
+        const defaultOffsetMin = (() => {
+            if (defaultMode === 'off') return null;
+            const n = Number(defaultMode);
+            const allowed = new Set([0, 5, 10, 15, 30, 60]);
+            return (Number.isFinite(n) && allowed.has(n)) ? n : 0;
+        })();
+        for (const it of (Array.isArray(list) ? list : [])) {
+            if (!it || typeof it !== 'object') continue;
+            const id = String(it.id || '').trim();
+            if (!id) continue;
+            const startMs = toMs(it.start);
+            const endMs = toMs(it.end);
+            if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
+            const start = new Date(startMs);
+            const end = new Date(endMs);
+            const allDay = (it.allDay === true) || isAllDayRange(start, end);
+            const reminderMode = String(it.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
+            if (reminderMode === 'custom') {
+                if (it.reminderEnabled !== true) continue;
+            } else {
+                if (allDay) {
+                    if (!settings.allDayReminderEnabled) continue;
+                } else {
+                    if (defaultMode === 'off') continue;
+                }
+            }
+            if (allDay) {
+                const sDay = new Date(startMs);
+                sDay.setHours(0, 0, 0, 0);
+                const eDay = new Date(endMs);
+                eDay.setHours(0, 0, 0, 0);
+                let dayMs = sDay.getTime();
+                const endDayMs = eDay.getTime();
+                while (dayMs < endDayMs && dayMs < windowEnd) {
+                    const dt = new Date(dayMs);
+                    dt.setHours(allDayTime.hh, allDayTime.mm, 0, 0);
+                    const atMs = dt.getTime();
+                    if (atMs > now && atMs < windowEnd) {
+                        const dateKey = formatDateKey(dt);
+                        const fired = loadScheduleReminderFiredSet(dateKey);
+                        const key = buildScheduleReminderKey(id, atMs);
+                        if (!fired.has(key)) {
+                            desired.set(key, { kind: 'schedule', atMs, scheduleId: id, title: String(it.title || '日程').trim() || '日程', allDay: true, dateKey });
+                        }
+                    }
+                    dayMs += 86400000;
+                }
+                continue;
+            }
+            const offsetMin = (() => {
+                if (reminderMode !== 'custom') return Number(defaultOffsetMin) || 0;
+                const n = Number(it.reminderOffsetMin);
+                const allowed = new Set([0, 5, 10, 15, 30, 60]);
+                return (Number.isFinite(n) && allowed.has(n)) ? n : 0;
+            })();
+            const atMs = startMs - offsetMin * 60000;
+            if (atMs <= now || atMs >= windowEnd) continue;
+            const dt = new Date(atMs);
+            const dateKey = formatDateKey(dt);
+            const fired = loadScheduleReminderFiredSet(dateKey);
+            const key = buildScheduleReminderKey(id, atMs);
+            if (fired.has(key)) continue;
+            desired.set(key, { kind: 'schedule', atMs, startMs, scheduleId: id, title: String(it.title || '日程').trim() || '日程', allDay: false, dateKey, offsetMin });
+        }
+
+        if (settings.taskDateAllDayReminderEnabled && typeof window.tmQueryCalendarTaskDateEvents === 'function') {
+            try {
+                const today0 = new Date(now);
+                today0.setHours(0, 0, 0, 0);
+                const queryEnd = new Date(windowEnd + 86400000);
+                const items = await Promise.resolve().then(() => window.tmQueryCalendarTaskDateEvents(today0, queryEnd)).catch(() => []);
+                for (const it of (Array.isArray(items) ? items : [])) {
+                    const tid = String(it?.id || '').trim();
+                    const title = String(it?.title || '').trim() || '任务';
+                    const startKey = String(it?.start || '').trim();
+                    const endExKey = String(it?.endExclusive || it?.end || '').trim();
+                    if (!tid || !startKey || !endExKey) continue;
+                    const sDay = parseDateOnly(startKey);
+                    const eDay = parseDateOnly(endExKey);
+                    if (!(sDay instanceof Date) || Number.isNaN(sDay.getTime())) continue;
+                    if (!(eDay instanceof Date) || Number.isNaN(eDay.getTime())) continue;
+                    const sMs0 = new Date(sDay.getFullYear(), sDay.getMonth(), sDay.getDate(), 0, 0, 0, 0).getTime();
+                    const eMs0 = new Date(eDay.getFullYear(), eDay.getMonth(), eDay.getDate(), 0, 0, 0, 0).getTime();
+                    if (eMs0 <= sMs0) continue;
+                    let dayMs = Math.max(sMs0, today0.getTime());
+                    const untilMs = Math.min(eMs0, queryEnd.getTime());
+                    while (dayMs < untilMs) {
+                        const dt = new Date(dayMs);
+                        dt.setHours(allDayTime.hh, allDayTime.mm, 0, 0);
+                        const atMs = dt.getTime();
+                        if (atMs > now && atMs < windowEnd) {
+                            const dateKey = formatDateKey(dt);
+                            const fired = loadScheduleReminderFiredSet(dateKey);
+                            const key = buildTaskDateReminderKey(tid, atMs);
+                            if (!fired.has(key)) {
+                                desired.set(key, { kind: 'taskdate', atMs, scheduleId: '', title, allDay: true, dateKey });
+                            }
+                        }
+                        dayMs += 86400000;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        if (settings.allDaySummaryIncludeExtras) {
+            const today0 = new Date(now);
+            today0.setHours(0, 0, 0, 0);
+            const queryEnd = new Date(windowEnd + 86400000);
+            if (settings.linkDockTomato) {
+                try {
+                    const blocks = await loadReminderBlocks().catch(() => []);
+                    const dayKeys = [];
+                    for (let dayMs = today0.getTime(); dayMs < queryEnd.getTime(); dayMs += 86400000) {
+                        const dt = new Date(dayMs);
+                        dt.setHours(allDayTime.hh, allDayTime.mm, 0, 0);
+                        const atMs = dt.getTime();
+                        if (atMs > now && atMs < windowEnd) {
+                            const dateKey = formatDateKey(dt);
+                            dayKeys.push({ dateKey, atMs });
+                        }
+                    }
+                    for (const d0 of dayKeys) {
+                        const dateKey = String(d0?.dateKey || '').trim();
+                        const atMs = Number(d0?.atMs);
+                        if (!dateKey || !Number.isFinite(atMs)) continue;
+                        const fired = loadScheduleReminderFiredSet(dateKey);
+                        for (const r of Array.isArray(blocks) ? blocks : []) {
+                            if (!r || r.enabled === false) continue;
+                            if (!doesReminderOccurOnDate(r, dateKey)) continue;
+                            const blockId = String(r.blockId || r.block_id || r.taskBlockId || r.task_block_id || r.targetBlockId || r.target_block_id || r.id || '').trim();
+                            const titleBase = String(r.blockName || r.blockContent || r.title || '').trim() || '任务提醒';
+                            const times = getReminderTimes(r);
+                            const completedSet = getReminderCompletedSet(r);
+                            const done = isReminderDateCompleted(r, dateKey, times, completedSet);
+                            const timeLabel = times.length > 0 ? ` (${times.join(',')})` : '';
+                            const title = `${done ? '✓ ' : '⏰ '}${titleBase}${timeLabel}`;
+                            const key = `reminder:${blockId || titleBase}:${dateKey}:${String(atMs)}`;
+                            if (fired.has(key)) continue;
+                            desired.set(key, { kind: 'reminder', atMs, scheduleId: '', title, allDay: true, dateKey });
+                        }
+                    }
+                } catch (e) {}
+            }
+            if (settings.showCnHoliday) {
+                try {
+                    const years = Array.from(new Set([today0.getFullYear(), queryEnd.getFullYear()])).filter((x) => Number.isFinite(Number(x)));
+                    const cnHolidayDays = await Promise.all(years.map((y) => loadCnHolidayYear(y))).then((arr) => arr.flat()).catch(() => []);
+                    const evs = buildCnHolidayEvents(cnHolidayDays, today0, queryEnd, 'dayGridMonth', settings);
+                    for (const ev of Array.isArray(evs) ? evs : []) {
+                        const title = String(ev?.title || '').trim();
+                        const dateKey = String(ev?.start || '').trim();
+                        if (!title || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) continue;
+                        const d = parseDateOnly(dateKey);
+                        if (!(d instanceof Date) || Number.isNaN(d.getTime())) continue;
+                        const dt = new Date(d.getTime());
+                        dt.setHours(allDayTime.hh, allDayTime.mm, 0, 0);
+                        const atMs = dt.getTime();
+                        if (!(atMs > now && atMs < windowEnd)) continue;
+                        const fired = loadScheduleReminderFiredSet(dateKey);
+                        const key = `cnHoliday:${dateKey}:${title}:${String(atMs)}`;
+                        if (fired.has(key)) continue;
+                        desired.set(key, { kind: 'cnHoliday', atMs, scheduleId: '', title, allDay: true, dateKey });
+                    }
+                } catch (e) {}
+            }
+        }
+        const active = sr.timers || new Map();
+        const desiredTimers = new Map();
+        const allDayGroups = new Map();
+        desired.forEach((meta, key) => {
+            if (meta && meta.allDay === true) {
+                const gk = `allday:${String(meta.atMs || '')}`;
+                const arr = allDayGroups.get(gk) || [];
+                arr.push({ key, meta });
+                allDayGroups.set(gk, arr);
+            } else {
+                desiredTimers.set(key, { kind: 'single', key, meta });
+            }
+        });
+        allDayGroups.forEach((items, gk) => {
+            if (!Array.isArray(items) || items.length === 0) return;
+            const atMs = Number(items[0]?.meta?.atMs);
+            if (!Number.isFinite(atMs)) return;
+            desiredTimers.set(gk, { kind: 'allday', atMs, items });
+        });
+        active.forEach((timerId, key) => {
+            if (!desiredTimers.has(key)) {
+                try { clearTimeout(timerId); } catch (e) {}
+                try { active.delete(key); } catch (e) {}
+            }
+        });
+        desiredTimers.forEach((pack, timerKey) => {
+            if (active.has(timerKey)) return;
+            const kind0 = String(pack?.kind || '').trim() || 'single';
+            const atMs0 = kind0 === 'allday' ? Number(pack?.atMs) : Number(pack?.meta?.atMs);
+            if (!Number.isFinite(atMs0)) return;
+            const delayMs = Math.max(0, atMs0 - Date.now());
+            const t = setTimeout(async () => {
+                try {
+                    const dt = new Date(atMs0);
+                    const timeText = `${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
+                    const dateKey0 = formatDateKey(dt);
+                    const fired = loadScheduleReminderFiredSet(dateKey0);
+                    if (kind0 === 'allday') {
+                        const items = Array.isArray(pack?.items) ? pack.items : [];
+                        const titles = [];
+                        const firedAny = [];
+                        for (const it of items) {
+                            const k0 = String(it?.key || '').trim();
+                            if (!k0) continue;
+                            const m0 = it?.meta || {};
+                            const dk = String(m0.dateKey || dateKey0).trim() || dateKey0;
+                            if (dk !== dateKey0) continue;
+                            if (fired.has(k0)) continue;
+                            fired.add(k0);
+                            firedAny.push(k0);
+                            const t0 = String(m0.title || '').trim() || '全天事件';
+                            titles.push(t0);
+                        }
+                        if (firedAny.length === 0) return;
+                        saveScheduleReminderFiredSet(dateKey0, fired);
+                        const title = `全天提醒 ${timeText}`;
+                        const body = titles.map((x) => `• ${x}`).join('\n');
+                        showScheduleReminderToast(title, body);
+                        if (getSettings().scheduleReminderSystemEnabled) {
+                            showScheduleSystemNotification(title, titles.join('\n'));
+                        }
+                        return;
+                    }
+                    const meta = pack?.meta || {};
+                    const key = String(pack?.key || timerKey).trim();
+                    const dateKey = String(meta.dateKey || dateKey0).trim() || dateKey0;
+                    if (dateKey !== dateKey0) return;
+                    if (fired.has(key)) return;
+                    fired.add(key);
+                    saveScheduleReminderFiredSet(dateKey0, fired);
+                    const offset = Number(meta.offsetMin);
+                    const startMs1 = (() => {
+                        const s = Number(meta.startMs);
+                        if (Number.isFinite(s) && s > 0) return s;
+                        if (Number.isFinite(offset) && offset > 0) return atMs0 + offset * 60000;
+                        return atMs0;
+                    })();
+                    const startDt = new Date(startMs1);
+                    const startText = `${pad2(startDt.getHours())}:${pad2(startDt.getMinutes())}`;
+                    const afterText = (() => {
+                        if (!Number.isFinite(offset) || offset <= 0) return '';
+                        if (offset % 60 === 0) {
+                            const h = Math.round(offset / 60);
+                            return `${h}小时后`;
+                        }
+                        return `${Math.round(offset)}分钟后`;
+                    })();
+                    const bodyInApp = (meta.allDay === true) ? `${startText}` : (afterText ? `${startText}（${afterText}）` : `${startText}`);
+                    showScheduleReminderToast(meta.title, bodyInApp);
+                    if (getSettings().scheduleReminderSystemEnabled) {
+                        showScheduleSystemNotification(meta.title, bodyInApp);
+                    }
+                } catch (e) {} finally {
+                    try { scheduleScheduleReminderRefresh('fire'); } catch (e2) {}
+                }
+            }, Math.min(delayMs, 2147483000));
+            active.set(timerKey, t);
+        });
+        sr.timers = active;
+        if (sr.periodicTimer) {
+            clearTimeout(sr.periodicTimer);
+            sr.periodicTimer = null;
+        }
+        sr.periodicTimer = setTimeout(() => { try { scheduleScheduleReminderRefresh('periodic'); } catch (e) {} }, 10 * 60 * 1000);
+    }
+
+    function scheduleScheduleReminderRefresh(reason) {
+        const sr = state.scheduleReminder;
+        if (sr.refreshTimer) return;
+        sr.refreshTimer = setTimeout(() => {
+            sr.refreshTimer = null;
+            refreshScheduleReminderTimers(reason).catch(() => null);
+        }, 180);
+    }
+
+    function bindScheduleReminderEngine() {
+        const sr = state.scheduleReminder;
+        if (sr.scheduleUpdatedListener) return;
+        sr.scheduleUpdatedListener = () => { scheduleScheduleReminderRefresh('schedule-updated'); };
+        try { window.addEventListener('tm:calendar-schedule-updated', sr.scheduleUpdatedListener); } catch (e) {}
+        scheduleScheduleReminderRefresh('bind');
+    }
+
+    function unbindScheduleReminderEngine() {
+        const sr = state.scheduleReminder;
+        if (sr.scheduleUpdatedListener) {
+            try { window.removeEventListener('tm:calendar-schedule-updated', sr.scheduleUpdatedListener); } catch (e) {}
+            sr.scheduleUpdatedListener = null;
+        }
+        clearScheduleReminderTimers();
+        try {
+            if (sr.toastHost) {
+                sr.toastHost.remove();
+                sr.toastHost = null;
+            }
+        } catch (e) {}
+        try {
+            if (sr.toastStyleEl) {
+                sr.toastStyleEl.remove();
+                sr.toastStyleEl = null;
+            }
+        } catch (e) {}
+    }
+
     async function addTaskSchedule(input) {
         const base = (input && typeof input === 'object') ? input : {};
         const taskId = String(base.taskId || '').trim();
@@ -1265,6 +1814,9 @@
             color,
             calendarId,
             taskId,
+            reminderMode: 'inherit',
+            reminderEnabled: null,
+            reminderOffsetMin: null,
         };
         list.push(item);
         await saveScheduleAll(list);
@@ -1843,6 +2395,7 @@
         if (state.sideDay.rootEl && state.sideDay.rootEl !== rootEl) {
             unmountSideDayTimeline();
         }
+        try { ensureFcCompactAllDayStyle(); } catch (e) {}
         const inOpts = (opts && typeof opts === 'object') ? opts : {};
         state.sideDay.settingsStore = inOpts.settingsStore || state.settingsStore || null;
         if (!state.settingsStore && state.sideDay.settingsStore) {
@@ -1920,7 +2473,12 @@
                         try { ev.stopPropagation(); } catch (e) {}
                         try { ev.preventDefault(); } catch (e) {}
                         if (tid && typeof window.tmShowTaskContextMenu === 'function') {
-                            try { window.tmShowTaskContextMenu(ev, tid); } catch (e2) {}
+                            const sid0 = String(ext.__tmScheduleId || '').trim();
+                            try {
+                                if (source === 'schedule' && sid0) window.tmShowTaskContextMenu(ev, tid, { scheduleId: sid0 });
+                                else if (source === 'taskdate') window.tmShowTaskContextMenu(ev, tid, { taskDateStartKey: String(ext.__tmTaskDateStartKey || '').trim(), taskDateEndExclusiveKey: String(ext.__tmTaskDateEndExclusiveKey || '').trim(), calendarId: String(ext.calendarId || 'default').trim(), title: String(arg?.event?.title || '').trim() });
+                                else window.tmShowTaskContextMenu(ev, tid);
+                            } catch (e2) {}
                         }
                         return false;
                     };
@@ -1942,15 +2500,18 @@
                     };
                     const title = document.createElement('span');
                     title.className = 'tm-cal-task-event-title';
-                    title.textContent = String(arg?.event?.title || '').trim() || '任务';
+                    const titleText = document.createElement('span');
+                    titleText.className = 'tm-cal-task-event-title-text';
+                    titleText.textContent = String(arg?.event?.title || '').trim() || '任务';
                     applyTaskEventTitleClamp(wrapEl, title);
-                    applyTaskDoneVisual(wrapEl, title, done);
-                    title.onclick = (ev) => {
+                    applyTaskDoneVisual(wrapEl, titleText, done);
+                    titleText.onclick = (ev) => {
                         try { ev.stopPropagation(); } catch (e) {}
                         if (!tid || typeof window.tmJumpToTask !== 'function') return;
                         try { window.tmJumpToTask(tid, ev); } catch (e) {}
                     };
                     wrapEl.appendChild(cb);
+                    title.appendChild(titleText);
                     wrapEl.appendChild(title);
                     return { domNodes: [wrapEl] };
                 }
@@ -1960,14 +2521,17 @@
                     const tid = String(ext.__tmReminderBlockId || '').trim();
                     const title = document.createElement('span');
                     title.className = 'tm-cal-task-event-title';
-                    title.textContent = String(arg?.event?.title || '').trim() || '任务提醒';
+                    const titleText = document.createElement('span');
+                    titleText.className = 'tm-cal-task-event-title-text';
+                    titleText.textContent = String(arg?.event?.title || '').trim() || '任务提醒';
                     applyTaskEventTitleClamp(wrapEl, title);
-                    applyTaskDoneVisual(wrapEl, title, !!ext.__tmReminderDone);
-                    title.onclick = (ev) => {
+                    applyTaskDoneVisual(wrapEl, titleText, !!ext.__tmReminderDone);
+                    titleText.onclick = (ev) => {
                         try { ev.stopPropagation(); } catch (e) {}
                         if (!tid || typeof window.tmJumpToTask !== 'function') return;
                         try { window.tmJumpToTask(tid, ev); } catch (e) {}
                     };
+                    title.appendChild(titleText);
                     wrapEl.appendChild(title);
                     return { domNodes: [wrapEl] };
                 }
@@ -2020,7 +2584,12 @@
                                 try { ev.stopPropagation(); } catch (e) {}
                                 try { ev.preventDefault(); } catch (e) {}
                                 if (typeof window.tmShowTaskContextMenu === 'function') {
-                                    try { window.tmShowTaskContextMenu(ev, tid); } catch (e) {}
+                                    const sid0 = String(ext.__tmScheduleId || '').trim();
+                                    try {
+                                        if (source === 'schedule' && sid0) window.tmShowTaskContextMenu(ev, tid, { scheduleId: sid0 });
+                                        else if (source === 'taskdate') window.tmShowTaskContextMenu(ev, tid, { taskDateStartKey: String(ext.__tmTaskDateStartKey || '').trim(), taskDateEndExclusiveKey: String(ext.__tmTaskDateEndExclusiveKey || '').trim(), calendarId: String(ext.calendarId || 'default').trim(), title: String(arg?.event?.title || '').trim() });
+                                        else window.tmShowTaskContextMenu(ev, tid);
+                                    } catch (e) {}
                                 }
                             });
                         }
@@ -2131,6 +2700,9 @@
                             color: String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'),
                             calendarId: String(ext.calendarId || 'default'),
                             taskId: String(ext.__tmTaskId || ''),
+                            reminderMode: String(ext.__tmReminderMode || ''),
+                            reminderEnabled: ext.__tmReminderEnabled === true,
+                            reminderOffsetMin: Number(ext.__tmReminderOffsetMin),
                         });
                     } catch (e2) {
                         toast(`❌ 打开编辑窗失败：${String(e2?.message || e2 || '')}`, 'error');
@@ -2397,6 +2969,14 @@
             const color = rawColor || settings.scheduleColor || calColor;
             const taskId = String(it?.taskId || it?.task_id || it?.linkedTaskId || it?.linked_task_id || '').trim();
             const allDay = (it?.allDay === true) || isAllDayRange(start, end);
+            const reminderMode = String(it?.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
+            const reminderEnabled = reminderMode === 'custom' ? (it?.reminderEnabled === true) : null;
+            const reminderOffsetMin = (() => {
+                if (reminderMode !== 'custom') return null;
+                const n = Number(it?.reminderOffsetMin);
+                const allowed = new Set([0, 5, 10, 15, 30, 60]);
+                return (Number.isFinite(n) && allowed.has(n)) ? n : 0;
+            })();
             return {
                 id: String(it?.id || uuid()),
                 title: titleBase,
@@ -2411,6 +2991,9 @@
                     __tmScheduleId: String(it?.id || ''),
                     __tmTaskId: taskId,
                     __tmRank: 1,
+                    __tmReminderMode: reminderMode,
+                    __tmReminderEnabled: reminderEnabled,
+                    __tmReminderOffsetMin: reminderOffsetMin,
                     calendarId,
                 },
             };
@@ -2446,6 +3029,8 @@
                     __tmSource: 'taskdate',
                     __tmTaskId: taskId,
                     __tmRank: 2,
+                    __tmTaskDateStartKey: startKey,
+                    __tmTaskDateEndExclusiveKey: endExKey,
                     calendarId,
                 },
             };
@@ -3340,6 +3925,19 @@
         const taskId0 = String(init.taskId || '').trim();
         const isEdit = !!scheduleId;
         const initAllDay = init.allDay === true;
+        const reminderMode0 = String(init?.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
+        const reminderEnabled0 = reminderMode0 === 'custom' ? (init?.reminderEnabled === true) : null;
+        const reminderOffset0 = (() => {
+            const n = Number(init?.reminderOffsetMin);
+            const allowed = new Set([0, 5, 10, 15, 30, 60]);
+            return (Number.isFinite(n) && allowed.has(n)) ? n : 0;
+        })();
+        const reminderSelect0 = (() => {
+            if (reminderMode0 !== 'custom') return 'inherit';
+            if (initAllDay) return reminderEnabled0 ? 'on' : 'off';
+            if (!reminderEnabled0) return 'off';
+            return String(reminderOffset0);
+        })();
         const start = init.start instanceof Date ? init.start : null;
         const end = init.end instanceof Date ? init.end : null;
         const title0 = String(init.title || '').trim();
@@ -3376,6 +3974,21 @@
                     <div class="tm-calendar-edit-label">颜色</div>
                     <input class="tm-calendar-edit-input" style="width:120px;flex:none;padding:0;height:30px" type="color" value="${esc(color0)}" data-tm-cal-field="color">
                     <div style="flex:1;"></div>
+                </div>
+                <div class="tm-calendar-edit-row">
+                    <div class="tm-calendar-edit-label">提醒</div>
+                    <select class="tm-calendar-edit-input" data-tm-cal-field="reminderSelect">
+                        <option value="inherit" ${reminderSelect0 === 'inherit' ? 'selected' : ''}>使用全局设置</option>
+                        <option value="off" ${reminderSelect0 === 'off' ? 'selected' : ''}>关闭提醒</option>
+                        ${initAllDay ? `<option value="on" ${reminderSelect0 === 'on' ? 'selected' : ''}>开启提醒（当天统一时间）</option>` : `
+                            <option value="0" ${reminderSelect0 === '0' ? 'selected' : ''}>准时提醒</option>
+                            <option value="5" ${reminderSelect0 === '5' ? 'selected' : ''}>5 分钟前</option>
+                            <option value="10" ${reminderSelect0 === '10' ? 'selected' : ''}>10 分钟前</option>
+                            <option value="15" ${reminderSelect0 === '15' ? 'selected' : ''}>15 分钟前</option>
+                            <option value="30" ${reminderSelect0 === '30' ? 'selected' : ''}>30 分钟前</option>
+                            <option value="60" ${reminderSelect0 === '60' ? 'selected' : ''}>1 小时前</option>
+                        `}
+                    </select>
                 </div>
                 <div class="tm-calendar-edit-actions">
                     <button class="tm-btn tm-btn-secondary" data-tm-cal-action="cancel">取消</button>
@@ -3451,6 +4064,20 @@
                 const s0 = getInputValue('start');
                 const e0 = getInputValue('end');
                 const color = getInputValue('color') || '#0078d4';
+                const reminderSelect = String(getInputValue('reminderSelect') || '').trim() || 'inherit';
+                const reminderMode = reminderSelect === 'inherit' ? 'inherit' : 'custom';
+                const reminderEnabled = (() => {
+                    if (reminderSelect === 'inherit') return null;
+                    if (reminderSelect === 'off') return false;
+                    return true;
+                })();
+                const reminderOffsetMin = (() => {
+                    if (reminderSelect === 'inherit' || reminderSelect === 'off') return null;
+                    if (initAllDay) return null;
+                    const n = Number(reminderSelect);
+                    const allowed = new Set([0, 5, 10, 15, 30, 60]);
+                    return (Number.isFinite(n) && allowed.has(n)) ? n : 0;
+                })();
                 if (!s0 || !e0) {
                     toast('⚠ 开始/结束不能为空', 'warning');
                     return;
@@ -3478,6 +4105,9 @@
                     color,
                     calendarId,
                     taskId: taskIdKeep,
+                    reminderMode,
+                    reminderEnabled,
+                    reminderOffsetMin: allDay ? null : reminderOffsetMin,
                 };
                 if (idx >= 0) list[idx] = item;
                 else list.push(item);
@@ -3521,6 +4151,15 @@
             try { cal.updateSize(); } catch (e3) {}
             try { applyCnHolidayDots(wrap); } catch (e3) {}
             try { applyCnLunarLabels(wrap); } catch (e3) {}
+            try {
+                const root = wrap || state.wrapEl || null;
+                if (root && root.querySelectorAll) {
+                    const nodes = root.querySelectorAll('.fc-daygrid-body-natural .fc-daygrid-day-events');
+                    nodes.forEach((el) => {
+                        try { el.style.marginBottom = '0'; } catch (e) {}
+                    });
+                }
+            } catch (e3) {}
         };
         try { requestAnimationFrame(run); } catch (e2) {}
         if (hard) {
@@ -3534,6 +4173,7 @@
         const wrap = state.wrapEl;
         const cal = state.calendar;
         if (!wrap || !cal) return false;
+        try { ensureFcCompactAllDayStyle(); } catch (e) {}
         if (opt.layoutOnly !== true) {
             try { renderTaskPage(wrap, getSettings()); } catch (e2) {}
             try { cal.refetchEvents(); } catch (e2) {}
@@ -3547,6 +4187,7 @@
         if (!globalThis.FullCalendar || !globalThis.FullCalendar.Calendar) return false;
         unmount();
 
+        try { ensureFcCompactAllDayStyle(); } catch (e) {}
         state.mounted = true;
         state.rootEl = rootEl;
         state.opts = opts || {};
@@ -3690,7 +4331,12 @@
                         try { ev.stopPropagation(); } catch (e) {}
                         try { ev.preventDefault(); } catch (e) {}
                         if (tid && typeof window.tmShowTaskContextMenu === 'function') {
-                            try { window.tmShowTaskContextMenu(ev, tid); } catch (e) {}
+                            const sid0 = String(ext.__tmScheduleId || '').trim();
+                            try {
+                                if (source === 'schedule' && sid0) window.tmShowTaskContextMenu(ev, tid, { scheduleId: sid0 });
+                                else if (source === 'taskdate') window.tmShowTaskContextMenu(ev, tid, { taskDateStartKey: String(ext.__tmTaskDateStartKey || '').trim(), taskDateEndExclusiveKey: String(ext.__tmTaskDateEndExclusiveKey || '').trim(), calendarId: String(ext.calendarId || 'default').trim(), title: String(arg?.event?.title || '').trim() });
+                                else window.tmShowTaskContextMenu(ev, tid);
+                            } catch (e) {}
                         }
                         return false;
                     };
@@ -3712,10 +4358,12 @@
                     };
                     const title = document.createElement('span');
                     title.className = 'tm-cal-task-event-title';
-                    title.textContent = String(arg?.event?.title || '').trim() || '任务';
+                    const titleText = document.createElement('span');
+                    titleText.className = 'tm-cal-task-event-title-text';
+                    titleText.textContent = String(arg?.event?.title || '').trim() || '任务';
                     applyTaskEventTitleClamp(wrapEl, title);
-                    applyTaskDoneVisual(wrapEl, title, done);
-                    title.onclick = (ev) => {
+                    applyTaskDoneVisual(wrapEl, titleText, done);
+                    titleText.onclick = (ev) => {
                         if (_tmClickTracker && _tmClickTracker.ts > 0) {
                             const dur = Date.now() - _tmClickTracker.ts;
                             const x = Number(ev.clientX);
@@ -3731,6 +4379,7 @@
                         try { window.tmJumpToTask(tid, ev); } catch (e) {}
                     };
                     wrapEl.appendChild(cb);
+                    title.appendChild(titleText);
                     wrapEl.appendChild(title);
                     return { domNodes: [wrapEl] };
                 }
@@ -3740,10 +4389,12 @@
                     const tid = String(ext.__tmReminderBlockId || '').trim();
                     const title = document.createElement('span');
                     title.className = 'tm-cal-task-event-title';
-                    title.textContent = String(arg?.event?.title || '').trim() || '任务提醒';
+                    const titleText = document.createElement('span');
+                    titleText.className = 'tm-cal-task-event-title-text';
+                    titleText.textContent = String(arg?.event?.title || '').trim() || '任务提醒';
                     applyTaskEventTitleClamp(wrapEl, title);
-                    applyTaskDoneVisual(wrapEl, title, !!ext.__tmReminderDone);
-                    title.onclick = (ev) => {
+                    applyTaskDoneVisual(wrapEl, titleText, !!ext.__tmReminderDone);
+                    titleText.onclick = (ev) => {
                         if (_tmClickTracker && _tmClickTracker.ts > 0) {
                             const dur = Date.now() - _tmClickTracker.ts;
                             const x = Number(ev.clientX);
@@ -3758,6 +4409,7 @@
                         if (!tid || typeof window.tmJumpToTask !== 'function') return;
                         try { window.tmJumpToTask(tid, ev); } catch (e) {}
                     };
+                    title.appendChild(titleText);
                     wrapEl.appendChild(title);
                     return { domNodes: [wrapEl] };
                 }
@@ -3817,7 +4469,12 @@
                                 try { ev.stopPropagation(); } catch (e) {}
                                 try { ev.preventDefault(); } catch (e) {}
                                 if (typeof window.tmShowTaskContextMenu === 'function') {
-                                    try { window.tmShowTaskContextMenu(ev, tid); } catch (e) {}
+                                    const sid0 = String(ext.__tmScheduleId || '').trim();
+                                    try {
+                                        if (source === 'schedule' && sid0) window.tmShowTaskContextMenu(ev, tid, { scheduleId: sid0 });
+                                        else if (source === 'taskdate') window.tmShowTaskContextMenu(ev, tid, { taskDateStartKey: String(ext.__tmTaskDateStartKey || '').trim(), taskDateEndExclusiveKey: String(ext.__tmTaskDateEndExclusiveKey || '').trim(), calendarId: String(ext.calendarId || 'default').trim(), title: String(arg?.event?.title || '').trim() });
+                                        else window.tmShowTaskContextMenu(ev, tid);
+                                    } catch (e) {}
                                 }
                             });
                         }
@@ -4246,6 +4903,7 @@
             if (document.visibilityState === 'visible' && lastVisibilityState === 'hidden') {
                 // 页面从后台恢复到前台，触发 resize 事件让日历重新布局
                 window.dispatchEvent(new Event('resize'));
+                try { scheduleScheduleReminderRefresh('visibility'); } catch (e) {}
             }
             lastVisibilityState = document.visibilityState;
         };
@@ -4487,7 +5145,7 @@
                     const x = Number(e?.clientX);
                     const y = Number(e?.clientY);
                     const checkEl = eventEl.querySelector?.('.tm-cal-task-event-check') || null;
-                    const titleEl = eventEl.querySelector?.('.tm-cal-task-event-title') || null;
+                    const titleEl = eventEl.querySelector?.('.tm-cal-task-event-title-text') || eventEl.querySelector?.('.tm-cal-task-event-title') || null;
                     const hitRect = (el) => {
                         if (!el || !(el instanceof Element)) return false;
                         if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
@@ -4538,6 +5196,9 @@
                             color: String(api?.backgroundColor || api?.borderColor || '#0078d4'),
                             calendarId: String(ext.calendarId || 'default'),
                             taskId: String(ext.__tmTaskId || ''),
+                            reminderMode: String(ext.__tmReminderMode || ''),
+                            reminderEnabled: ext.__tmReminderEnabled === true,
+                            reminderOffsetMin: Number(ext.__tmReminderOffsetMin),
                         });
                     } catch (e2) {
                         try { toast(`❌ 打开编辑窗失败：${String(e2?.message || e2 || '')}`, 'error'); } catch (e3) {}
@@ -4811,6 +5472,7 @@
             scheduleTomatoRefetch();
         };
         window.addEventListener('tomato:history-updated', state.tomatoListener);
+        try { bindScheduleReminderEngine(); } catch (e) {}
 
         return true;
     }
@@ -4969,6 +5631,57 @@
                     </label>
                 </div>
                 <div class="tm-calendar-settings-row">
+                    <div class="tm-calendar-settings-label">日程提醒</div>
+                    <label class="tm-switch">
+                        <input type="checkbox" data-tm-cal-setting="calendarScheduleReminderEnabled" ${s.scheduleReminderEnabled ? 'checked' : ''}>
+                        <span class="tm-switch-slider"></span>
+                    </label>
+                </div>
+                <div class="tm-calendar-settings-row" style="${s.scheduleReminderEnabled ? '' : 'opacity:0.55;pointer-events:none;'}">
+                    <div class="tm-calendar-settings-label">日程默认提醒</div>
+                    <select class="tm-calendar-settings-select" data-tm-cal-setting="calendarScheduleReminderDefaultMode">
+                        <option value="off" ${String(s.scheduleReminderDefaultMode) === 'off' ? 'selected' : ''}>关闭</option>
+                        <option value="0" ${String(s.scheduleReminderDefaultMode) === '0' ? 'selected' : ''}>准时提醒</option>
+                        <option value="5" ${String(s.scheduleReminderDefaultMode) === '5' ? 'selected' : ''}>5 分钟前</option>
+                        <option value="10" ${String(s.scheduleReminderDefaultMode) === '10' ? 'selected' : ''}>10 分钟前</option>
+                        <option value="15" ${String(s.scheduleReminderDefaultMode) === '15' ? 'selected' : ''}>15 分钟前</option>
+                        <option value="30" ${String(s.scheduleReminderDefaultMode) === '30' ? 'selected' : ''}>30 分钟前</option>
+                        <option value="60" ${String(s.scheduleReminderDefaultMode) === '60' ? 'selected' : ''}>1 小时前</option>
+                    </select>
+                </div>
+                <div class="tm-calendar-settings-row" style="${s.scheduleReminderEnabled ? '' : 'opacity:0.55;pointer-events:none;'}">
+                    <div class="tm-calendar-settings-label">系统弹窗提醒</div>
+                    <label class="tm-switch">
+                        <input type="checkbox" data-tm-cal-setting="calendarScheduleReminderSystemEnabled" ${s.scheduleReminderSystemEnabled ? 'checked' : ''}>
+                        <span class="tm-switch-slider"></span>
+                    </label>
+                </div>
+                <div class="tm-calendar-settings-row" style="${s.scheduleReminderEnabled ? '' : 'opacity:0.55;pointer-events:none;'}">
+                    <div class="tm-calendar-settings-label">全天事件提醒</div>
+                    <label class="tm-switch">
+                        <input type="checkbox" data-tm-cal-setting="calendarAllDayReminderEnabled" ${s.allDayReminderEnabled ? 'checked' : ''}>
+                        <span class="tm-switch-slider"></span>
+                    </label>
+                </div>
+                <div class="tm-calendar-settings-row" style="${s.scheduleReminderEnabled ? '' : 'opacity:0.55;pointer-events:none;'}">
+                    <div class="tm-calendar-settings-label">跨天事项全天提醒</div>
+                    <label class="tm-switch">
+                        <input type="checkbox" data-tm-cal-setting="calendarTaskDateAllDayReminderEnabled" ${s.taskDateAllDayReminderEnabled ? 'checked' : ''}>
+                        <span class="tm-switch-slider"></span>
+                    </label>
+                </div>
+                <div class="tm-calendar-settings-row" style="${s.scheduleReminderEnabled ? '' : 'opacity:0.55;pointer-events:none;'}">
+                    <div class="tm-calendar-settings-label">全天汇总包含番茄/节日</div>
+                    <label class="tm-switch">
+                        <input type="checkbox" data-tm-cal-setting="calendarAllDaySummaryIncludeExtras" ${s.allDaySummaryIncludeExtras ? 'checked' : ''}>
+                        <span class="tm-switch-slider"></span>
+                    </label>
+                </div>
+                <div class="tm-calendar-settings-row" style="${(s.scheduleReminderEnabled && (s.allDayReminderEnabled || s.taskDateAllDayReminderEnabled)) ? '' : 'opacity:0.55;pointer-events:none;'}">
+                    <div class="tm-calendar-settings-label">全天提醒时间</div>
+                    <input class="tm-calendar-settings-select" style="height:34px;" type="time" data-tm-cal-setting="calendarAllDayReminderTime" value="${esc(String(s.allDayReminderTime || '09:00'))}">
+                </div>
+                <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">跨天任务颜色</div>
                     <select class="tm-calendar-settings-select" data-tm-cal-setting="calendarTaskDateColorMode">
                         <option value="group" ${s.taskDateColorMode === 'group' ? 'selected' : ''}>跟随文档分组</option>
@@ -4998,8 +5711,25 @@
             } else {
                 store.data[key] = String(el.value || '');
             }
+            if (key === 'calendarScheduleReminderSystemEnabled' && store.data[key]) {
+                try {
+                    if (typeof Notification !== 'undefined' && Notification && typeof Notification.requestPermission === 'function') {
+                        const perm = String(Notification.permission || '');
+                        if (perm !== 'granted') {
+                            await Notification.requestPermission();
+                        }
+                    }
+                } catch (e2) {}
+            }
             try {
-                if (typeof store.save === 'function') await store.save();
+                if (typeof store.flushSave === 'function') {
+                    store.saveDirty = true;
+                    try { if (store.saveTimer) clearTimeout(store.saveTimer); } catch (e2) {}
+                    store.saveTimer = null;
+                    await store.flushSave();
+                } else if (typeof store.save === 'function') {
+                    await store.save();
+                }
             } catch (e2) {}
             try {
                 if (key === 'calendarLinkDockTomato') {
@@ -5009,6 +5739,9 @@
                         if (root) renderSidebar(root, getSettings());
                     } catch (e2) {}
                     try { state.calendar?.refetchEvents?.(); } catch (e2) {}
+                } else if (key === 'calendarScheduleReminderEnabled' || key === 'calendarScheduleReminderSystemEnabled' || key === 'calendarScheduleReminderDefaultMode' || key === 'calendarAllDayReminderEnabled' || key === 'calendarAllDayReminderTime' || key === 'calendarTaskDateAllDayReminderEnabled' || key === 'calendarAllDaySummaryIncludeExtras') {
+                    try { renderSettings(containerEl, store); } catch (e2) {}
+                    try { scheduleScheduleReminderRefresh('settings'); } catch (e2) {}
                 } else if (state.calendar) {
                     if (key === 'calendarFirstDay') {
                         try { state.calendar.setOption('firstDay', Number(store.data.calendarFirstDay) === 0 ? 0 : 1); } catch (e2) {}
@@ -5038,8 +5771,108 @@
     function cleanup() {
         unmountSideDayTimeline();
         unmount();
+        try { unbindScheduleReminderEngine(); } catch (e) {}
         state.settingsAbort?.abort();
         state.settingsAbort = null;
+    }
+
+    function setSettingsStore(settingsStore) {
+        state.settingsStore = settingsStore || state.settingsStore || null;
+        try { bindScheduleReminderEngine(); } catch (e) {}
+        try { scheduleScheduleReminderRefresh('set-store'); } catch (e) {}
+        return true;
+    }
+
+    async function openScheduleEditorById(scheduleId) {
+        const id = String(scheduleId || '').trim();
+        if (!id) return false;
+        try {
+            const list = await loadScheduleAll();
+            const item = (Array.isArray(list) ? list : []).find((x) => String(x?.id || '').trim() === id) || null;
+            if (!item) {
+                toast('⚠ 未找到日程', 'warning');
+                return false;
+            }
+            const startMs = toMs(item.start);
+            const endMs = toMs(item.end);
+            if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
+                toast('⚠ 日程时间不合法', 'warning');
+                return false;
+            }
+            const start = new Date(startMs);
+            const end = new Date(endMs);
+            const allDay = (item.allDay === true) || isAllDayRange(start, end);
+            openScheduleModal({
+                id,
+                title: String(item.title || '').trim(),
+                start,
+                end,
+                allDay,
+                color: String(item.color || '#0078d4'),
+                calendarId: String(item.calendarId || 'default'),
+                taskId: String(item.taskId || item.task_id || item.linkedTaskId || item.linked_task_id || '').trim(),
+                reminderMode: String(item.reminderMode || ''),
+                reminderEnabled: item.reminderEnabled,
+                reminderOffsetMin: item.reminderOffsetMin,
+            });
+            return true;
+        } catch (e) {
+            try { toast('❌ 打开失败', 'error'); } catch (e2) {}
+            return false;
+        }
+    }
+
+    async function openScheduleEditorByTaskId(taskId, opt) {
+        const tid = String(taskId || '').trim();
+        if (!tid) return false;
+        const extra = (opt && typeof opt === 'object') ? opt : {};
+        try {
+            const list = await loadScheduleAll();
+            const items = (Array.isArray(list) ? list : []).filter((x) => {
+                const t = String(x?.taskId || x?.task_id || x?.linkedTaskId || x?.linked_task_id || '').trim();
+                return t === tid;
+            }).sort((a, b) => toMs(a?.start) - toMs(b?.start));
+            if (items.length === 0) {
+                const startKey = String(extra.taskDateStartKey || extra.startKey || '').trim();
+                const endExKey = String(extra.taskDateEndExclusiveKey || extra.endExclusiveKey || '').trim();
+                const title0 = String(extra.title || '').trim();
+                if (startKey && endExKey) {
+                    const startDate = parseDateOnly(startKey);
+                    const endDate = parseDateOnly(endExKey);
+                    if (startDate && endDate) {
+                        const s = new Date(startDate.getTime());
+                        s.setHours(0, 0, 0, 0);
+                        const e = new Date(endDate.getTime());
+                        e.setHours(0, 0, 0, 0);
+                        if (e.getTime() > s.getTime()) {
+                            openScheduleModal({
+                                title: title0 || '任务',
+                                start: s,
+                                end: e,
+                                allDay: true,
+                                calendarId: String(extra.calendarId || 'default').trim() || 'default',
+                                taskId: tid,
+                                reminderMode: 'inherit',
+                            });
+                            return true;
+                        }
+                    }
+                }
+                toast('⚠ 该任务暂无日程', 'warning');
+                return false;
+            }
+            const now = Date.now();
+            const next = items.find((x) => {
+                const s = toMs(x?.start);
+                return Number.isFinite(s) && s >= now;
+            }) || items[items.length - 1];
+            const sid = String(next?.id || '').trim();
+            if (!sid) return false;
+            return await openScheduleEditorById(sid);
+        } catch (e) {
+            try { toast('❌ 打开失败', 'error'); } catch (e2) {}
+            return false;
+        }
     }
 
     globalThis.__tmCalendar = {
@@ -5069,6 +5902,9 @@
         getSideDayDate,
         addTaskSchedule,
         listTaskSchedulesByDay,
+        openScheduleEditorById,
+        openScheduleEditorByTaskId,
+        setSettingsStore,
         refreshInPlace,
     };
 })();
