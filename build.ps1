@@ -10,9 +10,7 @@ $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ('plugin_build_' + [Syste
 New-Item -ItemType Directory -Path $tempDir | Out-Null
 
 try {
-    Copy-Item -Path (Join-Path $pluginDir '*') -Destination $tempDir -Recurse -Force
-
-    $removePaths = @(
+    $excludePaths = @(
         '.git',
         '.gitignore',
         '.github',
@@ -32,12 +30,7 @@ try {
         '.hotreload'
     )
 
-    foreach ($p in $removePaths) {
-        $full = Join-Path $tempDir $p
-        if (Test-Path -LiteralPath $full) {
-            Remove-Item -LiteralPath $full -Recurse -Force
-        }
-    }
+    Get-ChildItem -Path $pluginDir -Exclude $excludePaths | Copy-Item -Destination $tempDir -Recurse -Force
 
     Get-ChildItem -Path $tempDir -Filter '*.zip' -File -ErrorAction SilentlyContinue | ForEach-Object {
         try { Remove-Item -LiteralPath $_.FullName -Force } catch {}
