@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.6.6
+// @version      1.6.8
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -23504,37 +23504,6 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
     }
 
-    async function __tmUpdateDoneRemote(id) {
-        const task = state.flatTasks[id];
-        if (!task) return;
-        const desired = __tmDoneDesired.get(id);
-        if (typeof desired !== 'boolean') return;
-
-        const base = __tmDoneBase.get(id) ?? task.markdown;
-        const md = __tmUpdateDoneMarkdown(base, desired);
-        if (md === base) return;
-
-        const attempt = async () => {
-            let effectiveId = id;
-            const upd = await API.updateBlock(effectiveId, md);
-            const updatedId = upd?.id || effectiveId;
-            if (updatedId && updatedId !== effectiveId) {
-                __tmRemapTaskId(effectiveId, updatedId);
-                effectiveId = updatedId;
-            }
-            __tmDoneBase.set(effectiveId, md);
-            task.markdown = md;
-            task.done = desired;
-        };
-
-        try {
-            await attempt();
-        } catch (e) {
-            await new Promise(r => setTimeout(r, 120));
-            await attempt();
-        }
-    }
-
     // ============ 重写设置完成状态（带完整树保护） ============
     window.tmSetPinned = async function(id, pinned, ev) {
         if (ev) ev.stopPropagation();
@@ -28800,6 +28769,8 @@ async function __tmRefreshAfterWake(reason) {
         SettingsStore.data.collapsedGroups = [...state.collapsedGroups];
         // 直接同步到本地存储，不等待云端同步，避免延迟
         try { Storage.set('tm_collapsed_groups', SettingsStore.data.collapsedGroups); } catch (e) {}
+        // 同步到云端设置，避免下次加载时被旧云端配置覆盖
+        try { SettingsStore.save(); } catch (e) {}
         try { __tmUpdateToggleGlyphInDom({ kind: 'group', key: k0, action }); } catch (e) {}
         if (action === 'collapse') {
             if (state.modal && __tmApplyVisibilityFromState(state.modal)) {
@@ -28843,6 +28814,8 @@ async function __tmRefreshAfterWake(reason) {
         // 直接同步到本地存储，不等待云端同步，避免延迟
         SettingsStore.data.collapsedTaskIds = [...state.collapsedTaskIds];
         try { Storage.set('tm_collapsed_task_ids', SettingsStore.data.collapsedTaskIds); } catch (e) {}
+        // 同步到云端设置，避免下次加载时被旧云端配置覆盖
+        try { SettingsStore.save(); } catch (e) {}
         try { __tmUpdateToggleGlyphInDom({ kind: 'task', key, action }); } catch (e) {}
         if (action === 'collapse') {
             if (state.modal && __tmApplyVisibilityFromState(state.modal)) {
