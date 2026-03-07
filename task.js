@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.6.8
+// @version      1.6.10
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -641,6 +641,38 @@
             border: 1px solid var(--tm-input-border);
             padding: 4px;
             border-radius: 4px;
+        }
+
+        .tm-rule-sort-move-btn {
+            width: 28px;
+            height: 26px;
+            padding: 0;
+            flex: 0 0 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            align-self: center;
+        }
+
+        .tm-rule-sort-move-btn > span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            line-height: 1;
+            transform: translateY(-1px);
+        }
+
+        .tm-rule-sort-remove-btn {
+            min-height: 26px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            align-self: center;
+            line-height: 1;
         }
         
         .tm-rule-actions {
@@ -3163,6 +3195,15 @@
             cursor: pointer;
             transition: color 0.2s;
         }
+
+        .tm-task-reminder-emoji {
+            display: inline-block;
+            margin-left: 4px;
+            line-height: inherit;
+            font-size: 1em;
+            white-space: nowrap;
+            vertical-align: baseline;
+        }
         
         .tm-task-content-clickable:hover {
             color: var(--tm-primary-color);
@@ -4072,6 +4113,7 @@
             calendarShowTomatoMaster: true,
             calendarShowTaskDates: true,
             calendarTaskDateColorMode: 'group',
+            calendarNewScheduleMaxDurationMin: 60,
             calendarScheduleColor: '',
             calendarTaskDatesColor: '#6b7280',
             calendarShowCnHoliday: true,
@@ -4316,6 +4358,7 @@
                                 if (typeof cloudData.calendarSidebarCollapseTasks === 'boolean') this.data.calendarSidebarCollapseTasks = cloudData.calendarSidebarCollapseTasks;
                                 if (typeof cloudData.calendarShowTaskDates === 'boolean') this.data.calendarShowTaskDates = cloudData.calendarShowTaskDates;
                                 if (typeof cloudData.calendarTaskDateColorMode === 'string') this.data.calendarTaskDateColorMode = cloudData.calendarTaskDateColorMode;
+                                if (typeof cloudData.calendarNewScheduleMaxDurationMin === 'number') this.data.calendarNewScheduleMaxDurationMin = cloudData.calendarNewScheduleMaxDurationMin;
                                 if (typeof cloudData.calendarScheduleColor === 'string') this.data.calendarScheduleColor = cloudData.calendarScheduleColor;
                                 if (typeof cloudData.calendarTaskDatesColor === 'string') this.data.calendarTaskDatesColor = cloudData.calendarTaskDatesColor;
                                 if (typeof cloudData.calendarShowCnHoliday === 'boolean') this.data.calendarShowCnHoliday = cloudData.calendarShowCnHoliday;
@@ -4516,6 +4559,7 @@
             this.data.calendarShowIdle = Storage.get('tm_calendar_show_idle', this.data.calendarShowIdle);
             this.data.calendarShowTaskDates = Storage.get('tm_calendar_show_task_dates', this.data.calendarShowTaskDates);
             this.data.calendarTaskDateColorMode = Storage.get('tm_calendar_task_date_color_mode', this.data.calendarTaskDateColorMode);
+            this.data.calendarNewScheduleMaxDurationMin = Number(Storage.get('tm_calendar_new_schedule_max_duration_min', this.data.calendarNewScheduleMaxDurationMin));
             this.data.calendarScheduleColor = Storage.get('tm_calendar_schedule_color', this.data.calendarScheduleColor);
             this.data.calendarTaskDatesColor = Storage.get('tm_calendar_task_dates_color', this.data.calendarTaskDatesColor);
             this.data.calendarShowCnHoliday = Storage.get('tm_calendar_show_cn_holiday', this.data.calendarShowCnHoliday);
@@ -4695,6 +4739,7 @@
             Storage.set('tm_calendar_show_idle', !!this.data.calendarShowIdle);
             Storage.set('tm_calendar_show_task_dates', !!this.data.calendarShowTaskDates);
             Storage.set('tm_calendar_task_date_color_mode', String(this.data.calendarTaskDateColorMode || 'group').trim() || 'group');
+            Storage.set('tm_calendar_new_schedule_max_duration_min', Number(this.data.calendarNewScheduleMaxDurationMin) || 60);
             Storage.set('tm_calendar_schedule_color', String(this.data.calendarScheduleColor || '').trim());
             Storage.set('tm_calendar_task_dates_color', String(this.data.calendarTaskDatesColor || '').trim());
             Storage.set('tm_calendar_show_cn_holiday', !!this.data.calendarShowCnHoliday);
@@ -5565,8 +5610,13 @@
             // 处理状态排序
             if (field === 'customStatus') {
                 const options = SettingsStore.data.customStatusOptions || [];
-                const indexA = options.findIndex(o => o.id === a);
-                const indexB = options.findIndex(o => o.id === b);
+                const fallback = String((options[0] && options[0].id) || 'todo').trim() || 'todo';
+                const normalizeStatus = (value) => {
+                    const raw = String(value ?? '').trim();
+                    return raw || fallback;
+                };
+                const indexA = options.findIndex(o => o.id === normalizeStatus(a));
+                const indexB = options.findIndex(o => o.id === normalizeStatus(b));
                 const valA = indexA === -1 ? 9999 : indexA;
                 const valB = indexB === -1 ? 9999 : indexB;
                 return valA - valB;
@@ -7191,6 +7241,131 @@
         });
     }
 
+    const __tmReminderMarkCache = new Map();
+    const __tmReminderMarkLoading = new Set();
+
+    function __tmHasReminderMark(task) {
+        const tid = String(task?.id || '').trim();
+        if (!tid) return false;
+        if (String(task?.bookmark || '').includes('⏰')) return true;
+        return __tmReminderMarkCache.get(tid) === true;
+    }
+
+    function __tmSetTaskReminderMark(taskId, hasReminder) {
+        const tid = String(taskId || '').trim();
+        if (!tid) return;
+        const mark = hasReminder ? '⏰' : '';
+        __tmReminderMarkCache.set(tid, !!hasReminder);
+        try {
+            const t = state.flatTasks?.[tid];
+            if (t && typeof t === 'object') t.bookmark = mark;
+        } catch (e) {}
+        try {
+            (Array.isArray(state.filteredTasks) ? state.filteredTasks : []).forEach((t) => {
+                if (String(t?.id || '').trim() === tid) t.bookmark = mark;
+            });
+        } catch (e) {}
+    }
+
+    function __tmInvalidateTaskReminderMark(taskId) {
+        const tid = String(taskId || '').trim();
+        if (!tid) return;
+        __tmReminderMarkCache.delete(tid);
+        __tmReminderMarkLoading.delete(tid);
+        try {
+            const t = state.flatTasks?.[tid];
+            if (t && typeof t === 'object') delete t.bookmark;
+        } catch (e) {}
+        try {
+            (Array.isArray(state.filteredTasks) ? state.filteredTasks : []).forEach((t) => {
+                if (String(t?.id || '').trim() === tid) delete t.bookmark;
+            });
+        } catch (e) {}
+    }
+
+    function __tmRefreshReminderMarkForTask(taskId, delayMs = 0) {
+        const tid = String(taskId || '').trim();
+        if (!tid) return;
+        const run = () => {
+            try { __tmInvalidateTaskReminderMark(tid); } catch (e) {}
+            try {
+                if (state.modal && document.body.contains(state.modal)) {
+                    __tmScheduleReminderTaskNameMarksRefresh(state.modal, true);
+                }
+            } catch (e) {}
+        };
+        if (delayMs > 0) {
+            try { setTimeout(run, delayMs); } catch (e) {}
+        } else {
+            run();
+        }
+    }
+
+    function __tmScheduleReminderMarkRefreshBurst(taskId, delays) {
+        const tid = String(taskId || '').trim();
+        if (!tid) return;
+        const plan = Array.isArray(delays) ? delays : [0, 600, 1600, 3200, 5200, 8000];
+        plan.forEach((ms) => {
+            try { __tmRefreshReminderMarkForTask(tid, Math.max(0, Number(ms) || 0)); } catch (e) {}
+        });
+    }
+
+    function __tmApplyReminderTaskNameMarks(modalEl) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) return;
+        const rows = modal.querySelectorAll('#tmTaskTable tbody tr[data-id], #tmTimelineLeftTable tbody tr[data-id]');
+        rows.forEach((row) => {
+            if (!(row instanceof HTMLElement)) return;
+            const tid = String(row.getAttribute('data-id') || '').trim();
+            if (!tid) return;
+            const contentEl = row.querySelector('.tm-task-content-clickable');
+            if (!(contentEl instanceof HTMLElement)) return;
+            const hasReminder = __tmReminderMarkCache.get(tid) === true;
+            let badge = contentEl.querySelector('.tm-task-reminder-emoji');
+            if (hasReminder) {
+                if (!(badge instanceof HTMLElement)) {
+                    badge = document.createElement('span');
+                    badge.className = 'tm-task-reminder-emoji';
+                    badge.title = '已添加提醒';
+                    badge.textContent = '⏰';
+                    contentEl.appendChild(badge);
+                }
+            } else if (badge instanceof HTMLElement) {
+                badge.remove();
+            }
+        });
+    }
+
+    function __tmScheduleReminderTaskNameMarksRefresh(modalEl, force = false) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) return;
+        __tmApplyReminderTaskNameMarks(modal);
+        Promise.resolve().then(async () => {
+            const rows = Array.from(modal.querySelectorAll('#tmTaskTable tbody tr[data-id], #tmTimelineLeftTable tbody tr[data-id]'));
+            const ids = Array.from(new Set(rows
+                .map((row) => String(row?.getAttribute?.('data-id') || '').trim())
+                .filter(Boolean)));
+            const pendingIds = ids.filter((tid) => force || !__tmReminderMarkCache.has(tid));
+            if (!pendingIds.length) return;
+            await Promise.all(pendingIds.map(async (tid) => {
+                if (__tmReminderMarkLoading.has(tid)) return;
+                __tmReminderMarkLoading.add(tid);
+                try {
+                    const res = await API.call('/api/attr/getBlockAttrs', { id: tid });
+                    const attrs = (res && res.code === 0 && res.data && typeof res.data === 'object') ? res.data : {};
+                    const raw = String(attrs?.bookmark ?? attrs?.['bookmark'] ?? '').trim();
+                    __tmSetTaskReminderMark(tid, raw.includes('⏰'));
+                } catch (e) {
+                    if (!__tmReminderMarkCache.has(tid)) __tmReminderMarkCache.set(tid, false);
+                } finally {
+                    __tmReminderMarkLoading.delete(tid);
+                }
+            }));
+            if (!modal.isConnected) return;
+            __tmApplyReminderTaskNameMarks(modal);
+        }).catch(() => null);
+    }
+
     function __tmScheduleTodayScheduledTaskNameMarksRefresh(modalEl, force = false) {
         const modal = modalEl instanceof Element ? modalEl : state.modal;
         if (!(modal instanceof Element)) return;
@@ -7480,6 +7655,8 @@ async function __tmRefreshAfterWake(reason) {
                         await new Promise(resolve => setTimeout(resolve, 200));
                         window.tmRefresh();
                     }
+                } else if (state.modal && document.body.contains(state.modal)) {
+                    try { __tmScheduleReminderTaskNameMarksRefresh(state.modal, true); } catch (e) {}
                 }
                 // 如果没有悬浮条修改，则不刷新，保持当前显示状态
 			} catch (e) {}
@@ -7491,6 +7668,8 @@ async function __tmRefreshAfterWake(reason) {
                     __tmClearQuickbarModifications();
                     await new Promise(resolve => setTimeout(resolve, 200));
                     window.tmRefresh();
+                } else if (state.modal && document.body.contains(state.modal)) {
+                    try { __tmScheduleReminderTaskNameMarksRefresh(state.modal, true); } catch (e) {}
                 }
             } catch (e) {}
         };
@@ -8633,6 +8812,8 @@ async function __tmRefreshAfterWake(reason) {
         }
         try { if (body) body.scrollTop = top; } catch (e) {}
         try { if (body) body.scrollLeft = left; } catch (e) {}
+        try { __tmApplyReminderTaskNameMarks(modal); } catch (e) {}
+        try { __tmScheduleReminderTaskNameMarksRefresh(modal); } catch (e) {}
         try { __tmApplyTodayScheduledTaskNameMarks(modal); } catch (e) {}
         try { __tmScheduleTodayScheduledTaskNameMarksRefresh(modal); } catch (e) {}
         try { queueMicrotask(() => { try { __tmRunFlipAnimation(modal); } catch (e) {} }); } catch (e) {
@@ -8872,6 +9053,8 @@ async function __tmRefreshAfterWake(reason) {
         try { queueMicrotask(() => { try { __tmRunFlipAnimation(modal); } catch (e) {} }); } catch (e) {
             try { Promise.resolve().then(() => { try { __tmRunFlipAnimation(modal); } catch (e2) {} }); } catch (e2) {}
         }
+        try { __tmApplyReminderTaskNameMarks(modal); } catch (e) {}
+        try { __tmScheduleReminderTaskNameMarksRefresh(modal); } catch (e) {}
         try { __tmApplyTodayScheduledTaskNameMarks(modal); } catch (e) {}
         try { __tmScheduleTodayScheduledTaskNameMarksRefresh(modal); } catch (e) {}
         return true;
@@ -9887,9 +10070,9 @@ async function __tmRefreshAfterWake(reason) {
                     <option value="asc" ${sortRule.order === 'asc' ? 'selected' : ''}>升序</option>
                     <option value="desc" ${sortRule.order === 'desc' ? 'selected' : ''}>降序</option>
                 </select>
-                <button class="tm-rule-btn tm-rule-btn-secondary" data-tm-action="moveSortRule" data-index="${index}" data-delta="-1" ${index === 0 ? 'disabled' : ''} style="width: 28px; padding: 2px 0;">↑</button>
-                <button class="tm-rule-btn tm-rule-btn-secondary" data-tm-action="moveSortRule" data-index="${index}" data-delta="1" ${index === sortRules.length - 1 ? 'disabled' : ''} style="width: 28px; padding: 2px 0;">↓</button>
-                <button class="tm-rule-btn tm-rule-btn-danger" data-tm-action="removeSortRule" data-index="${index}">
+                <button class="tm-rule-btn tm-rule-btn-secondary tm-rule-sort-move-btn" data-tm-action="moveSortRule" data-index="${index}" data-delta="-1" ${index === 0 ? 'disabled' : ''}><span>↑</span></button>
+                <button class="tm-rule-btn tm-rule-btn-secondary tm-rule-sort-move-btn" data-tm-action="moveSortRule" data-index="${index}" data-delta="1" ${index === sortRules.length - 1 ? 'disabled' : ''}><span>↓</span></button>
+                <button class="tm-rule-btn tm-rule-btn-danger tm-rule-sort-remove-btn" data-tm-action="removeSortRule" data-index="${index}">
                     ×
                 </button>
             </div>
@@ -11071,7 +11254,8 @@ async function __tmRefreshAfterWake(reason) {
 
         const rule = state.currentRule ? state.filterRules.find(r => r.id === state.currentRule) : null;
         const hasExplicitSortRule = __tmRuleHasExplicitSort(rule);
-        const keepDocFlowOrder = !!state.groupByDocName && !hasExplicitSortRule;
+        const isUngroup = !state.groupByDocName && !state.groupByTaskName && !state.groupByTime && !state.quadrantEnabled;
+        const keepDocFlowOrder = !hasExplicitSortRule && (!!state.groupByDocName || isUngroup);
 
         const currentRuleExcludesCompleted = () => {
             if (!rule || !rule.conditions || rule.conditions.length === 0) return false;
@@ -12208,6 +12392,23 @@ async function __tmRefreshAfterWake(reason) {
         render();
     };
 
+    window.tmHandleManagerTitleClick = function(ev) {
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        try { ev?.preventDefault?.(); } catch (e) {}
+        window.tmToggleDocTabs(ev);
+    };
+
+    window.tmHandleManagerIconClick = async function(ev) {
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        try { ev?.preventDefault?.(); } catch (e) {}
+        if (globalThis.__taskHorizonPluginIsMobile) return;
+        try {
+            if (typeof window.tmToggleCalendarSideDock === 'function') {
+                await window.tmToggleCalendarSideDock();
+            }
+        } catch (e) {}
+    };
+
     // 修改渲染函数以显示规则信息
     function render() {
         try { __tmEnsureDocTabTouchDelegation(); } catch (e) {}
@@ -12522,9 +12723,9 @@ async function __tmRefreshAfterWake(reason) {
                     continue;
                 }
                 if (r?.type === 'task') {
-                    // 按任务名分组时，每个任务使用自己文档的颜色
+                    // 按任务名分组/不分组时，每个任务使用自己文档的颜色
                     let taskDocColor = '';
-                    if (state.groupByTaskName) {
+                    if (state.groupByTaskName || (!state.groupByDocName && !state.groupByTime && !state.quadrantEnabled)) {
                         const task = state.flatTasks[r.id];
                         if (task?.root_id) {
                             taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
@@ -12853,8 +13054,8 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         ${parentTxt ? `<div class="tm-kanban-parent-line" style="font-size:12px;color:var(--tm-secondary-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:6px;" title="${esc(parentTxt)}"><span>父任务：</span><span style="font-weight:800;color:var(--tm-text-color);">${esc(parentTxt)}</span></div>` : ''}
                         <div class="tm-kanban-card-meta">
-                            ${statusChip}
                             ${priorityChip}
+                            ${statusChip}
                             <span class="tm-kanban-chip tm-kanban-chip--muted" onclick="tmKanbanPickDate('${id}', event)" title="点击选择日期">${esc(dateTxt || '日期')}</span>
                         </div>
                         ${(isAllTabsView && docName) ? `<div style="font-size:12px;color:var(--tm-secondary-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📄 ${esc(docName)}</div>` : ''}
@@ -13014,7 +13215,9 @@ async function __tmRefreshAfterWake(reason) {
                             const enableH2 = (!!SettingsStore.data.docH2SubgroupEnabled || headingMode) && !o.forceNoHeading;
                             if (!enableH2) {
                                 // 按文档内的顺序排序任务，使用 __tmCompareTasksByDocFlow
-                                const sortedItems = items.slice().sort(__tmCompareTasksByDocFlow);
+                                const sortedItems = items.slice().sort(
+                                    allowDocFlowForKanban ? __tmCompareTasksByDocFlow : sortByIdx
+                                );
                                 body = `<div class="tm-kanban-group-items">${sortedItems.map(t => renderTree(t, 0)).join('')}</div>`;
                             } else {
                                 const headingLevel = String(SettingsStore.data.taskHeadingLevel || 'h2').trim() || 'h2';
@@ -13039,7 +13242,9 @@ async function __tmRefreshAfterWake(reason) {
                                     let bucketItems = grouped.get(bucket.key) || [];
                                     if (!bucketItems.length) return '';
                                     // 按文档内的顺序排序任务，使用 __tmCompareTasksByDocFlow
-                                    bucketItems = bucketItems.slice().sort(__tmCompareTasksByDocFlow);
+                                    bucketItems = bucketItems.slice().sort(
+                                        allowDocFlowForKanban ? __tmCompareTasksByDocFlow : sortByIdx
+                                    );
                                     const h2Key = `kanban_${c.id}_doc_${docId}__h2_${encodeURIComponent(String(bucket.key || 'label:__none__'))}`;
                                     const h2Collapsed = state.collapsedGroups?.has(h2Key);
                                     const h2Title = `<span style="color:var(--tm-secondary-text);">🧩 ${esc(String(bucket.label || ''))}</span>`;
@@ -13596,8 +13801,8 @@ async function __tmRefreshAfterWake(reason) {
                             </div>
                             ${(detachedOrDetachedLike && parentText) ? `<div style="font-size:12px;color:var(--tm-secondary-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px;" title="${esc(parentText)}"><span>父任务：</span><span style="font-weight:800;color:var(--tm-text-color);">${esc(parentText)}</span></div>` : ''}
                             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                                ${statusChip}
                                 ${priorityChip}
+                                ${statusChip}
                                 <span class="tm-kanban-chip tm-kanban-chip--muted" style="cursor:${editableMeta ? 'pointer' : 'default'};" ${editableMeta ? `onclick="tmWhiteboardEditDate('${escSq(tid)}', event)"` : ''} title="${editableMeta ? '点击选择日期' : ''}">${esc(dateTxt || '日期')}</span>
                                 ${ghostTip}
                             </div>
@@ -13739,11 +13944,26 @@ async function __tmRefreshAfterWake(reason) {
                     }
                     return false;
                 };
+                const hasDoneAncestor = (taskId) => {
+                    let cur = String(taskId || '').trim();
+                    const seen = new Set();
+                    while (cur && !seen.has(cur)) {
+                        seen.add(cur);
+                        const t = map.get(cur);
+                        const pid = String(t?.parentTaskId || '').trim();
+                        if (!pid) return false;
+                        const pt = map.get(pid);
+                        if (pt?.done) return true;
+                        cur = pid;
+                    }
+                    return false;
+                };
                 const listMap = new Map();
                 const addToList = (t, locked = false) => {
                     const id = String(t?.id || '').trim();
                     if (!id) return;
                     if (!showDoneTasks && !!t?.done) return;
+                    if (hasDoneAncestor(id)) return;
                     const prev = listMap.get(id);
                     if (prev) {
                         if (!prev.__tmPoolLocked && locked) return;
@@ -13967,7 +14187,10 @@ async function __tmRefreshAfterWake(reason) {
                 <div class="tm-filter-rule-bar" style="padding: 8px 12px;">
                     <div style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;justify-content:space-between;min-width:0;">
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <div class="tm-title" onclick="tmToggleDocTabs(event)" style="font-size: 16px; font-weight: 700; white-space: nowrap;">📋 任务管理器</div>
+                            <div class="tm-title" style="font-size: 16px; font-weight: 700; white-space: nowrap; display:inline-flex; align-items:center; gap:4px;">
+                                <span onclick="tmHandleManagerIconClick(event)" style="cursor:${isMobile ? 'default' : 'pointer'};">📋</span>
+                                <span onclick="tmHandleManagerTitleClick(event)" style="cursor:pointer;">任务管理器</span>
+                            </div>
                             <button class="tm-btn tm-btn-success" onclick="tmAdd()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">+</button>
                             ${isMobile ? `<button class="tm-btn tm-btn-info" onclick="tmRefresh()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">🔄️</button>` : ''}
                             ${isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info" onclick="tmCalendarToggleSidebar()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="侧边栏">📅</button>` : ''}
@@ -14428,6 +14651,8 @@ async function __tmRefreshAfterWake(reason) {
         
         try { if (state.viewMode === 'kanban') __tmBindKanbanPan(state.modal); } catch (e) {}
         __tmGetMountRoot().appendChild(state.modal);
+        try { __tmApplyReminderTaskNameMarks(state.modal); } catch (e) {}
+        try { __tmScheduleReminderTaskNameMarksRefresh(state.modal); } catch (e) {}
         try { __tmApplyTodayScheduledTaskNameMarks(state.modal); } catch (e) {}
         try { __tmScheduleTodayScheduledTaskNameMarksRefresh(state.modal); } catch (e) {}
         try {
@@ -20217,6 +20442,7 @@ async function __tmRefreshAfterWake(reason) {
         task.startDate = isValidValue(task.startDate) ? String(task.startDate) : (isValidValue(task.start_date) ? String(task.start_date) : '');
         task.customTime = isValidValue(task.customTime) ? String(task.customTime) : (isValidValue(task.custom_time) ? String(task.custom_time) : '');
         task.customStatus = isValidValue(task.custom_status) ? String(task.custom_status) : (isValidValue(task.customStatus) ? String(task.customStatus) : '');
+        task.bookmark = isValidValue(task.bookmark) ? String(task.bookmark) : '';
         task.tomatoMinutes = isValidValue(task.tomatoMinutes) ? String(task.tomatoMinutes) : (isValidValue(task.tomato_minutes) ? String(task.tomato_minutes) : '');
         task.tomatoHours = isValidValue(task.tomatoHours) ? String(task.tomatoHours) : (isValidValue(task.tomato_hours) ? String(task.tomato_hours) : '');
         const pin0 = task.custom_pinned ?? task.customPinned ?? task.pinned ?? '';
@@ -22175,6 +22401,11 @@ async function __tmRefreshAfterWake(reason) {
             if (flow !== 0) return flow;
             return getTaskOrder(String(a?.id || '')) - getTaskOrder(String(b?.id || ''));
         };
+        const compareRootByFilteredOrderUngroup = (a, b) => {
+            const orderDiff = getTaskOrder(String(a?.id || '')) - getTaskOrder(String(b?.id || ''));
+            if (orderDiff !== 0) return orderDiff;
+            return compareRootByDocFlowUngroup(a, b);
+        };
 
         const emitTask = (task, depth, hasChildren, collapsed) => {
             rows.push({
@@ -22332,7 +22563,8 @@ async function __tmRefreshAfterWake(reason) {
                     return !filteredIdSet.has(t.parentTaskId);
                 });
                 const docNormal = timelineKeepH2Order ? docRootTasks.slice() : docRootTasks.filter(t => !t.pinned);
-                docNormal.sort(__tmCompareTasksByDocFlow);
+                if (allowDocFlowForRowModel) docNormal.sort(__tmCompareTasksByDocFlow);
+                else docNormal.sort((a, b) => getTaskOrder(a.id) - getTaskOrder(b.id));
                 const docName = docEntry.name || '未知文档';
                 const groupKey = `doc_${docId}`;
                 const isCollapsed = state.collapsedGroups?.has(groupKey);
@@ -22508,7 +22740,7 @@ async function __tmRefreshAfterWake(reason) {
             return rows;
         }
 
-        normalRoots.slice().sort(compareRootByDocFlowUngroup).forEach(task => walkTaskTree(task, 0));
+        normalRoots.slice().sort(compareRootByFilteredOrderUngroup).forEach(task => walkTaskTree(task, 0));
         return rows;
     }
 
@@ -22598,6 +22830,11 @@ async function __tmRefreshAfterWake(reason) {
             if (flow !== 0) return flow;
             return getTaskOrder(String(a?.id || '')) - getTaskOrder(String(b?.id || ''));
         };
+        const compareRootByFilteredOrderUngroup = (a, b) => {
+            const orderDiff = getTaskOrder(String(a?.id || '')) - getTaskOrder(String(b?.id || ''));
+            if (orderDiff !== 0) return orderDiff;
+            return compareRootByDocFlowUngroup(a, b);
+        };
 
         // 渲染单行（保持原有 emitRow 逻辑）
         const emitRow = (task, depth, hasChildren, collapsed) => {
@@ -22652,7 +22889,7 @@ async function __tmRefreshAfterWake(reason) {
                             <span class="tm-task-text ${done ? 'tm-task-done' : ''}"
                                   data-level="${depth}"
                                   title="${esc(content)}">
-                                <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)" title="${esc(content)}">${esc(content)}</span>
+                                <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)" title="${esc(content)}">${esc(content)}${__tmHasReminderMark(task) ? '<span class="tm-task-reminder-emoji" title="已添加提醒">⏰</span>' : ''}</span>
                             </span>
                             ${childStatsHtml}
                         </div>
@@ -22928,7 +23165,8 @@ async function __tmRefreshAfterWake(reason) {
 
                 // 分离置顶和非置顶
                 const docNormal = docRootTasks.filter(t => !t.pinned);
-                docNormal.sort(__tmCompareTasksByDocFlow);
+                if (allowDocFlowForRender) docNormal.sort(__tmCompareTasksByDocFlow);
+                else docNormal.sort((a, b) => getTaskOrder(a.id) - getTaskOrder(b.id));
 
                 // 渲染文档标题（支持折叠）
                 const docName = docEntry.name || '未知文档';
@@ -23130,8 +23368,9 @@ async function __tmRefreshAfterWake(reason) {
             });
         } else {
             // 普通全局混排（不按时间分组，不按文档分组，不按任务名分组）
-            currentGroupBg = '';
-            normalRoots.slice().sort(compareRootByDocFlowUngroup).forEach(task => {
+            normalRoots.slice().sort(compareRootByFilteredOrderUngroup).forEach(task => {
+                const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
+                currentGroupBg = (enableGroupBg && taskDocColor) ? __tmGroupBgFromLabelColor(taskDocColor, isDark) : '';
                 allRows.push(...renderTaskTree(task, 0));
             });
         }
@@ -24597,11 +24836,13 @@ async function __tmRefreshAfterWake(reason) {
             hint('⚠ 番茄钟联动已关闭', 'warning');
             return;
         }
-        const task = state.flatTasks[id];
+        const taskId = String(id || '').trim();
+        const task = state.flatTasks[taskId];
         if (!task) return;
         const showDialog = globalThis.__tomatoReminder?.showDialog;
         if (typeof showDialog === 'function') {
-            showDialog(id, task.content || '任务');
+            showDialog(taskId, task.content || '任务');
+            try { __tmRefreshReminderMarkForTask(taskId, 1200); } catch (e) {}
             return;
         }
         hint('⚠ 未检测到提醒功能，请确认番茄插件已启用', 'warning');
@@ -25988,10 +26229,20 @@ async function __tmRefreshAfterWake(reason) {
     // 显示设置
     function showSettings() {
         try { __tmHideMobileMenu(); } catch (e) {}
+        let savedSettingsSidebarScrollLeft = Number(state.settingsSidebarScrollLeft) || 0;
+        let savedSettingsTabsScrollLeft = Number(state.settingsTabsScrollLeft) || 0;
         if (state.settingsModal) {
+            try {
+                const prevSidebar = state.settingsModal.querySelector('.tm-settings-sidebar');
+                const prevTabs = state.settingsModal.querySelector('.tm-settings-tabs');
+                if (prevSidebar) savedSettingsSidebarScrollLeft = Number(prevSidebar.scrollLeft) || 0;
+                if (prevTabs) savedSettingsTabsScrollLeft = Number(prevTabs.scrollLeft) || 0;
+            } catch (e) {}
             try { state.settingsModal.remove(); } catch (e) {}
             state.settingsModal = null;
         }
+        state.settingsSidebarScrollLeft = savedSettingsSidebarScrollLeft;
+        state.settingsTabsScrollLeft = savedSettingsTabsScrollLeft;
 
         state.settingsModal = document.createElement('div');
         state.settingsModal.className = 'tm-settings-modal';
@@ -26510,6 +26761,30 @@ async function __tmRefreshAfterWake(reason) {
         `;
 
         document.body.appendChild(state.settingsModal);
+        try {
+            const settingsSidebar = state.settingsModal.querySelector('.tm-settings-sidebar');
+            const settingsTabs = state.settingsModal.querySelector('.tm-settings-tabs');
+            if (settingsSidebar) {
+                try { settingsSidebar.scrollLeft = Number(state.settingsSidebarScrollLeft) || 0; } catch (e) {}
+                settingsSidebar.addEventListener('scroll', () => {
+                    try { state.settingsSidebarScrollLeft = Number(settingsSidebar.scrollLeft) || 0; } catch (e2) {}
+                }, { passive: true });
+            }
+            if (settingsTabs) {
+                try { settingsTabs.scrollLeft = Number(state.settingsTabsScrollLeft) || 0; } catch (e) {}
+                settingsTabs.addEventListener('scroll', () => {
+                    try { state.settingsTabsScrollLeft = Number(settingsTabs.scrollLeft) || 0; } catch (e2) {}
+                }, { passive: true });
+            }
+            const activeNav = state.settingsModal.querySelector('.tm-settings-nav-btn.is-active');
+            if (activeNav instanceof HTMLElement) {
+                try {
+                    requestAnimationFrame(() => {
+                        try { activeNav.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e2) {}
+                    });
+                } catch (e) {}
+            }
+        } catch (e) {}
         __tmBindRulesManagerEvents(state.settingsModal);
         try {
             if (activeTab === 'calendar') {
@@ -29262,6 +29537,8 @@ async function __tmRefreshAfterWake(reason) {
                 if (!e || !e.detail || !e.detail.taskId) return;
                 const taskId = String(e.detail.taskId || '').trim();
                 if (!taskId) return;
+                const attrKey = String(e.detail.attrKey || '').trim();
+                const attrValue = String(e.detail.value ?? '').trim();
                 
                 // 使用 localStorage 持久化存储，以便在插件重新加载后仍能检测到
                 try {
@@ -29275,6 +29552,17 @@ async function __tmRefreshAfterWake(reason) {
                 // 同时更新内存中的状态
                 state.quickbarModifiedTaskIds.add(taskId);
                 state.lastQuickbarUpdateTime = Date.now();
+                if (attrKey === 'bookmark') {
+                    try { __tmSetTaskReminderMark(taskId, attrValue.includes('⏰')); } catch (ex) {}
+                    try {
+                        if (state.modal && document.body.contains(state.modal)) {
+                            __tmApplyReminderTaskNameMarks(state.modal);
+                        }
+                    } catch (ex) {}
+                    try { __tmRefreshReminderMarkForTask(taskId, 240); } catch (ex) {}
+                } else if (attrKey === 'custom-reminder' || !attrKey) {
+                    try { __tmRefreshReminderMarkForTask(taskId, 240); } catch (ex) {}
+                }
             };
             window.addEventListener('tm-task-attr-updated', __tmQuickbarTaskUpdateHandler);
         } catch (e) {}
@@ -29644,6 +29932,7 @@ async function __tmRefreshAfterWake(reason) {
         const quickbarDirty = __tmHasQuickbarModificationsSync();
         const canSkipRenderOnReuse = reusedExistingModal && hasDataReadyForSoftReuse && !quickbarDirty;
         if (canSkipRenderOnReuse) {
+            try { __tmScheduleReminderTaskNameMarksRefresh(state.modal, true); } catch (e) {}
             try {
                 if (String(state.viewMode || '').trim() === 'calendar' && globalThis.__tmCalendar?.refreshInPlace) {
                     globalThis.__tmCalendar.refreshInPlace({ layoutOnly: true, hard: false });
@@ -30316,8 +30605,8 @@ async function __tmRefreshAfterWake(reason) {
                 const task = getTaskById(r.id);
                 const docId = String(task?.docId || task?.root_id || '').trim();
                 
-                // 按任务名分组时，每个任务使用自己文档的颜色
-                if (state.groupByTaskName && docId) {
+                // 按任务名分组/不分组时，每个任务使用自己文档的颜色
+                if ((state.groupByTaskName || (!state.groupByDocName && !state.groupByTime && !state.quadrantEnabled)) && docId) {
                     const taskDocColor = __tmGetDocColorHex(docId, isDark);
                     currentGroupBg = (enableGroupBg && taskDocColor) ? (__tmGroupBgFromLabelColor(taskDocColor, isDark) || '') : '';
                 }

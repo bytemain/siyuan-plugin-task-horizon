@@ -1,10 +1,18 @@
 (function () {
+    let __tmSiyuanSdk = null;
+    try {
+        if (typeof require === 'function') {
+            __tmSiyuanSdk = require('siyuan');
+        }
+    } catch (e) {}
+
     const STORAGE = {
         DOCK_TOMATO_FILE_NEW: '/data/storage/petal/siyuan-plugin-docktomato/tomato-history.json',
         DOCK_TOMATO_FILE_LEGACY: '/data/storage/tomato-history.json',
         DOCK_TOMATO_LS_KEY: 'siyuan-tomato-history',
         SCHEDULE_FILE: '/data/storage/petal/siyuan-plugin-task-horizon/calendar-events.json',
         SCHEDULE_LS_KEY: 'tm-calendar-events',
+        SCHEDULE_MOBILE_REGISTRY_LS_KEY: 'tm-calendar-mobile-notification-registry',
     };
 
     const state = {
@@ -53,6 +61,9 @@
             refreshTimer: null,
             periodicTimer: null,
             timers: new Map(),
+            mobileSyncTimer: null,
+            mobileSyncRunning: false,
+            mobileSyncPending: false,
             scheduleUpdatedListener: null,
             toastHost: null,
             toastStyleEl: null,
@@ -279,23 +290,56 @@
     }
 
     function getSettings() {
-        const s = state.settingsStore?.data || state.sideDay?.settingsStore?.data || {};
+        const liveStore = state.settingsStore || state.sideDay?.settingsStore || null;
+        const s = liveStore?.data || {};
+        const preferLiveStore = !!liveStore?.loaded;
+        const normalizeNewScheduleMaxDuration = (value) => {
+            const allowed = [60, 120, 180, 240];
+            const num = Number(value);
+            return allowed.includes(num) ? num : 60;
+        };
+        const readStoredString = (key, fallback) => {
+            if (preferLiveStore && typeof fallback !== 'undefined' && fallback !== null && String(fallback).trim() !== '') {
+                return String(fallback);
+            }
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw != null && String(raw).trim() !== '') return String(raw);
+            } catch (e) {
+            }
+            if (typeof fallback !== 'undefined' && fallback !== null) return String(fallback);
+            return '';
+        };
+        const readStoredBool = (key, fallback) => {
+            if (preferLiveStore && typeof fallback === 'boolean') return fallback;
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw != null) {
+                    const v = String(raw).trim().toLowerCase();
+                    return v === 'true' || v === '1';
+                }
+            } catch (e) {
+            }
+            if (typeof fallback === 'boolean') return fallback;
+            return false;
+        };
         const tomatoMaster = s.calendarShowTomatoMaster !== false;
-        const allDayTime0 = String(s.calendarAllDayReminderTime || '09:00').trim();
-        const defaultMode0 = String(s.calendarScheduleReminderDefaultMode || '0').trim() || '0';
+        const allDayTime0 = readStoredString('tm_calendar_all_day_reminder_time', s.calendarAllDayReminderTime).trim() || '09:00';
+        const defaultMode0 = readStoredString('tm_calendar_schedule_reminder_default_mode', s.calendarScheduleReminderDefaultMode).trim() || '0';
         return {
             enabled: !!s.calendarEnabled,
             linkDockTomato: !!s.calendarLinkDockTomato,
             firstDay: Number(s.calendarFirstDay) === 0 ? 0 : 1,
             monthAggregate: !!s.calendarMonthAggregate,
             showSchedule: s.calendarShowSchedule !== false,
-            scheduleReminderEnabled: !!s.calendarScheduleReminderEnabled,
-            scheduleReminderSystemEnabled: !!s.calendarScheduleReminderSystemEnabled,
+            scheduleReminderEnabled: readStoredBool('tm_calendar_schedule_reminder_enabled', typeof s.calendarScheduleReminderEnabled === 'boolean' ? !!s.calendarScheduleReminderEnabled : undefined),
+            scheduleReminderSystemEnabled: readStoredBool('tm_calendar_schedule_reminder_system_enabled', typeof s.calendarScheduleReminderSystemEnabled === 'boolean' ? !!s.calendarScheduleReminderSystemEnabled : undefined),
             scheduleReminderDefaultMode: defaultMode0,
-            allDayReminderEnabled: !!s.calendarAllDayReminderEnabled,
+            allDayReminderEnabled: readStoredBool('tm_calendar_all_day_reminder_enabled', typeof s.calendarAllDayReminderEnabled === 'boolean' ? !!s.calendarAllDayReminderEnabled : undefined),
             allDayReminderTime: allDayTime0 || '09:00',
             showTaskDates: s.calendarShowTaskDates !== false,
-            taskDateAllDayReminderEnabled: !!s.calendarTaskDateAllDayReminderEnabled,
+            newScheduleMaxDurationMin: normalizeNewScheduleMaxDuration(s.calendarNewScheduleMaxDurationMin),
+            taskDateAllDayReminderEnabled: readStoredBool('tm_calendar_taskdate_all_day_reminder_enabled', typeof s.calendarTaskDateAllDayReminderEnabled === 'boolean' ? !!s.calendarTaskDateAllDayReminderEnabled : undefined),
             allDaySummaryIncludeExtras: s.calendarAllDaySummaryIncludeExtras !== false,
             taskDateColorMode: String(s.calendarTaskDateColorMode || 'group').trim() || 'group',
             scheduleColor: String(s.calendarScheduleColor || '').trim(),
@@ -579,7 +623,7 @@
                         durMin = Number(el?.getAttribute?.('data-task-duration-min'));
                     }
                     if (!calendarId) calendarId = pickDefaultCalendarId(settings);
-                    const safeMin = (Number.isFinite(durMin) && durMin > 0) ? Math.round(durMin) : 60;
+                    const safeMin = clampNewScheduleDurationMin(durMin, settings);
                     return {
                         title: title || '任务',
                         duration: toDurationStr(safeMin),
@@ -600,6 +644,8 @@
         const root = wrap?.querySelector?.('[data-tm-cal-role="task-page"]');
         const host = wrap?.querySelector?.('[data-tm-cal-role="task-table"]');
         if (!root || !host) return;
+        const savedTop = Number(host.scrollTop) || 0;
+        const savedLeft = Number(host.scrollLeft) || 0;
         const api = globalThis.tmRenderCalendarTaskTableHtml;
         if (typeof api !== 'function') {
             host.innerHTML = `<div class="tm-calendar-task-empty">未检测到任务表格渲染接口</div>`;
@@ -609,6 +655,8 @@
         let html = '';
         try { html = String(api() || ''); } catch (e) { html = ''; }
         host.innerHTML = html || `<div class="tm-calendar-task-empty">暂无任务</div>`;
+        try { host.scrollTop = savedTop; } catch (e) {}
+        try { host.scrollLeft = savedLeft; } catch (e) {}
         state.taskListEl = host.querySelector('#tmTaskTable tbody');
         try { state.taskTableAbort?.abort?.(); } catch (e) {}
         try {
@@ -1235,7 +1283,9 @@
                 const reminderOffsetMin0 = reminderMode0 === 'custom'
                     ? ((Number.isFinite(reminderOffsetRaw) && allowed.has(reminderOffsetRaw)) ? reminderOffsetRaw : 0)
                     : null;
+                const notificationSchedules0 = sanitizeScheduleNotificationSchedules(base.notificationSchedules);
                 if (String(base.reminderMode || '').trim() !== reminderMode0) changed = true;
+                if (JSON.stringify(base.notificationSchedules || {}) !== JSON.stringify(notificationSchedules0)) changed = true;
                 return {
                     ...base,
                     id,
@@ -1243,6 +1293,7 @@
                     reminderMode: reminderMode0,
                     reminderEnabled: reminderEnabled0,
                     reminderOffsetMin: reminderOffsetMin0,
+                    notificationSchedules: notificationSchedules0,
                 };
             });
             return { out, changed };
@@ -1348,6 +1399,709 @@
         return `taskdate:${String(taskId || '').trim()}:${String(atMs || '')}`;
     }
 
+    function getRuntimeBackendType() {
+        try {
+            if (__tmSiyuanSdk && typeof __tmSiyuanSdk.getBackend === 'function') {
+                const backend = __tmSiyuanSdk.getBackend();
+                if (typeof backend === 'string' && backend) return backend.toLowerCase();
+            }
+        } catch (e) {}
+        try {
+            const container = window?.siyuan?.config?.system?.container;
+            if (typeof container === 'string' && container) return container.toLowerCase();
+        } catch (e) {}
+        return '';
+    }
+
+    function shouldPreferDeviceNotificationBackend() {
+        const backend = getRuntimeBackendType();
+        return !!state.isMobileDevice || backend === 'android' || backend === 'harmony';
+    }
+
+    function normalizeNotificationId(value) {
+        const num = Number(value);
+        if (!Number.isFinite(num)) return null;
+        return Math.trunc(num);
+    }
+
+    function extractNotificationIdFromUnknownPayload(payload, depth = 0) {
+        if (depth > 4) return null;
+        const direct = normalizeNotificationId(payload);
+        if (direct !== null) return direct;
+        if (payload == null) return null;
+        if (typeof payload === 'string') {
+            const trimmed = payload.trim();
+            if (!trimmed) return null;
+            const asNum = normalizeNotificationId(trimmed);
+            if (asNum !== null) return asNum;
+            try {
+                const parsed = JSON.parse(trimmed);
+                return extractNotificationIdFromUnknownPayload(parsed, depth + 1);
+            } catch (e) {
+                return null;
+            }
+        }
+        if (Array.isArray(payload)) {
+            for (const item of payload) {
+                const nested = extractNotificationIdFromUnknownPayload(item, depth + 1);
+                if (nested !== null) return nested;
+            }
+            return null;
+        }
+        if (typeof payload === 'object') {
+            const priorityKeys = ['id', 'notificationId', 'notificationID', 'data', 'result', 'value'];
+            for (const key of priorityKeys) {
+                if (!(key in payload)) continue;
+                const nested = extractNotificationIdFromUnknownPayload(payload[key], depth + 1);
+                if (nested !== null) return nested;
+            }
+            for (const key of Object.keys(payload)) {
+                const nested = extractNotificationIdFromUnknownPayload(payload[key], depth + 1);
+                if (nested !== null) return nested;
+            }
+        }
+        return null;
+    }
+
+    function getNotificationBridgeCandidates() {
+        return [
+            { owner: globalThis, send: 'sendNotification', cancel: 'cancelNotification' },
+            { owner: window, send: 'sendNotification', cancel: 'cancelNotification' },
+            { owner: globalThis?.JSAndroid, send: 'sendNotification', cancel: 'cancelNotification' },
+            { owner: globalThis?.JSHarmony, send: 'sendNotification', cancel: 'cancelNotification' },
+            { owner: window?.siyuan, send: 'sendNotification', cancel: 'cancelNotification' },
+            { owner: window?.siyuan?.mobile, send: 'sendNotification', cancel: 'cancelNotification' },
+        ];
+    }
+
+    async function invokeNotificationBridge(owner, methodName, args) {
+        const fn = owner?.[methodName];
+        if (typeof fn !== 'function') return { called: false, value: null };
+        try {
+            const value = await fn.apply(owner, args);
+            return { called: true, value };
+        } catch (e) {
+            return { called: true, value: null };
+        }
+    }
+
+    async function sendDeviceNotificationCompat(title, body, options) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const safeTitle = String(title || '').trim();
+        const safeBody = String(body || '').trim();
+        const safeChannel = String(opts.channel || '').trim();
+        const delayInSeconds = Math.max(0, Math.round(Number(opts.delayInSeconds) || 0));
+        if (!safeTitle && !safeBody) return -1;
+        sendDeviceNotificationCompat._lastFailureReason = '';
+        const bridgeCandidates = getNotificationBridgeCandidates();
+        for (const candidate of bridgeCandidates) {
+            const attempt = await invokeNotificationBridge(candidate.owner, candidate.send, [safeChannel, safeTitle, safeBody, delayInSeconds]);
+            if (!attempt.called) continue;
+            const id = extractNotificationIdFromUnknownPayload(attempt.value);
+            if (id !== null) return id;
+            sendDeviceNotificationCompat._lastFailureReason = 'send-no-numeric-return';
+        }
+        try {
+            const msgHandler = globalThis?.webkit?.messageHandlers?.sendNotification;
+            if (msgHandler && typeof msgHandler.postMessage === 'function') {
+                msgHandler.postMessage({ channel: safeChannel, title: safeTitle, body: safeBody, delayInSeconds });
+                sendDeviceNotificationCompat._lastFailureReason = 'webkit-no-numeric-return';
+                return -1;
+            }
+        } catch (e) {}
+        if (!sendDeviceNotificationCompat._lastFailureReason) {
+            sendDeviceNotificationCompat._lastFailureReason = 'no-bridge-failure';
+        }
+        return -1;
+    }
+
+    async function cancelDeviceNotificationCompat(id) {
+        const safeId = normalizeNotificationId(id);
+        if (safeId === null || safeId < 0) return false;
+        const bridgeCandidates = getNotificationBridgeCandidates();
+        for (const candidate of bridgeCandidates) {
+            const attempt = await invokeNotificationBridge(candidate.owner, candidate.cancel, [safeId]);
+            if (attempt.called) return true;
+        }
+        return false;
+    }
+
+    function getOrCreateStableScheduleDeviceId() {
+        const keys = ['tomato-sync-device-id', 'tm-calendar-sync-device-id'];
+        const createId = () => 'device_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11);
+        for (const key of keys) {
+            try {
+                const existing = String(localStorage.getItem(key) || '').trim();
+                if (existing) {
+                    try { localStorage.setItem(keys[0], existing); } catch (e) {}
+                    return existing;
+                }
+            } catch (e) {}
+        }
+        const nextId = createId();
+        for (const key of keys) {
+            try { localStorage.setItem(key, nextId); } catch (e) {}
+        }
+        return nextId;
+    }
+
+    const SCHEDULE_SYNC_DEVICE_ID = getOrCreateStableScheduleDeviceId();
+    const SCHEDULE_ALL_DAY_MOBILE_WINDOW_DAYS = 7;
+    const SCHEDULE_ALL_DAY_SUMMARY_REGISTRY_KEY = '__all_day_summary__';
+
+    function sanitizeScheduleNotificationEntries(entries) {
+        const src = Array.isArray(entries) ? entries : [];
+        const out = [];
+        for (const it of src) {
+            const id = normalizeNotificationId(it?.id);
+            const status = String(it?.status || '').trim();
+            const keepNoId = status === 'scheduled-no-id';
+            if (!keepNoId && (id === null || id < 0)) continue;
+            out.push({
+                notificationKey: String(it?.notificationKey || '').trim(),
+                dateKey: String(it?.dateKey || '').trim(),
+                timeKey: String(it?.timeKey || '').trim(),
+                atMs: Number(it?.atMs) || 0,
+                id: keepNoId ? -1 : id,
+                delayInSeconds: Number(it?.delayInSeconds) || 0,
+                status: keepNoId ? 'scheduled-no-id' : 'scheduled',
+            });
+        }
+        return out;
+    }
+
+    function sanitizeScheduleNotificationSchedules(raw) {
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+        const out = {};
+        for (const [deviceId, schedule] of Object.entries(raw)) {
+            const key = String(deviceId || '').trim();
+            if (!key || !schedule || typeof schedule !== 'object') continue;
+            out[key] = {
+                planKey: String(schedule.planKey || '').trim(),
+                updatedAt: String(schedule.updatedAt || '').trim(),
+                status: String(schedule.status || '').trim(),
+                canceledAt: String(schedule.canceledAt || '').trim(),
+                cancelReason: String(schedule.cancelReason || '').trim(),
+                entries: sanitizeScheduleNotificationEntries(schedule.entries),
+            };
+        }
+        return out;
+    }
+
+    function loadScheduleMobileRegistry() {
+        try {
+            const raw = String(localStorage.getItem(STORAGE.SCHEDULE_MOBILE_REGISTRY_LS_KEY) || '').trim();
+            if (!raw) return {};
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+            const out = {};
+            for (const [scheduleId, schedule] of Object.entries(parsed)) {
+                const key = String(scheduleId || '').trim();
+                if (!key || !schedule || typeof schedule !== 'object') continue;
+                out[key] = {
+                    planKey: String(schedule.planKey || '').trim(),
+                    updatedAt: String(schedule.updatedAt || '').trim(),
+                    status: String(schedule.status || '').trim(),
+                    canceledAt: String(schedule.canceledAt || '').trim(),
+                    cancelReason: String(schedule.cancelReason || '').trim(),
+                    entries: sanitizeScheduleNotificationEntries(schedule.entries),
+                };
+            }
+            return out;
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function saveScheduleMobileRegistry(registry) {
+        try {
+            localStorage.setItem(STORAGE.SCHEDULE_MOBILE_REGISTRY_LS_KEY, JSON.stringify(registry || {}));
+        } catch (e) {}
+    }
+
+    function getScheduleDeviceScheduleMap(item) {
+        if (!item || typeof item !== 'object') return {};
+        const current = item.notificationSchedules;
+        if (!current || typeof current !== 'object' || Array.isArray(current)) {
+            item.notificationSchedules = {};
+        }
+        return item.notificationSchedules;
+    }
+
+    function getScheduleDeviceSchedule(item, deviceId = SCHEDULE_SYNC_DEVICE_ID) {
+        const map = getScheduleDeviceScheduleMap(item);
+        const entry = map[String(deviceId || '').trim()];
+        return (entry && typeof entry === 'object') ? entry : null;
+    }
+
+    function setScheduleDeviceSchedule(item, entry, deviceId = SCHEDULE_SYNC_DEVICE_ID) {
+        const key = String(deviceId || '').trim();
+        if (!key || !item || typeof item !== 'object') return null;
+        const map = getScheduleDeviceScheduleMap(item);
+        if (entry && typeof entry === 'object') {
+            map[key] = entry;
+            return map[key];
+        }
+        delete map[key];
+        return null;
+    }
+
+    function buildScheduleNotificationKey(scheduleId, dateKey, timeKey, atMs) {
+        return `schedule-mobile:${String(scheduleId || '').trim()}:${String(dateKey || '').trim()}:${String(timeKey || '').trim()}:${String(atMs || '')}`;
+    }
+
+    function buildScheduleNotificationEntry(atMs, scheduleId) {
+        const dt = new Date(Number(atMs) || 0);
+        if (Number.isNaN(dt.getTime())) return null;
+        const dateKey = formatDateKey(dt);
+        const timeKey = `${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
+        return {
+            notificationKey: buildScheduleNotificationKey(scheduleId, dateKey, timeKey, dt.getTime()),
+            dateKey,
+            timeKey,
+            atMs: dt.getTime(),
+        };
+    }
+
+    function clampNewScheduleDurationMin(durationMin, settings) {
+        const raw = Number(durationMin);
+        const safeMin = (Number.isFinite(raw) && raw > 0) ? Math.max(1, Math.round(raw)) : 60;
+        const limit = Number(settings?.newScheduleMaxDurationMin);
+        if (!Number.isFinite(limit) || limit <= 0) return safeMin;
+        return Math.min(safeMin, Math.round(limit));
+    }
+
+    function buildScheduleAllDaySummaryNotificationKey(dateKey, timeKey, atMs) {
+        return `schedule-mobile-allday-summary:${String(dateKey || '').trim()}:${String(timeKey || '').trim()}:${String(atMs || '')}`;
+    }
+
+    function getScheduleMobileNotificationTitle(item, target) {
+        const title = String(item?.title || '').trim() || '日程提醒';
+        return target?.allDay ? `全天提醒: ${title}` : title;
+    }
+
+    function getScheduleMobileNotificationBody(item, target) {
+        const title = String(item?.title || '').trim() || '日程';
+        if (target?.allDay) return `${title}\n${String(target?.dateKey || '')} ${String(target?.timeKey || '')}`.trim();
+        const offset = Number(target?.offsetMin);
+        const startDt = new Date(Number(target?.startMs) || 0);
+        const startText = Number.isNaN(startDt.getTime()) ? '' : `${pad2(startDt.getHours())}:${pad2(startDt.getMinutes())}`;
+        if (Number.isFinite(offset) && offset > 0) {
+            const prefix = offset % 60 === 0 ? `${Math.round(offset / 60)} 小时后开始` : `${Math.round(offset)} 分钟后开始`;
+            return `${prefix}${startText ? `\n${startText}` : ''}`;
+        }
+        return startText || title;
+    }
+
+    function collectScheduleMobileNotificationTargets(item, settings) {
+        if (!settings?.scheduleReminderEnabled) return [];
+        const startMs = toMs(item?.start);
+        const endMs = toMs(item?.end);
+        if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return [];
+        const start = new Date(startMs);
+        const end = new Date(endMs);
+        const allDay = (item?.allDay === true) || isAllDayRange(start, end);
+        if (allDay) return [];
+        const reminderMode = String(item?.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
+        const defaultMode = String(settings?.scheduleReminderDefaultMode || '0').trim() || '0';
+        const now = Date.now();
+        const out = [];
+        if (reminderMode === 'custom') {
+            if (item?.reminderEnabled !== true) return out;
+        } else {
+            if (defaultMode === 'off') {
+                return out;
+            }
+        }
+        const offsetMin = (() => {
+            if (reminderMode !== 'custom') {
+                const n = Number(defaultMode);
+                const allowed = new Set([0, 5, 10, 15, 30, 60]);
+                return (Number.isFinite(n) && allowed.has(n)) ? n : 0;
+            }
+            const n = Number(item?.reminderOffsetMin);
+            const allowed = new Set([0, 5, 10, 15, 30, 60]);
+            return (Number.isFinite(n) && allowed.has(n)) ? n : 0;
+        })();
+        const atMs = startMs - offsetMin * 60000;
+        if (atMs <= now) return out;
+        const entry = buildScheduleNotificationEntry(atMs, item?.id);
+        if (!entry) return out;
+        out.push({ ...entry, allDay: false, startMs, offsetMin });
+        return out;
+    }
+
+    function buildScheduleMobilePlanKey(item, settings, targets) {
+        const targetSig = (Array.isArray(targets) ? targets : []).map((it) => `${it.notificationKey}@${it.atMs}`).join('|');
+        return [
+            String(item?.id || '').trim(),
+            String(item?.title || '').trim(),
+            String(item?.start || '').trim(),
+            String(item?.end || '').trim(),
+            String(item?.reminderMode || '').trim(),
+            String(item?.reminderEnabled ?? ''),
+            String(item?.reminderOffsetMin ?? ''),
+            String(settings?.scheduleReminderDefaultMode || '').trim(),
+            String(settings?.allDayReminderEnabled ? '1' : '0'),
+            String(settings?.allDayReminderTime || '').trim(),
+            targetSig,
+        ].join('::');
+    }
+
+    function shouldIncludeAllDayScheduleInMobileSummary(item, settings) {
+        if (!settings?.scheduleReminderEnabled) return false;
+        const startMs = toMs(item?.start);
+        const endMs = toMs(item?.end);
+        if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return false;
+        const start = new Date(startMs);
+        const end = new Date(endMs);
+        const allDay = (item?.allDay === true) || isAllDayRange(start, end);
+        if (!allDay) return false;
+        const reminderMode = String(item?.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
+        if (reminderMode === 'custom') return item?.reminderEnabled === true;
+        return !!settings?.allDayReminderEnabled;
+    }
+
+    function collectAllDayScheduleSummaryTargets(list, settings) {
+        if (!settings?.scheduleReminderEnabled) return [];
+        const allDayTime = parseReminderTime(settings?.allDayReminderTime) || { hh: 9, mm: 0, key: '09:00' };
+        const now = Date.now();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const windowEnd = today.getTime() + SCHEDULE_ALL_DAY_MOBILE_WINDOW_DAYS * 86400000;
+        const grouped = new Map();
+        for (const item of (Array.isArray(list) ? list : [])) {
+            if (!shouldIncludeAllDayScheduleInMobileSummary(item, settings)) continue;
+            const startMs = toMs(item?.start);
+            const endMs = toMs(item?.end);
+            const title = String(item?.title || '').trim() || '全天日程';
+            const sDay = new Date(startMs);
+            sDay.setHours(0, 0, 0, 0);
+            const eDay = new Date(endMs);
+            eDay.setHours(0, 0, 0, 0);
+            let dayMs = Math.max(sDay.getTime(), today.getTime());
+            let guard = 0;
+            while (dayMs < eDay.getTime() && dayMs < windowEnd && guard < SCHEDULE_ALL_DAY_MOBILE_WINDOW_DAYS + 2) {
+                const day = new Date(dayMs);
+                const dateKey = formatDateKey(day);
+                const at = new Date(dayMs);
+                at.setHours(allDayTime.hh, allDayTime.mm, 0, 0);
+                const atMs = at.getTime();
+                if (atMs > now) {
+                    const existing = grouped.get(dateKey) || { dateKey, timeKey: `${pad2(at.getHours())}:${pad2(at.getMinutes())}`, atMs, titles: [] };
+                    existing.titles.push(title);
+                    grouped.set(dateKey, existing);
+                }
+                dayMs += 86400000;
+                guard += 1;
+            }
+        }
+        return Array.from(grouped.values())
+            .map((it) => ({
+                ...it,
+                notificationKey: buildScheduleAllDaySummaryNotificationKey(it.dateKey, it.timeKey, it.atMs),
+                titles: Array.from(new Set((it.titles || []).filter(Boolean))),
+            }))
+            .sort((a, b) => Number(a?.atMs || 0) - Number(b?.atMs || 0));
+    }
+
+    function buildAllDayScheduleSummaryPlanKey(targets, settings) {
+        const sig = (Array.isArray(targets) ? targets : [])
+            .map((it) => `${it.notificationKey}@${it.atMs}:${(it.titles || []).join('|')}`)
+            .join('||');
+        return [
+            'all-day-summary',
+            String(settings?.scheduleReminderEnabled ? '1' : '0'),
+            String(settings?.allDayReminderEnabled ? '1' : '0'),
+            String(settings?.allDayReminderTime || '').trim(),
+            String(SCHEDULE_ALL_DAY_MOBILE_WINDOW_DAYS),
+            sig,
+        ].join('::');
+    }
+
+    async function reconcileAllDayScheduleMobileSummary(list, settings, registry) {
+        const registryKey = SCHEDULE_ALL_DAY_SUMMARY_REGISTRY_KEY;
+        const existing = registry[registryKey] || null;
+        const validExistingEntries = sanitizeScheduleNotificationEntries(existing?.entries);
+        const targets = collectAllDayScheduleSummaryTargets(list, settings);
+        if (targets.length === 0) {
+            if (validExistingEntries.length === 0) {
+                delete registry[registryKey];
+                return false;
+            }
+            await cancelScheduleMobileNotificationEntries(validExistingEntries);
+            delete registry[registryKey];
+            return true;
+        }
+        const planKey = buildAllDayScheduleSummaryPlanKey(targets, settings);
+        if (String(existing?.planKey || '').trim() === planKey && validExistingEntries.length === targets.length) {
+            registry[registryKey] = { ...(existing || {}), entries: validExistingEntries };
+            return false;
+        }
+        if (validExistingEntries.length > 0) {
+            await cancelScheduleMobileNotificationEntries(validExistingEntries);
+        }
+        const nextEntries = [];
+        for (const target of targets) {
+            const delayInSeconds = Math.max(1, Math.ceil((Number(target.atMs) - Date.now()) / 1000));
+            const title = `全天日程提醒 ${String(target.timeKey || '')}`.trim();
+            const body = (target.titles || []).map((t) => `• ${t}`).join('\n');
+            const notificationId = await sendDeviceNotificationCompat(title, body, { channel: '', delayInSeconds });
+            const id = normalizeNotificationId(notificationId);
+            const failureReason = String(sendDeviceNotificationCompat._lastFailureReason || '').trim();
+            if ((id === null || id < 0) && failureReason === 'no-bridge-failure') continue;
+            nextEntries.push({
+                notificationKey: target.notificationKey,
+                dateKey: target.dateKey,
+                timeKey: target.timeKey,
+                atMs: target.atMs,
+                id: (id === null || id < 0) ? -1 : id,
+                delayInSeconds,
+                status: (id === null || id < 0) ? 'scheduled-no-id' : 'scheduled',
+            });
+        }
+        registry[registryKey] = {
+            planKey,
+            updatedAt: new Date().toISOString(),
+            status: nextEntries.length > 0 ? 'scheduled' : 'empty',
+            canceledAt: '',
+            cancelReason: '',
+            entries: nextEntries,
+        };
+        return true;
+    }
+
+    async function cancelScheduleMobileNotificationEntries(entries) {
+        const arr = Array.isArray(entries) ? entries : [];
+        for (const it of arr) {
+            const id = normalizeNotificationId(it?.id);
+            if (id === null || id < 0) continue;
+            try { await cancelDeviceNotificationCompat(id); } catch (e) {}
+        }
+    }
+
+    async function reconcileSingleScheduleMobileNotification(item, settings, registry) {
+        if (!item || typeof item !== 'object') return { changed: false, item };
+        const scheduleId = String(item.id || '').trim();
+        if (!scheduleId) return { changed: false, item };
+        const existing = getScheduleDeviceSchedule(item) || registry[scheduleId] || null;
+        const validExistingEntries = sanitizeScheduleNotificationEntries(existing?.entries);
+        const targets = collectScheduleMobileNotificationTargets(item, settings);
+        if (targets.length === 0) {
+            if (validExistingEntries.length === 0 && !getScheduleDeviceSchedule(item)) return { changed: false, item };
+            await cancelScheduleMobileNotificationEntries(validExistingEntries);
+            const nextSchedule = {
+                ...(existing || {}),
+                planKey: '',
+                updatedAt: new Date().toISOString(),
+                status: 'canceled',
+                canceledAt: new Date().toISOString(),
+                cancelReason: 'no-targets',
+                entries: [],
+            };
+            setScheduleDeviceSchedule(item, nextSchedule);
+            delete registry[scheduleId];
+            return { changed: true, item };
+        }
+        const planKey = buildScheduleMobilePlanKey(item, settings, targets);
+        if (String(existing?.planKey || '').trim() === planKey && validExistingEntries.length === targets.length) {
+            registry[scheduleId] = {
+                ...(existing || {}),
+                entries: validExistingEntries,
+            };
+            return { changed: false, item };
+        }
+        if (validExistingEntries.length > 0) {
+            await cancelScheduleMobileNotificationEntries(validExistingEntries);
+        }
+        const nextEntries = [];
+        for (const target of targets) {
+            const delayInSeconds = Math.max(1, Math.ceil((Number(target.atMs) - Date.now()) / 1000));
+            const notificationId = await sendDeviceNotificationCompat(
+                getScheduleMobileNotificationTitle(item, target),
+                getScheduleMobileNotificationBody(item, target),
+                { channel: '', delayInSeconds }
+            );
+            const id = normalizeNotificationId(notificationId);
+            const failureReason = String(sendDeviceNotificationCompat._lastFailureReason || '').trim();
+            if ((id === null || id < 0) && failureReason === 'no-bridge-failure') continue;
+            nextEntries.push({
+                notificationKey: target.notificationKey,
+                dateKey: target.dateKey,
+                timeKey: target.timeKey,
+                atMs: target.atMs,
+                id: (id === null || id < 0) ? -1 : id,
+                delayInSeconds,
+                status: (id === null || id < 0) ? 'scheduled-no-id' : 'scheduled',
+            });
+        }
+        const nextSchedule = {
+            planKey,
+            updatedAt: new Date().toISOString(),
+            status: nextEntries.length > 0 ? 'scheduled' : 'empty',
+            canceledAt: '',
+            cancelReason: '',
+            entries: nextEntries,
+        };
+        setScheduleDeviceSchedule(item, nextSchedule);
+        if (nextEntries.length > 0) registry[scheduleId] = nextSchedule;
+        else delete registry[scheduleId];
+        return { changed: true, item };
+    }
+
+    async function cleanupOrphanScheduleMobileRegistry(scheduleIds, registry) {
+        const keep = new Set((Array.isArray(scheduleIds) ? scheduleIds : []).map((id) => String(id || '').trim()).filter(Boolean));
+        let changed = false;
+        for (const [scheduleId, entry] of Object.entries(registry || {})) {
+            const key = String(scheduleId || '').trim();
+            if (key === SCHEDULE_ALL_DAY_SUMMARY_REGISTRY_KEY) continue;
+            if (!key || keep.has(key)) continue;
+            try { await cancelScheduleMobileNotificationEntries(entry?.entries); } catch (e) {}
+            delete registry[key];
+            changed = true;
+        }
+        return changed;
+    }
+
+    async function syncScheduleMobileNotifications(reason) {
+        const sr = state.scheduleReminder;
+        if (sr.mobileSyncRunning) {
+            sr.mobileSyncPending = true;
+            return false;
+        }
+        if (!shouldPreferDeviceNotificationBackend()) return false;
+        sr.mobileSyncRunning = true;
+        try {
+            const settings = getSettings();
+            const list = await loadScheduleAll();
+            const nextList = cloneScheduleList(list);
+            const registry = loadScheduleMobileRegistry();
+            let changed = false;
+            for (let i = 0; i < nextList.length; i += 1) {
+                const result = await reconcileSingleScheduleMobileNotification(nextList[i], settings, registry);
+                if (result?.changed) {
+                    nextList[i] = result.item;
+                    changed = true;
+                }
+            }
+            const allDayChanged = await reconcileAllDayScheduleMobileSummary(nextList, settings, registry);
+            await cleanupOrphanScheduleMobileRegistry(nextList.map((it) => String(it?.id || '').trim()), registry);
+            saveScheduleMobileRegistry(registry);
+            if (changed) {
+                await saveScheduleAll(nextList);
+                return true;
+            }
+            return !!allDayChanged;
+        } catch (e) {
+            return false;
+        } finally {
+            sr.mobileSyncRunning = false;
+            if (sr.mobileSyncPending) {
+                sr.mobileSyncPending = false;
+                scheduleScheduleMobileSync(`pending:${String(reason || '').trim()}`);
+            }
+        }
+    }
+
+    function scheduleScheduleMobileSync(reason) {
+        const sr = state.scheduleReminder;
+        if (sr.mobileSyncTimer) return;
+        sr.mobileSyncTimer = setTimeout(() => {
+            sr.mobileSyncTimer = null;
+            syncScheduleMobileNotifications(reason).catch(() => null);
+        }, 180);
+    }
+
+    async function refreshScheduleCurrentDeviceNotificationById(scheduleId) {
+        const id = String(scheduleId || '').trim();
+        if (!id) return null;
+        const list = await loadScheduleAll();
+        const nextList = cloneScheduleList(list);
+        const idx = nextList.findIndex((it) => String(it?.id || '').trim() === id);
+        if (idx < 0) return null;
+        const settings = getSettings();
+        const registry = loadScheduleMobileRegistry();
+        const result = await reconcileSingleScheduleMobileNotification(nextList[idx], settings, registry);
+        let changed = !!result?.changed;
+        if (result?.item) nextList[idx] = result.item;
+        const isAllDay = (() => {
+            const s = toMs(nextList[idx]?.start);
+            const e = toMs(nextList[idx]?.end);
+            if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) return false;
+            return (nextList[idx]?.allDay === true) || isAllDayRange(new Date(s), new Date(e));
+        })();
+        if (isAllDay) {
+            const allDayChanged = await reconcileAllDayScheduleMobileSummary(nextList, settings, registry);
+            changed = changed || !!allDayChanged;
+        }
+        saveScheduleMobileRegistry(registry);
+        if (changed) await saveScheduleAll(nextList);
+        return nextList[idx] || null;
+    }
+
+    async function refreshScheduleCurrentDeviceNotificationDraft(item) {
+        if (!item || typeof item !== 'object') return null;
+        const scheduleId = String(item.id || '').trim();
+        if (!scheduleId) return null;
+        const list = await loadScheduleAll();
+        const nextList = cloneScheduleList(list);
+        const idx = nextList.findIndex((it) => String(it?.id || '').trim() === scheduleId);
+        if (idx < 0) return null;
+        nextList[idx] = {
+            ...nextList[idx],
+            ...item,
+            notificationSchedules: sanitizeScheduleNotificationSchedules(item.notificationSchedules || nextList[idx]?.notificationSchedules),
+        };
+        const settings = getSettings();
+        const registry = loadScheduleMobileRegistry();
+        const result = await reconcileSingleScheduleMobileNotification(nextList[idx], settings, registry);
+        let changed = !!result?.changed;
+        if (result?.item) nextList[idx] = result.item;
+        const isAllDay = (() => {
+            const s = toMs(nextList[idx]?.start);
+            const e = toMs(nextList[idx]?.end);
+            if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) return false;
+            return (nextList[idx]?.allDay === true) || isAllDayRange(new Date(s), new Date(e));
+        })();
+        if (isAllDay) {
+            const allDayChanged = await reconcileAllDayScheduleMobileSummary(nextList, settings, registry);
+            changed = changed || !!allDayChanged;
+        }
+        saveScheduleMobileRegistry(registry);
+        await saveScheduleAll(nextList);
+        return nextList[idx] || null;
+    }
+
+    async function clearScheduleCurrentDeviceNotificationById(scheduleId) {
+        const id = String(scheduleId || '').trim();
+        if (!id) return null;
+        const list = await loadScheduleAll();
+        const nextList = cloneScheduleList(list);
+        const idx = nextList.findIndex((it) => String(it?.id || '').trim() === id);
+        if (idx < 0) return null;
+        const item = nextList[idx];
+        const existing = getScheduleDeviceSchedule(item);
+        const validEntries = sanitizeScheduleNotificationEntries(existing?.entries);
+        if (validEntries.length > 0) {
+            await cancelScheduleMobileNotificationEntries(validEntries);
+        }
+        const nextSchedule = {
+            ...(existing || {}),
+            planKey: '',
+            updatedAt: new Date().toISOString(),
+            status: 'canceled',
+            canceledAt: new Date().toISOString(),
+            cancelReason: 'manual-clear',
+            entries: [],
+        };
+        setScheduleDeviceSchedule(item, nextSchedule);
+        const registry = loadScheduleMobileRegistry();
+        delete registry[id];
+        saveScheduleMobileRegistry(registry);
+        await saveScheduleAll(nextList);
+        return item;
+    }
+
     function ensureScheduleReminderToastHost() {
         const sr = state.scheduleReminder;
         if (sr.toastHost && document.body.contains(sr.toastHost)) return sr.toastHost;
@@ -1437,6 +2191,12 @@
             }
         } catch (e) {}
         try {
+            if (sr.mobileSyncTimer) {
+                clearTimeout(sr.mobileSyncTimer);
+                sr.mobileSyncTimer = null;
+            }
+        } catch (e) {}
+        try {
             if (sr.timers && typeof sr.timers.forEach === 'function') {
                 sr.timers.forEach((t) => {
                     try { clearTimeout(t); } catch (e) {}
@@ -1454,9 +2214,15 @@
         if (!settings.scheduleReminderEnabled) {
             sr.enabled = false;
             clearScheduleReminderTimers();
+            if (shouldPreferDeviceNotificationBackend()) {
+                try { scheduleScheduleMobileSync(reason || 'disabled'); } catch (e) {}
+            }
             return;
         }
         sr.enabled = true;
+        if (shouldPreferDeviceNotificationBackend()) {
+            try { scheduleScheduleMobileSync(reason || 'refresh'); } catch (e) {}
+        }
         const now = Date.now();
         const todayKey = formatDateKey(new Date(now));
         const windowEnd = now + 36 * 60 * 60000;
@@ -2608,17 +3374,17 @@
                     const taskId = String(ext.__tmTaskId || payload?.taskId || '').trim();
                     const start = info?.event?.start;
                     let end = info?.event?.end;
-                    const durMin = Number(ext.__tmDurationMin || payload?.durationMin);
+                    const settings = getSettings();
+                    const durMin = clampNewScheduleDurationMin(Number(ext.__tmDurationMin || payload?.durationMin), settings);
                     if (!taskId || !(start instanceof Date) || Number.isNaN(start.getTime())) {
                         try { info?.event?.remove?.(); } catch (e2) {}
                         return;
                     }
                     if (!(end instanceof Date) || Number.isNaN(end.getTime()) || end.getTime() <= start.getTime()) {
-                        const safeMin = (Number.isFinite(durMin) && durMin > 0) ? Math.round(durMin) : 60;
-                        end = new Date(start.getTime() + safeMin * 60000);
+                        end = new Date(start.getTime() + durMin * 60000);
                     }
                     const title = String(payload?.title || info?.event?.title || '').trim() || '任务';
-                    const calendarId = String(ext.calendarId || payload?.calendarId || '').trim() || pickDefaultCalendarId(getSettings());
+                    const calendarId = String(ext.calendarId || payload?.calendarId || '').trim() || pickDefaultCalendarId(settings);
                     const dropAllDayHint = (() => {
                         const t = info?.jsEvent?.target;
                         if (!(t instanceof Element)) return false;
@@ -2708,6 +3474,7 @@
                             reminderMode: String(ext.__tmReminderMode || ''),
                             reminderEnabled: ext.__tmReminderEnabled === true,
                             reminderOffsetMin: Number(ext.__tmReminderOffsetMin),
+                            notificationSchedules: sanitizeScheduleNotificationSchedules(ext.__tmNotificationSchedules),
                         });
                     } catch (e2) {
                         toast(`❌ 打开编辑窗失败：${String(e2?.message || e2 || '')}`, 'error');
@@ -3083,6 +3850,7 @@
                     __tmReminderMode: reminderMode,
                     __tmReminderEnabled: reminderEnabled,
                     __tmReminderOffsetMin: reminderOffsetMin,
+                    __tmNotificationSchedules: sanitizeScheduleNotificationSchedules(it?.notificationSchedules),
                     calendarId,
                 },
             };
@@ -3749,6 +4517,114 @@
         setTimeout(() => { try { el.remove(); } catch (e) {} }, 2500);
     }
 
+    function getScheduleAllDeviceNotificationEntries(item) {
+        const map = sanitizeScheduleNotificationSchedules(item?.notificationSchedules);
+        const result = [];
+        for (const [deviceId, schedule] of Object.entries(map || {})) {
+            const entries = sanitizeScheduleNotificationEntries(schedule?.entries);
+            if (entries.length === 0) continue;
+            result.push({ deviceId, schedule, entries });
+        }
+        return result;
+    }
+
+    function getScheduleCurrentDeviceNotificationSummary(item) {
+        const current = getScheduleDeviceSchedule(item);
+        const entries = sanitizeScheduleNotificationEntries(current?.entries);
+        if (entries.length === 0) return '当前设备暂无已预约提醒';
+        const sorted = entries.slice().sort((a, b) => Number(a?.atMs || 0) - Number(b?.atMs || 0));
+        const first = sorted[0];
+        const dt = new Date(Number(first?.atMs) || 0);
+        const when = Number.isNaN(dt.getTime()) ? '' : `${formatDateKey(dt)} ${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
+        const noIdCount = sorted.filter((it) => String(it?.status || '') === 'scheduled-no-id').length;
+        return `当前设备已预约 ${sorted.length} 条${when ? `，最近一条 ${when}` : ''}${noIdCount > 0 ? `；其中 ${noIdCount} 条未返回通知ID` : ''}`;
+    }
+
+    function showScheduleDeviceScheduleDialog(item, options) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        let currentItem = (item && typeof item === 'object') ? { ...item } : {};
+        const scheduleId = String(currentItem?.id || '').trim();
+        const modal = document.createElement('div');
+        modal.className = 'tm-calendar-edit-modal';
+        const close = () => { try { modal.remove(); } catch (e) {} };
+        const render = () => {
+            const groups = getScheduleAllDeviceNotificationEntries(currentItem);
+            const currentSummary = getScheduleCurrentDeviceNotificationSummary(currentItem);
+            const lines = [];
+            for (const group of groups.sort((a, b) => String(a.deviceId || '').localeCompare(String(b.deviceId || '')))) {
+                lines.push(`设备: ${String(group.deviceId || '').trim() || 'unknown'}`);
+                const entries = group.entries.slice().sort((a, b) => Number(a?.atMs || 0) - Number(b?.atMs || 0));
+                for (const entry of entries) {
+                    const dt = new Date(Number(entry?.atMs) || 0);
+                    const label = Number.isNaN(dt.getTime())
+                        ? `${String(entry?.dateKey || '')} ${String(entry?.timeKey || '')}`.trim()
+                        : `${formatDateKey(dt)} ${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
+                    const idLabel = Number(entry?.id) >= 0 ? String(entry?.id ?? '') : '未返回';
+                    const extra = String(entry?.status || '') === 'scheduled-no-id' ? '\n状态: 已尝试预约，但桥接未返回通知ID' : '';
+                    lines.push(`${label}\nid: ${idLabel}${extra}`);
+                }
+                lines.push('');
+            }
+            const detailText = lines.length > 0 ? lines.join('\n') : '当前设备暂无已预约提醒';
+            modal.innerHTML = `
+                <div class="tm-calendar-edit-box">
+                    <div class="tm-calendar-edit-title">移动端预约</div>
+                    <div class="tm-calendar-edit-row" style="display:block;">
+                        <div class="tm-calendar-edit-label" style="margin-bottom:8px;white-space:nowrap;">当前设备</div>
+                        <div class="tm-calendar-edit-value" style="line-height:1.5;">${esc(currentSummary)}</div>
+                    </div>
+                    <div class="tm-calendar-edit-row" style="display:block;">
+                        <div class="tm-calendar-edit-label" style="margin-bottom:8px;white-space:nowrap;">已下发通知</div>
+                        <div class="tm-calendar-edit-value" style="white-space:pre-line;line-height:1.5;max-height:50vh;overflow:auto;">${esc(detailText)}</div>
+                    </div>
+                    <div class="tm-calendar-edit-actions">
+                        ${scheduleId ? `<button class="tm-btn tm-btn-secondary" data-tm-cal-action="refreshDeviceSchedule">更新预约</button>` : ''}
+                        ${scheduleId ? `<button class="tm-btn tm-btn-danger" data-tm-cal-action="clearDeviceSchedule">清除当前设备预约</button>` : ''}
+                        <div style="flex:1;"></div>
+                        <button class="tm-btn tm-btn-secondary" data-tm-cal-action="closeDeviceSchedule">关闭</button>
+                    </div>
+                </div>
+            `;
+        };
+        render();
+        document.body.appendChild(modal);
+        modal.addEventListener('click', async (e) => {
+            const action = String(e?.target?.closest?.('[data-tm-cal-action]')?.getAttribute?.('data-tm-cal-action') || '');
+            if (e.target === modal || action === 'closeDeviceSchedule') {
+                close();
+                return;
+            }
+            if (!action) return;
+            if (action === 'refreshDeviceSchedule') {
+                const nextItem = (typeof opts.resolveLatestItem === 'function')
+                    ? await opts.resolveLatestItem(currentItem)
+                    : await refreshScheduleCurrentDeviceNotificationById(scheduleId);
+                if (nextItem) {
+                    currentItem = { ...nextItem };
+                    render();
+                    try { refetchAllCalendars(); } catch (e2) {}
+                    toast('✅ 已更新当前设备预约', 'success');
+                } else {
+                    toast('❌ 更新失败', 'error');
+                }
+                return;
+            }
+            if (action === 'clearDeviceSchedule') {
+                const nextItem = await clearScheduleCurrentDeviceNotificationById(scheduleId);
+                if (nextItem) {
+                    currentItem = { ...nextItem };
+                    render();
+                    toast('✅ 已清除当前设备预约', 'success');
+                } else {
+                    toast('❌ 清除失败', 'error');
+                }
+            }
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') close();
+        }, { once: true });
+    }
+
     async function loadRecordsForRange(rangeStart, rangeEnd) {
         const s = getSettings();
         if (!s.linkDockTomato) return [];
@@ -3937,6 +4813,91 @@
             }, { signal: abort.signal });
         }
 
+        const buildDraftScheduleItemFromModal = async () => {
+            if (!scheduleId) return null;
+            const title = getInputValue('title');
+            const calendarId = getInputValue('calendarId') || calendarId0 || 'default';
+            const s0 = getInputValue('start');
+            const e0 = getInputValue('end');
+            const color = getInputValue('color') || '#0078d4';
+            const reminderSelect = String(getInputValue('reminderSelect') || '').trim() || 'inherit';
+            const reminderMode = reminderSelect === 'inherit' ? 'inherit' : 'custom';
+            const reminderEnabled = (() => {
+                if (reminderSelect === 'inherit') return null;
+                if (reminderSelect === 'off') return false;
+                return true;
+            })();
+            const reminderOffsetMin = (() => {
+                if (reminderSelect === 'inherit' || reminderSelect === 'off') return null;
+                if (initAllDay) return null;
+                const n = Number(reminderSelect);
+                const allowed = new Set([0, 5, 10, 15, 30, 60]);
+                return (Number.isFinite(n) && allowed.has(n)) ? n : 0;
+            })();
+            if (!s0 || !e0) {
+                toast('⚠ 开始/结束不能为空', 'warning');
+                return null;
+            }
+            const nextStart = new Date(s0);
+            const nextEnd = new Date(e0);
+            if (Number.isNaN(nextStart.getTime()) || Number.isNaN(nextEnd.getTime()) || nextEnd.getTime() <= nextStart.getTime()) {
+                toast('⚠ 时间不合法', 'warning');
+                return null;
+            }
+            const allDay = isAllDayRange(nextStart, nextEnd) || (initAllDay && isAllDayRange(nextStart, nextEnd));
+            const list = await loadScheduleAll();
+            const idx = list.findIndex((x) => String(x?.id || '') === scheduleId);
+            if (idx < 0) {
+                toast('⚠ 未找到日程', 'warning');
+                return null;
+            }
+            const prevItem = list[idx] || {};
+            const taskIdKeep = String(taskId0 || prevItem?.taskId || prevItem?.task_id || prevItem?.linkedTaskId || prevItem?.linked_task_id || '').trim();
+            return {
+                ...prevItem,
+                id: scheduleId,
+                title: title || '日程',
+                start: safeISO(nextStart),
+                end: safeISO(nextEnd),
+                allDay,
+                color,
+                calendarId,
+                taskId: taskIdKeep,
+                reminderMode,
+                reminderEnabled,
+                reminderOffsetMin: allDay ? null : reminderOffsetMin,
+                notificationSchedules: sanitizeScheduleNotificationSchedules(prevItem?.notificationSchedules),
+            };
+        };
+
+        const saveDraftScheduleItemFromModal = async () => {
+            const draftItem = await buildDraftScheduleItemFromModal();
+            if (!draftItem) return null;
+            const list = await loadScheduleAll();
+            const nextList = cloneScheduleList(list);
+            const idx = nextList.findIndex((x) => String(x?.id || '') === scheduleId);
+            if (idx < 0) {
+                toast('⚠ 未找到日程', 'warning');
+                return null;
+            }
+            nextList[idx] = {
+                ...nextList[idx],
+                ...draftItem,
+                notificationSchedules: sanitizeScheduleNotificationSchedules(draftItem.notificationSchedules || nextList[idx]?.notificationSchedules),
+            };
+            await saveScheduleAll(nextList);
+            try {
+                const store = state.settingsStore;
+                if (store && store.data) {
+                    store.data.calendarDefaultCalendarId = String(draftItem.calendarId || calendarId0 || 'default').trim() || 'default';
+                    if (store.data.calendarShowSchedule === false) store.data.calendarShowSchedule = true;
+                    await store.save();
+                }
+            } catch (e2) {}
+            try { refetchAllCalendars(); } catch (e2) {}
+            return nextList[idx] || draftItem;
+        };
+
         modal.addEventListener('click', async (e) => {
             const btn = e.target?.closest?.('[data-tm-cal-action]');
             const action = String(btn?.getAttribute?.('data-tm-cal-action') || '');
@@ -4034,6 +4995,7 @@
         const calDef0 = calDefs.find((d) => d.id === calendarId0) || calDefs[0] || { id: 'default', name: '时间轴', color: '#0078d4' };
         const color0 = String(init.color || '').trim() || String(calDef0.color || '#0078d4');
         const calendarOptions = calDefs.map((d) => `<option value="${esc(d.id)}" ${d.id === calendarId0 ? 'selected' : ''}>${esc(d.name)}</option>`).join('');
+        const deviceSummary0 = isEdit ? getScheduleCurrentDeviceNotificationSummary(init) : '保存后会自动同步移动端预约';
 
         const startLocal = start ? `${formatDateKey(start)}T${pad2(start.getHours())}:${pad2(start.getMinutes())}` : '';
         const endLocal = end ? `${formatDateKey(end)}T${pad2(end.getHours())}:${pad2(end.getMinutes())}` : '';
@@ -4078,6 +5040,11 @@
                             <option value="60" ${reminderSelect0 === '60' ? 'selected' : ''}>1 小时前</option>
                         `}
                     </select>
+                </div>
+                <div class="tm-calendar-edit-row">
+                    <div class="tm-calendar-edit-label">移动端预约</div>
+                    <div class="tm-calendar-edit-value" data-tm-cal-field="deviceScheduleSummary" style="flex:1;line-height:1.4;opacity:.85;">${esc(deviceSummary0)}</div>
+                    ${isEdit ? `<button class="tm-btn tm-btn-secondary" type="button" data-tm-cal-action="viewDeviceSchedule" style="margin-left:8px;">查看</button>` : ''}
                 </div>
                 <div class="tm-calendar-edit-actions">
                     <button class="tm-btn tm-btn-secondary" data-tm-cal-action="cancel">取消</button>
@@ -4126,6 +5093,22 @@
             if (!action) return;
             if (action === 'cancel') {
                 closeModal();
+                return;
+            }
+            if (action === 'viewDeviceSchedule') {
+                if (!scheduleId) {
+                    toast('请先保存日程后再查看', 'warning');
+                    return;
+                }
+                const savedItem = await saveDraftScheduleItemFromModal();
+                if (!savedItem) return;
+                showScheduleDeviceScheduleDialog(savedItem, {
+                    resolveLatestItem: async () => {
+                        const latestSaved = await saveDraftScheduleItemFromModal();
+                        if (!latestSaved) return null;
+                        return await refreshScheduleCurrentDeviceNotificationById(scheduleId);
+                    },
+                });
                 return;
             }
             if (action === 'delete') {
@@ -4605,13 +5588,12 @@
                     const taskId = String(ext.__tmTaskId || '').trim();
                     const start = info?.event?.start;
                     let end = info?.event?.end;
-                    const durMin = Number(ext.__tmDurationMin);
+                    const settings = getSettings();
+                    const durMin = clampNewScheduleDurationMin(Number(ext.__tmDurationMin), settings);
                     if (!(start instanceof Date) || Number.isNaN(start.getTime())) return;
                     if (!(end instanceof Date) || Number.isNaN(end.getTime()) || end.getTime() <= start.getTime()) {
-                        const safeMin = (Number.isFinite(durMin) && durMin > 0) ? Math.round(durMin) : 60;
-                        end = new Date(start.getTime() + safeMin * 60000);
+                        end = new Date(start.getTime() + durMin * 60000);
                     }
-                    const settings = getSettings();
                     const calendarId = String(ext.calendarId || '').trim() || pickDefaultCalendarId(settings);
                     const title = String(info?.event?.title || '').trim() || '任务';
                     const item = {
@@ -5290,6 +6272,7 @@
                             reminderMode: String(ext.__tmReminderMode || ''),
                             reminderEnabled: ext.__tmReminderEnabled === true,
                             reminderOffsetMin: Number(ext.__tmReminderOffsetMin),
+                            notificationSchedules: sanitizeScheduleNotificationSchedules(ext.__tmNotificationSchedules),
                         });
                     } catch (e2) {
                         try { toast(`❌ 打开编辑窗失败：${String(e2?.message || e2 || '')}`, 'error'); } catch (e3) {}
@@ -5707,6 +6690,15 @@
                     </select>
                 </div>
                 <div class="tm-calendar-settings-row">
+                    <div class="tm-calendar-settings-label">日程默认最大新建时长</div>
+                    <select class="tm-calendar-settings-select" data-tm-cal-setting="calendarNewScheduleMaxDurationMin">
+                        <option value="60" ${Number(s.newScheduleMaxDurationMin) === 60 ? 'selected' : ''}>1 小时</option>
+                        <option value="120" ${Number(s.newScheduleMaxDurationMin) === 120 ? 'selected' : ''}>2 小时</option>
+                        <option value="180" ${Number(s.newScheduleMaxDurationMin) === 180 ? 'selected' : ''}>3 小时</option>
+                        <option value="240" ${Number(s.newScheduleMaxDurationMin) === 240 ? 'selected' : ''}>4 小时</option>
+                    </select>
+                </div>
+                <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">显示农历</div>
                     <label class="tm-switch">
                         <input type="checkbox" data-tm-cal-setting="calendarShowLunar" ${s.showLunar ? 'checked' : ''}>
@@ -5797,6 +6789,10 @@
             if (!store || !store.data) return;
             if (key === 'calendarFirstDay') {
                 store.data[key] = String(el.value || '').trim() === '0' ? 0 : 1;
+            } else if (key === 'calendarNewScheduleMaxDurationMin') {
+                const allowed = new Set([60, 120, 180, 240]);
+                const num = Number(el.value);
+                store.data[key] = allowed.has(num) ? num : 60;
             } else if (el.type === 'checkbox') {
                 store.data[key] = !!el.checked;
             } else {
@@ -5833,6 +6829,11 @@
                 } else if (key === 'calendarScheduleReminderEnabled' || key === 'calendarScheduleReminderSystemEnabled' || key === 'calendarScheduleReminderDefaultMode' || key === 'calendarAllDayReminderEnabled' || key === 'calendarAllDayReminderTime' || key === 'calendarTaskDateAllDayReminderEnabled' || key === 'calendarAllDaySummaryIncludeExtras') {
                     try { renderSettings(containerEl, store); } catch (e2) {}
                     try { scheduleScheduleReminderRefresh('settings'); } catch (e2) {}
+                } else if (key === 'calendarNewScheduleMaxDurationMin') {
+                    try {
+                        const root = state.rootEl;
+                        if (root) renderTaskPage(root, getSettings());
+                    } catch (e2) {}
                 } else if (state.calendar) {
                     if (key === 'calendarFirstDay') {
                         try { state.calendar.setOption('firstDay', Number(store.data.calendarFirstDay) === 0 ? 0 : 1); } catch (e2) {}
@@ -5905,6 +6906,7 @@
                 reminderMode: String(item.reminderMode || ''),
                 reminderEnabled: item.reminderEnabled,
                 reminderOffsetMin: item.reminderOffsetMin,
+                notificationSchedules: item.notificationSchedules,
             });
             return true;
         } catch (e) {
