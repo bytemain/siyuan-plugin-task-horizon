@@ -38,6 +38,8 @@
         settingsAbort: null,
         uiAbort: null,
         modalEl: null,
+        deviceScheduleModalEl: null,
+        deviceScheduleAbort: null,
         isMobileDevice: false,
         sidebarOpen: false,
         mobileDragCloseTimer: null,
@@ -50,6 +52,7 @@
             list: null,
             loadedAt: 0,
             inflight: null,
+            sourceSignature: '',
         },
         reminderCache: {
             list: null,
@@ -67,6 +70,13 @@
             scheduleUpdatedListener: null,
             toastHost: null,
             toastStyleEl: null,
+            backgroundRefreshBound: false,
+            backgroundVisibilityHandler: null,
+            backgroundFocusHandler: null,
+            backgroundPageShowHandler: null,
+            backgroundLastRefreshAt: 0,
+            sharedFileWatchTimer: null,
+            sharedFileWatchRunning: false,
         },
         sideDay: {
             rootEl: null,
@@ -77,6 +87,7 @@
             dragHost: null,
             draggable: null,
             nativeDropAbort: null,
+            previewEl: null,
             popoverObserver: null,
             popoverClickCapture: null,
         },
@@ -84,6 +95,31 @@
 
     function esc(s) {
         return String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch] || ch));
+    }
+
+    function findActionTarget(target, attrName = 'data-tm-cal-action') {
+        const attr = String(attrName || '').trim();
+        if (!attr) return null;
+        let node = target;
+        while (node) {
+            if (node instanceof Element && typeof node.getAttribute === 'function') {
+                const value = node.getAttribute(attr);
+                if (value != null && String(value).trim()) return node;
+            }
+            node = node.parentElement || node.parentNode || null;
+        }
+        return null;
+    }
+
+    function getOverlayZIndex(baseEl, fallback = 200000) {
+        try {
+            const el = baseEl instanceof Element ? baseEl : null;
+            if (!el) return fallback;
+            const raw = window.getComputedStyle(el).zIndex;
+            const parsed = Number(raw);
+            if (Number.isFinite(parsed)) return parsed;
+        } catch (e) {}
+        return fallback;
     }
 
     function ensureFcCompactAllDayStyle() {
@@ -208,7 +244,30 @@
     async function getFileText(path) {
         const res = await postJSON('/api/file/getFile', { path });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.text();
+        return unwrapGetFileText(await res.text());
+    }
+
+    function unwrapGetFileText(raw) {
+        const text = String(raw ?? '');
+        const trimmed = text.replace(/^\uFEFF/, '').trim();
+        if (!trimmed) return '';
+        if (!trimmed.startsWith('{')) return text;
+        if (!/\"(code|msg|data|content)\"\s*:/.test(trimmed)) return text;
+        let obj = null;
+        try {
+            obj = JSON.parse(trimmed);
+        } catch (e) {
+            throw new Error(`getFile response looks like JSON but failed to parse: ${e?.message || e}`);
+        }
+        if (obj && typeof obj === 'object') {
+            if (typeof obj.data === 'string') return obj.data;
+            if (typeof obj.content === 'string') return obj.content;
+            if (obj.data && typeof obj.data === 'object' && typeof obj.data.content === 'string') return obj.data.content;
+            if (typeof obj.msg === 'string' && typeof obj.code !== 'undefined') {
+                throw new Error(`getFile error: ${obj.code} ${obj.msg}`);
+            }
+        }
+        return text;
     }
 
     async function delay(ms) {
@@ -289,6 +348,135 @@
         }
     }
 
+    function normalizeCalendarVisibleTime(value, fallback, allow24Hour = false) {
+        const raw = String(value || '').trim();
+        const safeFallback = String(fallback || '').trim() || (allow24Hour ? '24:00' : '00:00');
+        const m = raw.match(/^(\d{1,2}):(\d{2})$/);
+        if (!m) return safeFallback;
+        const hh = Number(m[1]);
+        const mm = Number(m[2]);
+        if (!Number.isInteger(hh) || !Number.isInteger(mm)) return safeFallback;
+        if (mm !== 0 && mm !== 30) return safeFallback;
+        if (hh < 0 || hh > (allow24Hour ? 24 : 23)) return safeFallback;
+        if (hh === 24 && mm !== 0) return safeFallback;
+        return `${pad2(hh)}:${pad2(mm)}`;
+    }
+
+    function getCalendarVisibleSlotRange(settings) {
+        const start = normalizeCalendarVisibleTime(settings?.visibleStartTime, '00:00', false);
+        const end = normalizeCalendarVisibleTime(settings?.visibleEndTime, '24:00', true);
+        const toMinutes = (text) => {
+            const [hh, mm] = String(text || '').split(':').map((it) => Number(it));
+            if (!Number.isInteger(hh) || !Number.isInteger(mm)) return NaN;
+            return hh * 60 + mm;
+        };
+        const startMin = toMinutes(start);
+        const endMin = toMinutes(end);
+        if (!Number.isFinite(startMin) || !Number.isFinite(endMin) || endMin <= startMin) {
+            return { start: '00:00', end: '24:00', slotMinTime: '00:00:00', slotMaxTime: '24:00:00' };
+        }
+        return {
+            start,
+            end,
+            slotMinTime: `${start}:00`,
+            slotMaxTime: end === '24:00' ? '24:00:00' : `${end}:00`,
+        };
+    }
+
+    function buildCalendarVisibleTimeOptions(selectedValue, allow24Hour = false) {
+        const selected = normalizeCalendarVisibleTime(selectedValue, allow24Hour ? '24:00' : '00:00', allow24Hour);
+        const maxHour = allow24Hour ? 24 : 23;
+        const options = [];
+        for (let hh = 0; hh <= maxHour; hh += 1) {
+            for (const mm of [0, 30]) {
+                if (hh === 24 && mm !== 0) continue;
+                const value = `${pad2(hh)}:${pad2(mm)}`;
+                options.push(`<option value="${value}" ${value === selected ? 'selected' : ''}>${value}</option>`);
+            }
+        }
+        return options.join('');
+    }
+
+    function applyCalendarVisibleSlotRange(calendar, settings) {
+        if (!calendar) return false;
+        const range = getCalendarVisibleSlotRange(settings || getSettings());
+        try { calendar.setOption('slotMinTime', range.slotMinTime); } catch (e) {}
+        try { calendar.setOption('slotMaxTime', range.slotMaxTime); } catch (e) {}
+        return true;
+    }
+
+    function getTimeGridSlotLayoutOptions(settings) {
+        const visibleRange = getCalendarVisibleSlotRange(settings || getSettings());
+        return {
+            slotDuration: '00:30:00',
+            slotLabelInterval: '01:00',
+            slotMinTime: visibleRange.slotMinTime,
+            slotMaxTime: visibleRange.slotMaxTime,
+            slotLabelContent: (arg) => {
+                const d = arg?.date;
+                if (!(d instanceof Date) || Number.isNaN(d.getTime())) return '';
+                return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+            },
+        };
+    }
+
+    function getSideDayContentHeight(settings) {
+        const range = getCalendarVisibleSlotRange(settings || getSettings());
+        const toMinutes = (value) => {
+            const raw = String(value || '').trim();
+            const m = raw.match(/^(\d{2}):(\d{2})/);
+            if (!m) return NaN;
+            return Number(m[1]) * 60 + Number(m[2]);
+        };
+        const minMinutes = toMinutes(range.slotMinTime);
+        const maxMinutes = toMinutes(range.slotMaxTime);
+        const totalMinutes = Number.isFinite(minMinutes) && Number.isFinite(maxMinutes) && maxMinutes > minMinutes
+            ? (maxMinutes - minMinutes)
+            : 24 * 60;
+        const slotCount = Math.max(1, Math.round(totalMinutes / 30));
+        return slotCount * 29;
+    }
+
+    function applySideDaySlotHeight(rootEl) {
+        if (!(rootEl instanceof HTMLElement)) return false;
+        const value = '29px';
+        const selectors = [
+            '.fc-timegrid-slot-lane',
+            '.fc-timegrid-slot-label',
+            '.fc-timegrid-slot',
+            '.fc-timegrid-slot-frame',
+            '.fc-timegrid-slots tr',
+            '.fc-timegrid-slots td',
+        ];
+        selectors.forEach((selector) => {
+            rootEl.querySelectorAll(selector).forEach((el) => {
+                if (!(el instanceof HTMLElement)) return;
+                try { el.style.setProperty('height', value, 'important'); } catch (e) {}
+                try { el.style.setProperty('min-height', value, 'important'); } catch (e) {}
+            });
+        });
+        return true;
+    }
+
+    function syncSideDayLayout(rootEl, calendar, settings) {
+        if (!(rootEl instanceof HTMLElement)) return false;
+        const contentHeight = getSideDayContentHeight(settings || getSettings());
+        try { rootEl.style.setProperty('--tm-calendar-half-hour-slot-height', '29px'); } catch (e) {}
+        try { rootEl.style.setProperty('--fc-slot-min-height', '29px'); } catch (e) {}
+        try { rootEl.style.setProperty('--fc-timegrid-slot-min-height', '29px'); } catch (e) {}
+        try {
+            rootEl.querySelectorAll('.fc, .fc-media-screen, .fc-scrollgrid, .fc-scrollgrid-sync-table, .fc-timegrid-body, .fc-timegrid-slots table').forEach((el) => {
+                if (!(el instanceof HTMLElement)) return;
+                el.style.setProperty('height', 'auto', 'important');
+                el.style.setProperty('min-height', '0', 'important');
+            });
+        } catch (e) {}
+        try { calendar?.setOption?.('contentHeight', contentHeight); } catch (e) {}
+        try { applySideDaySlotHeight(rootEl); } catch (e) {}
+        try { calendar?.updateSize?.(); } catch (e) {}
+        return true;
+    }
+
     function getSettings() {
         const liveStore = state.settingsStore || state.sideDay?.settingsStore || null;
         const s = liveStore?.data || {};
@@ -326,6 +514,8 @@
         const tomatoMaster = s.calendarShowTomatoMaster !== false;
         const allDayTime0 = readStoredString('tm_calendar_all_day_reminder_time', s.calendarAllDayReminderTime).trim() || '09:00';
         const defaultMode0 = readStoredString('tm_calendar_schedule_reminder_default_mode', s.calendarScheduleReminderDefaultMode).trim() || '0';
+        const visibleStartTime0 = normalizeCalendarVisibleTime(readStoredString('tm_calendar_visible_start_time', s.calendarVisibleStartTime).trim() || '00:00', '00:00', false);
+        const visibleEndTime0 = normalizeCalendarVisibleTime(readStoredString('tm_calendar_visible_end_time', s.calendarVisibleEndTime).trim() || '24:00', '24:00', true);
         return {
             enabled: !!s.calendarEnabled,
             linkDockTomato: !!s.calendarLinkDockTomato,
@@ -344,6 +534,8 @@
             taskDateColorMode: String(s.calendarTaskDateColorMode || 'group').trim() || 'group',
             scheduleColor: String(s.calendarScheduleColor || '').trim(),
             taskDatesColor: String(s.calendarTaskDatesColor || '').trim(),
+            visibleStartTime: visibleStartTime0,
+            visibleEndTime: visibleEndTime0,
             showCnHoliday: !!s.calendarShowCnHoliday,
             cnHolidayColor: String(s.calendarCnHolidayColor || '#ff3333').trim() || '#ff3333',
             showLunar: !!s.calendarShowLunar,
@@ -1254,50 +1446,71 @@
         return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     }
 
+    function computeScheduleSourceSignature(raw) {
+        const text = String(raw || '');
+        let hash = 2166136261;
+        for (let i = 0; i < text.length; i += 1) {
+            hash ^= text.charCodeAt(i);
+            hash = Math.imul(hash, 16777619);
+        }
+        return `${text.length}:${hash >>> 0}`;
+    }
+
     function cloneScheduleList(items) {
         const src = Array.isArray(items) ? items : [];
         return src.map((it) => ((it && typeof it === 'object') ? { ...it } : {}));
     }
 
-    function setScheduleCache(items) {
+    function normalizeScheduleList(arr) {
+        const list0 = Array.isArray(arr) ? arr : [];
+        let changed = false;
+        const out = list0.map((it) => {
+            const base = (it && typeof it === 'object') ? it : {};
+            const id0 = String(base.id || '').trim();
+            const taskId0 = String(base.taskId || base.task_id || base.linkedTaskId || base.linked_task_id || '').trim();
+            const id = id0 || uuid();
+            if (id !== id0) changed = true;
+            if (taskId0 && taskId0 !== String(base.taskId || '').trim()) changed = true;
+            const reminderMode0 = String(base.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
+            const allowed = new Set([0, 5, 10, 15, 30, 60]);
+            const reminderEnabled0 = reminderMode0 === 'custom' ? (base.reminderEnabled === true) : null;
+            const reminderOffsetRaw = Number(base.reminderOffsetMin);
+            const reminderOffsetMin0 = reminderMode0 === 'custom'
+                ? ((Number.isFinite(reminderOffsetRaw) && allowed.has(reminderOffsetRaw)) ? reminderOffsetRaw : 0)
+                : null;
+            const notificationSchedules0 = sanitizeScheduleNotificationSchedules(base.notificationSchedules);
+            if (String(base.reminderMode || '').trim() !== reminderMode0) changed = true;
+            if (JSON.stringify(base.notificationSchedules || {}) !== JSON.stringify(notificationSchedules0)) changed = true;
+            return {
+                ...base,
+                id,
+                taskId: taskId0,
+                reminderMode: reminderMode0,
+                reminderEnabled: reminderEnabled0,
+                reminderOffsetMin: reminderOffsetMin0,
+                notificationSchedules: notificationSchedules0,
+            };
+        });
+        return { out, changed };
+    }
+
+    function setScheduleCache(items, sourceSignature) {
         state.scheduleCache.list = cloneScheduleList(items);
         state.scheduleCache.loadedAt = Date.now();
+        if (typeof sourceSignature !== 'undefined') {
+            state.scheduleCache.sourceSignature = String(sourceSignature || '');
+        }
+    }
+
+    function persistScheduleLocalShadow(items) {
+        const list = Array.isArray(items) ? items : [];
+        setScheduleCache(list);
+        try { localStorage.setItem(STORAGE.SCHEDULE_LS_KEY, JSON.stringify(list, null, 2)); } catch (e) {}
+        return true;
     }
 
     async function loadScheduleAll() {
         const cacheTtlMs = 1200;
-        const normalizeList = (arr) => {
-            const list0 = Array.isArray(arr) ? arr : [];
-            let changed = false;
-            const out = list0.map((it) => {
-                const base = (it && typeof it === 'object') ? it : {};
-                const id0 = String(base.id || '').trim();
-                const taskId0 = String(base.taskId || base.task_id || base.linkedTaskId || base.linked_task_id || '').trim();
-                const id = id0 || uuid();
-                if (id !== id0) changed = true;
-                if (taskId0 && taskId0 !== String(base.taskId || '').trim()) changed = true;
-                const reminderMode0 = String(base.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
-                const allowed = new Set([0, 5, 10, 15, 30, 60]);
-                const reminderEnabled0 = reminderMode0 === 'custom' ? (base.reminderEnabled === true) : null;
-                const reminderOffsetRaw = Number(base.reminderOffsetMin);
-                const reminderOffsetMin0 = reminderMode0 === 'custom'
-                    ? ((Number.isFinite(reminderOffsetRaw) && allowed.has(reminderOffsetRaw)) ? reminderOffsetRaw : 0)
-                    : null;
-                const notificationSchedules0 = sanitizeScheduleNotificationSchedules(base.notificationSchedules);
-                if (String(base.reminderMode || '').trim() !== reminderMode0) changed = true;
-                if (JSON.stringify(base.notificationSchedules || {}) !== JSON.stringify(notificationSchedules0)) changed = true;
-                return {
-                    ...base,
-                    id,
-                    taskId: taskId0,
-                    reminderMode: reminderMode0,
-                    reminderEnabled: reminderEnabled0,
-                    reminderOffsetMin: reminderOffsetMin0,
-                    notificationSchedules: notificationSchedules0,
-                };
-            });
-            return { out, changed };
-        };
         try {
             const cache = state.scheduleCache;
             if (Array.isArray(cache.list) && (Date.now() - (Number(cache.loadedAt) || 0) < cacheTtlMs)) {
@@ -1310,34 +1523,27 @@
         } catch (e) {}
         state.scheduleCache.inflight = (async () => {
             try {
-                const raw = await getFileText(STORAGE.SCHEDULE_FILE);
+                // Keep reads side-effect free: mobile startup may run before cloud sync settles.
+                const raw = await getFileTextRetry(STORAGE.SCHEDULE_FILE, 1);
                 if (raw && raw.trim()) {
                     const parsed = JSON.parse(raw);
-                    const { out, changed } = normalizeList(parsed);
-                    if (changed) {
-                        try { await saveScheduleAll(out); } catch (e2) {}
-                    } else {
-                        setScheduleCache(out);
-                    }
+                    const { out } = normalizeScheduleList(parsed);
+                    setScheduleCache(out, computeScheduleSourceSignature(raw));
                     return Array.isArray(state.scheduleCache.list) ? state.scheduleCache.list : out;
                 }
             } catch (e) {}
             try {
                 const raw = String(localStorage.getItem(STORAGE.SCHEDULE_LS_KEY) || '');
                 if (!raw.trim()) {
-                    setScheduleCache([]);
+                    setScheduleCache([], '');
                     return [];
                 }
                 const parsed = JSON.parse(raw);
-                const { out, changed } = normalizeList(parsed);
-                if (changed) {
-                    try { await saveScheduleAll(out); } catch (e2) {}
-                } else {
-                    setScheduleCache(out);
-                }
+                const { out } = normalizeScheduleList(parsed);
+                setScheduleCache(out, computeScheduleSourceSignature(raw));
                 return Array.isArray(state.scheduleCache.list) ? state.scheduleCache.list : out;
             } catch (e) {
-                setScheduleCache([]);
+                setScheduleCache([], '');
                 return [];
             }
         })();
@@ -1349,12 +1555,35 @@
         }
     }
 
+    async function refreshScheduleCacheFromSharedFile() {
+        try {
+            const raw = await getFileTextRetry(STORAGE.SCHEDULE_FILE, 1);
+            const trimmed = String(raw || '').trim();
+            if (!trimmed) return { changed: false, list: null };
+            const nextSignature = computeScheduleSourceSignature(raw);
+            const prevSignature = String(state.scheduleCache.sourceSignature || '');
+            if (nextSignature && prevSignature && nextSignature === prevSignature) {
+                return { changed: false, list: Array.isArray(state.scheduleCache.list) ? cloneScheduleList(state.scheduleCache.list) : null };
+            }
+            const parsed = JSON.parse(raw);
+            const { out } = normalizeScheduleList(parsed);
+            setScheduleCache(out, nextSignature);
+            return { changed: nextSignature !== prevSignature, list: cloneScheduleList(out) };
+        } catch (e) {
+            return { changed: false, list: null };
+        }
+    }
+
     async function saveScheduleAll(items) {
         const list = Array.isArray(items) ? items : [];
-        setScheduleCache(list);
-        try { localStorage.setItem(STORAGE.SCHEDULE_LS_KEY, JSON.stringify(list)); } catch (e) {}
-        try { await putFileText(STORAGE.SCHEDULE_FILE, JSON.stringify(list, null, 2)); } catch (e) {}
+        const serialized = JSON.stringify(list, null, 2);
+        setScheduleCache(list, computeScheduleSourceSignature(serialized));
+        try { localStorage.setItem(STORAGE.SCHEDULE_LS_KEY, serialized); } catch (e) {}
+        try { await putFileText(STORAGE.SCHEDULE_FILE, serialized); } catch (e) {}
         try { window.dispatchEvent(new CustomEvent('tm:calendar-schedule-updated', { detail: { ts: Date.now() } })); } catch (e) {}
+        if (shouldPreferDeviceNotificationBackend()) {
+            try { scheduleScheduleMobileSync('save-schedule-all'); } catch (e) {}
+        }
         return true;
     }
 
@@ -1413,9 +1642,35 @@
         return '';
     }
 
+    function isLikelyMobileRuntime() {
+        try {
+            const ua = String(navigator?.userAgent || '');
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(ua)) return true;
+            if (/HarmonyOS/i.test(ua)) return true;
+            if (/Huawei|HUAWEI/.test(ua) && !/Chrome|Chromium|EdgA|Firefox/.test(ua)) return true;
+            if (window.matchMedia?.('(any-pointer:coarse)')?.matches) {
+                if (/Android|Linux/.test(ua) && !/Win|Mac|X11/.test(ua)) return true;
+            }
+        } catch (e) {}
+        return false;
+    }
+
+    function hasDeviceNotificationBridge() {
+        try {
+            for (const candidate of getNotificationBridgeCandidates()) {
+                if (typeof candidate?.owner?.[candidate?.send] === 'function') return true;
+            }
+        } catch (e) {}
+        try {
+            const msgHandler = globalThis?.webkit?.messageHandlers?.sendNotification;
+            if (msgHandler && typeof msgHandler.postMessage === 'function') return true;
+        } catch (e) {}
+        return false;
+    }
+
     function shouldPreferDeviceNotificationBackend() {
         const backend = getRuntimeBackendType();
-        return !!state.isMobileDevice || backend === 'android' || backend === 'harmony';
+        return !!state.isMobileDevice || backend === 'android' || backend === 'harmony' || isLikelyMobileRuntime() || hasDeviceNotificationBridge();
     }
 
     function normalizeNotificationId(value) {
@@ -1498,7 +1753,10 @@
             const attempt = await invokeNotificationBridge(candidate.owner, candidate.send, [safeChannel, safeTitle, safeBody, delayInSeconds]);
             if (!attempt.called) continue;
             const id = extractNotificationIdFromUnknownPayload(attempt.value);
-            if (id !== null) return id;
+            if (id !== null) {
+                if (id === -1) sendDeviceNotificationCompat._lastFailureReason = 'send-returned-minus-one';
+                return id;
+            }
             sendDeviceNotificationCompat._lastFailureReason = 'send-no-numeric-return';
         }
         try {
@@ -1617,6 +1875,25 @@
         try {
             localStorage.setItem(STORAGE.SCHEDULE_MOBILE_REGISTRY_LS_KEY, JSON.stringify(registry || {}));
         } catch (e) {}
+    }
+
+    function buildScheduleNotificationSchedulesView(item, registry) {
+        const map = sanitizeScheduleNotificationSchedules(item?.notificationSchedules);
+        const scheduleId = String(item?.id || '').trim();
+        const deviceId = String(SCHEDULE_SYNC_DEVICE_ID || '').trim();
+        if (!scheduleId || !deviceId) return map;
+        const sourceRegistry = (registry && typeof registry === 'object') ? registry : loadScheduleMobileRegistry();
+        const current = sourceRegistry?.[scheduleId];
+        if (!current || typeof current !== 'object') return map;
+        map[deviceId] = {
+            planKey: String(current.planKey || '').trim(),
+            updatedAt: String(current.updatedAt || '').trim(),
+            status: String(current.status || '').trim(),
+            canceledAt: String(current.canceledAt || '').trim(),
+            cancelReason: String(current.cancelReason || '').trim(),
+            entries: sanitizeScheduleNotificationEntries(current.entries),
+        };
+        return map;
     }
 
     function getScheduleDeviceScheduleMap(item) {
@@ -1974,8 +2251,23 @@
         try {
             const settings = getSettings();
             const list = await loadScheduleAll();
-            const nextList = cloneScheduleList(list);
+            if (!Array.isArray(list)) {
+                return false;
+            }
             const registry = loadScheduleMobileRegistry();
+            if (list.length === 0) {
+                let changed = false;
+                const allDayExisting = sanitizeScheduleNotificationEntries(registry[SCHEDULE_ALL_DAY_SUMMARY_REGISTRY_KEY]?.entries);
+                if (allDayExisting.length > 0) {
+                    await cancelScheduleMobileNotificationEntries(allDayExisting);
+                    changed = true;
+                }
+                delete registry[SCHEDULE_ALL_DAY_SUMMARY_REGISTRY_KEY];
+                const orphanChanged = await cleanupOrphanScheduleMobileRegistry([], registry);
+                saveScheduleMobileRegistry(registry);
+                return changed || orphanChanged;
+            }
+            const nextList = cloneScheduleList(list);
             let changed = false;
             for (let i = 0; i < nextList.length; i += 1) {
                 const result = await reconcileSingleScheduleMobileNotification(nextList[i], settings, registry);
@@ -1988,7 +2280,8 @@
             await cleanupOrphanScheduleMobileRegistry(nextList.map((it) => String(it?.id || '').trim()), registry);
             saveScheduleMobileRegistry(registry);
             if (changed) {
-                await saveScheduleAll(nextList);
+                // Device notification state should not overwrite the shared schedule file.
+                persistScheduleLocalShadow(nextList);
                 return true;
             }
             return !!allDayChanged;
@@ -2035,7 +2328,7 @@
             changed = changed || !!allDayChanged;
         }
         saveScheduleMobileRegistry(registry);
-        if (changed) await saveScheduleAll(nextList);
+        if (changed) persistScheduleLocalShadow(nextList);
         return nextList[idx] || null;
     }
 
@@ -2055,7 +2348,6 @@
         const settings = getSettings();
         const registry = loadScheduleMobileRegistry();
         const result = await reconcileSingleScheduleMobileNotification(nextList[idx], settings, registry);
-        let changed = !!result?.changed;
         if (result?.item) nextList[idx] = result.item;
         const isAllDay = (() => {
             const s = toMs(nextList[idx]?.start);
@@ -2064,11 +2356,10 @@
             return (nextList[idx]?.allDay === true) || isAllDayRange(new Date(s), new Date(e));
         })();
         if (isAllDay) {
-            const allDayChanged = await reconcileAllDayScheduleMobileSummary(nextList, settings, registry);
-            changed = changed || !!allDayChanged;
+            await reconcileAllDayScheduleMobileSummary(nextList, settings, registry);
         }
         saveScheduleMobileRegistry(registry);
-        await saveScheduleAll(nextList);
+        persistScheduleLocalShadow(nextList);
         return nextList[idx] || null;
     }
 
@@ -2098,7 +2389,7 @@
         const registry = loadScheduleMobileRegistry();
         delete registry[id];
         saveScheduleMobileRegistry(registry);
-        await saveScheduleAll(nextList);
+        persistScheduleLocalShadow(nextList);
         return item;
     }
 
@@ -2501,7 +2792,10 @@
             clearTimeout(sr.periodicTimer);
             sr.periodicTimer = null;
         }
-        sr.periodicTimer = setTimeout(() => { try { scheduleScheduleReminderRefresh('periodic'); } catch (e) {} }, 10 * 60 * 1000);
+        const periodicDelayMs = shouldPreferDeviceNotificationBackend() ? 60 * 1000 : 10 * 60 * 1000;
+        sr.periodicTimer = setTimeout(() => {
+            try { scheduleScheduleReminderRefresh(shouldPreferDeviceNotificationBackend() ? 'mobile-periodic' : 'periodic'); } catch (e) {}
+        }, periodicDelayMs);
     }
 
     function scheduleScheduleReminderRefresh(reason) {
@@ -2513,12 +2807,101 @@
         }, 180);
     }
 
+    async function pollSharedScheduleFileAndSync(reason) {
+        const sr = state.scheduleReminder;
+        if (!shouldPreferDeviceNotificationBackend()) return false;
+        if (document.visibilityState === 'hidden') return false;
+        if (sr.sharedFileWatchRunning) return false;
+        sr.sharedFileWatchRunning = true;
+        try {
+            const refreshed = await refreshScheduleCacheFromSharedFile();
+            if (!refreshed?.changed) return false;
+            try { refetchAllCalendars(); } catch (e) {}
+            try { scheduleScheduleReminderRefresh(`shared-file:${String(reason || '').trim()}`); } catch (e) {}
+            return true;
+        } finally {
+            sr.sharedFileWatchRunning = false;
+        }
+    }
+
+    function stopSharedScheduleFileWatch() {
+        const sr = state.scheduleReminder;
+        if (sr.sharedFileWatchTimer) {
+            try { clearTimeout(sr.sharedFileWatchTimer); } catch (e) {}
+            sr.sharedFileWatchTimer = null;
+        }
+        sr.sharedFileWatchRunning = false;
+    }
+
+    function ensureSharedScheduleFileWatch() {
+        const sr = state.scheduleReminder;
+        if (!shouldPreferDeviceNotificationBackend()) {
+            stopSharedScheduleFileWatch();
+            return;
+        }
+        if (sr.sharedFileWatchTimer) return;
+        const loop = () => {
+            sr.sharedFileWatchTimer = setTimeout(async () => {
+                sr.sharedFileWatchTimer = null;
+                try { await pollSharedScheduleFileAndSync('watch'); } catch (e) {}
+                ensureSharedScheduleFileWatch();
+            }, 2500);
+        };
+        loop();
+    }
+
+    function bindScheduleReminderBackgroundRefresh() {
+        const sr = state.scheduleReminder;
+        if (sr.backgroundRefreshBound) return;
+        const trigger = (reason) => {
+            const now = Date.now();
+            if (now - (Number(sr.backgroundLastRefreshAt) || 0) < 800) return;
+            sr.backgroundLastRefreshAt = now;
+            try { scheduleScheduleReminderRefresh(reason); } catch (e) {}
+            try { pollSharedScheduleFileAndSync(reason); } catch (e) {}
+        };
+        sr.backgroundVisibilityHandler = () => {
+            if (document.visibilityState === 'visible') trigger('app-visibility');
+        };
+        sr.backgroundFocusHandler = () => {
+            trigger('app-focus');
+        };
+        sr.backgroundPageShowHandler = () => {
+            trigger('app-pageshow');
+        };
+        try { document.addEventListener('visibilitychange', sr.backgroundVisibilityHandler, true); } catch (e) {}
+        try { window.addEventListener('focus', sr.backgroundFocusHandler, true); } catch (e) {}
+        try { window.addEventListener('pageshow', sr.backgroundPageShowHandler, true); } catch (e) {}
+        sr.backgroundRefreshBound = true;
+        try { ensureSharedScheduleFileWatch(); } catch (e) {}
+    }
+
+    function unbindScheduleReminderBackgroundRefresh() {
+        const sr = state.scheduleReminder;
+        if (sr.backgroundVisibilityHandler) {
+            try { document.removeEventListener('visibilitychange', sr.backgroundVisibilityHandler, true); } catch (e) {}
+            sr.backgroundVisibilityHandler = null;
+        }
+        if (sr.backgroundFocusHandler) {
+            try { window.removeEventListener('focus', sr.backgroundFocusHandler, true); } catch (e) {}
+            sr.backgroundFocusHandler = null;
+        }
+        if (sr.backgroundPageShowHandler) {
+            try { window.removeEventListener('pageshow', sr.backgroundPageShowHandler, true); } catch (e) {}
+            sr.backgroundPageShowHandler = null;
+        }
+        sr.backgroundRefreshBound = false;
+        stopSharedScheduleFileWatch();
+    }
+
     function bindScheduleReminderEngine() {
         const sr = state.scheduleReminder;
         if (sr.scheduleUpdatedListener) return;
         sr.scheduleUpdatedListener = () => { scheduleScheduleReminderRefresh('schedule-updated'); };
         try { window.addEventListener('tm:calendar-schedule-updated', sr.scheduleUpdatedListener); } catch (e) {}
+        try { bindScheduleReminderBackgroundRefresh(); } catch (e) {}
         scheduleScheduleReminderRefresh('bind');
+        try { pollSharedScheduleFileAndSync('bind'); } catch (e) {}
     }
 
     function unbindScheduleReminderEngine() {
@@ -2527,6 +2910,7 @@
             try { window.removeEventListener('tm:calendar-schedule-updated', sr.scheduleUpdatedListener); } catch (e) {}
             sr.scheduleUpdatedListener = null;
         }
+        try { unbindScheduleReminderBackgroundRefresh(); } catch (e) {}
         clearScheduleReminderTimers();
         try {
             if (sr.toastHost) {
@@ -2589,6 +2973,7 @@
         };
         list.push(item);
         await saveScheduleAll(list);
+        try { await refreshScheduleCurrentDeviceNotificationById(item.id); } catch (e) {}
         refetchAllCalendars();
         return item;
     }
@@ -2679,6 +3064,37 @@
             }
         } catch (e) {}
         return { taskId, title, durationMin, calendarId: String(calendarId || '').trim() };
+    }
+
+    function buildDraggingTaskPayload(resolveTask) {
+        let taskId = '';
+        try {
+            if (typeof window.tmCalendarGetDraggingTaskId === 'function') {
+                taskId = String(window.tmCalendarGetDraggingTaskId() || '').trim();
+            }
+        } catch (e) {}
+        if (!taskId) return null;
+        const resolver = typeof resolveTask === 'function' ? resolveTask : null;
+        const task = resolver ? resolver(taskId) : null;
+        let title = String(task?.content || task?.title || '').trim() || taskId;
+        let durationMin = parseTaskDurationMinutes(task?.duration);
+        let calendarId = '';
+        try {
+            const meta = (typeof window.tmCalendarGetTaskDragMeta === 'function')
+                ? window.tmCalendarGetTaskDragMeta(taskId)
+                : null;
+            if (meta && typeof meta === 'object') {
+                const metaTitle = String(meta.title || '').trim();
+                const metaCalendarId = String(meta.calendarId || '').trim();
+                const metaDuration = Number(meta.durationMin);
+                if (metaTitle) title = metaTitle;
+                if (metaCalendarId) calendarId = metaCalendarId;
+                if (Number.isFinite(metaDuration) && metaDuration > 0) {
+                    durationMin = Math.max(15, Math.round(metaDuration));
+                }
+            }
+        } catch (e) {}
+        return { taskId, title, durationMin, calendarId };
     }
 
     function applyTaskDoneVisual(wrapEl, titleEl, done) {
@@ -2811,6 +3227,10 @@
         state.sideDay.dragHost = null;
         try { state.sideDay.nativeDropAbort?.abort?.(); } catch (e) {}
         state.sideDay.nativeDropAbort = null;
+        if (state.sideDay.previewEl instanceof HTMLElement) {
+            try { state.sideDay.previewEl.remove(); } catch (e) {}
+            state.sideDay.previewEl = null;
+        }
         try { state.sideDay.calendar?.destroy?.(); } catch (e) {}
         state.sideDay.calendar = null;
         state.sideDay.rootEl = null;
@@ -2823,11 +3243,67 @@
         if (!(rootEl instanceof HTMLElement)) return;
         const abort = new AbortController();
         state.sideDay.nativeDropAbort = abort;
-        const PREVIEW_EVENT_ID = '__tm-cal-drag-preview-side__';
         let previewKey = '';
+        let liveDrag = null;
+        let scrollRefreshFrame = null;
+        let livePreviewTimer = null;
+        const ensureGhostPreview = () => {
+            const layer = rootEl.querySelector('.fc-timegrid-col-events');
+            if (!(layer instanceof HTMLElement)) return null;
+            if (!(state.sideDay.previewEl instanceof HTMLElement) || !state.sideDay.previewEl.isConnected) {
+                const harness = document.createElement('div');
+                harness.className = 'tm-cal-side-drag-ghost fc-timegrid-event-harness';
+                harness.style.display = 'none';
+                harness.innerHTML = `
+                    <div class="fc-timegrid-event fc-v-event fc-event fc-event-start fc-event-end tm-cal-drag-preview">
+                        <div class="fc-event-main">
+                            <span class="tm-cal-task-event">
+                                <span class="tm-cal-task-event-title">
+                                    <span class="tm-cal-task-event-title-text"></span>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                `;
+                layer.appendChild(harness);
+                state.sideDay.previewEl = harness;
+            } else if (state.sideDay.previewEl.parentElement !== layer) {
+                try { layer.appendChild(state.sideDay.previewEl); } catch (e) {}
+            }
+            return state.sideDay.previewEl;
+        };
         const clearDropPreview = () => {
             previewKey = '';
-            try { state.sideDay?.calendar?.getEventById?.(PREVIEW_EVENT_ID)?.remove?.(); } catch (e) {}
+            liveDrag = null;
+            if (scrollRefreshFrame != null) {
+                try { cancelAnimationFrame(scrollRefreshFrame); } catch (e) {}
+                scrollRefreshFrame = null;
+            }
+            if (livePreviewTimer != null) {
+                try { clearInterval(livePreviewTimer); } catch (e) {}
+                livePreviewTimer = null;
+            }
+            if (state.sideDay.previewEl instanceof HTMLElement) {
+                try { state.sideDay.previewEl.style.display = 'none'; } catch (e) {}
+            }
+        };
+        const rememberLiveDrag = (payload, x, y) => {
+            if (!payload?.taskId) {
+                liveDrag = null;
+                return;
+            }
+            const xp = Number(x);
+            const yp = Number(y);
+            if (!Number.isFinite(xp) || !Number.isFinite(yp)) {
+                liveDrag = null;
+                return;
+            }
+            liveDrag = { payload, x: xp, y: yp };
+            if (livePreviewTimer == null) {
+                livePreviewTimer = setInterval(() => {
+                    refreshPreviewFromLiveDrag();
+                }, 80);
+            }
         };
         const renderDropPreview = (payload, hit) => {
             const start = hit?.start;
@@ -2850,30 +3326,41 @@
             const nextKey = `${start.getTime()}|${end.getTime()}|${allDay ? 1 : 0}|${title}|${color}`;
             if (nextKey === previewKey) return;
             previewKey = nextKey;
-            const cal = state.sideDay?.calendar;
-            if (!cal) return;
-            let ev = null;
-            try { ev = cal.getEventById?.(PREVIEW_EVENT_ID) || null; } catch (e) { ev = null; }
-            if (!ev) {
-                try {
-                    ev = cal.addEvent?.({
-                        id: PREVIEW_EVENT_ID,
-                        title,
-                        start: safeISO(start),
-                        end: safeISO(end),
-                        allDay,
-                        editable: false,
-                        durationEditable: false,
-                        startEditable: false,
-                        overlap: true,
-                        classNames: ['tm-cal-drag-preview'],
-                    }) || null;
-                } catch (e) { ev = null; }
+            const ghost = ensureGhostPreview();
+            if (!(ghost instanceof HTMLElement)) return;
+            const layer = ghost.parentElement;
+            const slotsWrap = rootEl.querySelector('.fc-timegrid-slots');
+            const scroller = rootEl.querySelector('.fc-timegrid-body .fc-scroller, .fc-timegrid-body .fc-scroller-liquid-absolute, .fc-scroller');
+            const allDayWrap = rootEl.querySelector('.fc-timegrid-all-day, .fc-timegrid-allday');
+            const titleEl = ghost.querySelector('.tm-cal-task-event-title-text');
+            const eventEl = ghost.querySelector('.fc-event');
+            if (!(layer instanceof HTMLElement) || !(slotsWrap instanceof HTMLElement) || !(titleEl instanceof HTMLElement) || !(eventEl instanceof HTMLElement)) {
+                clearDropPreview();
+                return;
             }
-            try { ev?.setProp?.('title', title); } catch (e) {}
-            try { ev?.setDates?.(start, end, { allDay }); } catch (e) {}
-            try { ev?.setProp?.('backgroundColor', color); } catch (e) {}
-            try { ev?.setProp?.('borderColor', color); } catch (e) {}
+            const layerRect = layer.getBoundingClientRect();
+            const slotsRect = slotsWrap.getBoundingClientRect();
+            const scrollTop = (scroller instanceof HTMLElement) ? scroller.scrollTop : 0;
+            const visibleRange = getCalendarVisibleSlotRange(settings);
+            const startMinutesBase = (() => {
+                const m = String(visibleRange.start || '00:00').match(/^(\d{2}):(\d{2})$/);
+                return m ? (Number(m[1]) * 60 + Number(m[2])) : 0;
+            })();
+            const eventStartMinutes = start.getHours() * 60 + start.getMinutes();
+            const previewDurationMin = Math.max(30, Math.round((end.getTime() - start.getTime()) / 60000));
+            const slotHeight = 29;
+            const top = allDay
+                ? 0
+                : Math.max(0, (slotsRect.top - layerRect.top) - scrollTop + ((eventStartMinutes - startMinutesBase) / 30) * slotHeight);
+            const height = allDay
+                ? Math.max(22, ((allDayWrap instanceof HTMLElement) ? allDayWrap.getBoundingClientRect().height : 26) - 4)
+                : Math.max(18, (previewDurationMin / 30) * slotHeight - 2);
+            try { titleEl.textContent = title; } catch (e) {}
+            try { ghost.style.display = 'block'; } catch (e) {}
+            try { ghost.style.top = `${Math.round(top)}px`; } catch (e) {}
+            try { ghost.style.height = `${Math.round(height)}px`; } catch (e) {}
+            try { eventEl.style.background = color; } catch (e) {}
+            try { eventEl.style.borderColor = color; } catch (e) {}
         };
         const getDropInfo = (target, x, y) => {
             const pickCurrentSideDay = () => {
@@ -2887,6 +3374,13 @@
                 } catch (e) {}
                 return null;
             };
+            const getVisibleStartMinutes = () => {
+                const range = getCalendarVisibleSlotRange(getSettings());
+                const raw = String(range?.start || '00:00').trim();
+                const m = raw.match(/^(\d{2}):(\d{2})$/);
+                if (!m) return 0;
+                return Number(m[1]) * 60 + Number(m[2]);
+            };
             const findColByX = (xPos) => {
                 const xp = Number(xPos);
                 if (!Number.isFinite(xp)) return null;
@@ -2899,34 +3393,43 @@
                 }
                 return cols[0] || null;
             };
-            const pickSlotByXY = (xPos, yPos) => {
+            const resolveTimedByGeometry = (xPos, yPos) => {
                 const xp = Number(xPos);
                 const yp = Number(yPos);
-                if (!Number.isFinite(yp)) return null;
-                const slots = Array.from(rootEl.querySelectorAll('.fc-timegrid-slot[data-time]'));
-                if (slots.length === 0) return null;
-                let best = null;
-                let bestDist = Number.POSITIVE_INFINITY;
-                for (const s of slots) {
+                if (!Number.isFinite(xp) || !Number.isFinite(yp)) return null;
+                const col = findColByX(xp);
+                const dateStr = String(col?.getAttribute?.('data-date') || '').trim();
+                if (!dateStr) return null;
+                const slotsWrap = rootEl.querySelector('.fc-timegrid-slots');
+                const slotsTable = slotsWrap?.querySelector?.('table');
+                const scroller = rootEl.querySelector('.fc-timegrid-body .fc-scroller, .fc-timegrid-body .fc-scroller-liquid-absolute, .fc-scroller');
+                if (!(slotsWrap instanceof HTMLElement) || !(slotsTable instanceof HTMLElement)) return null;
+                const wrapRect = slotsWrap.getBoundingClientRect();
+                const tableRect = slotsTable.getBoundingClientRect();
+                const allDayWrap = rootEl.querySelector('.fc-timegrid-all-day, .fc-timegrid-allday');
+                if (allDayWrap instanceof HTMLElement) {
                     try {
-                        const r = s.getBoundingClientRect();
-                        const containsY = yp >= r.top && yp < r.bottom;
-                        const containsX = !Number.isFinite(xp) || (xp >= r.left && xp < r.right);
-                        if (containsY && containsX) return s;
-                        const centerY = (r.top + r.bottom) / 2;
-                        const d = Math.abs(centerY - yp);
-                        if (d < bestDist) {
-                            bestDist = d;
-                            best = s;
+                        const adRect = allDayWrap.getBoundingClientRect();
+                        if (yp >= adRect.top && yp < adRect.bottom) {
+                            const dt0 = new Date(`${dateStr}T00:00:00`);
+                            if (!Number.isNaN(dt0.getTime())) return { start: dt0, allDay: true };
                         }
                     } catch (e) {}
                 }
-                return best;
+                if (yp < wrapRect.top || yp > wrapRect.bottom) return null;
+                const scrollTop = (scroller instanceof HTMLElement) ? scroller.scrollTop : 0;
+                const offsetY = (yp - wrapRect.top) + scrollTop;
+                const slotHeight = 29;
+                const slotIndex = Math.max(0, Math.floor(offsetY / slotHeight));
+                const startMinutes = getVisibleStartMinutes() + slotIndex * 30;
+                const hh = Math.floor(startMinutes / 60);
+                const mm = startMinutes % 60;
+                const dt = new Date(`${dateStr}T${pad2(hh)}:${pad2(mm)}:00`);
+                if (!Number.isNaN(dt.getTime())) return { start: dt, allDay: false };
+                return null;
             };
             const resolveFrom = (el) => {
                 if (!(el instanceof Element)) return null;
-                const slot = el.closest?.('.fc-timegrid-slot,[data-time].fc-timegrid-slot');
-                const col = el.closest?.('.fc-timegrid-col') || findColByX(x);
                 const allDayWrap = el.closest?.('.fc-timegrid-all-day, .fc-timegrid-allday');
                 const day = el.closest?.('.fc-daygrid-day');
                 if (allDayWrap) {
@@ -2938,48 +3441,8 @@
                     const cur = pickCurrentSideDay();
                     if (cur) return { start: cur, allDay: true };
                 }
-                if (slot && col && !allDayWrap) {
-                    const dateStr = String(col.getAttribute('data-date') || '').trim();
-                    const timeStr = String(slot.getAttribute('data-time') || '').trim();
-                    if (dateStr && timeStr) {
-                        const hhmm = timeStr.slice(0, 5);
-                        const dt = new Date(`${dateStr}T${hhmm}:00`);
-                        if (!Number.isNaN(dt.getTime())) return { start: dt, allDay: false };
-                    }
-                }
-                if (col && !allDayWrap) {
-                    const dateStr = String(col.getAttribute('data-date') || '').trim();
-                    const slotByPoint = pickSlotByXY(x, y);
-                    const timeStr = String(slotByPoint?.getAttribute?.('data-time') || '').trim();
-                    if (dateStr && timeStr) {
-                        const hhmm = timeStr.slice(0, 5);
-                        const dt = new Date(`${dateStr}T${hhmm}:00`);
-                        if (!Number.isNaN(dt.getTime())) return { start: dt, allDay: false };
-                    }
-                }
-                if (col && !allDayWrap) {
-                    const dateStr = String(col.getAttribute('data-date') || '').trim();
-                    if (dateStr) {
-                        const slotEls = Array.from(rootEl.querySelectorAll('.fc-timegrid-slot[data-time]'));
-                        if (slotEls.length > 0) {
-                            const y0 = Number(y);
-                            const picked = slotEls.find((s) => {
-                                try {
-                                    const r = s.getBoundingClientRect();
-                                    return y0 >= r.top && y0 < r.bottom;
-                                } catch (e) {
-                                    return false;
-                                }
-                            }) || slotEls[0];
-                            const timeStr = String(picked?.getAttribute?.('data-time') || '').trim();
-                            if (timeStr) {
-                                const hhmm = timeStr.slice(0, 5);
-                                const dt = new Date(`${dateStr}T${hhmm}:00`);
-                                if (!Number.isNaN(dt.getTime())) return { start: dt, allDay: false };
-                            }
-                        }
-                    }
-                }
+                const timed = resolveTimedByGeometry(x, y);
+                if (timed) return timed;
                 const dayEl = day || el.closest?.('[data-date]');
                 const dateStr = String(dayEl?.getAttribute?.('data-date') || '').trim();
                 if (dateStr) {
@@ -3003,11 +3466,33 @@
                     if (hit) break;
                 }
             }
-            if (!hit) hit = resolveFrom(document.elementFromPoint(x, y));
+            if (!hit) hit = resolveTimedByGeometry(x, y) || resolveFrom(document.elementFromPoint(x, y));
             if (hit) return hit;
             const cur = pickCurrentSideDay();
             if (cur) return { start: cur, allDay: true };
             return null;
+        };
+        const refreshPreviewFromLiveDrag = () => {
+            const xp = Number(liveDrag?.x);
+            const yp = Number(liveDrag?.y);
+            if (!liveDrag?.payload?.taskId || !Number.isFinite(xp) || !Number.isFinite(yp)) return;
+            try {
+                const r = rootEl.getBoundingClientRect();
+                const inside = xp >= r.left && xp <= r.right && yp >= r.top && yp <= r.bottom;
+                if (!inside) {
+                    clearDropPreview();
+                    return;
+                }
+            } catch (e) {}
+            const hit = getDropInfo(document.elementFromPoint(xp, yp), xp, yp);
+            renderDropPreview(liveDrag.payload, hit);
+        };
+        const schedulePreviewRefresh = () => {
+            if (scrollRefreshFrame != null) return;
+            scrollRefreshFrame = requestAnimationFrame(() => {
+                scrollRefreshFrame = null;
+                refreshPreviewFromLiveDrag();
+            });
         };
 
         rootEl.addEventListener('dragover', (e) => {
@@ -3026,7 +3511,8 @@
                 return;
             }
             e.preventDefault();
-            const payload = parseTaskDropPayload(e, null, resolveTask);
+            const payload = parseTaskDropPayload(e, null, resolveTask) || buildDraggingTaskPayload(resolveTask);
+            rememberLiveDrag(payload, e.clientX, e.clientY);
             const hit = getDropInfo(e.target, e.clientX, e.clientY);
             renderDropPreview(payload, hit);
         }, { signal: abort.signal });
@@ -3056,10 +3542,36 @@
                 return;
             }
             e.preventDefault();
-            const payload = parseTaskDropPayload(e, null, resolveTask);
+            const payload = parseTaskDropPayload(e, null, resolveTask) || buildDraggingTaskPayload(resolveTask);
+            rememberLiveDrag(payload, x, y);
             const hit = getDropInfo(document.elementFromPoint(x, y), x, y);
             renderDropPreview(payload, hit);
         }, { signal: abort.signal, capture: true });
+        document.addEventListener('drag', (e) => {
+            const payload = buildDraggingTaskPayload(resolveTask);
+            if (!payload?.taskId) {
+                clearDropPreview();
+                return;
+            }
+            const x = Number(e.clientX);
+            const y = Number(e.clientY);
+            if (!Number.isFinite(x) || !Number.isFinite(y) || (x === 0 && y === 0)) return;
+            try {
+                const r = rootEl.getBoundingClientRect();
+                const inside = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+                if (!inside) {
+                    clearDropPreview();
+                    return;
+                }
+            } catch (e2) {}
+            rememberLiveDrag(payload, x, y);
+            const hit = getDropInfo(document.elementFromPoint(x, y), x, y);
+            renderDropPreview(payload, hit);
+        }, { signal: abort.signal, capture: true });
+        rootEl.addEventListener('scroll', schedulePreviewRefresh, { signal: abort.signal, capture: true });
+        Array.from(rootEl.querySelectorAll('.fc-scroller')).forEach((scroller) => {
+            try { scroller.addEventListener('scroll', schedulePreviewRefresh, { signal: abort.signal, passive: true }); } catch (e) {}
+        });
         rootEl.addEventListener('dragleave', (e) => {
             try {
                 const r = rootEl.getBoundingClientRect();
@@ -3195,12 +3707,16 @@
 
         state.sideDay.rootEl = rootEl;
         const settings = getSettings();
+        const slotLayout = getTimeGridSlotLayoutOptions(settings);
         const initialDate = String(inOpts.date || '').trim() || undefined;
         const cal = new window.FullCalendar.Calendar(rootEl, {
             locale: 'zh-cn',
             timeZone: 'local',
             initialView: 'timeGridDay',
             initialDate,
+            height: 'auto',
+            contentHeight: getSideDayContentHeight(settings),
+            expandRows: false,
             firstDay: Number(settings.firstDay) === 0 ? 0 : 1,
             headerToolbar: false,
             nowIndicator: true,
@@ -3218,13 +3734,7 @@
             dayMaxEvents: true,
             moreLinkClick: 'popover',
             handleWindowResize: true,
-            slotDuration: '00:30:00',
-            slotLabelInterval: '01:00',
-            slotLabelContent: (arg) => {
-                const d = arg?.date;
-                if (!(d instanceof Date) || Number.isNaN(d.getTime())) return '';
-                return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-            },
+            ...slotLayout,
             eventOrder: '__tmRank,title',
             eventOrderStrict: true,
             eventContent: (arg) => {
@@ -3588,8 +4098,20 @@
                 if (!start || !end) return;
                 openScheduleModal({ start, end, allDay: info?.allDay === true, calendarId: pickDefaultCalendarId(getSettings()) });
             },
+            datesSet: () => {
+                try {
+                    requestAnimationFrame(() => syncSideDayLayout(rootEl, cal, getSettings()));
+                } catch (e) {}
+                try { setTimeout(() => syncSideDayLayout(rootEl, cal, getSettings()), 0); } catch (e) {}
+            },
+            viewDidMount: () => {
+                try {
+                    requestAnimationFrame(() => syncSideDayLayout(rootEl, cal, getSettings()));
+                } catch (e) {}
+            },
         });
         cal.render();
+        syncSideDayLayout(rootEl, cal, settings);
         state.sideDay.calendar = cal;
         scheduleClampSideDayPopover(rootEl);
 
@@ -3597,7 +4119,7 @@
         if (rootEl && typeof ResizeObserver === 'function') {
             const sideDayResizeObserver = new ResizeObserver(() => {
                 requestAnimationFrame(() => {
-                    try { cal.updateSize(); } catch (e2) {}
+                    try { syncSideDayLayout(rootEl, cal, getSettings()); } catch (e2) {}
                     try { clampSideDayPopover(rootEl); } catch (e2) {}
                 });
             });
@@ -3811,6 +4333,7 @@
         if (!settings.showSchedule) return [];
         const defs = getCalendarDefs(settings);
         const defMap = new Map(defs.map((d) => [d.id, d]));
+        const registry = shouldPreferDeviceNotificationBackend() ? loadScheduleMobileRegistry() : null;
         return (Array.isArray(items) ? items : []).map((it) => {
             const rs = toMs(it?.start);
             const re = toMs(it?.end);
@@ -3850,7 +4373,7 @@
                     __tmReminderMode: reminderMode,
                     __tmReminderEnabled: reminderEnabled,
                     __tmReminderOffsetMin: reminderOffsetMin,
-                    __tmNotificationSchedules: sanitizeScheduleNotificationSchedules(it?.notificationSchedules),
+                    __tmNotificationSchedules: buildScheduleNotificationSchedulesView(it, registry),
                     calendarId,
                 },
             };
@@ -4518,7 +5041,7 @@
     }
 
     function getScheduleAllDeviceNotificationEntries(item) {
-        const map = sanitizeScheduleNotificationSchedules(item?.notificationSchedules);
+        const map = buildScheduleNotificationSchedulesView(item);
         const result = [];
         for (const [deviceId, schedule] of Object.entries(map || {})) {
             const entries = sanitizeScheduleNotificationEntries(schedule?.entries);
@@ -4529,7 +5052,7 @@
     }
 
     function getScheduleCurrentDeviceNotificationSummary(item) {
-        const current = getScheduleDeviceSchedule(item);
+        const current = buildScheduleNotificationSchedulesView(item)[String(SCHEDULE_SYNC_DEVICE_ID || '').trim()];
         const entries = sanitizeScheduleNotificationEntries(current?.entries);
         if (entries.length === 0) return '当前设备暂无已预约提醒';
         const sorted = entries.slice().sort((a, b) => Number(a?.atMs || 0) - Number(b?.atMs || 0));
@@ -4541,12 +5064,18 @@
     }
 
     function showScheduleDeviceScheduleDialog(item, options) {
+        closeDeviceScheduleDialog();
         const opts = (options && typeof options === 'object') ? options : {};
         let currentItem = (item && typeof item === 'object') ? { ...item } : {};
         const scheduleId = String(currentItem?.id || '').trim();
         const modal = document.createElement('div');
         modal.className = 'tm-calendar-edit-modal';
-        const close = () => { try { modal.remove(); } catch (e) {} };
+        modal.dataset.tmCalDialog = 'deviceSchedule';
+        modal.style.zIndex = String(getOverlayZIndex(state.modalEl, 200000) + 2);
+        const abort = new AbortController();
+        state.deviceScheduleAbort?.abort();
+        state.deviceScheduleAbort = abort;
+        const close = () => { closeDeviceScheduleDialog(); };
         const render = () => {
             const groups = getScheduleAllDeviceNotificationEntries(currentItem);
             const currentSummary = getScheduleCurrentDeviceNotificationSummary(currentItem);
@@ -4588,8 +5117,10 @@
         };
         render();
         document.body.appendChild(modal);
+        state.deviceScheduleModalEl = modal;
         modal.addEventListener('click', async (e) => {
-            const action = String(e?.target?.closest?.('[data-tm-cal-action]')?.getAttribute?.('data-tm-cal-action') || '');
+            const btn = findActionTarget(e?.target, 'data-tm-cal-action');
+            const action = String(btn?.getAttribute?.('data-tm-cal-action') || '');
             if (e.target === modal || action === 'closeDeviceSchedule') {
                 close();
                 return;
@@ -4619,10 +5150,10 @@
                     toast('❌ 清除失败', 'error');
                 }
             }
-        });
+        }, { signal: abort.signal });
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') close();
-        }, { once: true });
+        }, { signal: abort.signal });
     }
 
     async function loadRecordsForRange(rangeStart, rangeEnd) {
@@ -4729,6 +5260,7 @@
     }
 
     function closeModal() {
+        closeDeviceScheduleDialog();
         if (state.modalEl) {
             try { state.modalEl.remove(); } catch (e) {}
             state.modalEl = null;
@@ -4736,6 +5268,17 @@
         if (state.uiAbort) {
             try { state.uiAbort.abort(); } catch (e) {}
             state.uiAbort = null;
+        }
+    }
+
+    function closeDeviceScheduleDialog() {
+        if (state.deviceScheduleModalEl) {
+            try { state.deviceScheduleModalEl.remove(); } catch (e) {}
+            state.deviceScheduleModalEl = null;
+        }
+        if (state.deviceScheduleAbort) {
+            try { state.deviceScheduleAbort.abort(); } catch (e) {}
+            state.deviceScheduleAbort = null;
         }
     }
 
@@ -4899,7 +5442,7 @@
         };
 
         modal.addEventListener('click', async (e) => {
-            const btn = e.target?.closest?.('[data-tm-cal-action]');
+            const btn = findActionTarget(e?.target, 'data-tm-cal-action');
             const action = String(btn?.getAttribute?.('data-tm-cal-action') || '');
             if (!action) return;
             if (action === 'openDockHistory') {
@@ -5088,7 +5631,7 @@
         }
 
         modal.addEventListener('click', async (e) => {
-            const btn = e.target?.closest?.('[data-tm-cal-action]');
+            const btn = findActionTarget(e?.target, 'data-tm-cal-action');
             const action = String(btn?.getAttribute?.('data-tm-cal-action') || '');
             if (!action) return;
             if (action === 'cancel') {
@@ -5096,19 +5639,52 @@
                 return;
             }
             if (action === 'viewDeviceSchedule') {
+                try { e.preventDefault?.(); } catch (e2) {}
+                try { e.stopPropagation?.(); } catch (e2) {}
                 if (!scheduleId) {
                     toast('请先保存日程后再查看', 'warning');
                     return;
                 }
-                const savedItem = await saveDraftScheduleItemFromModal();
-                if (!savedItem) return;
-                showScheduleDeviceScheduleDialog(savedItem, {
-                    resolveLatestItem: async () => {
-                        const latestSaved = await saveDraftScheduleItemFromModal();
-                        if (!latestSaved) return null;
-                        return await refreshScheduleCurrentDeviceNotificationById(scheduleId);
-                    },
-                });
+                const title = getInputValue('title');
+                const calendarId = getInputValue('calendarId') || calendarId0 || 'default';
+                const s0 = getInputValue('start');
+                const e0 = getInputValue('end');
+                const color = getInputValue('color') || '#0078d4';
+                const nextStart = s0 ? new Date(s0) : null;
+                const nextEnd = e0 ? new Date(e0) : null;
+                const canUseInputTime = !!(
+                    nextStart instanceof Date
+                    && nextEnd instanceof Date
+                    && !Number.isNaN(nextStart.getTime())
+                    && !Number.isNaN(nextEnd.getTime())
+                    && nextEnd.getTime() > nextStart.getTime()
+                );
+                const currentViewItem = {
+                    ...(init && typeof init === 'object' ? init : {}),
+                    id: scheduleId,
+                    title: title || title0 || '日程',
+                    start: canUseInputTime ? safeISO(nextStart) : (init?.start instanceof Date ? safeISO(init.start) : String(init?.start || '')),
+                    end: canUseInputTime ? safeISO(nextEnd) : (init?.end instanceof Date ? safeISO(init.end) : String(init?.end || '')),
+                    allDay: canUseInputTime ? isAllDayRange(nextStart, nextEnd) || (initAllDay && isAllDayRange(nextStart, nextEnd)) : !!initAllDay,
+                    color,
+                    calendarId,
+                    taskId: String(taskId0 || init?.taskId || '').trim(),
+                    notificationSchedules: sanitizeScheduleNotificationSchedules(
+                        init?.notificationSchedules
+                    ),
+                };
+                try {
+                    showScheduleDeviceScheduleDialog(currentViewItem, {
+                        resolveLatestItem: async () => {
+                            const latestSaved = await saveDraftScheduleItemFromModal();
+                            if (!latestSaved) return null;
+                            return await refreshScheduleCurrentDeviceNotificationById(scheduleId);
+                        },
+                    });
+                } catch (err) {
+                    console.error('[task-horizon] open device schedule dialog failed', err);
+                    toast('❌ 打开预约详情失败', 'error');
+                }
                 return;
             }
             if (action === 'delete') {
@@ -5184,6 +5760,7 @@
                 if (idx >= 0) list[idx] = item;
                 else list.push(item);
                 await saveScheduleAll(list);
+                try { await refreshScheduleCurrentDeviceNotificationById(id); } catch (e2) {}
                 try {
                     const store = state.settingsStore;
                     if (store && store.data) {
@@ -5357,6 +5934,7 @@
             const d0 = parseDateOnly(s.lastDate);
             return d0 || undefined;
         })();
+        const slotLayout = getTimeGridSlotLayoutOptions(s);
         calendar = new FullCalendar.Calendar(host, {
             initialView: preferredInitialView,
             initialDate: preferredInitialDate,
@@ -5382,6 +5960,7 @@
             moreLinkClick: 'popover',
             stickyHeaderDates: true,
             lazyFetching: false,
+            ...slotLayout,
             headerToolbar: {
                 left: 'today prev,next',
                 center: 'title',
@@ -5573,13 +6152,6 @@
             selectable: true,
             selectMirror: true,
             scrollTimeReset: false,
-            slotDuration: '00:30:00',
-            slotLabelInterval: '01:00',
-            slotLabelContent: (arg) => {
-                const d = arg?.date;
-                if (!(d instanceof Date) || Number.isNaN(d.getTime())) return '';
-                return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-            },
             droppable: true,
             dropAccept: '.tm-cal-task, tr[data-id], .tm-kanban-card[data-id]',
             eventReceive: async (info) => {
@@ -6022,7 +6594,7 @@
                 } catch (e2) {}
                 return;
             }
-            const btn = e.target?.closest?.('[data-tm-cal-action]');
+            const btn = findActionTarget(e?.target, 'data-tm-cal-action');
             const action = String(btn?.getAttribute?.('data-tm-cal-action') || '');
             if (!action) return;
             if (action === 'toggleSidebar') {
@@ -6643,6 +7215,9 @@
         if (!containerEl || !(containerEl instanceof Element)) return false;
         state.settingsStore = settingsStore || state.settingsStore || null;
         const s = getSettings();
+        const visibleRange = getCalendarVisibleSlotRange(s);
+        const visibleStartOptions = buildCalendarVisibleTimeOptions(visibleRange.start, false);
+        const visibleEndOptions = buildCalendarVisibleTimeOptions(visibleRange.end, true);
         const tomatoRows = s.linkDockTomato ? `
                 <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">月视图隐藏番茄钟</div>
@@ -6688,6 +7263,14 @@
                         <option value="1" ${Number(s.firstDay) === 1 ? 'selected' : ''}>周一</option>
                         <option value="0" ${Number(s.firstDay) === 0 ? 'selected' : ''}>周日</option>
                     </select>
+                </div>
+                <div class="tm-calendar-settings-row">
+                    <div class="tm-calendar-settings-label">显示起始时间</div>
+                    <select class="tm-calendar-settings-select" data-tm-cal-setting="calendarVisibleStartTime">${visibleStartOptions}</select>
+                </div>
+                <div class="tm-calendar-settings-row">
+                    <div class="tm-calendar-settings-label">显示结束时间</div>
+                    <select class="tm-calendar-settings-select" data-tm-cal-setting="calendarVisibleEndTime">${visibleEndOptions}</select>
                 </div>
                 <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">日程默认最大新建时长</div>
@@ -6773,6 +7356,7 @@
                 </div>
                 <div class="tm-calendar-settings-hint">
                     保存按钮会将上述设置写入任务管理器配置。日历编辑需要底栏番茄钟插件提供历史编辑接口。
+                    <br>例如将显示起始时间设为 06:00，即可隐藏 00:00-06:00。
                 </div>
             </div>
         `;
@@ -6826,6 +7410,12 @@
                         if (root) renderSidebar(root, getSettings());
                     } catch (e2) {}
                     try { state.calendar?.refetchEvents?.(); } catch (e2) {}
+                } else if (key === 'calendarVisibleStartTime' || key === 'calendarVisibleEndTime') {
+                    const settings = getSettings();
+                    try { applyCalendarVisibleSlotRange(state.calendar, settings); } catch (e2) {}
+                    try { applyCalendarVisibleSlotRange(state.sideDay?.calendar, settings); } catch (e2) {}
+                    try { state.calendar?.updateSize?.(); } catch (e2) {}
+                    try { syncSideDayLayout(state.sideDay?.rootEl, state.sideDay?.calendar, settings); } catch (e2) {}
                 } else if (key === 'calendarScheduleReminderEnabled' || key === 'calendarScheduleReminderSystemEnabled' || key === 'calendarScheduleReminderDefaultMode' || key === 'calendarAllDayReminderEnabled' || key === 'calendarAllDayReminderTime' || key === 'calendarTaskDateAllDayReminderEnabled' || key === 'calendarAllDaySummaryIncludeExtras') {
                     try { renderSettings(containerEl, store); } catch (e2) {}
                     try { scheduleScheduleReminderRefresh('settings'); } catch (e2) {}
@@ -6906,7 +7496,7 @@
                 reminderMode: String(item.reminderMode || ''),
                 reminderEnabled: item.reminderEnabled,
                 reminderOffsetMin: item.reminderOffsetMin,
-                notificationSchedules: item.notificationSchedules,
+                notificationSchedules: buildScheduleNotificationSchedulesView(item),
             });
             return true;
         } catch (e) {

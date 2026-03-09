@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.6.11
+// @version      1.6.12
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -4114,6 +4114,8 @@
             calendarShowTaskDates: true,
             calendarTaskDateColorMode: 'group',
             calendarNewScheduleMaxDurationMin: 60,
+            calendarVisibleStartTime: '00:00',
+            calendarVisibleEndTime: '24:00',
             calendarScheduleColor: '',
             calendarTaskDatesColor: '#6b7280',
             calendarShowCnHoliday: true,
@@ -4359,6 +4361,8 @@
                                 if (typeof cloudData.calendarShowTaskDates === 'boolean') this.data.calendarShowTaskDates = cloudData.calendarShowTaskDates;
                                 if (typeof cloudData.calendarTaskDateColorMode === 'string') this.data.calendarTaskDateColorMode = cloudData.calendarTaskDateColorMode;
                                 if (typeof cloudData.calendarNewScheduleMaxDurationMin === 'number') this.data.calendarNewScheduleMaxDurationMin = cloudData.calendarNewScheduleMaxDurationMin;
+                                if (typeof cloudData.calendarVisibleStartTime === 'string') this.data.calendarVisibleStartTime = cloudData.calendarVisibleStartTime;
+                                if (typeof cloudData.calendarVisibleEndTime === 'string') this.data.calendarVisibleEndTime = cloudData.calendarVisibleEndTime;
                                 if (typeof cloudData.calendarScheduleColor === 'string') this.data.calendarScheduleColor = cloudData.calendarScheduleColor;
                                 if (typeof cloudData.calendarTaskDatesColor === 'string') this.data.calendarTaskDatesColor = cloudData.calendarTaskDatesColor;
                                 if (typeof cloudData.calendarShowCnHoliday === 'boolean') this.data.calendarShowCnHoliday = cloudData.calendarShowCnHoliday;
@@ -7431,6 +7435,7 @@
     let __tmVisibilityHandler = null;
     let __tmFocusHandler = null;
     let __tmWhiteboardViewSaveTimer = null;
+    let __tmTimelineTodayIndicatorTimer = null;
     // 存储被悬浮条修改过的任务 ID
     let __tmModifiedTaskIds = new Set();
     // 追踪最小化前插件页面是否正在显示（用于控制是否在恢复后刷新）
@@ -7511,6 +7516,7 @@
     let __tmTodayScheduleRefreshTimer = null;
     let __tmCalendarBootstrapRetryTimer = null;
     let __tmQuickbarTaskUpdateHandler = null;
+    const __TM_TIMELINE_TODAY_REFRESH_MS = 5 * 60 * 1000;
 
     async function __tmSafeOpenManager(reason) {
         try {
@@ -9038,6 +9044,7 @@ async function __tmRefreshAfterWake(reason) {
                 });
             } catch (e) {}
         }
+        __tmScheduleTimelineTodayIndicatorRefresh();
 
         try { leftBody.scrollTop = savedTop; } catch (e) {}
         try { ganttBody.scrollTop = savedTop; } catch (e) {}
@@ -11801,6 +11808,18 @@ async function __tmRefreshAfterWake(reason) {
         });
     }
 
+    function __tmMoveGlobalNewTaskDocFirst(docIds) {
+        const list = Array.isArray(docIds) ? [...docIds] : [];
+        if (list.length <= 1) return list;
+        const globalDocId = String(SettingsStore.data.newTaskDocId || '').trim();
+        if (!globalDocId || globalDocId === '__dailyNote__') return list;
+        const idx = list.findIndex(id => String(id || '').trim() === globalDocId);
+        if (idx <= 0) return list;
+        const [target] = list.splice(idx, 1);
+        list.unshift(target);
+        return list;
+    }
+
     async function __tmSetDocPinnedForGroup(docId, pinned, groupId) {
         const id = String(docId || '').trim();
         const gid = String(groupId || 'all').trim() || 'all';
@@ -12468,6 +12487,7 @@ async function __tmRefreshAfterWake(reason) {
         const isViewSwitchAnim = (kind0 === 'from-right' || kind0 === 'from-left')
             && (Date.now() - (Number(state.uiAnimTs) || 0) < 380);
         const isTimelineView = state.viewMode === 'timeline';
+        if (!isTimelineView) __tmClearTimelineTodayIndicatorTimer();
         const useSoftSwap = isViewSwitchAnim;
         let prevModalEl = null;
         const prevModalSnapshot = state.modal instanceof Element ? state.modal : null;
@@ -12981,8 +13001,11 @@ async function __tmRefreshAfterWake(reason) {
             const cols = (() => {
                 if (!headingMode) return colsStatus;
                 if (isAllTabsView) {
+                    const globalNewTaskDocId = String(SettingsStore.data.newTaskDocId || '').trim();
                     const docIdSet = new Set(filtered.map(t => String(t?.root_id || '').trim()).filter(Boolean));
-                    const ordered = docsInOrder.filter(id => docIdSet.has(id));
+                    const ordered = __tmMoveGlobalNewTaskDocFirst(
+                        docsInOrder.filter((id) => docIdSet.has(id) || (globalNewTaskDocId && id === globalNewTaskDocId))
+                    );
                     Array.from(docIdSet).forEach((id) => {
                         if (!ordered.includes(id)) ordered.push(id);
                     });
@@ -13034,7 +13057,8 @@ async function __tmRefreshAfterWake(reason) {
                     const group = grouped.get(b.key);
                     if (group?.items?.length > 0) {
                         cols0.push({
-                            id: String(b?.id || '').trim(),
+                            bucketKey: String(b?.key || '').trim() || `label:${String(b?.label || '').trim() || noHeadingLabel}`,
+                            headingId: String(b?.id || '').trim(),
                             name: String(b?.label || '').trim() || '(空标题)',
                             color: pickDocColor(docId),
                             kind: 'heading',
@@ -13050,7 +13074,8 @@ async function __tmRefreshAfterWake(reason) {
                 Array.from(grouped.keys()).forEach(key => {
                     if (!usedKeys.has(key) && (grouped.get(key)?.items?.length > 0)) {
                         cols0.push({
-                            id: grouped.get(key)?.id || '',
+                            bucketKey: String(key || '').trim() || `label:${noHeadingLabel}`,
+                            headingId: String(grouped.get(key)?.id || '').trim(),
                             name: String(grouped.get(key)?.label || '').trim() || '(空标题)',
                             color: pickDocColor(docId),
                             kind: 'heading',
@@ -13068,7 +13093,8 @@ async function __tmRefreshAfterWake(reason) {
                     const key = `id:${hid}`;
                     if (!usedKeys.has(key) && !grouped.has(key)) {
                         cols0.push({
-                            id: hid,
+                            bucketKey: key,
+                            headingId: hid,
                             name: String(h?.content || '').trim() || '(空标题)',
                             color: pickDocColor(docId),
                             kind: 'heading',
@@ -13079,20 +13105,33 @@ async function __tmRefreshAfterWake(reason) {
                     }
                 });
                 
-                // 按原始标题顺序排序：有任务的在前，无任务的按原始顺序在后
+                // 按原始标题顺序排序：无标题始终最左；其余有任务的在前，无任务的按原始顺序在后
                 cols0.sort((a, b) => {
+                    const aIsNone = String(a?.name || '').trim() === noHeadingLabel;
+                    const bIsNone = String(b?.name || '').trim() === noHeadingLabel;
+                    if (aIsNone !== bIsNone) return aIsNone ? -1 : 1;
                     if (a.hasItems !== b.hasItems) return a.hasItems ? -1 : 1;
                     return a.orderIdx - b.orderIdx;
                 });
                 
-                // 确保"无标题"列在最后
+                // 确保"无标题"列始终存在且位于最左
                 const noneCol = cols0.find(c => c.name === noHeadingLabel);
                 if (!noneCol) {
-                    cols0.push({ id: '__none__', name: noHeadingLabel, color: pickDocColor(docId), kind: 'heading', docId, hasItems: false, orderIdx: 99999 });
+                    cols0.unshift({
+                        bucketKey: `label:${noHeadingLabel}`,
+                        headingId: '__none__',
+                        name: noHeadingLabel,
+                        color: pickDocColor(docId),
+                        kind: 'heading',
+                        docId,
+                        hasItems: false,
+                        orderIdx: -1
+                    });
                 }
                 
                 return cols0.map(c => ({
-                    id: c.id,
+                    id: c.bucketKey,
+                    headingId: c.headingId,
                     name: c.name,
                     color: c.color,
                     kind: c.kind,
@@ -13112,7 +13151,7 @@ async function __tmRefreshAfterWake(reason) {
                 } else {
                     const did = String(task?.root_id || '').trim();
                     if (did !== String(state.activeDocId || '').trim()) return;
-                    key = String(task?.h2Id || '').trim() || '__none__';
+                    key = __tmGetDocHeadingBucket(task, noHeadingLabel).key;
                 }
                 if (!tasksByStatus.has(key)) tasksByStatus.set(key, []);
                 tasksByStatus.get(key).push(task);
@@ -13729,7 +13768,7 @@ async function __tmRefreshAfterWake(reason) {
                 const dataAttrs = headingMode
                     ? (kind === 'doc'
                         ? `data-kind="doc" data-doc="${esc(String(c?.id || '').trim())}"`
-                        : `data-kind="heading" data-doc="${esc(String(c?.docId || '').trim())}" data-heading="${esc(String(c?.id || '').trim())}"`)
+                        : `data-kind="heading" data-doc="${esc(String(c?.docId || '').trim())}" data-heading="${esc(String(c?.headingId || '__none__').trim())}"`)
                     : `data-kind="status" data-status="${esc(c.id)}"`;
                 const colHeaderBg = (() => {
                     const rgba = __tmParseCssColorToRgba(String(c?.color || '').trim());
@@ -14265,12 +14304,21 @@ async function __tmRefreshAfterWake(reason) {
                     if (!id || map.has(id)) return;
                     map.set(id, t);
                 });
+                const getTaskLike = (taskId) => {
+                    const id = String(taskId || '').trim();
+                    if (!id) return null;
+                    return map.get(id) || state.flatTasks?.[id] || (snapMap?.[id] ? {
+                        id,
+                        parentTaskId: String(snapMap[id]?.parentTaskId || '').trim(),
+                        done: !!snapMap[id]?.done,
+                    } : null);
+                };
                 const hasPlacedAncestor = (taskId) => {
                     let cur = String(taskId || '').trim();
                     const seen = new Set();
                     while (cur && !seen.has(cur)) {
                         seen.add(cur);
-                        const t = map.get(cur);
+                        const t = getTaskLike(cur);
                         const pid = String(t?.parentTaskId || '').trim();
                         if (!pid) return false;
                         if (placedMap[pid]) return true;
@@ -14283,10 +14331,10 @@ async function __tmRefreshAfterWake(reason) {
                     const seen = new Set();
                     while (cur && !seen.has(cur)) {
                         seen.add(cur);
-                        const t = map.get(cur);
+                        const t = getTaskLike(cur);
                         const pid = String(t?.parentTaskId || '').trim();
                         if (!pid) return false;
-                        const pt = map.get(pid);
+                        const pt = getTaskLike(pid);
                         if (pt?.done) return true;
                         cur = pid;
                     }
@@ -14592,7 +14640,7 @@ async function __tmRefreshAfterWake(reason) {
                             <button class="tm-view-seg-item ${state.viewMode === 'timeline' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('timeline')" role="tab" aria-selected="${state.viewMode === 'timeline' ? 'true' : 'false'}" title="时间轴">时间轴</button>
                             <button class="tm-view-seg-item ${state.viewMode === 'whiteboard' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('whiteboard')" role="tab" aria-selected="${state.viewMode === 'whiteboard' ? 'true' : 'false'}" title="白板">白板</button>
                             <button class="tm-view-seg-item ${state.viewMode === 'kanban' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('kanban')" role="tab" aria-selected="${state.viewMode === 'kanban' ? 'true' : 'false'}" title="看板">看板</button>
-                            <button class="tm-view-seg-item ${state.viewMode === 'calendar' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('calendar')" role="tab" aria-selected="${state.viewMode === 'calendar' ? 'true' : 'false'}" title="日历">日历</button>
+                            <button class="tm-view-seg-item ${state.viewMode === 'calendar' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('calendar')" oncontextmenu="return tmHandleCalendarViewButtonContextMenu(event)" role="tab" aria-selected="${state.viewMode === 'calendar' ? 'true' : 'false'}" title="日历">日历</button>
                         </div>
                         ${state.viewMode === 'kanban' ? `
                             <div class="tm-view-segmented tm-kanban-mode-segmented" role="tablist" aria-label="看板模式">
@@ -14972,13 +15020,19 @@ async function __tmRefreshAfterWake(reason) {
                     #tmCalendarSideDockTimeline {
                         flex: 1 1 auto;
                         min-height: 0;
-                        overflow: hidden;
+                        overflow: auto;
                     }
                     #tmCalendarSideDockTimeline .fc {
-                        height: 100%;
+                        height: auto !important;
+                        min-height: 100%;
                     }
                     #tmCalendarSideDockTimeline .fc-view-harness {
+                        height: auto !important;
                         min-height: 0 !important;
+                    }
+                    #tmCalendarSideDockTimeline .fc-scroller,
+                    #tmCalendarSideDockTimeline .fc-scroller-liquid-absolute {
+                        overflow: visible !important;
                     }
                     #tmCalendarSideDockPanel {
                         height: 100%;
@@ -15105,6 +15159,7 @@ async function __tmRefreshAfterWake(reason) {
                         ganttBody.scrollLeft = desiredLeft;
                     } catch (e) {}
                 }
+                __tmScheduleTimelineTodayIndicatorRefresh();
                 
                 const syncHeaderX = () => {
                     if (!ganttBody || !ganttHeader) return;
@@ -15555,11 +15610,18 @@ async function __tmRefreshAfterWake(reason) {
             timelineRoot.innerHTML = `<div style="padding:12px;color:var(--tm-secondary-text);">日历模块未加载。</div>`;
             return;
         }
+        const dragHost = (() => {
+            const modal = state.modal;
+            if (!(modal instanceof Element)) return null;
+            if (state.viewMode === 'timeline') return modal.querySelector('#tmTimelineLeftTable tbody');
+            if (state.viewMode === 'kanban') return modal.querySelector('.tm-body.tm-body--kanban');
+            return modal.querySelector('#tmTaskTable tbody');
+        })();
         const ok = globalThis.__tmCalendar.mountSideDayTimeline(timelineRoot, {
             settingsStore: SettingsStore,
             date: __tmCalendarDockGetDateKey(),
             resolveTask: (taskId) => state.flatTasks?.[String(taskId || '').trim()] || null,
-            dragHost: state.modal,
+            dragHost: dragHost || state.modal,
             enableExternalDrag: false,
         });
         if (!ok) {
@@ -15625,6 +15687,13 @@ async function __tmRefreshAfterWake(reason) {
         SettingsStore.data.calendarSideDockEnabled = !!next;
         try { await SettingsStore.save(); } catch (e) {}
         render();
+    };
+
+    window.tmHandleCalendarViewButtonContextMenu = async function(ev) {
+        try { ev?.preventDefault?.(); } catch (e) {}
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        try { await window.tmToggleCalendarSideDock(); } catch (e) {}
+        return false;
     };
 
     window.tmSwitchViewMode = function(mode) {
@@ -20247,6 +20316,57 @@ async function __tmRefreshAfterWake(reason) {
         try { body.dispatchEvent(new Event('scroll')); } catch (e) {}
     };
 
+    function __tmClearTimelineTodayIndicatorTimer() {
+        try {
+            if (__tmTimelineTodayIndicatorTimer != null) {
+                clearTimeout(__tmTimelineTodayIndicatorTimer);
+                __tmTimelineTodayIndicatorTimer = null;
+            }
+        } catch (e) {
+            __tmTimelineTodayIndicatorTimer = null;
+        }
+    }
+
+    function __tmRefreshTimelineTodayIndicatorInPlace() {
+        if (state.viewMode !== 'timeline') return false;
+        const modal = state.modal;
+        if (!(modal instanceof Element) || !document.body.contains(modal)) return false;
+        const body = modal.querySelector('#tmGanttBody');
+        if (!(body instanceof HTMLElement)) return false;
+        const todayLine = body.querySelector('.tm-gantt-today');
+        if (!(todayLine instanceof HTMLElement)) return false;
+        const startTs = Number(body.dataset.tmGanttStartTs);
+        const dayWidth = Number(body.dataset.tmGanttDayWidth);
+        const totalWidth = Number(body.dataset.tmGanttTotalWidth);
+        const dayMs = Number(globalThis.__TaskHorizonGanttView?.DAY_MS) || 86400000;
+        if (!Number.isFinite(startTs) || !Number.isFinite(dayWidth) || dayWidth <= 0 || !Number.isFinite(totalWidth) || totalWidth < 0) return false;
+        const nextLeftRaw = ((Date.now() - startTs) / dayMs) * dayWidth;
+        const nextLeft = Math.max(0, Math.min(totalWidth, nextLeftRaw));
+        try { todayLine.style.left = `${nextLeft}px`; } catch (e) { return false; }
+        return true;
+    }
+
+    function __tmGetTimelineTodayIndicatorDelayMs() {
+        const intervalMs = __TM_TIMELINE_TODAY_REFRESH_MS;
+        const now = Date.now();
+        const remainder = now % intervalMs;
+        const delay = remainder === 0 ? intervalMs : (intervalMs - remainder);
+        return Math.max(1000, delay);
+    }
+
+    function __tmScheduleTimelineTodayIndicatorRefresh() {
+        __tmClearTimelineTodayIndicatorTimer();
+        if (!__tmRefreshTimelineTodayIndicatorInPlace()) return;
+        const tick = () => {
+            if (!__tmRefreshTimelineTodayIndicatorInPlace()) {
+                __tmClearTimelineTodayIndicatorTimer();
+                return;
+            }
+            __tmTimelineTodayIndicatorTimer = setTimeout(tick, __tmGetTimelineTodayIndicatorDelayMs());
+        };
+        __tmTimelineTodayIndicatorTimer = setTimeout(tick, __tmGetTimelineTodayIndicatorDelayMs());
+    }
+
     window.tmToggleDesktopMenu = function(e) {
         if (e) { e.stopPropagation(); e.preventDefault(); }
         
@@ -20441,6 +20561,7 @@ async function __tmRefreshAfterWake(reason) {
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
         } catch (e) {}
+        __tmClearTimelineTodayIndicatorTimer();
         
         // 强制移除所有可能的模态框（防御性编程）
         const modals = document.querySelectorAll('.tm-modal, .tm-settings-modal, .tm-rules-modal, .tm-prompt-modal');
@@ -30590,6 +30711,7 @@ async function __tmRefreshAfterWake(reason) {
                 __tmCalendarBootstrapRetryTimer = null;
             }
         } catch (e) {}
+        try { __tmClearTimelineTodayIndicatorTimer(); } catch (e) {}
         try {
             if (__tmTomatoAssociationHandler) {
                 window.removeEventListener('tomato:association-cleared', __tmTomatoAssociationHandler);
@@ -31112,9 +31234,9 @@ async function __tmRefreshAfterWake(reason) {
                 </div>
             `;
     
-            const nowIdx = getDayIndexByTs(startTs, Date.now());
-            const todayIdx = clamp(nowIdx, 0, dayCount - 1);
-            const todayLeft = todayIdx * dayWidth + dayWidth * 0.5;
+            const nowTs = Date.now();
+            const todayLeftRaw = ((nowTs - startTs) / DAY_MS) * dayWidth;
+            const todayLeft = clamp(todayLeftRaw, 0, totalWidth);
             const rowsHtml = [];
             const enableGroupBg = !!SettingsStore.data.enableGroupTaskBgByGroupColor;
             const isDark = __tmIsDarkMode();
