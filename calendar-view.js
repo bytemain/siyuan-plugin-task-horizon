@@ -2146,7 +2146,8 @@
     }
 
     function buildScheduleMobilePlanKey(item, settings, targets) {
-        const targetSig = (Array.isArray(targets) ? targets : []).map((it) => `${it.notificationKey}@${it.atMs}`).join('|');
+        // 🔧 修复：使用稳定的标识符，不包含时间戳，避免每次重启都重新创建预约
+        const targetSig = (Array.isArray(targets) ? targets : []).map((it) => `${it.notificationKey}@${it.dateKey}@${it.timeKey}`).join('|');
         return [
             String(item?.id || '').trim(),
             String(item?.title || '').trim(),
