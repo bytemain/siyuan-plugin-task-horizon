@@ -1747,7 +1747,12 @@
     }
 
     function shouldUseOfficialMobileNotificationBackend() {
+        // 🔧 修复：只检查真正的移动端设备
+        // 桌面端虽然有 sendNotification，但应该使用实时提醒而不是预约机制
         const backend = getRuntimeBackendType();
+        // 桌面端返回 false，移动端返回 true
+        if (backend === 'desktop' || backend === 'pc') return false;
+        
         return !!state.isMobileDevice
             || backend === 'android'
             || backend === 'harmony'
@@ -1757,8 +1762,10 @@
     }
 
     function shouldPreferDeviceNotificationBackend() {
-        return shouldUseOfficialMobileNotificationBackend()
-            || !!getPlatformUtilsCompat();
+        // 🔧 修复：只使用 isLikelyMobileRuntime() 来判断是否使用预约机制
+        // 桌面端应该使用实时提醒机制，不预先预约系统通知
+        // 移除 getPlatformUtilsCompat() 检查，因为它在桌面端也存在
+        return shouldUseOfficialMobileNotificationBackend();
     }
 
     function normalizeNotificationId(value) {
@@ -2287,6 +2294,20 @@
     }
 
     async function reconcileSingleScheduleMobileNotification(item, settings, registry) {
+        // 🔧 修复：桌面端使用实时提醒模式，不预先预约系统通知
+        // 只有真正的移动端（手机/平板）才使用预先预约机制
+        const isMobile = isLikelyMobileRuntime() || state.isMobileDevice;
+        if (!isMobile) {
+            // 桌面端：清理旧的预约（如果有的话）
+            const existing = getScheduleDeviceSchedule(item) || registry[String(item?.id || '').trim()] || null;
+            const validExistingEntries = sanitizeScheduleNotificationEntries(existing?.entries);
+            if (validExistingEntries.length > 0) {
+                await cancelScheduleMobileNotificationEntries(validExistingEntries);
+                delete registry[String(item?.id || '').trim()];
+            }
+            return { changed: false, item, reason: 'desktop-realtime-mode' };
+        }
+        
         if (!item || typeof item !== 'object') return { changed: false, item };
         const scheduleId = String(item.id || '').trim();
         if (!scheduleId) return { changed: false, item };
@@ -2374,6 +2395,22 @@
             sr.mobileSyncPending = true;
             return false;
         }
+        
+        // 🔧 修复：桌面端使用实时提醒模式，不预先预约系统通知
+        // 只有真正的移动端才执行预约同步
+        const isMobile = isLikelyMobileRuntime() || state.isMobileDevice;
+        if (!isMobile) {
+            // 桌面端：只清理孤立的预约，不执行预约同步
+            try {
+                const list = await loadScheduleAll();
+                const registry = loadScheduleMobileRegistry();
+                const scheduleIds = Array.isArray(list) ? list.map(it => String(it?.id || '').trim()).filter(Boolean) : [];
+                await cleanupOrphanScheduleMobileRegistry(scheduleIds, registry);
+                saveScheduleMobileRegistry(registry);
+            } catch (e) {}
+            return false;
+        }
+        
         if (!shouldPreferDeviceNotificationBackend()) return false;
         sr.mobileSyncRunning = true;
         try {
@@ -2682,6 +2719,34 @@
             return;
         }
         sr.enabled = true;
+
+        // 🔧 修复：桌面端启动时立即清理所有旧的系统通知预约
+        // 避免旧的预约在到点时触发通知
+        // 只使用 isLikelyMobileRuntime()，确保桌面端不使用预约机制
+        const isMobile = isLikelyMobileRuntime() || state.isMobileDevice;
+        if (!isMobile && settings.scheduleReminderEnabled) {
+            // 桌面端：立即清理所有旧的预约
+            try {
+                const registry = loadScheduleMobileRegistry();
+                const entriesToCancel = [];
+                for (const [scheduleId, schedule] of Object.entries(registry)) {
+                    if (schedule?.entries?.length) {
+                        for (const entry of schedule.entries) {
+                            entriesToCancel.push(entry);
+                        }
+                    }
+                }
+                if (entriesToCancel.length > 0) {
+                    for (const entry of entriesToCancel) {
+                        try { await cancelDeviceNotificationCompat(entry.id); } catch (e) {}
+                    }
+                    // 清空本地注册表
+                    saveScheduleMobileRegistry({});
+                }
+            } catch (e) {
+            }
+        }
+
         if (shouldPreferDeviceNotificationBackend()) {
             try { scheduleScheduleMobileSync(reason || 'refresh'); } catch (e) {}
         }
@@ -2927,9 +2992,7 @@
                     const key = String(pack?.key || timerKey).trim();
                     const dateKey = String(meta.dateKey || dateKey0).trim() || dateKey0;
                     if (dateKey !== dateKey0) return;
-                    if (fired.has(key)) return;
-                    fired.add(key);
-                    saveScheduleReminderFiredSet(dateKey0, fired);
+                    // 非全天日程：直接触发提醒，不保存 fired 记录（修改后可重新触发）
                     const offset = Number(meta.offsetMin);
                     const startMs1 = (() => {
                         const s = Number(meta.startMs);
@@ -2958,6 +3021,7 @@
             }, Math.min(delayMs, 2147483000));
             active.set(timerKey, t);
         });
+        
         sr.timers = active;
         if (sr.periodicTimer) {
             clearTimeout(sr.periodicTimer);
@@ -3068,7 +3132,9 @@
     function bindScheduleReminderEngine() {
         const sr = state.scheduleReminder;
         if (sr.scheduleUpdatedListener) return;
-        sr.scheduleUpdatedListener = () => { scheduleScheduleReminderRefresh('schedule-updated'); };
+        sr.scheduleUpdatedListener = () => { 
+            scheduleScheduleReminderRefresh('schedule-updated'); 
+        };
         try { window.addEventListener('tm:calendar-schedule-updated', sr.scheduleUpdatedListener); } catch (e) {}
         try { bindScheduleReminderBackgroundRefresh(); } catch (e) {}
         scheduleScheduleReminderRefresh('bind');
