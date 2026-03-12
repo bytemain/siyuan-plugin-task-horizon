@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.7.1
+// @version      1.7.5
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -89,6 +89,7 @@
             --tm-topbar-search-border: rgba(255,255,255,0.3);
             --tm-topbar-scrollbar-thumb: rgba(255,255,255,0.25);
             --tm-task-content-color: var(--tm-text-color);
+            --tm-task-meta-color: var(--tm-secondary-text);
             --tm-group-doc-label-color: var(--tm-text-color);
             --tm-time-group-base-color: #1a73e8;
             --tm-time-group-overdue-color: #d93025;
@@ -134,6 +135,7 @@
             --tm-topbar-grad-end: #5b2d7a;
             --tm-topbar-text-color: #ffffff;
             --tm-task-content-color: var(--tm-text-color);
+            --tm-task-meta-color: var(--tm-secondary-text);
             --tm-group-doc-label-color: var(--tm-text-color);
             --tm-time-group-base-color: #6ba5ff;
             --tm-time-group-overdue-color: #ff6b6b;
@@ -993,6 +995,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            /* 启用容器查询 */
+            container-type: inline-size;
+            container-name: tm-modal;
         }
 
         .tm-modal.tm-modal--mobile {
@@ -1010,6 +1015,102 @@
 
         .tm-modal.tm-modal--mobile .tm-body {
             max-height: none;
+        }
+
+        /* 分屏模式样式 - 通过容器宽度检测 */
+        @media (max-width: 900px) {
+            .tm-modal .tm-filter-rule-bar {
+                flex-wrap: wrap !important;
+                padding: 10px 16px !important;
+                gap: 8px !important;
+            }
+            
+            .tm-modal .tm-header-selectors {
+                flex-wrap: wrap !important;
+                overflow-x: visible !important;
+            }
+            
+            .tm-modal .tm-view-segmented {
+                max-width: 100% !important;
+                overflow-x: auto !important;
+            }
+            
+            .tm-modal .tm-search-box {
+                flex-wrap: wrap !important;
+            }
+            
+            .tm-modal .tm-search-input {
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+            
+            .tm-modal .tm-header {
+                padding: 12px 16px !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+            }
+            
+            .tm-modal .tm-desktop-toolbar {
+                flex-wrap: wrap !important;
+            }
+            
+            /* 隐藏桌面端工具栏，显示移动端菜单 */
+            .tm-modal .tm-desktop-toolbar.tm-header-selectors {
+                display: none !important;
+            }
+            
+            .tm-modal .tm-mobile-menu-btn,
+            .tm-modal .tm-mobile-menu-btn[style*="display: none"] {
+                display: flex !important;
+            }
+        }
+
+        /* 分屏模式样式 - 应用移动端顶栏图标效果 */
+        .tm-modal.tm-modal--split-pane .tm-box {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            max-height: none;
+            border-radius: 0;
+        }
+
+        .tm-modal.tm-modal--split-pane .tm-body {
+            max-height: none;
+        }
+
+        .tm-modal.tm-modal--split-pane .tm-filter-rule-bar {
+            flex-wrap: wrap;
+            padding: 10px 16px;
+            gap: 8px;
+        }
+
+        .tm-modal.tm-modal--split-pane .tm-header-selectors {
+            flex-wrap: wrap;
+            overflow-x: visible;
+        }
+
+        .tm-modal.tm-modal--split-pane .tm-view-segmented {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .tm-modal.tm-modal--split-pane .tm-search-box {
+            flex-wrap: wrap;
+        }
+
+        .tm-modal.tm-modal--split-pane .tm-search-input {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .tm-modal.tm-modal--split-pane .tm-header {
+            padding: 12px 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tm-modal.tm-modal--split-pane .tm-desktop-toolbar {
+            flex-wrap: wrap;
         }
 
         @media (max-width: 768px) {
@@ -1032,6 +1133,105 @@
             }
         }
 
+        /* 容器查询：处理分屏/窄屏模式 - 基于容器宽度而非视口宽度 */
+        @container tm-modal (max-width: 900px) {
+            /* 隐藏桌面端工具栏，显示移动端菜单按钮 */
+            .tm-modal .tm-desktop-toolbar.tm-header-selectors {
+                display: none !important;
+            }
+            
+            /* 显示移动端菜单按钮 */
+            .tm-modal .tm-mobile-menu-btn,
+            .tm-modal .tm-mobile-menu-btn[style*="display: none"] {
+                display: flex !important;
+            }
+            
+            /* 移动端专属项目显示 */
+            .tm-modal .tm-mobile-only-item {
+                display: flex !important;
+            }
+            
+            /* 隐藏桌面端菜单按钮 */
+            .tm-modal .tm-desktop-menu-btn {
+                display: none !important;
+            }
+            
+            /* 筛选规则栏换行 */
+            .tm-modal .tm-filter-rule-bar {
+                flex-wrap: wrap;
+                padding: 10px 16px;
+                gap: 8px;
+            }
+            
+            /* 标题区域换行 */
+            .tm-modal .tm-header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            /* 桌面工具栏换行 */
+            .tm-modal .tm-desktop-toolbar {
+                flex-wrap: wrap;
+            }
+            
+            /* 搜索框换行 */
+            .tm-modal .tm-search-box {
+                flex-wrap: wrap;
+            }
+            
+            .tm-modal .tm-search-input {
+                width: 100%;
+                min-width: 0;
+            }
+            
+            /* 视图分段控制器允许横向滚动 */
+            .tm-modal .tm-view-segmented {
+                max-width: 100%;
+                overflow-x: auto;
+            }
+            
+            /* 头部选择器换行 */
+            .tm-modal .tm-header-selectors {
+                flex-wrap: wrap;
+                overflow-x: visible;
+            }
+        }
+
+        /* 容器查询：更窄的容器 - 隐藏视图选择器，完全变成移动端样式 */
+        @container tm-modal (max-width: 600px) {
+            /* 隐藏桌面端的视图选择器，将其整合到移动端菜单中 */
+            .tm-modal .tm-search-box .tm-view-segmented {
+                display: none !important;
+            }
+            
+            /* 隐藏桌面端的刷新和设置按钮，只保留菜单按钮 */
+            .tm-modal .tm-search-box .tm-btn:not(.tm-desktop-menu-btn) {
+                display: none !important;
+            }
+        }
+
+        /* 容器查询：更窄的容器（类似移动设备） */
+        @container tm-modal (max-width: 768px) {
+            .tm-modal {
+                align-items: stretch;
+                justify-content: stretch;
+            }
+            .tm-modal .tm-box {
+                width: 100%;
+                height: 100%;
+                max-width: none;
+                max-height: none;
+                border-radius: 0;
+            }
+            .tm-modal .tm-header {
+                padding: 12px 14px;
+            }
+            .tm-modal .tm-body {
+                max-height: none;
+            }
+        }
+
         /* Tab 模式下的容器样式（非遮罩层） */
         .tm-modal.tm-modal--tab {
             position: relative;
@@ -1042,6 +1242,9 @@
             z-index: auto;
             background: transparent;
             display: block;
+            /* 启用容器查询，使其可以检测自身宽度变化 */
+            container-type: inline-size;
+            container-name: tm-modal;
         }
 
         .tm-modal.tm-modal--tab .tm-box {
@@ -2672,11 +2875,452 @@
             min-width: 0;
         }
 
+        .tm-task-detail-value .tm-input,
+        .tm-task-detail-value .tm-rule-select,
+        .tm-task-detail-value textarea,
+        .tm-task-detail-value input[type="date"],
+        .tm-task-detail-value input[type="text"] {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-height: 36px;
+            padding: 8px 12px;
+            border: 1px solid color-mix(in srgb, var(--tm-input-border) 82%, var(--tm-text-color) 18%);
+            border-radius: 10px;
+            background: color-mix(in srgb, var(--tm-input-bg) 94%, var(--tm-bg-color));
+            color: var(--tm-text-color);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+            transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            color-scheme: light dark;
+            font-size: calc(var(--tm-font-size) * 0.98);
+        }
+
+        .tm-task-detail-value textarea {
+            line-height: 1.45;
+        }
+
+        .tm-task-detail-value .tm-rule-select {
+            padding-right: 36px;
+            background-image:
+                linear-gradient(45deg, transparent 50%, var(--tm-secondary-text) 50%),
+                linear-gradient(135deg, var(--tm-secondary-text) 50%, transparent 50%);
+            background-position:
+                calc(100% - 18px) calc(50% - 1px),
+                calc(100% - 12px) calc(50% - 1px);
+            background-size: 6px 6px, 6px 6px;
+            background-repeat: no-repeat;
+        }
+
+        .tm-task-detail-value .tm-input:focus,
+        .tm-task-detail-value .tm-rule-select:focus,
+        .tm-task-detail-value textarea:focus,
+        .tm-task-detail-value input[type="date"]:focus,
+        .tm-task-detail-value input[type="text"]:focus {
+            border-color: color-mix(in srgb, var(--tm-primary-color) 72%, var(--tm-input-border));
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--tm-primary-color) 18%, transparent);
+            background: color-mix(in srgb, var(--tm-input-bg) 98%, var(--tm-bg-color));
+        }
+
         .tm-task-detail-actions {
             display: flex;
             justify-content: flex-end;
             gap: 8px;
             margin-top: 12px;
+        }
+
+        .tm-checklist-layout {
+            display: flex;
+            min-height: 0;
+            height: 100%;
+            width: 100%;
+            background: var(--tm-bg-color);
+        }
+
+        .tm-checklist-pane {
+            flex: 1 1 auto;
+            min-width: 320px;
+            min-height: 0;
+            overflow: auto;
+            padding: 14px 14px 14px 24px;
+            font-size: var(--tm-font-size);
+            background:
+                linear-gradient(180deg, color-mix(in srgb, var(--tm-section-bg) 55%, transparent), transparent 120px),
+                var(--tm-bg-color);
+        }
+
+        .tm-checklist-items {
+            --tm-checklist-list-gutter: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-left: var(--tm-checklist-list-gutter);
+        }
+
+        .tm-checklist-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 38px;
+            width: 100%;
+            padding: 0 14px;
+            box-sizing: border-box;
+            border: 1px solid var(--tm-border-color);
+            border-radius: 12px;
+            background: var(--tm-header-bg);
+            color: var(--tm-text-color);
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .tm-checklist-group.tm-checklist-group--h2 {
+            margin-left: 12px;
+            background: var(--tm-subgroup-bg);
+            color: var(--tm-secondary-text);
+        }
+
+        .tm-checklist-group-label {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tm-checklist-item {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 2px;
+            padding: 8px 12px 8px 14px;
+            border: 1px solid var(--tm-border-color);
+            border-radius: 12px;
+            background: color-mix(in srgb, var(--tm-bg-color) 92%, var(--tm-section-bg));
+            color: var(--tm-text-color);
+            font-size: 1em;
+            cursor: pointer;
+            transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+        }
+
+        .tm-checklist-item:hover {
+            border-color: color-mix(in srgb, var(--tm-border-color) 72%, var(--tm-text-color) 28%);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .tm-checklist-item--active {
+            border-color: #2f6fed;
+            box-shadow: 0 0 0 1px #2f6fed inset, 0 12px 24px rgba(47, 111, 237, 0.14);
+            background: color-mix(in srgb, var(--tm-bg-color) 88%, #2f6fed 12%);
+        }
+
+        .tm-checklist-item--done .tm-checklist-title {
+            color: var(--tm-task-done-color);
+            text-decoration: line-through;
+        }
+
+        .tm-checklist-item-main {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .tm-checklist-leading {
+            flex: 0 0 18px;
+            width: 18px;
+            min-width: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0;
+            padding-top: 3px;
+            overflow: visible;
+        }
+
+        .tm-checklist-leading.tm-checklist-leading--branch {
+            flex-basis: 18px;
+            width: 18px;
+            min-width: 18px;
+        }
+
+        .tm-checklist-leading .tm-tree-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            min-width: 20px;
+            height: 20px;
+            color: #8a8f98;
+        }
+
+        .tm-checklist-leading.tm-checklist-leading--branch .tm-tree-toggle {
+            position: absolute;
+            left: -22px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .tm-checklist-leading .tm-tree-toggle .tm-tree-toggle-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .tm-checklist-title-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .tm-checklist-title {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 1em;
+            font-weight: 600;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+
+        .tm-checklist-title-button {
+            cursor: pointer;
+            transition: color 0.16s ease;
+        }
+
+        .tm-checklist-title-button:hover {
+            color: var(--tm-primary-color);
+            text-decoration: underline;
+        }
+
+        .tm-checklist-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 5px;
+        }
+
+        .tm-checklist-meta-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            min-height: calc(var(--tm-font-size) + 6px);
+            padding: 0 7px;
+            border-radius: 999px;
+            background: var(--tm-doc-count-bg);
+            color: var(--tm-secondary-text);
+            font-size: calc(var(--tm-font-size) * 0.82);
+            line-height: 1.2;
+        }
+
+        .tm-checklist-side {
+            flex: 0 0 360px;
+            width: 360px;
+            min-width: 320px;
+            max-width: 460px;
+            min-height: 0;
+            border-left: 1px solid var(--tm-border-color);
+            background: var(--tm-section-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tm-checklist-resizer {
+            flex: 0 0 6px;
+            width: 6px;
+            cursor: col-resize;
+            background: transparent;
+            position: relative;
+        }
+
+        .tm-checklist-resizer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 2px;
+            width: 1px;
+            background: var(--tm-border-color);
+            opacity: .72;
+        }
+
+        .tm-checklist-resizer:hover::after {
+            background: var(--tm-primary-color);
+            opacity: 1;
+        }
+
+        .tm-checklist-detail-wrap {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: auto;
+            padding: 14px 16px;
+        }
+
+        .tm-checklist-empty-detail {
+            height: 100%;
+            min-height: 260px;
+            border: 1px dashed var(--tm-border-color);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            color: var(--tm-secondary-text);
+            text-align: center;
+            background: color-mix(in srgb, var(--tm-bg-color) 90%, transparent);
+        }
+
+        .tm-checklist-detail-card {
+            border: 1px solid var(--tm-border-color);
+            border-radius: 16px;
+            background: var(--tm-bg-color);
+            box-shadow: var(--tm-shadow);
+            padding: 16px;
+        }
+
+        .tm-checklist-side .tm-checklist-detail-card {
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .tm-checklist-side .tm-checklist-detail-head {
+            margin-bottom: 10px;
+        }
+
+        .tm-checklist-side .tm-task-detail-row:first-of-type {
+            border-top: 1px solid var(--tm-border-color);
+        }
+
+        .tm-checklist-detail-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .tm-checklist-detail-title {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .tm-checklist-detail-textarea {
+            width: 100%;
+            min-height: 88px;
+            resize: vertical;
+        }
+
+        .tm-checklist-sheet-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.22);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 30;
+        }
+
+        .tm-checklist-sheet-backdrop.tm-checklist-sheet-backdrop--open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .tm-checklist-sheet {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            max-height: min(76vh, 680px);
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+            background: var(--tm-section-bg);
+            border-top: 1px solid var(--tm-border-color);
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.22);
+            transform: translateY(calc(100% + 16px));
+            transition: transform 0.22s ease;
+            z-index: 31;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tm-checklist-sheet.tm-checklist-sheet--dragging {
+            transition: none;
+        }
+
+        .tm-checklist-sheet.tm-checklist-sheet--open {
+            transform: translateY(0);
+        }
+
+        .tm-checklist-sheet-handle {
+            width: 100%;
+            height: 28px;
+            margin: 0;
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+            cursor: grab;
+        }
+
+        .tm-checklist-sheet-handle::before {
+            content: '';
+            width: 42px;
+            height: 4px;
+            border-radius: 999px;
+            background: var(--tm-border-color);
+            display: block;
+        }
+
+        .tm-checklist-sheet-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: auto;
+            padding: 0 12px 14px;
+        }
+
+        .tm-box--with-cal-dock .tm-checklist-pane {
+            min-width: 240px;
+            padding: 10px 10px 10px 18px;
+        }
+
+        .tm-box--with-cal-dock .tm-checklist-side {
+            flex-basis: 300px;
+            width: 300px;
+            min-width: 260px;
+            max-width: 340px;
+        }
+
+        @media (max-width: 960px) {
+            .tm-checklist-layout {
+                flex-direction: column;
+            }
+
+            .tm-checklist-side {
+                display: none;
+            }
+
+            .tm-checklist-resizer {
+                display: none;
+            }
+
+            .tm-checklist-pane {
+                padding: 10px 10px 10px 22px;
+            }
+
+            .tm-checklist-items {
+                --tm-checklist-list-gutter: 6px;
+            }
+
+            .tm-checklist-leading.tm-checklist-leading--branch .tm-tree-toggle {
+                left: -20px;
+                top: 50%;
+                transform: translateY(-50%);
+            }
         }
 
         .tm-timeline-split {
@@ -3153,12 +3797,40 @@
             min-width: 0;
             padding-top: 2px;
             padding-bottom: 2px;
+            position: relative;
+            --tm-tree-indent-step: 16px;
+            --tm-checkbox-size: 14px;
+            --tm-checkbox-center: 7px;
+        }
+
+        .tm-tree-guides {
+            position: absolute;
+            inset: -1px auto -1px 0;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        .tm-tree-guide-line {
+            position: absolute;
+            display: block;
+            width: 0;
+            height: 100%;
+        }
+
+        .tm-tree-guide-line::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 1px;
+            bottom: 1px;
+            border-left: 1.5px solid color-mix(in srgb, var(--tm-secondary-text) 78%, #000 22%);
+            opacity: 1;
         }
 
         .tm-body:not(.tm-body--timeline) .tm-task-cell {
             height: var(--tm-row-height);
             max-height: var(--tm-row-height);
-            overflow: hidden;
+            overflow: visible;
             padding-top: 0;
             padding-bottom: 0;
         }
@@ -3184,6 +3856,24 @@
 
         .tm-task-text:not(.tm-task-done) {
             color: var(--tm-task-content-color);
+        }
+
+        .tm-task-meta-cell {
+            color: var(--tm-task-meta-color);
+        }
+
+        .tm-table td.tm-task-meta-cell,
+        .tm-timeline-row td.tm-task-meta-cell {
+            color: var(--tm-task-meta-color);
+        }
+
+        .tm-table td.tm-task-content-cell,
+        .tm-timeline-row td.tm-task-content-cell {
+            overflow: visible;
+        }
+
+        .tm-task-meta-cell .tm-task-remark-text {
+            color: inherit;
         }
 
         /* 顶层任务字体加粗 */
@@ -3326,6 +4016,51 @@
             vertical-align: middle;
             margin-top: 0;
             line-height: 1;
+            position: absolute;
+            top: 50%;
+            left: -15px;
+            transform: translateY(-50%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.16s ease, color 0.16s ease;
+            z-index: 2;
+        }
+
+        .tm-tree-toggle-icon {
+            transition: transform 0.16s ease;
+        }
+
+        .tm-task-leading--branch .tm-tree-toggle-icon {
+            transform: rotate(90deg);
+        }
+
+        .tm-task-leading--branch.tm-task-leading--collapsed .tm-tree-toggle-icon {
+            transform: rotate(0deg);
+        }
+
+        /* 顶层任务的折叠按钮始终显示 */
+        .tm-task-leading--toplevel .tm-tree-toggle {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* 非顶层任务：hover时显示 */
+        .tm-task-cell:hover .tm-tree-toggle,
+        .tm-task-leading:hover .tm-tree-toggle,
+        .tm-task-leading:focus-within .tm-tree-toggle {
+            opacity: 1;
+            pointer-events: auto;
+            color: var(--tm-text-color);
+        }
+
+        /* 分组折叠指示器样式 */
+        .tm-group-toggle-icon {
+            transition: transform 0.16s ease;
+            transform: rotate(90deg);
+        }
+
+        .tm-group-toggle--collapsed .tm-group-toggle-icon {
+            transform: rotate(0deg);
         }
 
         .tm-tree-spacer {
@@ -3343,6 +4078,51 @@
             height: 14px;
             margin: 0;
             flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tm-task-leading {
+            width: 14px;
+            height: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex: 0 0 14px;
+            overflow: visible;
+        }
+
+        .tm-task-leading-ring {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 22px;
+            height: 22px;
+            transform: translate(-50%, -50%);
+            border-radius: 999px;
+            background: rgba(226, 232, 240, 0.95);
+            border: 0;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+            opacity: 1;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        [data-theme-mode="dark"] .tm-task-leading-ring {
+            background: rgba(80, 80, 80, 0.95);
+            box-shadow: inset 0 0 0 1px rgba(120, 120, 120, 0.3);
+            margin-left: -0.5px;
+        }
+
+        .tm-task-leading.tm-task-leading--branch.tm-task-leading--collapsed .tm-tree-toggle {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        .tm-task-leading.tm-task-leading--branch.tm-task-leading--collapsed .tm-task-checkbox {
+            position: relative;
+            z-index: 2;
         }
 
         .tm-priority-high {
@@ -3514,6 +4294,15 @@
         .tm-prompt-input:focus {
             border-color: var(--tm-primary-color);
             outline: none;
+        }
+
+        .tm-prompt-select {
+            min-height: 44px;
+            padding: 10px 40px 10px 12px;
+            font-size: 16px;
+            line-height: 1.35;
+            appearance: auto;
+            -webkit-appearance: menulist;
         }
 
         .tm-prompt-buttons {
@@ -4053,6 +4842,8 @@
             groupByDocName: true,
             groupByTime: false,
             defaultViewMode: 'list',
+            defaultViewModeMobile: 'list',
+            enabledViews: ['list', 'checklist', 'timeline', 'kanban', 'calendar', 'whiteboard'],
             kanbanCompactMode: false,
             kanbanColumnWidth: 320,
             kanbanShowDoneColumn: false,
@@ -4123,6 +4914,7 @@
             calendarShowLunar: false,
             calendarSideDockEnabled: false,
             calendarSideDockWidth: 340,
+            checklistDetailWidth: 320,
             defaultDocId: '',
             defaultDocIdByGroup: {},
             // 默认状态选项
@@ -4181,6 +4973,8 @@
             topbarTextColorDark: '#ffffff',
             taskContentColorLight: '#333333',
             taskContentColorDark: '#e0e0e0',
+            taskMetaColorLight: '#5f6368',
+            taskMetaColorDark: '#b0b8c4',
             groupDocLabelColorLight: '#333333',
             groupDocLabelColorDark: '#e0e0e0',
             timeGroupBaseColorLight: '#1a73e8',
@@ -4299,6 +5093,8 @@
                                 if (typeof cloudData.groupByDocName === 'boolean') this.data.groupByDocName = cloudData.groupByDocName;
                                 if (typeof cloudData.groupByTime === 'boolean') this.data.groupByTime = cloudData.groupByTime;
                                 if (typeof cloudData.defaultViewMode === 'string') this.data.defaultViewMode = cloudData.defaultViewMode;
+                                if (typeof cloudData.defaultViewModeMobile === 'string') this.data.defaultViewModeMobile = cloudData.defaultViewModeMobile;
+                                if (Array.isArray(cloudData.enabledViews)) this.data.enabledViews = __tmNormalizeEnabledViews(cloudData.enabledViews);
                                 if (typeof cloudData.kanbanCompactMode === 'boolean') this.data.kanbanCompactMode = cloudData.kanbanCompactMode;
                                 if (typeof cloudData.kanbanColumnWidth === 'number') this.data.kanbanColumnWidth = cloudData.kanbanColumnWidth;
                                 if (typeof cloudData.kanbanShowDoneColumn === 'boolean') this.data.kanbanShowDoneColumn = cloudData.kanbanShowDoneColumn;
@@ -4386,6 +5182,8 @@
                                 if (typeof cloudData.topbarTextColorDark === 'string') this.data.topbarTextColorDark = cloudData.topbarTextColorDark;
                                 if (typeof cloudData.taskContentColorLight === 'string') this.data.taskContentColorLight = cloudData.taskContentColorLight;
                                 if (typeof cloudData.taskContentColorDark === 'string') this.data.taskContentColorDark = cloudData.taskContentColorDark;
+                                if (typeof cloudData.taskMetaColorLight === 'string') this.data.taskMetaColorLight = cloudData.taskMetaColorLight;
+                                if (typeof cloudData.taskMetaColorDark === 'string') this.data.taskMetaColorDark = cloudData.taskMetaColorDark;
                                 if (typeof cloudData.groupDocLabelColorLight === 'string') this.data.groupDocLabelColorLight = cloudData.groupDocLabelColorLight;
                                 if (typeof cloudData.groupDocLabelColorDark === 'string') this.data.groupDocLabelColorDark = cloudData.groupDocLabelColorDark;
                                 if (typeof cloudData.timeGroupBaseColorLight === 'string') this.data.timeGroupBaseColorLight = cloudData.timeGroupBaseColorLight;
@@ -4498,6 +5296,8 @@
             this.data.groupByDocName = Storage.get('tm_group_by_docname', true);
             this.data.groupByTime = Storage.get('tm_group_by_time', false);
             this.data.defaultViewMode = Storage.get('tm_default_view_mode', this.data.defaultViewMode);
+            this.data.defaultViewModeMobile = Storage.get('tm_default_view_mode_mobile', this.data.defaultViewModeMobile || this.data.defaultViewMode);
+            this.data.enabledViews = __tmNormalizeEnabledViews(Storage.get('tm_enabled_views', this.data.enabledViews));
             this.data.kanbanCompactMode = !!Storage.get('tm_kanban_compact_mode', this.data.kanbanCompactMode);
             this.data.kanbanColumnWidth = Storage.get('tm_kanban_column_width', this.data.kanbanColumnWidth);
             this.data.kanbanShowDoneColumn = !!Storage.get('tm_kanban_show_done_column', this.data.kanbanShowDoneColumn);
@@ -4523,6 +5323,8 @@
             this.data.topbarTextColorDark = Storage.get('tm_topbar_text_color_dark', this.data.topbarTextColorDark);
             this.data.taskContentColorLight = Storage.get('tm_task_content_color_light', this.data.taskContentColorLight);
             this.data.taskContentColorDark = Storage.get('tm_task_content_color_dark', this.data.taskContentColorDark);
+            this.data.taskMetaColorLight = Storage.get('tm_task_meta_color_light', this.data.taskMetaColorLight);
+            this.data.taskMetaColorDark = Storage.get('tm_task_meta_color_dark', this.data.taskMetaColorDark);
             this.data.groupDocLabelColorLight = Storage.get('tm_group_doc_label_color_light', this.data.groupDocLabelColorLight);
             this.data.groupDocLabelColorDark = Storage.get('tm_group_doc_label_color_dark', this.data.groupDocLabelColorDark);
             this.data.timeGroupBaseColorLight = Storage.get('tm_time_group_base_color_light', this.data.timeGroupBaseColorLight);
@@ -4571,6 +5373,7 @@
             this.data.calendarShowLunar = Storage.get('tm_calendar_show_lunar', this.data.calendarShowLunar);
             this.data.calendarSideDockEnabled = Storage.get('tm_calendar_side_dock_enabled', this.data.calendarSideDockEnabled);
             this.data.calendarSideDockWidth = Storage.get('tm_calendar_side_dock_width', this.data.calendarSideDockWidth);
+            this.data.checklistDetailWidth = Storage.get('tm_checklist_detail_width', this.data.checklistDetailWidth);
             this.data.calendarColorFocus = Storage.get('tm_calendar_color_focus', this.data.calendarColorFocus);
             this.data.calendarColorBreak = Storage.get('tm_calendar_color_break', this.data.calendarColorBreak);
             this.data.calendarColorStopwatch = Storage.get('tm_calendar_color_stopwatch', this.data.calendarColorStopwatch);
@@ -4677,7 +5480,12 @@
             Storage.set('tm_query_limit', this.data.queryLimit);
             Storage.set('tm_group_by_docname', this.data.groupByDocName);
             Storage.set('tm_group_by_time', this.data.groupByTime);
+            this.data.enabledViews = __tmNormalizeEnabledViews(this.data.enabledViews);
+            this.data.defaultViewMode = __tmGetSafeViewMode(this.data.defaultViewMode);
+            this.data.defaultViewModeMobile = __tmGetSafeViewMode(this.data.defaultViewModeMobile || this.data.defaultViewMode);
             Storage.set('tm_default_view_mode', String(this.data.defaultViewMode || 'list').trim() || 'list');
+            Storage.set('tm_default_view_mode_mobile', String(this.data.defaultViewModeMobile || this.data.defaultViewMode || 'list').trim() || 'list');
+            Storage.set('tm_enabled_views', this.data.enabledViews);
             Storage.set('tm_kanban_compact_mode', !!this.data.kanbanCompactMode);
             Storage.set('tm_kanban_column_width', Number(this.data.kanbanColumnWidth) || 320);
             Storage.set('tm_kanban_show_done_column', !!this.data.kanbanShowDoneColumn);
@@ -4703,6 +5511,8 @@
             Storage.set('tm_topbar_text_color_dark', String(this.data.topbarTextColorDark || '').trim());
             Storage.set('tm_task_content_color_light', String(this.data.taskContentColorLight || '').trim());
             Storage.set('tm_task_content_color_dark', String(this.data.taskContentColorDark || '').trim());
+            Storage.set('tm_task_meta_color_light', String(this.data.taskMetaColorLight || '').trim());
+            Storage.set('tm_task_meta_color_dark', String(this.data.taskMetaColorDark || '').trim());
             Storage.set('tm_group_doc_label_color_light', String(this.data.groupDocLabelColorLight || '').trim());
             Storage.set('tm_group_doc_label_color_dark', String(this.data.groupDocLabelColorDark || '').trim());
             Storage.set('tm_time_group_base_color_light', String(this.data.timeGroupBaseColorLight || '').trim());
@@ -4751,6 +5561,7 @@
             Storage.set('tm_calendar_show_lunar', !!this.data.calendarShowLunar);
             Storage.set('tm_calendar_side_dock_enabled', !!this.data.calendarSideDockEnabled);
             Storage.set('tm_calendar_side_dock_width', Number(this.data.calendarSideDockWidth) || 340);
+            Storage.set('tm_checklist_detail_width', Number(this.data.checklistDetailWidth) || 320);
             Storage.set('tm_calendar_color_focus', String(this.data.calendarColorFocus || '').trim());
             Storage.set('tm_calendar_color_break', String(this.data.calendarColorBreak || '').trim());
             Storage.set('tm_calendar_color_stopwatch', String(this.data.calendarColorStopwatch || '').trim());
@@ -5630,6 +6441,13 @@
             if (field === 'startDate' || field.includes('Time') || field === 'created' || field === 'updated') {
                 const timeA = a ? __tmParseTimeToTs(a) : 0;
                 const timeB = b ? __tmParseTimeToTs(b) : 0;
+                // 空日期（返回0）视为最大，这样升序时会排在最后面
+                // 实际有日期的会排在前面
+                const hasA = !!a;
+                const hasB = !!b;
+                if (!hasA && !hasB) return 0;
+                if (!hasA) return 1;  // a为空，视为最大，排在后面
+                if (!hasB) return -1; // b为空，视为最大，排在后面
                 return timeA - timeB;
             }
             
@@ -5871,6 +6689,23 @@
                 }
             } catch (e) {
             }
+            return [];
+        },
+
+        async getNotebookDocuments(notebookId) {
+            const box = String(notebookId || '').trim();
+            if (!box) return [];
+            try {
+                const sql = `SELECT id, content, hpath FROM blocks WHERE box = '${box.replace(/'/g, "''")}' AND type = 'd' ORDER BY hpath ASC`;
+                const res = await this.call('/api/query/sql', { stmt: sql });
+                if (res.code === 0 && Array.isArray(res.data)) {
+                    return res.data.map((row) => ({
+                        id: String(row?.id || '').trim(),
+                        name: String(row?.content || '').trim() || '未命名文档',
+                        path: String(row?.hpath || '').trim()
+                    })).filter((row) => row.id);
+                }
+            } catch (e) {}
             return [];
         },
 
@@ -7082,6 +7917,8 @@
         quickAddSubmitting: false,
         viewMode: 'list',
         viewModeInitialized: false,
+        detailTaskId: '',
+        checklistDetailSheetOpen: false,
         calendarDockDate: '',
         docTabsHidden: false,
         ganttView: {
@@ -7105,6 +7942,9 @@
         // 设置（从 SettingsStore 读取）
         selectedDocIds: [],
         allDocuments: [],
+        notebooks: [],
+        notebooksFetchedAt: 0,
+        notebooksLoadingPromise: null,
         queryLimit: 500,
         groupByDocName: true,
         groupByTaskName: false,
@@ -7232,12 +8072,13 @@
         const selectors = [
             '#tmTaskTable tbody tr[data-id] .tm-task-content-clickable',
             '#tmTimelineLeftTable tbody tr[data-id] .tm-task-content-clickable',
+            '.tm-checklist-item[data-id] .tm-checklist-title',
             '.tm-body--kanban .tm-kanban-card[data-id] .tm-task-content-clickable',
         ].join(',');
         const items = modal.querySelectorAll(selectors);
         items.forEach((el) => {
             if (!(el instanceof HTMLElement)) return;
-            const owner = el.closest('tr[data-id], .tm-kanban-card[data-id]');
+            const owner = el.closest('tr[data-id], .tm-kanban-card[data-id], .tm-checklist-item[data-id]');
             const tid = String(owner?.getAttribute?.('data-id') || '').trim();
             if (!tid) return;
             if (__tmHasTaskScheduledToday(tid)) el.style.color = '#1a73e8';
@@ -7317,12 +8158,12 @@
     function __tmApplyReminderTaskNameMarks(modalEl) {
         const modal = modalEl instanceof Element ? modalEl : state.modal;
         if (!(modal instanceof Element)) return;
-        const rows = modal.querySelectorAll('#tmTaskTable tbody tr[data-id], #tmTimelineLeftTable tbody tr[data-id]');
+        const rows = modal.querySelectorAll('#tmTaskTable tbody tr[data-id], #tmTimelineLeftTable tbody tr[data-id], .tm-checklist-item[data-id]');
         rows.forEach((row) => {
             if (!(row instanceof HTMLElement)) return;
             const tid = String(row.getAttribute('data-id') || '').trim();
             if (!tid) return;
-            const contentEl = row.querySelector('.tm-task-content-clickable');
+            const contentEl = row.querySelector('.tm-task-content-clickable, .tm-checklist-title');
             if (!(contentEl instanceof HTMLElement)) return;
             const hasReminder = __tmReminderMarkCache.get(tid) === true;
             let badge = contentEl.querySelector('.tm-task-reminder-emoji');
@@ -7345,7 +8186,7 @@
         if (!(modal instanceof Element)) return;
         __tmApplyReminderTaskNameMarks(modal);
         Promise.resolve().then(async () => {
-            const rows = Array.from(modal.querySelectorAll('#tmTaskTable tbody tr[data-id], #tmTimelineLeftTable tbody tr[data-id]'));
+            const rows = Array.from(modal.querySelectorAll('#tmTaskTable tbody tr[data-id], #tmTimelineLeftTable tbody tr[data-id], .tm-checklist-item[data-id]'));
             const ids = Array.from(new Set(rows
                 .map((row) => String(row?.getAttribute?.('data-id') || '').trim())
                 .filter(Boolean)));
@@ -7517,6 +8358,13 @@
     let __tmTodayScheduleRefreshTimer = null;
     let __tmCalendarBootstrapRetryTimer = null;
     let __tmQuickbarTaskUpdateHandler = null;
+    let __tmEditorTitleIconMenuHandler = null;
+    let __tmDocTreeMenuHandler = null;
+    let __tmDocMenuObserver = null;
+    let __tmLastRightClickedTitleProtyle = null;
+    let __tmLastRightClickedTitleAtMs = 0;
+    let __tmNativeDocMenuCaptureHandler = null;
+    let __tmDocMenuEventBus = null;
     const __TM_TIMELINE_TODAY_REFRESH_MS = 5 * 60 * 1000;
 
     async function __tmSafeOpenManager(reason) {
@@ -7596,13 +8444,14 @@ async function __tmRefreshAfterWake(reason) {
                     globalThis.__tmCalendar.setSettingsStore(SettingsStore);
                 }
             } catch (e2) {}
-            const allow = new Set(['list', 'timeline', 'kanban', 'calendar', 'whiteboard']);
             const isMobileDevice = __tmIsMobileDevice();
             const current = String(state.viewMode || '').trim();
-            if (!allow.has(current)) {
-                const m0 = String(SettingsStore.data.defaultViewMode || 'list').trim();
-                const m1 = (isMobileDevice && m0 === 'timeline') ? 'list' : m0;
-                state.viewMode = allow.has(m1) ? m1 : 'list';
+            SettingsStore.data.enabledViews = __tmNormalizeEnabledViews(SettingsStore.data.enabledViews);
+            SettingsStore.data.defaultViewMode = __tmGetSafeViewMode(SettingsStore.data.defaultViewMode);
+            SettingsStore.data.defaultViewModeMobile = __tmGetSafeViewMode(SettingsStore.data.defaultViewModeMobile || SettingsStore.data.defaultViewMode);
+            const currentSafe = __tmGetSafeViewMode(current);
+            if (current !== currentSafe) {
+                state.viewMode = __tmGetConfiguredDefaultViewMode(isMobileDevice);
             }
             if (String(state.viewMode || '').trim() === 'calendar' && globalThis.__tmCalendar && typeof globalThis.__tmCalendar.refreshInPlace === 'function') {
                 const nextCalendarSig = __tmBuildCalendarWakeTaskSignature();
@@ -8058,6 +8907,56 @@ async function __tmRefreshAfterWake(reason) {
         return __tmIsMobileDevice() ? mobileSize : base;
     };
 
+    const __TM_ALL_VIEWS = Object.freeze([
+        { id: 'list', label: '表格', longLabel: '表格视图' },
+        { id: 'checklist', label: '清单', longLabel: '清单视图' },
+        { id: 'timeline', label: '时间轴', longLabel: '时间轴视图' },
+        { id: 'kanban', label: '看板', longLabel: '看板视图' },
+        { id: 'calendar', label: '日历', longLabel: '日历视图' },
+        { id: 'whiteboard', label: '白板', longLabel: '白板视图' },
+    ]);
+
+    const __tmNormalizeEnabledViews = (views) => {
+        const allow = new Set(__TM_ALL_VIEWS.map(v => v.id));
+        const arr = Array.isArray(views) ? views.map(v => String(v || '').trim()).filter(v => allow.has(v)) : [];
+        const unique = [];
+        for (const id of arr) {
+            if (!unique.includes(id)) unique.push(id);
+        }
+        return unique.length ? unique : ['list'];
+    };
+
+    const __tmGetEnabledViews = () => __tmNormalizeEnabledViews(SettingsStore?.data?.enabledViews);
+
+    const __tmIsViewEnabled = (mode) => __tmGetEnabledViews().includes(String(mode || '').trim());
+
+    const __tmGetSafeViewMode = (mode) => {
+        const current = String(mode || '').trim();
+        const enabled = __tmGetEnabledViews();
+        return enabled.includes(current) ? current : (enabled[0] || 'list');
+    };
+
+    const __tmGetConfiguredDefaultViewMode = (isMobile = __tmIsMobileDevice()) => {
+        const raw = isMobile
+            ? String(SettingsStore?.data?.defaultViewModeMobile || SettingsStore?.data?.defaultViewMode || 'list').trim()
+            : String(SettingsStore?.data?.defaultViewMode || 'list').trim();
+        return __tmGetSafeViewMode(raw);
+    };
+
+    const __tmRenderViewSwitcherButtons = (opts = {}) => {
+        const activeMode = __tmGetSafeViewMode(state.viewMode || SettingsStore.data.defaultViewMode || 'list');
+        const buttonStyle = opts.compact ? ' style="line-height:28px; padding:0 10px;"' : '';
+        const buttons = __tmGetEnabledViews().map((viewId) => {
+            const view = __TM_ALL_VIEWS.find(v => v.id === viewId);
+            if (!view) return '';
+            const extra = view.id === 'calendar'
+                ? ' oncontextmenu="return tmHandleCalendarViewButtonContextMenu(event)"'
+                : '';
+            return `<button class="tm-view-seg-item ${activeMode === view.id ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('${view.id}')"${extra} role="tab" aria-selected="${activeMode === view.id ? 'true' : 'false'}"${buttonStyle} title="${view.label}">${view.label}</button>`;
+        }).join('');
+        return buttons;
+    };
+
     const __tmApplyRowHeightVars = () => {
         const px = Number(SettingsStore.data.rowHeightPx);
         if (Number.isFinite(px) && px > 0) {
@@ -8382,22 +9281,36 @@ async function __tmRefreshAfterWake(reason) {
         if (!key) return;
         const modal = state.modal;
         if (!modal) return;
-        const glyph = action === 'collapse' ? '▸' : action === 'expand' ? '▾' : '';
-        if (!glyph) return;
         if (kind === 'task') {
             const row = modal.querySelector(`#tmTaskTable tbody tr[data-id="${CSS.escape(key)}"],#tmTimelineLeftTable tbody tr[data-id="${CSS.escape(key)}"]`);
-            const t = row?.querySelector?.('.tm-tree-toggle');
-            if (t) t.textContent = glyph;
+            const leading = row?.querySelector?.('.tm-task-leading--branch');
+            if (leading) {
+                const collapsed = action === 'collapse';
+                leading.classList.toggle('tm-task-leading--collapsed', collapsed);
+                const ring = leading.querySelector('.tm-task-leading-ring');
+                if (collapsed && !ring) {
+                    leading.insertAdjacentHTML('afterbegin', '<span class="tm-task-leading-ring" aria-hidden="true"></span>');
+                } else if (!collapsed && ring) {
+                    ring.remove();
+                }
+            }
             return;
         }
         if (kind === 'group') {
             const row = modal.querySelector(`#tmTaskTable tbody tr[data-group-key="${CSS.escape(key)}"],#tmTimelineLeftTable tbody tr[data-group-key="${CSS.escape(key)}"]`);
             const t = row?.querySelector?.('.tm-group-toggle');
-            if (t) t.textContent = glyph;
+            if (t) {
+                const collapsed = action === 'collapse';
+                t.classList.toggle('tm-group-toggle--collapsed', collapsed);
+            }
         }
     }
 
     function __tmScheduleCollapseRerender() {
+        if (String(state.viewMode || '').trim() === 'checklist') {
+            __tmRenderChecklistPreserveScroll();
+            return;
+        }
         try {
             const id0 = Number(state.__tmCollapseRafId) || 0;
             if (id0) cancelAnimationFrame(id0);
@@ -8465,8 +9378,17 @@ async function __tmRefreshAfterWake(reason) {
             if (id) {
                 const toggleEl = row.querySelector('.tm-tree-toggle');
                 const hasToggle = !!toggleEl;
+                const leadingEl = row.querySelector('.tm-task-leading--branch');
                 const isCollapsed = hasToggle && collapsedTaskIds.has(id);
-                if (hasToggle && toggleEl) toggleEl.textContent = isCollapsed ? '▸' : '▾';
+                if (leadingEl) {
+                    leadingEl.classList.toggle('tm-task-leading--collapsed', !!isCollapsed);
+                    const ring = leadingEl.querySelector('.tm-task-leading-ring');
+                    if (isCollapsed && !ring) {
+                        leadingEl.insertAdjacentHTML('afterbegin', '<span class="tm-task-leading-ring" aria-hidden="true"></span>');
+                    } else if (!isCollapsed && ring) {
+                        ring.remove();
+                    }
+                }
                 if (!hide && isCollapsed) collapsedAncestorDepth = d;
             }
         });
@@ -8915,7 +9837,7 @@ async function __tmRefreshAfterWake(reason) {
 
         const renderGroupRow = (row) => {
             const isCollapsed = !!row?.collapsed;
-            const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;margin-right:8px;display:inline-block;width:12px;">${isCollapsed ? '▸' : '▾'}</span>`;
+            const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
             if (row.kind === 'doc') {
                 const labelColor = String(row.labelColor || 'var(--tm-group-doc-label-color)');
                 return `<tr class="tm-group-row tm-timeline-row" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">📄 ${esc(row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span></div></td></tr>`;
@@ -8945,10 +9867,23 @@ async function __tmRefreshAfterWake(reason) {
         const renderTaskRow = (row) => {
             const task = state.flatTasks[row.id];
             if (!task) return '';
-            const indent = (Math.max(0, Number(row.depth) || 0)) * 12;
+            const depth = Math.max(0, Number(row.depth) || 0);
+            const contentIndent = 12 + depth * 16;
+            const treeGuides = depth > 0
+                ? `<span class="tm-tree-guides" aria-hidden="true">${Array.from({ length: depth }, (_, i) => `<span class="tm-tree-guide-line" style="left:${18 + i * 16}px"></span>`).join('')}</span>`
+                : '';
+            const leadingClass = [
+                'tm-task-leading',
+                row.hasChildren && depth === 0 ? 'tm-task-leading--toplevel' : '',
+                row.hasChildren ? 'tm-task-leading--branch' : '',
+                row.hasChildren && row.collapsed ? 'tm-task-leading--collapsed' : '',
+            ].filter(Boolean).join(' ');
+            const leadingRing = row.hasChildren && row.collapsed
+                ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>'
+                : '';
             const toggle = row.hasChildren
-                ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${task.id}', event)">${row.collapsed ? '▸' : '▾'}</span>`
-                : `<span class="tm-tree-spacer"></span>`;
+                ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${task.id}', event)"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
+                : '';
             const tomatoFocusTaskId = SettingsStore.data.enableTomatoIntegration ? String(state.timerFocusTaskId || '').trim() : '';
             const tomatoFocusModeEnabled = __tmIsTomatoFocusModeEnabled();
             const rowClass = tomatoFocusTaskId
@@ -8975,13 +9910,17 @@ async function __tmRefreshAfterWake(reason) {
 
             return `
                 <tr class="tm-timeline-row ${rowClass}" data-id="${task.id}" data-depth="${row.depth}" onclick="tmRowClick(event, '${task.id}')" oncontextmenu="tmShowTaskContextMenu(event, '${task.id}')">
-                    <td style="width: ${timelineContentWidth}px; min-width: ${timelineContentWidth}px; max-width: ${timelineContentWidth}px; ${contentCellBgStyle}">
-                        <div class="tm-task-cell" style="padding-left:${indent}px">
-                            ${toggle}
-                            <input class="tm-task-checkbox ${isGloballyLocked ? 'tm-operating' : ''}"
-                                   type="checkbox" ${task.done ? 'checked' : ''}
-                                   ${isGloballyLocked ? 'disabled' : ''}
-                                   onchange="tmSetDone('${task.id}', this.checked, event)">
+                    <td class="tm-task-content-cell" style="width: ${timelineContentWidth}px; min-width: ${timelineContentWidth}px; max-width: ${timelineContentWidth}px; ${contentCellBgStyle}">
+                            <div class="tm-task-cell" style="padding-left:${contentIndent}px">
+                                ${treeGuides}
+                                <span class="${leadingClass}">
+                                    ${leadingRing}
+                                    <input class="tm-task-checkbox ${isGloballyLocked ? 'tm-operating' : ''}"
+                                           type="checkbox" ${task.done ? 'checked' : ''}
+                                           ${isGloballyLocked ? 'disabled' : ''}
+                                           onchange="tmSetDone('${task.id}', this.checked, event)">
+                                    ${toggle}
+                                </span>
                             <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}" title="${esc(task.content || '')}">
                                 <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)" title="${esc(task.content || '')}">${esc(task.content || '')}</span>
                             </span>
@@ -9018,19 +9957,16 @@ async function __tmRefreshAfterWake(reason) {
                 continue;
             }
             if (r?.type === 'task') {
-                // 按任务名分组时，每个任务使用自己文档的颜色
-                if (state.groupByTaskName) {
-                    const task = state.flatTasks[r.id];
-                    if (task?.root_id) {
-                        const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
-                        if (taskDocColor && enableGroupBg) {
-                            currentGroupBg = __tmGroupBgFromLabelColor(taskDocColor, isDark);
-                        } else {
-                            currentGroupBg = '';
-                        }
+                const task = state.flatTasks[r.id];
+                if (task?.root_id) {
+                    const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
+                    if (taskDocColor && enableGroupBg) {
+                        currentGroupBg = __tmGroupBgFromLabelColor(taskDocColor, isDark);
                     } else {
                         currentGroupBg = '';
                     }
+                } else {
+                    currentGroupBg = '';
                 }
                 leftRows.push(renderTaskRow(r));
                 continue;
@@ -9254,6 +10190,9 @@ async function __tmRefreshAfterWake(reason) {
         const taskColor = isDark
             ? __tmNormalizeHexColor(SettingsStore.data.taskContentColorDark, '#e0e0e0')
             : __tmNormalizeHexColor(SettingsStore.data.taskContentColorLight, '#333333');
+        const taskMetaColor = isDark
+            ? __tmNormalizeHexColor(SettingsStore.data.taskMetaColorDark, '#b0b8c4')
+            : __tmNormalizeHexColor(SettingsStore.data.taskMetaColorLight, '#5f6368');
         const docGroupColor = isDark
             ? __tmNormalizeHexColor(SettingsStore.data.groupDocLabelColorDark, '#e0e0e0')
             : __tmNormalizeHexColor(SettingsStore.data.groupDocLabelColorLight, '#333333');
@@ -9302,6 +10241,7 @@ async function __tmRefreshAfterWake(reason) {
         try { root.style.setProperty('--tm-topbar-search-border', searchBorder); } catch (e) {}
         try { root.style.setProperty('--tm-topbar-scrollbar-thumb', thumb); } catch (e) {}
         try { if (taskColor) root.style.setProperty('--tm-task-content-color', taskColor); } catch (e) {}
+        try { if (taskMetaColor) root.style.setProperty('--tm-task-meta-color', taskMetaColor); } catch (e) {}
         try { if (docGroupColor) root.style.setProperty('--tm-group-doc-label-color', docGroupColor); } catch (e) {}
         try { if (timeBase) root.style.setProperty('--tm-time-group-base-color', timeBase); } catch (e) {}
         try { if (timeOverdue) root.style.setProperty('--tm-time-group-overdue-color', timeOverdue); } catch (e) {}
@@ -9338,6 +10278,105 @@ async function __tmRefreshAfterWake(reason) {
         el.textContent = msg;
         document.body.appendChild(el);
         setTimeout(() => el.remove(), 2500);
+    }
+
+    async function __tmRefreshNotebookCache(force = false) {
+        const now = Date.now();
+        if (!force && Array.isArray(state.notebooks) && state.notebooks.length > 0 && (now - (Number(state.notebooksFetchedAt) || 0) < 60000)) {
+            return state.notebooks;
+        }
+        if (state.notebooksLoadingPromise) return state.notebooksLoadingPromise;
+        state.notebooksLoadingPromise = (async () => {
+            try {
+                const notebooks = await API.lsNotebooks();
+                state.notebooks = Array.isArray(notebooks) ? notebooks : [];
+                state.notebooksFetchedAt = Date.now();
+            } catch (e) {
+                state.notebooks = Array.isArray(state.notebooks) ? state.notebooks : [];
+            } finally {
+                state.notebooksLoadingPromise = null;
+            }
+            return state.notebooks;
+        })();
+        return state.notebooksLoadingPromise;
+    }
+
+    function __tmGetNotebookDisplayName(notebookId, fallback = '') {
+        const id = String(notebookId || '').trim();
+        if (!id) return String(fallback || '').trim() || '未命名笔记本';
+        const notebooks = Array.isArray(state.notebooks) ? state.notebooks : [];
+        const hit = notebooks.find((item) => String(item?.id || item?.box || '').trim() === id);
+        return String(hit?.name || hit?.title || fallback || '').trim() || '未命名笔记本';
+    }
+
+    function __tmResolveDocGroupName(group) {
+        if (!group || typeof group !== 'object') return '未命名分组';
+        const notebookId = String(group.notebookId || '').trim();
+        if (notebookId) return __tmGetNotebookDisplayName(notebookId, group.name);
+        return String(group.name || '').trim() || '未命名分组';
+    }
+
+    function __tmNormalizeGroupDocEntries(group) {
+        const docs = Array.isArray(group?.docs) ? group.docs : [];
+        return docs.map((doc) => {
+            const id = String((typeof doc === 'object' ? doc?.id : doc) || '').trim();
+            if (!id) return null;
+            return {
+                id,
+                kind: 'doc',
+                recursive: !!(typeof doc === 'object' ? doc?.recursive : false)
+            };
+        }).filter(Boolean);
+    }
+
+    function __tmGetGroupSourceEntries(group) {
+        const out = __tmNormalizeGroupDocEntries(group);
+        const notebookId = String(group?.notebookId || '').trim();
+        if (notebookId) {
+            out.push({ id: notebookId, kind: 'notebook', recursive: true });
+        }
+        return out;
+    }
+
+    async function __tmExpandSourceEntryDocIds(entry, pushId) {
+        if (!entry || typeof pushId !== 'function') return;
+        const kind = String(entry.kind || 'doc').trim();
+        if (kind === 'notebook') {
+            try {
+                const docs = await API.getNotebookDocuments(entry.id);
+                (Array.isArray(docs) ? docs : []).forEach((doc) => pushId(doc?.id));
+            } catch (e) {}
+            return;
+        }
+        pushId(entry.id);
+        if (entry.recursive && API && typeof API.getSubDocIds === 'function') {
+            try {
+                const subIds = await API.getSubDocIds(entry.id);
+                (Array.isArray(subIds) ? subIds : []).forEach((sid) => pushId(sid));
+            } catch (e) {}
+        }
+    }
+
+    function __tmRenderChecklistPreserveScroll() {
+        const modal = state.modal instanceof Element ? state.modal : null;
+        const pane = modal?.querySelector?.('.tm-checklist-pane');
+        const top = Number(pane?.scrollTop || 0);
+        const left = Number(pane?.scrollLeft || 0);
+        render();
+        try {
+            requestAnimationFrame(() => {
+                const nextPane = state.modal?.querySelector?.('.tm-checklist-pane');
+                if (!(nextPane instanceof HTMLElement)) return;
+                nextPane.scrollTop = top;
+                nextPane.scrollLeft = left;
+                try {
+                    requestAnimationFrame(() => {
+                        try { nextPane.scrollTop = top; } catch (e2) {}
+                        try { nextPane.scrollLeft = left; } catch (e2) {}
+                    });
+                } catch (e) {}
+            });
+        } catch (e) {}
     }
 
     function showPrompt(title, placeholder = '', defaultValue = '') {
@@ -9481,7 +10520,7 @@ async function __tmRefreshAfterWake(reason) {
             modal.innerHTML = `
                 <div class="tm-prompt-box">
                     <div class="tm-prompt-title">${title}</div>
-                    <select class="tm-prompt-input" style="height: 36px;">
+                    <select class="tm-prompt-input tm-prompt-select">
                         ${items}
                     </select>
                     <div class="tm-prompt-buttons">
@@ -9513,6 +10552,146 @@ async function __tmRefreshAfterWake(reason) {
                 if (e.target === modal) cancelBtn.click();
             };
         });
+    }
+
+    function showChoiceButtonsPrompt(title, choices) {
+        return new Promise((resolve) => {
+            const existing = document.querySelector('.tm-prompt-modal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.className = 'tm-prompt-modal';
+
+            const items = Array.isArray(choices) ? choices : [];
+            modal.innerHTML = `
+                <div class="tm-prompt-box" style="width:min(92vw,520px);">
+                    <div class="tm-prompt-title">${esc(String(title || '请选择'))}</div>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;padding:8px 0 2px;">
+                        ${items.map((item, idx) => `
+                            <button class="tm-btn ${idx === 0 ? 'tm-btn-primary' : 'tm-btn-info'}" data-tm-choice-value="${esc(String(item?.value || ''))}" style="flex:1;min-width:180px;padding:14px 12px;font-size:15px;font-weight:600;">
+                                ${esc(String(item?.label || item?.value || ''))}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div class="tm-prompt-buttons" style="margin-top:14px;">
+                        <button class="tm-prompt-btn tm-prompt-btn-secondary" id="tm-choice-cancel">取消</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            const cancelBtn = modal.querySelector('#tm-choice-cancel');
+            const choiceButtons = Array.from(modal.querySelectorAll('[data-tm-choice-value]'));
+
+            choiceButtons.forEach((btn) => {
+                btn.onclick = () => {
+                    const value = String(btn.getAttribute('data-tm-choice-value') || '').trim();
+                    modal.remove();
+                    resolve(value || null);
+                };
+            });
+
+            cancelBtn.onclick = () => {
+                modal.remove();
+                resolve(null);
+            };
+
+            modal.onclick = (e) => {
+                if (e.target === modal) cancelBtn.click();
+            };
+        });
+    }
+
+    function __tmNormalizeDocIdsForGroupInput(input) {
+        const source = Array.isArray(input) ? input : [input];
+        const seen = new Set();
+        return source.map((item) => String(item || '').trim()).filter((id) => {
+            if (!id || seen.has(id)) return false;
+            seen.add(id);
+            return true;
+        });
+    }
+
+    function __tmTryCollectDocIdsFromElements(elements) {
+        const out = [];
+        const push = (raw) => {
+            const id = String(raw || '').trim();
+            if (id) out.push(id);
+        };
+        try {
+            Array.from(elements || []).forEach((el) => {
+                if (!el) return;
+                push(el.dataset?.nodeId);
+                push(el.dataset?.id);
+                push(el.getAttribute?.('data-node-id'));
+                push(el.getAttribute?.('data-id'));
+            });
+        } catch (e) {}
+        return __tmNormalizeDocIdsForGroupInput(out);
+    }
+
+    function __tmGetDocIdFromProtyle(protyle) {
+        try {
+            const direct = [
+                protyle?.querySelector?.('.protyle-title')?.getAttribute?.('data-node-id'),
+                protyle?.querySelector?.('.protyle-title__input')?.getAttribute?.('data-node-id'),
+                protyle?.querySelector?.('.protyle-background')?.getAttribute?.('data-node-id'),
+                protyle?.querySelector?.('[data-node-id]')?.getAttribute?.('data-node-id'),
+                protyle?.dataset?.nodeId,
+                protyle?.dataset?.id
+            ];
+            return direct.map((v) => String(v || '').trim()).find(Boolean) || '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function __tmRememberTitleMenuContext(target) {
+        try {
+            if (!target || !target.closest) return;
+            if (target.closest('#commonMenu') || target.closest('.b3-menu')) return;
+            const protyle = target.closest('.protyle');
+            if (!protyle) return;
+            const isTitle = !!(target.closest('.protyle-title') || target.closest('.protyle-title__input') || target.closest('.protyle-icon'));
+            if (!isTitle) return;
+            __tmLastRightClickedTitleProtyle = protyle;
+            __tmLastRightClickedTitleAtMs = Date.now();
+        } catch (e) {}
+    }
+
+    function __tmCreateNativeMenuItem(label, onClick) {
+        const btn = document.createElement('button');
+        btn.className = 'b3-menu__item tm-doc-group-menu-item';
+        btn.type = 'button';
+        btn.innerHTML = `
+            <svg class="b3-menu__icon"><use xlink:href="#iconTaskHorizon"></use></svg>
+            <span class="b3-menu__label">${esc(String(label || '添加到任务管理器分组'))}</span>
+        `;
+        btn.onclick = async (e) => {
+            try { e.preventDefault(); } catch (e2) {}
+            try { e.stopPropagation(); } catch (e2) {}
+            try { window.siyuan?.menus?.menu?.remove?.(); } catch (e2) {}
+            try { await onClick?.(); } catch (e2) {}
+        };
+        return btn;
+    }
+
+    function __tmInsertMenuItem(menuItems, menuItem) {
+        if (!menuItems || !menuItem) return;
+        const ref = menuItems.querySelector('button[data-id="addToDatabase"]');
+        const existing = menuItems.querySelector('.tm-doc-group-menu-item');
+        Array.from(menuItems.querySelectorAll('.tm-doc-group-menu-separator')).forEach((el) => {
+            try { el.remove(); } catch (e) {}
+        });
+        if (existing) existing.remove();
+        if (ref && ref.parentNode === menuItems) {
+            const divider = document.createElement('button');
+            divider.className = 'b3-menu__separator tm-doc-group-menu-separator';
+            ref.before(divider);
+            ref.before(menuItem);
+            return;
+        }
+        menuItems.appendChild(menuItem);
     }
 
     function __tmToDatetimeLocalValue(iso) {
@@ -9685,7 +10864,7 @@ async function __tmRefreshAfterWake(reason) {
                 <div class="tm-rules-body">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-bottom:1px solid var(--tm-border-color); background: var(--tm-bg-color);">
                         <div style="font-size:13px; color: var(--tm-text-color);">时间轴强制按完成日期排序（越近今天越靠前）</div>
-                        <input type="checkbox" ${SettingsStore.data.timelineForceSortByCompletionNearToday ? 'checked' : ''} onchange="tmToggleTimelineForceSortByCompletionNearToday(this.checked)">
+                        <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.timelineForceSortByCompletionNearToday ? 'checked' : ''} onchange="tmToggleTimelineForceSortByCompletionNearToday(this.checked)">
                     </div>
                     ${renderRulesList()}
                 </div>
@@ -9901,7 +11080,7 @@ async function __tmRefreshAfterWake(reason) {
             <div class="tm-rule-group">
                 <div class="tm-rule-group-header">
                     <div class="tm-rule-group-title">
-                        <input type="checkbox" ${rule.enabled ? 'checked' : ''} 
+                        <input class="b3-switch fn__flex-center" type="checkbox" ${rule.enabled ? 'checked' : ''} 
                                data-tm-change="toggleRuleEnabled"
                                data-rule-id="${esc(String(rule.id))}"
                                style="margin-right: 8px;">
@@ -10940,9 +12119,9 @@ async function __tmRefreshAfterWake(reason) {
         };
 
         groups.forEach(g => {
-            const ds = Array.isArray(g?.docs) ? g.docs : [];
+            const ds = __tmGetGroupSourceEntries(g);
             if (ds.length === 0) return;
-            listEl.appendChild(renderGroup(String(g?.name || '分组'), ds, String(g?.id || '')));
+            listEl.appendChild(renderGroup(__tmResolveDocGroupName(g), ds, String(g?.id || '')));
         });
     };
 
@@ -11861,6 +13040,20 @@ async function __tmRefreshAfterWake(reason) {
         return list;
     }
 
+    function __tmGetVisibleDocTabsForCurrentGroup() {
+        const currentGroupId = String(SettingsStore.data.currentGroupId || 'all').trim() || 'all';
+        const docsForTabs = __tmSortDocEntriesByPinned(state.taskTree || [], currentGroupId);
+        const globalNewTaskDocId = String(SettingsStore.data.newTaskDocId || '').trim();
+        return docsForTabs
+            .filter(doc => __tmDocHasUndoneTasks(doc))
+            .filter(doc => !globalNewTaskDocId || String(doc?.id || '').trim() !== globalNewTaskDocId)
+            .map(doc => ({
+                id: String(doc?.id || '').trim(),
+                name: String(doc?.name || '').trim() || '未命名文档',
+            }))
+            .filter(doc => !!doc.id);
+    }
+
     async function __tmSetDocPinnedForGroup(docId, pinned, groupId) {
         const id = String(docId || '').trim();
         const gid = String(groupId || 'all').trim() || 'all';
@@ -12454,7 +13647,7 @@ async function __tmRefreshAfterWake(reason) {
         const title = String(meta?.title || '').trim();
         try {
             const row = (ev?.currentTarget instanceof Element)
-                ? ev.currentTarget.closest?.('tr[data-id], .tm-kanban-card[data-id], .tm-whiteboard-pool-item[data-task-id], .tm-whiteboard-node[data-task-id]')
+                ? ev.currentTarget.closest?.('tr[data-id], .tm-checklist-item[data-id], .tm-kanban-card[data-id], .tm-whiteboard-pool-item[data-task-id], .tm-whiteboard-node[data-task-id]')
                 : null;
             if (row && calendarId) row.setAttribute('data-calendar-id', calendarId);
         } catch (e) {}
@@ -12481,11 +13674,115 @@ async function __tmRefreshAfterWake(reason) {
         if (!id) return;
         const t = ev?.target;
         if (t?.closest?.('button,input,select,textarea,a,.tm-task-content-clickable,.tm-tree-toggle,.tm-col-resize')) return;
+        if (String(state.viewMode || '').trim() === 'checklist') {
+            state.detailTaskId = id;
+            if (!__tmRefreshChecklistSelectionInPlace(state.modal)) render();
+            return;
+        }
         const task = state.flatTasks?.[id];
         if (!task) return;
         const hasChild = Array.isArray(task.children) && task.children.length > 0;
         if (!hasChild) return;
         tmToggleCollapse(id, ev);
+    };
+
+    window.tmChecklistSelectTask = function(taskId, ev) {
+        const id = String(taskId || '').trim();
+        if (!id) return;
+        const target = ev?.target;
+        if (target?.closest?.('input,button,select,textarea,a,.tm-tree-toggle')) return;
+        state.detailTaskId = id;
+        if (__tmChecklistUseSheetMode(state.modal)) state.checklistDetailSheetOpen = true;
+        if (!__tmRefreshChecklistSelectionInPlace(state.modal)) render();
+    };
+
+    window.tmChecklistCloseSheet = function(ev) {
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        try { ev?.preventDefault?.(); } catch (e) {}
+        state.checklistDetailSheetOpen = false;
+        __tmRefreshChecklistSelectionInPlace(state.modal);
+    };
+
+    window.tmChecklistSheetDragStart = function(ev) {
+        if (!__tmChecklistUseSheetMode(state.modal)) return;
+        if (!state.checklistDetailSheetOpen) return;
+        const sheet = state.modal?.querySelector?.('#tmChecklistSheet');
+        const body = state.modal?.querySelector?.('#tmChecklistSheetPanel');
+        if (!(sheet instanceof HTMLElement)) return;
+        const target = ev?.target;
+        if (!(target instanceof Element)) return;
+        if (target.closest('input, textarea, select, button, a, label')) return;
+        const fromHandle = !!target.closest('.tm-checklist-sheet-handle');
+        const inBody = !!target.closest('.tm-checklist-sheet-body');
+        const bodyScrollTop = Number(body?.scrollTop || 0);
+        const sheetTop = Number(sheet.getBoundingClientRect().top || 0);
+        const pointerY = Number(ev?.clientY || 0);
+        const nearTop = pointerY > 0 && (pointerY - sheetTop) <= 44;
+        if (!fromHandle && !(inBody && bodyScrollTop <= 0 && nearTop)) return;
+        try { ev.preventDefault?.(); } catch (e) {}
+        const startY = pointerY;
+        let lastY = startY;
+        let lastTs = Date.now();
+        let velocity = 0;
+        sheet.classList.add('tm-checklist-sheet--dragging');
+        const onMove = (e2) => {
+            const y = Number(e2?.clientY || 0);
+            let dy = y - startY;
+            if (!Number.isFinite(dy)) dy = 0;
+            if (dy < 0) dy = dy * 0.18;
+            sheet.style.transform = `translateY(${Math.max(-24, dy)}px)`;
+            const now = Date.now();
+            const dt = Math.max(1, now - lastTs);
+            velocity = (y - lastY) / dt;
+            lastY = y;
+            lastTs = now;
+            try { e2.preventDefault?.(); } catch (e) {}
+        };
+        const onUp = (e2) => {
+            try { window.removeEventListener('pointermove', onMove, true); } catch (e) {}
+            try { window.removeEventListener('pointerup', onUp, true); } catch (e) {}
+            try { window.removeEventListener('pointercancel', onUp, true); } catch (e) {}
+            const endY = Number(e2?.clientY || lastY || startY);
+            const dy = Math.max(0, endY - startY);
+            sheet.classList.remove('tm-checklist-sheet--dragging');
+            sheet.style.transform = '';
+            const closeByDistance = dy >= 88;
+            const closeByVelocity = velocity > 0.55 && dy > 18;
+            if (closeByDistance || closeByVelocity) {
+                window.tmChecklistCloseSheet(e2);
+                return;
+            }
+            __tmRefreshChecklistSelectionInPlace(state.modal);
+        };
+        try { sheet.setPointerCapture?.(ev.pointerId); } catch (e) {}
+        try { window.addEventListener('pointermove', onMove, true); } catch (e) {}
+        try { window.addEventListener('pointerup', onUp, true); } catch (e) {}
+        try { window.addEventListener('pointercancel', onUp, true); } catch (e) {}
+    };
+
+    window.tmStartChecklistDetailResize = function(ev) {
+        try { ev?.preventDefault?.(); } catch (e) {}
+        if (__tmChecklistUseSheetMode(state.modal)) return;
+        const aside = state.modal?.querySelector?.('.tm-checklist-side');
+        if (!(aside instanceof HTMLElement)) return;
+        const startX = Number(ev?.clientX) || 0;
+        const startW = Math.max(260, Math.min(520, Math.round(aside.getBoundingClientRect().width || Number(SettingsStore.data.checklistDetailWidth) || 320)));
+        const onMove = (e2) => {
+            const x = Number(e2?.clientX) || 0;
+            const delta = startX - x;
+            const nextW = Math.max(260, Math.min(520, Math.round(startW + delta)));
+            aside.style.width = `${nextW}px`;
+            aside.style.minWidth = `${nextW}px`;
+            aside.style.flexBasis = `${nextW}px`;
+            SettingsStore.data.checklistDetailWidth = nextW;
+        };
+        const onUp = async () => {
+            try { document.removeEventListener('mousemove', onMove, true); } catch (e2) {}
+            try { document.removeEventListener('mouseup', onUp, true); } catch (e2) {}
+            try { await SettingsStore.save(); } catch (e2) {}
+        };
+        try { document.addEventListener('mousemove', onMove, true); } catch (e2) {}
+        try { document.addEventListener('mouseup', onUp, true); } catch (e2) {}
     };
 
     window.tmToggleDocTabs = function(ev) {
@@ -12652,17 +13949,18 @@ async function __tmRefreshAfterWake(reason) {
         // 获取文档分组信息
         const docGroups = SettingsStore.data.docGroups || [];
         const currentGroup = docGroups.find(g => g.id === currentGroupId);
-        const groupName = currentGroupId === 'all' ? '全部文档' : (currentGroup ? currentGroup.name : '未知分组');
+        const groupName = currentGroupId === 'all' ? '全部文档' : (currentGroup ? __tmResolveDocGroupName(currentGroup) : '未知分组');
         const isMobile = __tmIsMobileDevice();
+        const isSplitPane = false; // 使用CSS容器查询处理分屏模式
         const isLandscape = !!(isMobile && (() => { try { return !!window.matchMedia?.('(orientation: landscape)')?.matches; } catch (e) { return false; } })());
-        const isDesktopNarrow = !!(!isMobile && (() => { try { return !!window.matchMedia?.('(max-width: 768px)')?.matches; } catch (e) { return false; } })());
+        const isDesktopNarrow = false; // 使用CSS容器查询处理窄屏模式
         const kind = String(state.uiAnimKind || '').trim();
         const bodyAnimClass = (Date.now() - (Number(state.uiAnimTs) || 0) < 300)
             ? (kind === 'from-right' ? ' tm-body-anim--from-right' : kind === 'from-left' ? ' tm-body-anim--from-left' : ' tm-body-anim')
             : '';
         
         state.modal = document.createElement('div');
-        state.modal.className = 'tm-modal' + (__tmMountEl ? ' tm-modal--tab' : '') + (isMobile ? ' tm-modal--mobile' : '');
+        state.modal.className = 'tm-modal' + (__tmMountEl ? ' tm-modal--tab' : '') + (isMobile ? ' tm-modal--mobile' : '') + (isSplitPane ? ' tm-modal--split-pane' : '');
         try {
             const wrapCfg = __tmGetWrapConfig();
             state.modal.classList.toggle('tm-modal--task-wrap', !!wrapCfg.enabled);
@@ -12719,6 +14017,196 @@ async function __tmRefreshAfterWake(reason) {
                 </div>
             `;
 
+        function __tmRenderChecklistBodyHtml() {
+            const rowModel = __tmBuildTaskRowModel();
+            const isDark = __tmIsDarkMode();
+            const enableGroupBg = !!SettingsStore.data.enableGroupTaskBgByGroupColor;
+            const escSq = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const sheetMode = __tmChecklistUseSheetMode();
+            const detailWidth = Math.max(260, Math.min(520, Math.round(Number(SettingsStore.data.checklistDetailWidth) || 320)));
+            const progressBarColor = isDark
+                ? __tmNormalizeHexColor(SettingsStore.data.progressBarColorDark, '#81c784')
+                : __tmNormalizeHexColor(SettingsStore.data.progressBarColorLight, '#4caf50');
+            const selectedId = String(state.detailTaskId || '').trim();
+            const fallbackId = __tmResolveFirstVisibleTaskIdFromRowModel(rowModel);
+            const activeId = state.flatTasks?.[selectedId]
+                ? selectedId
+                : (sheetMode ? '' : fallbackId);
+            if (activeId !== selectedId) state.detailTaskId = activeId;
+            if (!sheetMode) state.checklistDetailSheetOpen = false;
+            let currentGroupBg = '';
+
+            const resolvePinnedTaskGroupBg = (task) => {
+                if (!enableGroupBg || !task) return '';
+                if (state.groupByDocName || state.groupByTaskName || (!state.groupByDocName && !state.groupByTime && !state.quadrantEnabled)) {
+                    const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
+                    return taskDocColor ? (__tmGroupBgFromLabelColor(taskDocColor, isDark) || '') : '';
+                }
+                if (state.groupByTime) {
+                    const diffDays = Number(__tmGetTaskTimePriorityInfo(task)?.diffDays);
+                    const groupInfo = !Number.isFinite(diffDays)
+                        ? { key: 'pending', sortValue: Number.POSITIVE_INFINITY }
+                        : (diffDays < 0
+                            ? { key: 'overdue', sortValue: diffDays }
+                            : { key: `days_${diffDays}`, sortValue: diffDays });
+                    const timeBaseColor = isDark
+                        ? __tmNormalizeHexColor(SettingsStore.data.timeGroupBaseColorDark, '#6ba5ff')
+                        : __tmNormalizeHexColor(SettingsStore.data.timeGroupBaseColorLight, '#1a73e8');
+                    const timeOverdueColor = isDark
+                        ? __tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorDark, '#ff6b6b')
+                        : __tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorLight, '#d93025');
+                    const key = String(groupInfo?.key || '');
+                    const sortValue = Number(groupInfo?.sortValue);
+                    const labelColor = (key === 'pending' || !Number.isFinite(sortValue))
+                        ? 'var(--tm-secondary-text)'
+                        : (sortValue < 0
+                            ? (timeOverdueColor || 'var(--tm-danger-color)')
+                            : __tmWithAlpha(timeBaseColor || 'var(--tm-primary-color)', __tmClamp(1 - sortValue * (isDark ? 0.085 : 0.11), isDark ? 0.52 : 0.42, 1)));
+                    return __tmGroupBgFromLabelColor(labelColor, isDark) || '';
+                }
+                if (state.quadrantEnabled) {
+                    const quadrantRules = (SettingsStore.data.quadrantConfig && SettingsStore.data.quadrantConfig.rules) || [];
+                    const priority = String(task.priority || '').toLowerCase();
+                    const importance = (priority === 'a' || priority === '高' || priority === 'high')
+                        ? 'high'
+                        : ((priority === 'b' || priority === '中' || priority === 'medium')
+                            ? 'medium'
+                            : ((priority === 'c' || priority === '低' || priority === 'low') ? 'low' : 'none'));
+                    const diffDays = Number(__tmGetTaskTimePriorityInfo(task)?.diffDays);
+                    const timeRange = !Number.isFinite(diffDays)
+                        ? 'nodate'
+                        : (diffDays < 0 ? 'overdue' : (diffDays <= 7 ? 'within7days' : (diffDays <= 15 ? 'within15days' : (diffDays <= 30 ? 'within30days' : 'beyond30days'))));
+                    let ruleColor = '';
+                    for (const rule of quadrantRules) {
+                        const importanceMatch = Array.isArray(rule?.importance) && rule.importance.includes(importance);
+                        let timeRangeMatch = Array.isArray(rule?.timeRanges) && rule.timeRanges.includes(timeRange);
+                        if (!timeRangeMatch && Array.isArray(rule?.timeRanges)) {
+                            for (const range of rule.timeRanges) {
+                                if (!String(range || '').startsWith('beyond') || range === 'beyond30days') continue;
+                                const days = parseInt(String(range).replace('beyond', '').replace('days', ''), 10);
+                                if (!Number.isNaN(days) && diffDays > days) { timeRangeMatch = true; break; }
+                            }
+                        }
+                        if (importanceMatch && timeRangeMatch) {
+                            const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
+                            ruleColor = colorMap[String(rule?.color || '')] || 'var(--tm-text-color)';
+                            break;
+                        }
+                    }
+                    return ruleColor ? (__tmGroupBgFromLabelColor(ruleColor, isDark) || '') : '';
+                }
+                return '';
+            };
+
+            const renderGroup = (row) => {
+                const isCollapsed = !!row?.collapsed;
+                const toggle = `<span class="tm-group-toggle" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:16px;color:var(--tm-text-color);"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${isCollapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+                const countHtml = Number(row?.count) > 0 ? `<span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span>` : '';
+                const durationHtml = String(row?.durationSum || '').trim()
+                    ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">📊</span>${esc(String(row.durationSum || '').trim())}</span>`
+                    : '';
+                let labelColor = 'var(--tm-text-color)';
+                if (row.kind === 'doc') labelColor = String(row.labelColor || 'var(--tm-group-doc-label-color)');
+                else if (row.kind === 'task') labelColor = String(row.labelColor || 'var(--tm-primary-color)');
+                else if (row.kind === 'time') labelColor = String(row.labelColor || 'var(--tm-text-color)');
+                else if (row.kind === 'quadrant') {
+                    const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
+                    labelColor = colorMap[String(row.color || '')] || 'var(--tm-text-color)';
+                } else if (row.kind === 'h2') {
+                    labelColor = 'var(--tm-secondary-text)';
+                }
+                if (row.kind === 'task' && row.groupDocColor) {
+                    currentGroupBg = enableGroupBg ? (__tmGroupBgFromLabelColor(row.groupDocColor, isDark) || '') : '';
+                } else {
+                    currentGroupBg = enableGroupBg ? (__tmGroupBgFromLabelColor(labelColor, isDark) || '') : '';
+                }
+                return `
+                    <div class="tm-checklist-group ${row.kind === 'h2' ? 'tm-checklist-group--h2' : ''}" data-group-key="${esc(String(row.key || ''))}" onclick="tmToggleGroupCollapse('${escSq(String(row.key || ''))}', event)">
+                        ${toggle}
+                        <span class="tm-checklist-group-label" style="color:${labelColor};">${esc(String(row.label || ''))}</span>
+                        ${countHtml}
+                        ${durationHtml}
+                    </div>
+                `;
+            };
+
+            const renderTask = (row) => {
+                const task = state.flatTasks?.[String(row?.id || '').trim()];
+                if (!task) return '';
+                if ((state.groupByTaskName || (!state.groupByDocName && !state.groupByTime && !state.quadrantEnabled)) && task.root_id) {
+                    const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
+                    currentGroupBg = (enableGroupBg && taskDocColor) ? (__tmGroupBgFromLabelColor(taskDocColor, isDark) || '') : '';
+                }
+                const depth = Math.max(0, Number(row?.depth) || 0);
+                const hasChildren = !!row?.hasChildren;
+                const collapsed = !!row?.collapsed;
+                const allChildren = Array.isArray(task.children) ? task.children : [];
+                const totalChildren = allChildren.length;
+                const completedChildren = allChildren.filter((child) => child?.done).length;
+                const progressPercent = totalChildren > 0 ? Math.round((completedChildren / totalChildren) * 100) : 0;
+                const resolvedGroupBg = currentGroupBg || resolvePinnedTaskGroupBg(task);
+                const baseBg = resolvedGroupBg ? `background-color:${resolvedGroupBg};` : '';
+                const progressBg = progressPercent > 0
+                    ? `background-image:linear-gradient(90deg, ${progressBarColor} ${progressPercent}%, transparent ${progressPercent}%);background-repeat:no-repeat;background-size:100% 3px;background-position:left bottom;`
+                    : '';
+                const activeCls = String(task.id) === activeId ? ' tm-checklist-item--active' : '';
+                const doneCls = task.done ? ' tm-checklist-item--done' : '';
+                const reminderHtml = __tmHasReminderMark(task) ? '<span class="tm-task-reminder-emoji" title="已添加提醒">⏰</span>' : '';
+                const statusOptions = SettingsStore.data.customStatusOptions || [];
+                const currentStatus = String(task.customStatus || '').trim() || 'todo';
+                const statusOption = statusOptions.find((o) => String(o?.id || '').trim() === currentStatus) || { name: currentStatus, color: '#757575' };
+                const statusChipStyle = __tmBuildStatusChipStyle(statusOption.color);
+                const indent = depth * 22;
+                const meta = [];
+                if (task.docName) meta.push(`<span class="tm-checklist-meta-chip">📄 ${esc(String(task.docName || ''))}</span>`);
+                if (task.h2) meta.push(`<span class="tm-checklist-meta-chip">🧩 ${esc(String(task.h2 || ''))}</span>`);
+                if (task.completionTime) meta.push(`<span class="tm-checklist-meta-chip">📅 ${esc(__tmFormatTaskTime(task.completionTime))}</span>`);
+                if (task.duration) meta.push(`<span class="tm-checklist-meta-chip">⏱ ${esc(String(task.duration || ''))}</span>`);
+                if (totalChildren > 0) meta.push(`<span class="tm-checklist-meta-chip">子任务 ${completedChildren}/${totalChildren}</span>`);
+                return `
+                    <div class="tm-checklist-item${activeCls}${doneCls}" data-id="${esc(String(task.id || ''))}" draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" style="margin-left:${indent}px;${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')">
+                        <div class="tm-checklist-leading${hasChildren ? ' tm-checklist-leading--branch' : ''}">
+                            <input class="tm-task-checkbox ${GlobalLock.isLocked() ? 'tm-operating' : ''}" type="checkbox" ${task.done ? 'checked' : ''} ${GlobalLock.isLocked() ? 'disabled' : ''} onchange="tmSetDone('${escSq(String(task.id || ''))}', this.checked, event)">
+                            ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="14" height="14" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : ''}
+                        </div>
+                        <div class="tm-checklist-item-main">
+                            <div class="tm-checklist-title-row">
+                                <div class="tm-checklist-title"><span class="tm-checklist-title-button" onclick="event.stopPropagation();tmJumpToTask('${escSq(String(task.id || ''))}', event)" title="跳转到任务">${esc(String(task.content || '').trim() || '(无内容)')}</span>${reminderHtml}</div>
+                                <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
+                                ${task.pinned ? '<span class="tm-checklist-meta-chip">📌</span>' : ''}
+                                ${hasChildren && collapsed ? '<span class="tm-checklist-meta-chip">已折叠</span>' : ''}
+                            </div>
+                            ${meta.length ? `<div class="tm-checklist-meta">${meta.join('')}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            };
+
+            const itemsHtml = rowModel.map((row) => row?.type === 'group' ? renderGroup(row) : renderTask(row)).join('');
+            const detailTask = activeId ? (state.flatTasks?.[activeId] || null) : null;
+            const detailHtml = detailTask
+                ? __tmBuildTaskDetailInnerHtml(detailTask, { embedded: true })
+                : `<div class="tm-checklist-empty-detail">选择左侧任务后，这里会显示可编辑的详情。</div>`;
+            return `
+                <div class="tm-body${bodyAnimClass}">
+                    <div class="tm-checklist-layout">
+                        <div class="tm-checklist-pane">
+                            <div class="tm-checklist-items">${itemsHtml || `<div class="tm-checklist-empty-detail">暂无任务</div>`}</div>
+                        </div>
+                        <div class="tm-checklist-resizer" ${sheetMode ? 'style="display:none;"' : 'onmousedown="tmStartChecklistDetailResize(event)"'} title="拖拽调整详情宽度"></div>
+                        <aside class="tm-checklist-side" ${sheetMode ? 'style="display:none;"' : `style="width:${detailWidth}px;min-width:${detailWidth}px;flex-basis:${detailWidth}px;"`}>
+                            <div class="tm-checklist-detail-wrap" id="tmChecklistDetailPanel">${detailHtml}</div>
+                        </aside>
+                        <div id="tmChecklistSheetBackdrop" class="tm-checklist-sheet-backdrop ${sheetMode && state.checklistDetailSheetOpen && detailTask ? 'tm-checklist-sheet-backdrop--open' : ''}" ${sheetMode ? '' : 'style="display:none;"'} onclick="tmChecklistCloseSheet(event)"></div>
+                        <div id="tmChecklistSheet" class="tm-checklist-sheet ${sheetMode && state.checklistDetailSheetOpen && detailTask ? 'tm-checklist-sheet--open' : ''}" ${sheetMode ? '' : 'style="display:none;"'} onpointerdown="tmChecklistSheetDragStart(event)">
+                            <div class="tm-checklist-sheet-handle"></div>
+                            <div class="tm-checklist-sheet-body" id="tmChecklistSheetPanel">${sheetMode ? detailHtml : ''}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         const __tmRenderTimelineBodyHtml = (rowModel) => {
             const widths = SettingsStore.data.columnWidths || {};
             const isGloballyLocked = GlobalLock.isLocked();
@@ -12741,7 +14229,7 @@ async function __tmRefreshAfterWake(reason) {
 
             const renderGroupRow = (row) => {
                 const isCollapsed = !!row?.collapsed;
-                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;margin-right:8px;display:inline-block;width:12px;">${isCollapsed ? '▸' : '▾'}</span>`;
+                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                 if (row.kind === 'doc') {
                     const labelColor = String(row.labelColor || 'var(--tm-group-doc-label-color)');
                     return `<tr class="tm-group-row tm-timeline-row" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">📄 ${esc(row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span></div></td></tr>`;
@@ -12772,10 +14260,23 @@ async function __tmRefreshAfterWake(reason) {
             const renderTaskRow = (row) => {
                 const task = state.flatTasks[row.id];
                 if (!task) return '';
-                const indent = (Math.max(0, Number(row.depth) || 0)) * 12;
+                const depth = Math.max(0, Number(row.depth) || 0);
+                const contentIndent = 12 + depth * 16;
+                const treeGuides = depth > 0
+                    ? `<span class="tm-tree-guides" aria-hidden="true">${Array.from({ length: depth }, (_, i) => `<span class="tm-tree-guide-line" style="left:${18 + i * 16}px"></span>`).join('')}</span>`
+                    : '';
+                const leadingClass = [
+                    'tm-task-leading',
+                    row.hasChildren && depth === 0 ? 'tm-task-leading--toplevel' : '',
+                    row.hasChildren ? 'tm-task-leading--branch' : '',
+                    row.hasChildren && row.collapsed ? 'tm-task-leading--collapsed' : '',
+                ].filter(Boolean).join(' ');
+                const leadingRing = row.hasChildren && row.collapsed
+                    ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>'
+                    : '';
                 const toggle = row.hasChildren
-                    ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${task.id}', event)">${row.collapsed ? '▸' : '▾'}</span>`
-                    : `<span class="tm-tree-spacer"></span>`;
+                    ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${task.id}', event)"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
+                    : '';
                 const tomatoFocusTaskId = SettingsStore.data.enableTomatoIntegration ? String(state.timerFocusTaskId || '').trim() : '';
                 const tomatoFocusModeEnabled = __tmIsTomatoFocusModeEnabled();
                 const rowClass = tomatoFocusTaskId
@@ -12802,20 +14303,24 @@ async function __tmRefreshAfterWake(reason) {
 
                 return `
                     <tr class="tm-timeline-row ${rowClass}" data-id="${task.id}" data-depth="${row.depth}" onclick="tmRowClick(event, '${task.id}')" oncontextmenu="tmShowTaskContextMenu(event, '${task.id}')">
-                        <td style="width: ${timelineContentWidth}px; min-width: ${timelineContentWidth}px; max-width: ${timelineContentWidth}px; ${contentCellBgStyle}">
-                            <div class="tm-task-cell" style="padding-left:${indent}px">
-                                ${toggle}
-                                <input class="tm-task-checkbox ${isGloballyLocked ? 'tm-operating' : ''}"
-                                       type="checkbox" ${task.done ? 'checked' : ''}
-                                       ${isGloballyLocked ? 'disabled' : ''}
-                                       onchange="tmSetDone('${task.id}', this.checked, event)">
+                        <td class="tm-task-content-cell" style="width: ${timelineContentWidth}px; min-width: ${timelineContentWidth}px; max-width: ${timelineContentWidth}px; ${contentCellBgStyle}">
+                            <div class="tm-task-cell" style="padding-left:${contentIndent}px">
+                                ${treeGuides}
+                                <span class="${leadingClass}">
+                                    ${leadingRing}
+                                    <input class="tm-task-checkbox ${isGloballyLocked ? 'tm-operating' : ''}"
+                                           type="checkbox" ${task.done ? 'checked' : ''}
+                                           ${isGloballyLocked ? 'disabled' : ''}
+                                           onchange="tmSetDone('${task.id}', this.checked, event)">
+                                    ${toggle}
+                                </span>
                                 <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}" title="${esc(task.content || '')}">
                                     <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)" title="${esc(task.content || '')}">${esc(task.content || '')}</span>
                                 </span>
                             </div>
                         </td>
-                        <td class="tm-cell-editable" style="width:${timelineStartW}px; min-width:${timelineStartW}px; max-width:${timelineStartW}px; ${otherCellBgStyle}" onclick="tmBeginCellEdit('${task.id}','startDate',this,event)">${__tmFormatTaskTime(task.startDate)}</td>
-                        <td class="tm-cell-editable" style="width:${timelineEndW}px; min-width:${timelineEndW}px; max-width:${timelineEndW}px; ${otherCellBgStyle}" onclick="tmBeginCellEdit('${task.id}','completionTime',this,event)">${__tmFormatTaskTime(task.completionTime)}</td>
+                    <td class="tm-cell-editable tm-task-meta-cell" style="width:${timelineStartW}px; min-width:${timelineStartW}px; max-width:${timelineStartW}px; ${otherCellBgStyle}" onclick="tmBeginCellEdit('${task.id}','startDate',this,event)">${__tmFormatTaskTime(task.startDate)}</td>
+                    <td class="tm-cell-editable tm-task-meta-cell" style="width:${timelineEndW}px; min-width:${timelineEndW}px; max-width:${timelineEndW}px; ${otherCellBgStyle}" onclick="tmBeginCellEdit('${task.id}','completionTime',this,event)">${__tmFormatTaskTime(task.completionTime)}</td>
                     </tr>
                 `;
             };
@@ -13259,6 +14764,9 @@ async function __tmRefreshAfterWake(reason) {
             const colsHtml = cols.map(c => {
                 const list0 = tasksByStatus.get(c.id) || [];
                 const map = new Map();
+                const pinnedGroupBg = __tmIsDarkMode()
+                    ? 'color-mix(in srgb, var(--tm-danger-color,#d32f2f) 18%, var(--tm-header-bg))'
+                    : '#ffebee';
                 list0.forEach(t => {
                     const id = String(t?.id || '').trim();
                     if (id) map.set(id, t);
@@ -13329,7 +14837,7 @@ async function __tmRefreshAfterWake(reason) {
                     const childList = childrenByParent.get(id) || [];
                     const collapsed = childList.length ? __tmKanbanGetCollapsedSet().has(id) : false;
                     const toggleHtml = childList.length
-                        ? `<button class="tm-kanban-toggle" onclick="tmKanbanToggleCollapse('${id}', event)" title="${collapsed ? '展开子任务' : '折叠子任务'}">${collapsed ? '▸' : '▾'}</button>`
+                        ? `<button class="tm-kanban-toggle" onclick="tmKanbanToggleCollapse('${id}', event)" title="${collapsed ? '展开子任务' : '折叠子任务'}"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
                         : '';
                     const childrenHtml = (!collapsed && childList.length) ? childList.map(ch => renderTree(ch, depthInCol + 1)).join('') : '';
                     return renderCard(
@@ -13362,7 +14870,7 @@ async function __tmRefreshAfterWake(reason) {
                     return `
                         <div class="tm-kanban-group-title${dropKind ? ' tm-kanban-group-title--droppable' : ''}" onclick="tmToggleGroupCollapse('${escSq(groupKey)}', event)" style="${titleColor ? `color:${titleColor};` : ''}${groupBg ? `background:${groupBg};` : ''}"${dropAttrs}${dropHandlers}>
                             <span style="display:inline-flex;align-items:center;min-width:0;padding-left:${leftIndent};">
-                                <span class="tm-group-toggle" style="cursor:pointer;display:inline-block;width:12px;">${isCollapsed ? '▸' : '▾'}</span>
+                                <span class="tm-group-toggle" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                                 <span>${titleHtml}</span>
                             </span>
                             <span class="tm-badge tm-badge--count">${Number(count) || 0}</span>
@@ -13398,11 +14906,11 @@ async function __tmRefreshAfterWake(reason) {
                             });
                         };
                         const pinnedBody = pinnedIsCollapsed ? '' : `<div class="tm-kanban-group-items">${allPinned.map(renderPinnedTree).join('')}</div>`;
-                        // 自定义渲染置顶分组标题：淡粉色背景 + 黑色文字 + 黑色折叠指示器
+                        // 自定义渲染置顶分组标题
                         const pinnedTitle = `
-                            <div class="tm-kanban-group-title" onclick="tmToggleGroupCollapse('${escSq(pinnedGroupKey)}', event)" style="background:#ffebee;">
+                            <div class="tm-kanban-group-title" onclick="tmToggleGroupCollapse('${escSq(pinnedGroupKey)}', event)" style="background:${pinnedGroupBg};">
                                 <span style="display:inline-flex;align-items:center;min-width:0;">
-                                    <span class="tm-group-toggle" style="cursor:pointer;display:inline-block;width:12px;color:var(--tm-text-color);">${pinnedIsCollapsed ? '▸' : '▾'}</span>
+                                    <span class="tm-group-toggle" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:16px;color:var(--tm-text-color);"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                                     <span style="color:var(--tm-text-color);">📌 置顶</span>
                                 </span>
                                 <span class="tm-badge tm-badge--count">${allPinned.length}</span>
@@ -13554,11 +15062,11 @@ async function __tmRefreshAfterWake(reason) {
                             });
                         };
                         const pinnedBody = pinnedIsCollapsed ? '' : `<div class="tm-kanban-group-items">${allPinned.map(renderPinnedTree).join('')}</div>`;
-                        // 自定义渲染置顶分组标题：淡粉色背景 + 黑色文字 + 黑色折叠指示器
+                        // 自定义渲染置顶分组标题
                         const pinnedTitle = `
-                            <div class="tm-kanban-group-title" onclick="tmToggleGroupCollapse('${escSq(pinnedGroupKey)}', event)" style="background:#ffebee;">
+                            <div class="tm-kanban-group-title" onclick="tmToggleGroupCollapse('${escSq(pinnedGroupKey)}', event)" style="background:${pinnedGroupBg};">
                                 <span style="display:inline-flex;align-items:center;min-width:0;">
-                                    <span class="tm-group-toggle" style="cursor:pointer;display:inline-block;width:12px;color:var(--tm-text-color);">${pinnedIsCollapsed ? '▸' : '▾'}</span>
+                                    <span class="tm-group-toggle" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:16px;color:var(--tm-text-color);"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                                     <span style="color:var(--tm-text-color);">📌 置顶</span>
                                 </span>
                                 <span class="tm-badge tm-badge--count">${allPinned.length}</span>
@@ -13619,11 +15127,11 @@ async function __tmRefreshAfterWake(reason) {
                             });
                         };
                         const pinnedBody = pinnedIsCollapsed ? '' : `<div class="tm-kanban-group-items">${allPinned.map(renderPinnedTree).join('')}</div>`;
-                        // 自定义渲染置顶分组标题：淡粉色背景 + 黑色文字 + 黑色折叠指示器
+                        // 自定义渲染置顶分组标题
                         const pinnedTitle = `
-                            <div class="tm-kanban-group-title" onclick="tmToggleGroupCollapse('${escSq(pinnedGroupKey)}', event)" style="background:#ffebee;">
+                            <div class="tm-kanban-group-title" onclick="tmToggleGroupCollapse('${escSq(pinnedGroupKey)}', event)" style="background:${pinnedGroupBg};">
                                 <span style="display:inline-flex;align-items:center;min-width:0;">
-                                    <span class="tm-group-toggle" style="cursor:pointer;display:inline-block;width:12px;color:var(--tm-text-color);">${pinnedIsCollapsed ? '▸' : '▾'}</span>
+                                    <span class="tm-group-toggle" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:16px;color:var(--tm-text-color);"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                                     <span style="color:var(--tm-text-color);">📌 置顶</span>
                                 </span>
                                 <span class="tm-badge tm-badge--count">${allPinned.length}</span>
@@ -13692,11 +15200,11 @@ async function __tmRefreshAfterWake(reason) {
                             });
                         };
                         const pinnedBody = pinnedIsCollapsed ? '' : `<div class="tm-kanban-group-items">${allPinned.map(renderPinnedTree).join('')}</div>`;
-                        // 自定义渲染置顶分组标题：淡粉色背景 + 黑色文字 + 黑色折叠指示器
+                        // 自定义渲染置顶分组标题
                         const pinnedTitle = `
-                            <div class="tm-kanban-group-title" onclick="tmToggleGroupCollapse('${escSq(pinnedGroupKey)}', event)" style="background:#ffebee;">
+                            <div class="tm-kanban-group-title" onclick="tmToggleGroupCollapse('${escSq(pinnedGroupKey)}', event)" style="background:${pinnedGroupBg};">
                                 <span style="display:inline-flex;align-items:center;min-width:0;">
-                                    <span class="tm-group-toggle" style="cursor:pointer;display:inline-block;width:12px;color:var(--tm-text-color);">${pinnedIsCollapsed ? '▸' : '▾'}</span>
+                                    <span class="tm-group-toggle" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:16px;color:var(--tm-text-color);"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                                     <span style="color:var(--tm-text-color);">📌 置顶</span>
                                 </span>
                                 <span class="tm-badge tm-badge--count">${allPinned.length}</span>
@@ -13763,11 +15271,11 @@ async function __tmRefreshAfterWake(reason) {
                             });
                         };
                         const pinnedBody = pinnedIsCollapsed ? '' : `<div class="tm-kanban-group-items">${allPinned.map(renderPinnedTree).join('')}</div>`;
-                        // 自定义渲染置顶分组标题：淡粉色背景 + 黑色文字 + 黑色折叠指示器
+                        // 自定义渲染置顶分组标题
                         const pinnedTitle = `
-                            <div class="tm-kanban-group-title" onclick="tmToggleGroupCollapse('${escSq(pinnedGroupKey)}', event)" style="background:#ffebee;">
+                            <div class="tm-kanban-group-title" onclick="tmToggleGroupCollapse('${escSq(pinnedGroupKey)}', event)" style="background:${pinnedGroupBg};">
                                 <span style="display:inline-flex;align-items:center;min-width:0;">
-                                    <span class="tm-group-toggle" style="cursor:pointer;display:inline-block;width:12px;color:var(--tm-text-color);">${pinnedIsCollapsed ? '▸' : '▾'}</span>
+                                    <span class="tm-group-toggle" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:16px;color:var(--tm-text-color);"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                                     <span style="color:var(--tm-text-color);">📌 置顶</span>
                                 </span>
                                 <span class="tm-badge tm-badge--count">${allPinned.length}</span>
@@ -14163,7 +15671,7 @@ async function __tmRefreshAfterWake(reason) {
                     const linkStats = __tmGetTaskLinkStats(tid, { docId, includeAuto: false });
                     const hasTaskLinks = (Number(linkStats?.incoming || 0) + Number(linkStats?.outgoing || 0)) > 0;
                     const toggleHtml = children.length
-                        ? `<button class="tm-kanban-toggle" onclick="tmWhiteboardToggleTaskCollapse('${escSq(tid)}', event)" title="${collapsed ? '展开子任务' : '折叠子任务'}">${collapsed ? '▸' : '▾'}</button>`
+                        ? `<button class="tm-kanban-toggle" onclick="tmWhiteboardToggleTaskCollapse('${escSq(tid)}', event)" title="${collapsed ? '展开子任务' : '折叠子任务'}"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
                         : '';
                     const collapseProxyDot = (collapsed && children.length)
                         ? `<span class="tm-task-link-dot tm-whiteboard-collapse-proxy-dot" title="折叠子任务连线汇聚点"></span>`
@@ -14291,7 +15799,7 @@ async function __tmRefreshAfterWake(reason) {
                                             <button class="tm-btn ${noteBold ? 'tm-btn-primary' : 'tm-btn-secondary'}" style="padding:2px 8px;font-size:12px;font-weight:700;" onclick="tmWhiteboardToggleNoteBold('${escSq(nid)}', event)" title="加粗">B</button>
                                             <button class="tm-btn tm-btn-info" style="padding:2px 6px;font-size:12px;" onclick="tmWhiteboardAdjustNoteFontSize('${escSq(nid)}', -1, event)" title="减小字号">A-</button>
                                             <button class="tm-btn tm-btn-info" style="padding:2px 6px;font-size:12px;" onclick="tmWhiteboardAdjustNoteFontSize('${escSq(nid)}', 1, event)" title="增大字号">A+</button>
-                                            ${noteColorOptions.map((c) => `<button class="tm-btn" style="padding:0;width:14px;height:14px;min-width:14px;border-radius:50%;background:${c};border:${noteColor === c ? '2px solid var(--tm-primary-color)' : '1px solid var(--tm-border-color)'};" onclick="tmWhiteboardSetNoteColor('${escSq(nid)}', '${escSq(c)}', event)" title="文字颜色"></button>`).join('')}
+                                            ${noteColorOptions.map((c) => `<button class="tm-btn" style="padding:0;width:16px;height:14px;min-width:16px;border-radius:50%;background:${c};border:${noteColor === c ? '2px solid var(--tm-primary-color)' : '1px solid var(--tm-border-color)'};" onclick="tmWhiteboardSetNoteColor('${escSq(nid)}', '${escSq(c)}', event)" title="文字颜色"></button>`).join('')}
                                             <button class="tm-btn tm-btn-danger" style="padding:2px 8px;font-size:12px;" onclick="tmWhiteboardDeleteNote('${escSq(nid)}', event)" title="移除文本">移除</button>
                                         </div>`
                                         : '';
@@ -14328,7 +15836,7 @@ async function __tmRefreshAfterWake(reason) {
                                         <button class="tm-btn ${noteBold ? 'tm-btn-primary' : 'tm-btn-secondary'}" style="padding:2px 8px;font-size:12px;font-weight:700;" onclick="tmWhiteboardToggleNoteBold('${escSq(nid)}', event)" title="加粗">B</button>
                                         <button class="tm-btn tm-btn-info" style="padding:2px 6px;font-size:12px;" onclick="tmWhiteboardAdjustNoteFontSize('${escSq(nid)}', -1, event)" title="减小字号">A-</button>
                                         <button class="tm-btn tm-btn-info" style="padding:2px 6px;font-size:12px;" onclick="tmWhiteboardAdjustNoteFontSize('${escSq(nid)}', 1, event)" title="增大字号">A+</button>
-                                        ${noteColorOptions.map((c) => `<button class="tm-btn" style="padding:0;width:14px;height:14px;min-width:14px;border-radius:50%;background:${c};border:${noteColor === c ? '2px solid var(--tm-primary-color)' : '1px solid var(--tm-border-color)'};" onclick="tmWhiteboardSetNoteColor('${escSq(nid)}', '${escSq(c)}', event)" title="文字颜色"></button>`).join('')}
+                                        ${noteColorOptions.map((c) => `<button class="tm-btn" style="padding:0;width:16px;height:14px;min-width:16px;border-radius:50%;background:${c};border:${noteColor === c ? '2px solid var(--tm-primary-color)' : '1px solid var(--tm-border-color)'};" onclick="tmWhiteboardSetNoteColor('${escSq(nid)}', '${escSq(c)}', event)" title="文字颜色"></button>`).join('')}
                                         <button class="tm-btn tm-btn-danger" style="padding:2px 8px;font-size:12px;" onclick="tmWhiteboardDeleteNote('${escSq(nid)}', event)" title="移除文本">移除</button>
                                     </div>`
                                     : '';
@@ -14496,8 +16004,8 @@ async function __tmRefreshAfterWake(reason) {
                                     const childIds = (groupChildrenMap.get(tid) || []).filter((cid) => groupTaskMap.has(cid));
                                     const collapsed = childIds.length ? __tmKanbanGetCollapsedSet().has(tid) : false;
                                     const toggleHtml = childIds.length
-                                        ? `<button class="tm-whiteboard-pool-toggle" onclick="tmWhiteboardToggleTaskCollapse('${escSq(tid)}', event)" onmousedown="event.stopPropagation()" title="${collapsed ? '展开子任务' : '折叠子任务'}">${collapsed ? '▸' : '▾'}</button>`
-                                        : '<span style="display:inline-block;width:14px;height:14px;"></span>';
+                                        ? `<button class="tm-whiteboard-pool-toggle" onclick="tmWhiteboardToggleTaskCollapse('${escSq(tid)}', event)" onmousedown="event.stopPropagation()" title="${collapsed ? '展开子任务' : '折叠子任务'}"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
+                                        : '<span style="display:inline-block;width:16px;height:14px;"></span>';
                                     const indent = Math.max(0, Math.min(10, Number(depth) || 0)) * 16;
                                     const doneCls = t?.done ? ' tm-whiteboard-pool-item--done' : '';
                                     const parentCls = childIds.length ? ' tm-whiteboard-pool-item--parent' : '';
@@ -14598,6 +16106,8 @@ async function __tmRefreshAfterWake(reason) {
             ? __tmRenderCalendarBodyHtml()
             : state.viewMode === 'whiteboard'
                 ? __tmRenderWhiteboardBodyHtml()
+            : state.viewMode === 'checklist'
+                ? __tmRenderChecklistBodyHtml()
             : state.viewMode === 'timeline'
                 ? __tmRenderTimelineBodyHtml(__tmTimelineRowModel)
                 : state.viewMode === 'kanban'
@@ -14623,12 +16133,12 @@ async function __tmRefreshAfterWake(reason) {
                     <div style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;justify-content:space-between;min-width:0;">
                         <div style="display:flex;align-items:center;gap:10px;">
                             <div class="tm-title" style="font-size: 16px; font-weight: 700; white-space: nowrap; display:inline-flex; align-items:center; gap:4px;">
-                                <span onclick="tmHandleManagerIconClick(event)" style="cursor:${isMobile ? 'default' : 'pointer'};">📋</span>
+                                <span onclick="tmHandleManagerIconClick(event)" style="cursor:${false};">📋</span>
                                 <span onclick="tmHandleManagerTitleClick(event)" style="cursor:pointer;">任务管理器</span>
                             </div>
                             <button class="tm-btn tm-btn-success" onclick="tmAdd()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">+</button>
-                            ${isMobile ? `<button class="tm-btn tm-btn-info" onclick="tmRefresh()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">🔄️</button>` : ''}
-                            ${isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info" onclick="tmCalendarToggleSidebar()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="侧边栏">📅</button>` : ''}
+                            ${false ? `<button class="tm-btn tm-btn-info" onclick="tmRefresh()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">🔄️</button>` : ''}
+                            ${false && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info" onclick="tmCalendarToggleSidebar()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="侧边栏">📅</button>` : ''}
                             ${(state.viewMode === 'timeline' && ((isMobile && isLandscape) || isDesktopNarrow)) ? `
                                 <button class="tm-btn tm-btn-info" onclick="tmGanttZoomOut()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="缩小">－</button>
                                 <button class="tm-btn tm-btn-info" onclick="tmGanttZoomIn()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="放大">＋</button>
@@ -14638,12 +16148,12 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
 
                         <!-- 桌面端工具栏 -->
-                        <div class="tm-desktop-toolbar tm-header-selectors" style="display:${isMobile ? 'none' : 'flex'};align-items:center;gap:8px;flex:1;min-width:0;">
+                        <div class="tm-desktop-toolbar tm-header-selectors" style="display:${false ? 'none' : 'flex'};align-items:center;gap:8px;flex:1;min-width:0;">
                             <div class="tm-rule-selector" style="margin-left: 6px;">
                                 <span class="tm-rule-label">文档:</span>
                                 <select class="tm-rule-select" onchange="tmSwitchDocGroup(this.value)" aria-label="文档" title="文档">
                                     <option value="all" ${currentGroupId === 'all' ? 'selected' : ''}>全部文档</option>
-                                    ${docGroups.map(g => `<option value="${g.id}" ${currentGroupId === g.id ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}
+                                    ${docGroups.map(g => `<option value="${g.id}" ${currentGroupId === g.id ? 'selected' : ''}>${esc(__tmResolveDocGroupName(g))}</option>`).join('')}
                                 </select>
                             </div>
 
@@ -14675,7 +16185,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         
                         <!-- 移动端菜单按钮 -->
-                            <div class="tm-mobile-menu-btn" style="display:${isMobile ? 'block' : 'none'};margin-left:auto;">
+                            <div class="tm-mobile-menu-btn" style="display:${isMobile ? 'flex' : 'none'};margin-left:auto;">
                             <div style="display:flex;align-items:center;gap:10px;">
                                 <button class="tm-btn tm-btn-info" onclick="tmToggleMobileMenu(event)" ontouchend="tmToggleMobileMenu(event)" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">
                                     <span style="font-size: 16px; transform: translateY(1px); line-height: 1;">☰</span>
@@ -14687,13 +16197,9 @@ async function __tmRefreshAfterWake(reason) {
                     </div>
                     
                     <!-- 桌面端搜索栏 -->
-                    <div class="tm-search-box tm-desktop-toolbar" style="display:${isMobile ? 'none' : 'flex'}; flex-wrap: wrap;">
+                    <div class="tm-search-box tm-desktop-toolbar" style="display:${false ? 'none' : 'flex'}; flex-wrap: wrap;">
                         <div class="tm-view-segmented" role="tablist" aria-label="视图">
-                            <button class="tm-view-seg-item ${state.viewMode === 'list' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('list')" role="tab" aria-selected="${state.viewMode === 'list' ? 'true' : 'false'}" title="表格">表格</button>
-                            <button class="tm-view-seg-item ${state.viewMode === 'timeline' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('timeline')" role="tab" aria-selected="${state.viewMode === 'timeline' ? 'true' : 'false'}" title="时间轴">时间轴</button>
-                            <button class="tm-view-seg-item ${state.viewMode === 'whiteboard' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('whiteboard')" role="tab" aria-selected="${state.viewMode === 'whiteboard' ? 'true' : 'false'}" title="白板">白板</button>
-                            <button class="tm-view-seg-item ${state.viewMode === 'kanban' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('kanban')" role="tab" aria-selected="${state.viewMode === 'kanban' ? 'true' : 'false'}" title="看板">看板</button>
-                            <button class="tm-view-seg-item ${state.viewMode === 'calendar' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('calendar')" oncontextmenu="return tmHandleCalendarViewButtonContextMenu(event)" role="tab" aria-selected="${state.viewMode === 'calendar' ? 'true' : 'false'}" title="日历">日历</button>
+                            ${__tmRenderViewSwitcherButtons()}
                         </div>
                         ${state.viewMode === 'kanban' ? `
                             <div class="tm-view-segmented tm-kanban-mode-segmented" role="tablist" aria-label="看板模式">
@@ -14709,7 +16215,7 @@ async function __tmRefreshAfterWake(reason) {
                         ` : ''}
                         <button class="tm-btn tm-btn-info" onclick="tmRefresh()" style="padding: 4px 10px;" title="刷新">🔄️</button>
                         <button class="tm-btn tm-btn-info" onclick="showSettings()" style="padding: 4px 10px;">⚙️ 设置</button>
-                        ${!isMobile ? `
+                        ${!false ? `
                             <button class="tm-btn tm-btn-info tm-desktop-menu-btn" onclick="tmToggleDesktopMenu(event)" style="padding: 4px 10px; display: flex; align-items: center; gap: 4px;">
                                 <span>☰</span> 菜单
                             </button>
@@ -14723,11 +16229,7 @@ async function __tmRefreshAfterWake(reason) {
                                     <span style="color:var(--tm-text-color);">视图:</span>
                                     <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
                                         <div class="tm-view-segmented" role="tablist" aria-label="视图" style="height:28px; min-width:max-content;">
-                                            <button class="tm-view-seg-item ${state.viewMode === 'list' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('list')" role="tab" aria-selected="${state.viewMode === 'list' ? 'true' : 'false'}" style="line-height:28px; padding:0 10px;">表格</button>
-                                            <button class="tm-view-seg-item ${state.viewMode === 'timeline' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('timeline')" role="tab" aria-selected="${state.viewMode === 'timeline' ? 'true' : 'false'}" style="line-height:28px; padding:0 10px;">时间轴</button>
-                                            <button class="tm-view-seg-item ${state.viewMode === 'whiteboard' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('whiteboard')" role="tab" aria-selected="${state.viewMode === 'whiteboard' ? 'true' : 'false'}" style="line-height:28px; padding:0 10px;">白板</button>
-                                            <button class="tm-view-seg-item ${state.viewMode === 'kanban' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('kanban')" role="tab" aria-selected="${state.viewMode === 'kanban' ? 'true' : 'false'}" style="line-height:28px; padding:0 10px;">看板</button>
-                                            <button class="tm-view-seg-item ${state.viewMode === 'calendar' ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('calendar')" role="tab" aria-selected="${state.viewMode === 'calendar' ? 'true' : 'false'}" style="line-height:28px; padding:0 10px;">日历</button>
+                                            ${__tmRenderViewSwitcherButtons({ compact: true })}
                                         </div>
                                     </div>
                                     ${state.viewMode === 'kanban' ? `
@@ -14743,7 +16245,7 @@ async function __tmRefreshAfterWake(reason) {
                                     <span style="color:var(--tm-text-color);width:60px;">文档:</span>
                                     <select class="tm-rule-select" style="flex:1;" onchange="tmSwitchDocGroup(this.value)">
                                         <option value="all" ${currentGroupId === 'all' ? 'selected' : ''}>全部文档</option>
-                                        ${docGroups.map(g => `<option value="${g.id}" ${currentGroupId === g.id ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}
+                                        ${docGroups.map(g => `<option value="${g.id}" ${currentGroupId === g.id ? 'selected' : ''}>${esc(__tmResolveDocGroupName(g))}</option>`).join('')}
                                     </select>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
@@ -14774,21 +16276,23 @@ async function __tmRefreshAfterWake(reason) {
                                     </button>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
-                                    <button class="tm-btn tm-btn-info" style="flex:1; padding: 6px; opacity:.6; cursor:not-allowed;" disabled title="移动端不启用日历侧边栏">
-                                        ☐ 日历侧边栏（移动端关闭）
-                                    </button>
+                                    <div class="tm-btn tm-btn-info" style="flex:1; padding: 6px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px; opacity:.6; cursor:not-allowed;" title="移动端不启用日历侧边栏" aria-disabled="true">
+                                        <span>日历侧边栏（移动端关闭）</span>
+                                        <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.calendarSideDockEnabled ? 'checked' : ''} disabled>
+                                    </div>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
-                                    <button class="tm-btn tm-btn-info" onclick="tmToggleWhiteboardSequenceMode(); tmHideMobileMenu();" style="flex:1; padding: 6px;">
-                                        ${SettingsStore.data.whiteboardSequenceMode ? '☑' : '☐'} 白板顺序模式
-                                    </button>
+                                    <div class="tm-btn tm-btn-info" style="flex:1; padding: 6px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                                        <span>白板顺序模式</span>
+                                        <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.whiteboardSequenceMode ? 'checked' : ''} onchange="tmToggleWhiteboardSequenceMode(this.checked); tmHideMobileMenu();">
+                                    </div>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px;">
                                      <button class="tm-btn tm-btn-info" onclick="showSettings()" style="flex:1; padding: 6px;">⚙️ 设置</button>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px;">
-                                     <button class="tm-btn tm-btn-info" onclick="tmCollapseAllTasks()" style="flex:1; padding: 6px;">▸ 折叠</button>
-                                     <button class="tm-btn tm-btn-info" onclick="tmExpandAllTasks()" style="flex:1; padding: 6px;">▾ 展开</button>
+                                     <button class="tm-btn tm-btn-info" onclick="tmCollapseAllTasks()" style="flex:1; padding: 6px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(0deg);margin-right:4px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>折叠</button>
+                                     <button class="tm-btn tm-btn-info" onclick="tmExpandAllTasks()" style="flex:1; padding: 6px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(90deg);margin-right:4px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>展开</button>
                                 </div>
                                 ${currentRule ? `<div class="tm-mobile-only-item" style="color:var(--tm-secondary-text);font-size:12px;">当前规则: ${esc(currentRule.name)} (${filteredCount}任务)</div>` : ''}
                             </div>
@@ -15121,6 +16625,11 @@ async function __tmRefreshAfterWake(reason) {
         
         try { if (state.viewMode === 'kanban') __tmBindKanbanPan(state.modal); } catch (e) {}
         __tmGetMountRoot().appendChild(state.modal);
+        try {
+            if (state.viewMode === 'checklist') {
+                __tmRefreshChecklistSelectionInPlace(state.modal);
+            }
+        } catch (e) {}
         try { __tmApplyReminderTaskNameMarks(state.modal); } catch (e) {}
         try { __tmScheduleReminderTaskNameMarksRefresh(state.modal); } catch (e) {}
         try { __tmApplyTodayScheduledTaskNameMarks(state.modal); } catch (e) {}
@@ -15637,7 +17146,7 @@ async function __tmRefreshAfterWake(reason) {
     function __tmShouldShowCalendarSideDock() {
         const mode = String(state.viewMode || '').trim();
         if (!SettingsStore.data.calendarSideDockEnabled) return false;
-        return mode === 'list' || mode === 'timeline' || mode === 'kanban' || mode === 'whiteboard';
+        return mode === 'list' || mode === 'checklist' || mode === 'timeline' || mode === 'kanban' || mode === 'whiteboard';
     }
 
     function __tmCalendarDockGetDateKey() {
@@ -15688,6 +17197,7 @@ async function __tmRefreshAfterWake(reason) {
             if (!(modal instanceof Element)) return null;
             if (state.viewMode === 'timeline') return modal.querySelector('#tmTimelineLeftTable tbody');
             if (state.viewMode === 'kanban') return modal.querySelector('.tm-body.tm-body--kanban');
+            if (state.viewMode === 'checklist') return modal.querySelector('.tm-checklist-items');
             return modal.querySelector('#tmTaskTable tbody');
         })();
         const ok = globalThis.__tmCalendar.mountSideDayTimeline(timelineRoot, {
@@ -15783,8 +17293,7 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmSwitchViewMode = function(mode) {
-        const allow = new Set(['list', 'timeline', 'kanban', 'calendar', 'whiteboard']);
-        const next = allow.has(String(mode || '').trim()) ? String(mode || '').trim() : 'list';
+        const next = __tmGetSafeViewMode(mode);
         if (state.viewMode === next) return;
         state.viewMode = next;
         state.uiAnimKind = '';
@@ -19211,7 +20720,7 @@ async function __tmRefreshAfterWake(reason) {
             const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
             groups.forEach((g) => {
                 const gid = String(g?.id || '').trim();
-                const docs = Array.isArray(g?.docs) ? g.docs : [];
+                const docs = __tmNormalizeGroupDocEntries(g);
                 if (!gid) return;
                 docs.forEach((d) => {
                     const did = String((typeof d === 'object' ? d?.id : d) || '').trim();
@@ -19280,7 +20789,7 @@ async function __tmRefreshAfterWake(reason) {
             const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
             groups.forEach((g) => {
                 const gid = String(g?.id || '').trim();
-                const docs = Array.isArray(g?.docs) ? g.docs : [];
+                const docs = __tmNormalizeGroupDocEntries(g);
                 if (!gid) return;
                 docs.forEach((d) => {
                     const did = String(d?.id || '').trim();
@@ -19350,31 +20859,17 @@ async function __tmRefreshAfterWake(reason) {
             const targetDocs = [];
             legacyIds.forEach((id) => {
                 const did = String(id || '').trim();
-                if (did) targetDocs.push({ id: did, recursive: false });
+                if (did) targetDocs.push({ id: did, kind: 'doc', recursive: false });
             });
             groups.forEach((g) => {
-                const docs = Array.isArray(g?.docs) ? g.docs : [];
-                docs.forEach((d) => {
-                    const did = String((typeof d === 'object' ? d?.id : d) || '').trim();
-                    if (!did) return;
-                    targetDocs.push({ id: did, recursive: !!(typeof d === 'object' && d && d.recursive) });
-                });
+                targetDocs.push(...__tmGetGroupSourceEntries(g));
             });
             const finalIds = new Set();
             if (quickAddDocId && quickAddDocId !== '__dailyNote__') finalIds.add(quickAddDocId);
-            await Promise.all(targetDocs.map(async (doc) => {
-                if (!doc || !doc.id) return;
-                finalIds.add(doc.id);
-                if (doc.recursive && API && typeof API.getSubDocIds === 'function') {
-                    try {
-                        const subIds = await API.getSubDocIds(doc.id);
-                        (Array.isArray(subIds) ? subIds : []).forEach((sid) => {
-                            const s = String(sid || '').trim();
-                            if (s) finalIds.add(s);
-                        });
-                    } catch (e) {}
-                }
-            }));
+            await Promise.all(targetDocs.map((doc) => __tmExpandSourceEntryDocIds(doc, (sid) => {
+                const s = String(sid || '').trim();
+                if (s) finalIds.add(s);
+            })));
             return Array.from(finalIds);
         };
 
@@ -19413,12 +20908,10 @@ async function __tmRefreshAfterWake(reason) {
             for (const g of groups) {
                 const gid = String(g?.id || '').trim();
                 if (!gid) continue;
-                const docs = Array.isArray(g?.docs) ? g.docs : [];
-                const ds = docs.map((d) => {
-                    const did = String((typeof d === 'object' ? d?.id : d) || '').trim();
-                    const rec = !!(typeof d === 'object' && d && d.recursive);
+                const ds = __tmGetGroupSourceEntries(g).map((d) => {
+                    const did = String(d?.id || '').trim();
                     if (!did) return '';
-                    return did + (rec ? '*' : '');
+                    return did + (d.kind === 'notebook' ? '#nb' : (d.recursive ? '*' : ''));
                 }).filter(Boolean);
                 parts.push(`${gid}:${ds.join(',')}`);
             }
@@ -19430,22 +20923,13 @@ async function __tmRefreshAfterWake(reason) {
             for (const g of groups) {
                 const gid = String(g?.id || '').trim();
                 if (!gid) continue;
-                const docs = Array.isArray(g?.docs) ? g.docs : [];
-                for (const d of docs) {
-                    const did = String((typeof d === 'object' ? d?.id : d) || '').trim();
-                    const rec = !!(typeof d === 'object' && d && d.recursive);
-                    if (!did) continue;
-                    if (!map.has(did)) map.set(did, gid);
-                    if (rec && API && typeof API.getSubDocIds === 'function') {
-                        try {
-                            const subIds = await API.getSubDocIds(did);
-                            (Array.isArray(subIds) ? subIds : []).forEach((sid) => {
-                                const s = String(sid || '').trim();
-                                if (!s) return;
-                                if (!map.has(s)) map.set(s, gid);
-                            });
-                        } catch (e) {}
-                    }
+                const entries = __tmGetGroupSourceEntries(g);
+                for (const entry of entries) {
+                    await __tmExpandSourceEntryDocIds(entry, (did0) => {
+                        const did = String(did0 || '').trim();
+                        if (!did || map.has(did)) return;
+                        map.set(did, gid);
+                    });
                 }
             }
 
@@ -19563,12 +21047,10 @@ async function __tmRefreshAfterWake(reason) {
             for (const g of groups) {
                 const gid = String(g?.id || '').trim();
                 if (!gid) continue;
-                const docs = Array.isArray(g?.docs) ? g.docs : [];
-                const ds = docs.map((d) => {
-                    const did = String((typeof d === 'object' ? d?.id : d) || '').trim();
-                    const rec = !!(typeof d === 'object' && d && d.recursive);
+                const ds = __tmGetGroupSourceEntries(g).map((d) => {
+                    const did = String(d?.id || '').trim();
                     if (!did) return '';
-                    return did + (rec ? '*' : '');
+                    return did + (d.kind === 'notebook' ? '#nb' : (d.recursive ? '*' : ''));
                 }).filter(Boolean);
                 parts.push(`${gid}:${ds.join(',')}`);
             }
@@ -19586,7 +21068,7 @@ async function __tmRefreshAfterWake(reason) {
                 const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
                 groups.forEach((g) => {
                     const gid = String(g?.id || '').trim();
-                    const docs = Array.isArray(g?.docs) ? g.docs : [];
+                    const docs = __tmNormalizeGroupDocEntries(g);
                     if (!gid) return;
                     docs.forEach((d) => {
                         const did = String((typeof d === 'object' ? d?.id : d) || '').trim();
@@ -19605,7 +21087,7 @@ async function __tmRefreshAfterWake(reason) {
                 for (const g of groups) {
                     const gId = String(g?.id || '').trim();
                     if (!gId) continue;
-                    const docs = Array.isArray(g?.docs) ? g.docs : [];
+                    const docs = __tmNormalizeGroupDocEntries(g);
                     const hit = docs.some((d) => String((typeof d === 'object' ? d?.id : d) || '').trim() === docId);
                     if (hit) {
                         gid = gId;
@@ -19644,12 +21126,10 @@ async function __tmRefreshAfterWake(reason) {
         for (const g of groups) {
             const gid = String(g?.id || '').trim();
             if (!gid) continue;
-            const docs = Array.isArray(g?.docs) ? g.docs : [];
-            const ds = docs.map((d) => {
-                const did = String((typeof d === 'object' ? d?.id : d) || '').trim();
-                const rec = !!(typeof d === 'object' && d && d.recursive);
+            const ds = __tmGetGroupSourceEntries(g).map((d) => {
+                const did = String(d?.id || '').trim();
                 if (!did) return '';
-                return did + (rec ? '*' : '');
+                return did + (d.kind === 'notebook' ? '#nb' : (d.recursive ? '*' : ''));
             }).filter(Boolean);
             parts.push(`${gid}:${ds.join(',')}`);
         }
@@ -19661,22 +21141,13 @@ async function __tmRefreshAfterWake(reason) {
         for (const g of groups) {
             const gid = String(g?.id || '').trim();
             if (!gid) continue;
-            const docs = Array.isArray(g?.docs) ? g.docs : [];
-            for (const d of docs) {
-                const did = String((typeof d === 'object' ? d?.id : d) || '').trim();
-                const rec = !!(typeof d === 'object' && d && d.recursive);
-                if (!did) continue;
-                if (!map.has(did)) map.set(did, gid);
-                if (rec && API && typeof API.getSubDocIds === 'function') {
-                    try {
-                        const subIds = await API.getSubDocIds(did);
-                        (Array.isArray(subIds) ? subIds : []).forEach((sid) => {
-                            const s = String(sid || '').trim();
-                            if (!s) return;
-                            if (!map.has(s)) map.set(s, gid);
-                        });
-                    } catch (e) {}
-                }
+            const entries = __tmGetGroupSourceEntries(g);
+            for (const entry of entries) {
+                await __tmExpandSourceEntryDocIds(entry, (did0) => {
+                    const did = String(did0 || '').trim();
+                    if (!did || map.has(did)) return;
+                    map.set(did, gid);
+                });
             }
         }
         window.__tmCalendarDocsToGroupCache = { key, map };
@@ -20500,11 +21971,17 @@ async function __tmRefreshAfterWake(reason) {
         menu.innerHTML = `
             <button class="tm-btn tm-btn-info" onclick="tmShowSearchModal(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;">🔍 搜索${state.searchKeyword ? ` (${String(state.searchKeyword || '').trim()})` : ''}</button>
             <button class="tm-btn tm-btn-info" onclick="tmShowSummaryModal(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;">📝 摘要</button>
-            <button class="tm-btn tm-btn-info" onclick="tmToggleCalendarSideDock(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;">${SettingsStore.data.calendarSideDockEnabled ? '☑' : '☐'} 日历侧边栏</button>
+            <div class="tm-btn tm-btn-info" style="text-align:left; padding: 6px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span>日历侧边栏</span>
+                <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.calendarSideDockEnabled ? 'checked' : ''} onchange="tmToggleCalendarSideDock(this.checked); document.getElementById('tmDesktopMenu').remove()">
+            </div>
             ${state.searchKeyword ? `<button class="tm-btn tm-btn-secondary" onclick="tmSearch(''); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;">清除搜索</button>` : ''}
-            <button class="tm-btn tm-btn-info" onclick="tmToggleWhiteboardSequenceMode(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;">${SettingsStore.data.whiteboardSequenceMode ? '☑' : '☐'} 白板顺序模式</button>
-            <button class="tm-btn tm-btn-info" onclick="tmCollapseAllTasks(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;">▸ 全部折叠</button>
-            <button class="tm-btn tm-btn-info" onclick="tmExpandAllTasks(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;">▾ 全部展开</button>
+            <div class="tm-btn tm-btn-info" style="text-align:left; padding: 6px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span>白板顺序模式</span>
+                <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.whiteboardSequenceMode ? 'checked' : ''} onchange="tmToggleWhiteboardSequenceMode(this.checked); document.getElementById('tmDesktopMenu').remove()">
+            </div>
+            <button class="tm-btn tm-btn-info" onclick="tmCollapseAllTasks(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(0deg);margin-right:6px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>全部折叠</button>
+            <button class="tm-btn tm-btn-info" onclick="tmExpandAllTasks(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(90deg);margin-right:6px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>全部展开</button>
         `;
         
         // 点击外部关闭
@@ -21961,6 +23438,24 @@ async function __tmRefreshAfterWake(reason) {
 
     let __tmCellEditorState = null;
 
+    function __tmRefreshMainViewInPlace(options = {}) {
+        const withFilters = !(options && options.withFilters === false);
+        if (withFilters) applyFilters();
+        if (!state.modal || !document.body.contains(state.modal)) {
+            render();
+            return;
+        }
+        if (state.viewMode === 'timeline') {
+            if (!__tmRerenderTimelineInPlace(state.modal)) render();
+            return;
+        }
+        if (state.viewMode !== 'calendar' && state.viewMode !== 'kanban' && state.viewMode !== 'whiteboard' && state.viewMode !== 'checklist') {
+            if (!__tmRerenderListInPlace(state.modal)) render();
+            return;
+        }
+        render();
+    }
+
     function __tmCloseCellEditor(shouldRerender) {
         const last = __tmCellEditorState;
         if (__tmCellEditorState?.cleanup) {
@@ -21968,8 +23463,7 @@ async function __tmRefreshAfterWake(reason) {
         }
         __tmCellEditorState = null;
         if (shouldRerender) {
-            applyFilters();
-            render();
+            __tmRefreshMainViewInPlace({ withFilters: true });
         }
     }
 
@@ -22407,8 +23901,7 @@ async function __tmRefreshAfterWake(reason) {
                     task.priority = next;
                     __tmPersistMetaAndAttrs(id, { priority: next });
                     close();
-                    applyFilters();
-                    render();
+                    __tmRefreshMainViewInPlace({ withFilters: true });
                     hint('✅ 优先级已更新', 'success');
                 } catch (e) {
                     hint(`❌ 更新失败: ${e.message}`, 'error');
@@ -22433,8 +23926,7 @@ async function __tmRefreshAfterWake(reason) {
                     task.duration = next;
                     __tmPersistMetaAndAttrs(id, { duration: next });
                     close();
-                    applyFilters();
-                    render();
+                    __tmRefreshMainViewInPlace({ withFilters: true });
                     hint('✅ 时长已更新', 'success');
                 } catch (e) {
                     hint(`❌ 更新失败: ${e.message}`, 'error');
@@ -22462,8 +23954,7 @@ async function __tmRefreshAfterWake(reason) {
                     task.remark = next;
                     __tmPersistMetaAndAttrs(id, { remark: next });
                     close();
-                    applyFilters();
-                    render();
+                    __tmRefreshMainViewInPlace({ withFilters: true });
                     hint('✅ 备注已更新', 'success');
                 } catch (e) {
                     hint(`❌ 更新失败: ${e.message}`, 'error');
@@ -22493,8 +23984,7 @@ async function __tmRefreshAfterWake(reason) {
                     task.completionTime = '';
                     __tmPersistMetaAndAttrs(id, { completionTime: '' });
                     close();
-                    applyFilters();
-                    render();
+                    __tmRefreshMainViewInPlace({ withFilters: true });
                     hint('✅ 完成日期已清空', 'success');
                 } catch (e) {
                     hint(`❌ 更新失败: ${e.message}`, 'error');
@@ -22508,8 +23998,7 @@ async function __tmRefreshAfterWake(reason) {
                     task.completionTime = next;
                     __tmPersistMetaAndAttrs(id, { completionTime: next });
                     close();
-                    applyFilters();
-                    render();
+                    __tmRefreshMainViewInPlace({ withFilters: true });
                     hint('✅ 完成日期已更新', 'success');
                 } catch (e) {
                     hint(`❌ 更新失败: ${e.message}`, 'error');
@@ -22665,6 +24154,83 @@ async function __tmRefreshAfterWake(reason) {
         });
     };
 
+    window.tmPickTaskDocInline = async function(id, el, ev) {
+        try {
+            ev?.stopPropagation?.();
+            ev?.preventDefault?.();
+        } catch (e) {}
+        const tid = String(id || '').trim();
+        if (!tid) return;
+        const task = state.flatTasks[tid];
+        if (!task) return;
+        const currentDocId = String(task.docId || task.root_id || '').trim();
+        const docs = __tmGetVisibleDocTabsForCurrentGroup()
+            .filter(doc => String(doc.id || '').trim() && String(doc.id || '').trim() !== currentDocId);
+        if (!docs.length) {
+            hint('⚠ 当前分组页签内没有可移动到的其他文档', 'warning');
+            return;
+        }
+
+        const saveDoc = async (nextDocId, close) => {
+            const nextId = String(nextDocId || '').trim();
+            if (!nextId || nextId === currentDocId) {
+                close?.();
+                return;
+            }
+            try {
+                hint('🔄 正在移动任务...', 'info');
+                await __tmMoveTaskToDocTop(tid, nextId, { silentHint: true, clearHeading: true });
+                close?.();
+                await loadSelectedDocuments();
+                hint('✅ 任务已移动到目标文档顶部', 'success');
+            } catch (e) {
+                hint(`❌ 移动失败: ${e.message}`, 'error');
+            }
+        };
+
+        const anchorEl = (el instanceof Element)
+            ? el
+            : (ev?.currentTarget instanceof Element ? ev.currentTarget : null);
+
+        if (!(anchorEl instanceof Element)) {
+            const next = await showSelectPrompt('选择目标文档', docs.map(doc => ({
+                value: doc.id,
+                label: doc.name,
+            })), '');
+            if (next == null) return;
+            await saveDoc(next, null);
+            return;
+        }
+
+        __tmOpenInlineEditor(anchorEl, ({ editor, close }) => {
+            const maxLen = docs.reduce((m, doc) => Math.max(m, String(doc?.name || '').trim().length), 6);
+            const w = Math.min(320, Math.max(160, maxLen * 12 + 36));
+            editor.style.minWidth = '0';
+            editor.style.width = `${w}px`;
+            editor.style.padding = '8px';
+            const wrap = document.createElement('div');
+            wrap.style.display = 'flex';
+            wrap.style.flexDirection = 'column';
+            wrap.style.gap = '4px';
+            docs.forEach((doc) => {
+                const btn = document.createElement('button');
+                btn.className = 'tm-btn tm-btn-secondary';
+                btn.style.padding = '6px 8px';
+                btn.style.fontSize = '12px';
+                btn.style.textAlign = 'left';
+                btn.style.justifyContent = 'flex-start';
+                btn.style.display = 'block';
+                btn.style.width = '100%';
+                btn.textContent = String(doc?.name || '').trim() || '未命名文档';
+                btn.onclick = async () => {
+                    await saveDoc(String(doc?.id || '').trim(), close);
+                };
+                wrap.appendChild(btn);
+            });
+            editor.appendChild(wrap);
+        });
+    };
+
     window.tmEditPriority = async function(id) {
         const task = state.flatTasks[id];
         if (!task) return;
@@ -22678,8 +24244,7 @@ async function __tmRefreshAfterWake(reason) {
         try {
             task.priority = next;
             __tmPersistMetaAndAttrs(id, { priority: next });
-            applyFilters();
-            render();
+            __tmRefreshMainViewInPlace({ withFilters: true });
             hint('✅ 优先级已更新', 'success');
         } catch (e) {
             hint(`❌ 更新失败: ${e.message}`, 'error');
@@ -22694,8 +24259,7 @@ async function __tmRefreshAfterWake(reason) {
         try {
             task.duration = next;
             __tmPersistMetaAndAttrs(id, { duration: String(next || '').trim() });
-            applyFilters();
-            render();
+            __tmRefreshMainViewInPlace({ withFilters: true });
             hint('✅ 时长已更新', 'success');
         } catch (e) {
             hint(`❌ 更新失败: ${e.message}`, 'error');
@@ -23479,6 +25043,331 @@ async function __tmRefreshAfterWake(reason) {
         return rows;
     }
 
+    function __tmResolveFirstVisibleTaskIdFromRowModel(rowModel) {
+        const rows = Array.isArray(rowModel) ? rowModel : [];
+        const firstTask = rows.find((row) => row?.type === 'task' && String(row?.id || '').trim());
+        return String(firstTask?.id || '').trim();
+    }
+
+    function __tmBuildTaskDetailInnerHtml(task, options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const embedded = !!opts.embedded;
+        const title = embedded ? '任务详情' : '任务详情';
+        const statusOptionsRaw = Array.isArray(SettingsStore.data.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
+        const statusOptions = statusOptionsRaw
+            .map((o) => ({ id: String(o?.id || '').trim(), name: String(o?.name || '').trim() }))
+            .filter((o) => o.id);
+        if (!statusOptions.some((o) => o.id === 'todo')) statusOptions.unshift({ id: 'todo', name: '待办' });
+        const curStatus = String(task?.customStatus || '').trim() || 'todo';
+        const curPriority = String(task?.priority || '').trim().toLowerCase();
+        const curPinned = !!task?.pinned;
+        const docName = String(task?.docName || '').trim();
+        const headingName = String(task?.h2 || task?.h2Name || '').trim();
+        return `
+            <div class="${embedded ? 'tm-checklist-detail-card' : 'tm-task-detail'}" role="dialog" aria-modal="${embedded ? 'false' : 'true'}">
+                <div class="${embedded ? 'tm-checklist-detail-head' : ''}" style="${embedded ? '' : 'display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;'}">
+                    <div class="${embedded ? 'tm-checklist-detail-title' : ''}" style="${embedded ? '' : 'font-size:16px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'}">${title}</div>
+                    ${embedded ? `
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <button class="tm-btn tm-btn-info" data-tm-detail="jump" style="padding:0 10px;height:30px;">跳转</button>
+                        </div>
+                    ` : `
+                        <button class="tm-btn tm-btn-gray" data-tm-detail="close" style="padding:0 10px;height:30px;display:inline-flex;align-items:center;justify-content:center;">✖</button>
+                    `}
+                </div>
+
+                ${(docName || headingName) ? `
+                    <div class="tm-task-detail-row">
+                        <div class="tm-task-detail-label">位置</div>
+                        <div class="tm-task-detail-value" style="display:flex;flex-wrap:wrap;gap:6px;">
+                            ${docName ? `<button type="button" class="tm-checklist-meta-chip" data-tm-detail="location-doc" title="点击切换文档" style="border:none;cursor:pointer;">📄 ${esc(docName)}</button>` : ''}
+                            ${headingName ? `<button type="button" class="tm-checklist-meta-chip" data-tm-detail="location-heading" title="点击切换标题" style="border:none;cursor:pointer;">🧩 ${esc(headingName)}</button>` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="tm-task-detail-row">
+                    <div class="tm-task-detail-label">内容</div>
+                    <div class="tm-task-detail-value">
+                        <textarea class="tm-input tm-checklist-detail-textarea" data-tm-detail="content">${esc(task?.content || '')}</textarea>
+                    </div>
+                </div>
+
+                <div class="tm-task-detail-row">
+                    <div class="tm-task-detail-label">状态</div>
+                    <div class="tm-task-detail-value">
+                        <select class="tm-rule-select" data-tm-detail="status">
+                            ${statusOptions.map((o) => `<option value="${esc(o.id)}" ${o.id === curStatus ? 'selected' : ''}>${esc(o.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="tm-task-detail-row">
+                    <div class="tm-task-detail-label">重要性</div>
+                    <div class="tm-task-detail-value">
+                        <select class="tm-rule-select" data-tm-detail="priority">
+                            <option value="" ${!curPriority ? 'selected' : ''}>无</option>
+                            <option value="high" ${curPriority === 'high' ? 'selected' : ''}>高</option>
+                            <option value="medium" ${curPriority === 'medium' ? 'selected' : ''}>中</option>
+                            <option value="low" ${curPriority === 'low' ? 'selected' : ''}>低</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="tm-task-detail-row">
+                    <div class="tm-task-detail-label">置顶</div>
+                    <div class="tm-task-detail-value">
+                        <label style="display:inline-flex;align-items:center;gap:8px;">
+                            <input type="checkbox" data-tm-detail="pinned" ${curPinned ? 'checked' : ''}>
+                            <span style="color:var(--tm-secondary-text);font-size:12px;">在列表/看板中置顶</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="tm-task-detail-row">
+                    <div class="tm-task-detail-label">开始日期</div>
+                    <div class="tm-task-detail-value">
+                        <input class="tm-input" type="date" data-tm-detail="startDate" value="${esc(String(task?.startDate || '').trim().slice(0, 10))}">
+                    </div>
+                </div>
+
+                <div class="tm-task-detail-row">
+                    <div class="tm-task-detail-label">完成日期</div>
+                    <div class="tm-task-detail-value">
+                        <input class="tm-input" type="date" data-tm-detail="completionTime" value="${esc(String(task?.completionTime || '').trim().slice(0, 10))}">
+                    </div>
+                </div>
+
+                <div class="tm-task-detail-row">
+                    <div class="tm-task-detail-label">时长</div>
+                    <div class="tm-task-detail-value">
+                        <input class="tm-input" data-tm-detail="duration" placeholder="如 1h / 30min" value="${esc(task?.duration || '')}">
+                    </div>
+                </div>
+
+                <div class="tm-task-detail-row">
+                    <div class="tm-task-detail-label">备注</div>
+                    <div class="tm-task-detail-value">
+                        <textarea class="tm-input" data-tm-detail="remark" style="width:100%;min-height:88px;resize:vertical;">${esc(task?.remark || '')}</textarea>
+                    </div>
+                </div>
+
+                <div class="tm-task-detail-actions">
+                    ${embedded ? '' : `<button class="tm-btn tm-btn-secondary" data-tm-detail="cancel" style="padding:0 12px;height:32px;">取消</button>`}
+                    <button class="tm-btn tm-btn-primary" data-tm-detail="save" style="padding:0 12px;height:32px;">保存</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function __tmBindTaskDetailEditor(root, taskId, options = {}) {
+        if (!(root instanceof Element)) return;
+        const opts = (options && typeof options === 'object') ? options : {};
+        const embedded = !!opts.embedded;
+        const onClose = typeof opts.onClose === 'function' ? opts.onClose : null;
+        const close = () => { if (onClose) onClose(); };
+        let autoSaveTimer = null;
+        let saving = false;
+        let lastSerialized = '';
+        const bindDatePickers = () => {
+            try {
+                const dateInputs = root.querySelectorAll('input[type="date"][data-tm-detail]');
+                dateInputs.forEach((inp) => {
+                    inp.addEventListener('click', () => { try { inp.showPicker?.(); } catch (e) {} });
+                });
+            } catch (e) {}
+        };
+        bindDatePickers();
+        root.querySelector('[data-tm-detail="close"]')?.addEventListener('click', close);
+        root.querySelector('[data-tm-detail="cancel"]')?.addEventListener('click', close);
+        root.querySelector('[data-tm-detail="jump"]')?.addEventListener('click', (ev) => {
+            try { ev.preventDefault(); } catch (e) {}
+            try { tmJumpToTask(taskId, ev); } catch (e) {}
+        });
+        root.querySelector('[data-tm-detail="location-doc"]')?.addEventListener('click', (ev) => {
+            try { ev.preventDefault(); } catch (e) {}
+            try { ev.stopPropagation(); } catch (e) {}
+            try { tmPickTaskDocInline(taskId, ev.currentTarget, ev); } catch (e) {}
+        });
+        root.querySelector('[data-tm-detail="location-heading"]')?.addEventListener('click', (ev) => {
+            try { ev.preventDefault(); } catch (e) {}
+            try { ev.stopPropagation(); } catch (e) {}
+            try { tmPickHeadingInline(taskId, ev.currentTarget, ev); } catch (e) {}
+        });
+        root.querySelector('[data-tm-detail="editPrompt"]')?.addEventListener('click', (ev) => {
+            try { ev.preventDefault(); } catch (e) {}
+            try { tmEdit(taskId); } catch (e) {}
+        });
+        const collectFormState = () => {
+            const task = state.flatTasks?.[String(taskId || '').trim()];
+            const normalize = (s) => {
+                const v = String(s || '').trim();
+                if (!v) return '';
+                try { if (typeof __tmNormalizeDateOnly === 'function') return __tmNormalizeDateOnly(v); } catch (e) {}
+                return v;
+            };
+            const nextContent = String(root.querySelector('[data-tm-detail="content"]')?.value || '').trim();
+            const nextStatus = String(root.querySelector('[data-tm-detail="status"]')?.value || '').trim() || 'todo';
+            const nextPriority = String(root.querySelector('[data-tm-detail="priority"]')?.value || '').trim();
+            const nextPinned = !!root.querySelector('[data-tm-detail="pinned"]')?.checked;
+            const nextStart = normalize(root.querySelector('[data-tm-detail="startDate"]')?.value);
+            const nextEnd = normalize(root.querySelector('[data-tm-detail="completionTime"]')?.value);
+            const nextDuration = String(root.querySelector('[data-tm-detail="duration"]')?.value || '').trim();
+            const nextRemark = String(root.querySelector('[data-tm-detail="remark"]')?.value || '').trim();
+            return {
+                task,
+                nextContent,
+                nextStatus,
+                nextPriority,
+                nextPinned,
+                nextStart,
+                nextEnd,
+                nextDuration,
+                nextRemark
+            };
+        };
+        const doSave = async (showHint = true) => {
+            const {
+                task,
+                nextContent,
+                nextStatus,
+                nextPriority,
+                nextPinned,
+                nextStart,
+                nextEnd,
+                nextDuration,
+                nextRemark
+            } = collectFormState();
+            if (!task) {
+                if (showHint) hint('⚠️ 未找到任务数据，无法保存', 'warning');
+                return false;
+            }
+            if (!nextContent) {
+                if (showHint) hint('⚠️ 任务内容不能为空', 'warning');
+                return false;
+            }
+            const serialized = JSON.stringify([nextContent, nextStatus, nextPriority, nextPinned, nextStart, nextEnd, nextDuration, nextRemark]);
+            if (serialized === lastSerialized && !showHint) return true;
+            if (saving) return false;
+            saving = true;
+
+            try {
+                if (nextContent !== String(task.content || '')) {
+                    const prefix = String(task.markdown || '').match(/^(\s*[\*\-]\s*\[[ xX]?\])\s*/)?.[1]
+                        || String(task.markdown || '').match(/^(\s*[\*\-]\s*\[[xX ]\])\s*/)?.[1]
+                        || '- [ ]';
+                    const newMarkdown = `${prefix} ${nextContent}`.trim();
+                    await API.updateBlock(task.id, newMarkdown);
+                    task.content = nextContent;
+                    task.markdown = newMarkdown;
+                }
+                const patch = {
+                    customStatus: nextStatus,
+                    priority: nextPriority,
+                    pinned: nextPinned ? '1' : '',
+                    startDate: nextStart,
+                    completionTime: nextEnd,
+                    duration: nextDuration,
+                    remark: nextRemark
+                };
+                task.customStatus = nextStatus;
+                task.priority = nextPriority;
+                task.pinned = nextPinned;
+                task.startDate = nextStart;
+                task.completionTime = nextEnd;
+                task.duration = nextDuration;
+                task.remark = nextRemark;
+                await __tmPersistMetaAndAttrsAsync(task.id, patch);
+                lastSerialized = serialized;
+                try { applyFilters(); } catch (e) {}
+                if (String(state.viewMode || '').trim() === 'checklist' && embedded) {
+                    if (showHint) {
+                        try { __tmRefreshChecklistSelectionInPlace(state.modal); } catch (e) {}
+                    }
+                } else {
+                    render();
+                }
+                if (showHint) hint('✅ 已保存', 'success');
+                if (!embedded) close();
+                return true;
+            } catch (e) {
+                if (showHint) hint(`❌ 保存失败: ${e.message}`, 'error');
+                return false;
+            } finally {
+                saving = false;
+            }
+        };
+        root.querySelector('[data-tm-detail="save"]')?.addEventListener('click', async () => {
+            if (autoSaveTimer) {
+                try { clearTimeout(autoSaveTimer); } catch (e) {}
+                autoSaveTimer = null;
+            }
+            await doSave(true);
+        });
+        lastSerialized = (() => {
+            try {
+                const s = collectFormState();
+                return JSON.stringify([s.nextContent, s.nextStatus, s.nextPriority, s.nextPinned, s.nextStart, s.nextEnd, s.nextDuration, s.nextRemark]);
+            } catch (e) {
+                return '';
+            }
+        })();
+        const scheduleAutoSave = () => {
+            if (autoSaveTimer) {
+                try { clearTimeout(autoSaveTimer); } catch (e) {}
+            }
+            autoSaveTimer = setTimeout(() => {
+                autoSaveTimer = null;
+                doSave(false).catch(() => null);
+            }, 600);
+        };
+        root.querySelectorAll('[data-tm-detail]').forEach((el) => {
+            if (!(el instanceof HTMLElement)) return;
+            if (String(el.getAttribute('data-tm-detail') || '').trim() === 'save') return;
+            if (el.matches('textarea,input[type="text"],input[type="date"],select')) {
+                el.addEventListener('input', scheduleAutoSave);
+                el.addEventListener('change', scheduleAutoSave);
+                el.addEventListener('blur', scheduleAutoSave);
+            } else if (el.matches('input[type="checkbox"]')) {
+                el.addEventListener('change', scheduleAutoSave);
+            }
+        });
+    }
+
+    function __tmRefreshChecklistSelectionInPlace(modalEl) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) return false;
+        if (String(state.viewMode || '').trim() !== 'checklist') return false;
+        const selectedId = String(state.detailTaskId || '').trim();
+        const sheetMode = __tmChecklistUseSheetMode(modal);
+        const items = modal.querySelectorAll('.tm-checklist-item[data-id]');
+        items.forEach((item) => {
+            if (!(item instanceof HTMLElement)) return;
+            const id = String(item.getAttribute('data-id') || '').trim();
+            item.classList.toggle('tm-checklist-item--active', !!selectedId && id === selectedId);
+        });
+        const panel = modal.querySelector(sheetMode ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+        if (!(panel instanceof HTMLElement)) return false;
+        const task = selectedId ? (state.flatTasks?.[selectedId] || null) : null;
+        panel.innerHTML = task
+            ? __tmBuildTaskDetailInnerHtml(task, { embedded: true })
+            : `<div class="tm-checklist-empty-detail">选择左侧任务后，这里会显示可编辑的详情。</div>`;
+        if (task) __tmBindTaskDetailEditor(panel, selectedId, { embedded: true });
+        const backdrop = modal.querySelector('#tmChecklistSheetBackdrop');
+        const sheet = modal.querySelector('#tmChecklistSheet');
+        if (backdrop instanceof HTMLElement) backdrop.classList.toggle('tm-checklist-sheet-backdrop--open', !!(sheetMode && state.checklistDetailSheetOpen && task));
+        if (sheet instanceof HTMLElement) sheet.classList.toggle('tm-checklist-sheet--open', !!(sheetMode && state.checklistDetailSheetOpen && task));
+        return true;
+    }
+
+    function __tmChecklistUseSheetMode(modalEl) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        const modalWidth = Number(modal?.clientWidth || 0);
+        if (__tmIsMobileDevice()) return true;
+        if (modalWidth > 0) return modalWidth <= 960;
+        return (Number(window.innerWidth || 0) > 0) ? window.innerWidth <= 960 : false;
+    }
+
 // 渲染任务列表（支持跨文档全局排序）
     function renderTaskList() {
         if (state.filteredTasks.length === 0) {
@@ -23531,6 +25420,55 @@ async function __tmRefreshAfterWake(reason) {
             const bts = Number(bi?.ts || 0);
             if (ats !== bts) return ats - bts;
             return getTaskOrder(String(a?.id || '')) - getTaskOrder(String(b?.id || ''));
+        };
+        const resolvePinnedTaskGroupBg = (task) => {
+            if (!enableGroupBg || !task) return '';
+            if (state.groupByDocName || state.groupByTaskName || (!state.groupByDocName && !state.groupByTime && !state.quadrantEnabled)) {
+                const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
+                return taskDocColor ? (__tmGroupBgFromLabelColor(taskDocColor, isDark) || '') : '';
+            }
+            if (state.groupByTime) {
+                const info = getTimePriorityInfo(task);
+                const diffDays = Number(info?.diffDays);
+                const groupInfo = !Number.isFinite(diffDays)
+                    ? { key: 'pending', sortValue: Number.POSITIVE_INFINITY }
+                    : (diffDays < 0
+                        ? { key: 'overdue', sortValue: diffDays }
+                        : { key: `days_${diffDays}`, sortValue: diffDays });
+                return __tmGroupBgFromLabelColor(__tmGetTimeGroupLabelColor(groupInfo), isDark) || '';
+            }
+            if (state.quadrantEnabled) {
+                const quadrantRules = (SettingsStore.data.quadrantConfig && SettingsStore.data.quadrantConfig.rules) || [];
+                const priority = String(task.priority || '').toLowerCase();
+                const importance = (priority === 'a' || priority === '高' || priority === 'high')
+                    ? 'high'
+                    : ((priority === 'b' || priority === '中' || priority === 'medium')
+                        ? 'medium'
+                        : ((priority === 'c' || priority === '低' || priority === 'low') ? 'low' : 'none'));
+                const diffDays = Number(getTimePriorityInfo(task)?.diffDays);
+                const timeRange = !Number.isFinite(diffDays)
+                    ? 'nodate'
+                    : (diffDays < 0 ? 'overdue' : (diffDays <= 7 ? 'within7days' : (diffDays <= 15 ? 'within15days' : (diffDays <= 30 ? 'within30days' : 'beyond30days'))));
+                let ruleColor = '';
+                for (const rule of quadrantRules) {
+                    const importanceMatch = Array.isArray(rule?.importance) && rule.importance.includes(importance);
+                    let timeRangeMatch = Array.isArray(rule?.timeRanges) && rule.timeRanges.includes(timeRange);
+                    if (!timeRangeMatch && Array.isArray(rule?.timeRanges)) {
+                        for (const range of rule.timeRanges) {
+                            if (!String(range || '').startsWith('beyond') || range === 'beyond30days') continue;
+                            const days = parseInt(String(range).replace('beyond', '').replace('days', ''), 10);
+                            if (!Number.isNaN(days) && diffDays > days) { timeRangeMatch = true; break; }
+                        }
+                    }
+                    if (importanceMatch && timeRangeMatch) {
+                        const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
+                        ruleColor = colorMap[String(rule?.color || '')] || 'var(--tm-text-color)';
+                        break;
+                    }
+                }
+                return ruleColor ? (__tmGroupBgFromLabelColor(ruleColor, isDark) || '') : '';
+            }
+            return '';
         };
         const ruleForRender = state.currentRule ? state.filterRules.find(r => r.id === state.currentRule) : null;
         const allowDocFlowForRender = !__tmRuleHasExplicitSort(ruleForRender);
@@ -23592,16 +25530,29 @@ async function __tmRefreshAfterWake(reason) {
             const progressBarColor = isDark 
                 ? __tmNormalizeHexColor(SettingsStore.data.progressBarColorDark, '#81c784')
                 : __tmNormalizeHexColor(SettingsStore.data.progressBarColorLight, '#4caf50');
-            const groupBg = enableGroupBg ? currentGroupBg : '';
+            const groupBg = enableGroupBg ? (currentGroupBg || resolvePinnedTaskGroupBg(task)) : '';
             const progressBgStyle = (hasChildren && progressPercent > 0)
                 ? (enableGroupBg && groupBg
                     ? `background-image: linear-gradient(90deg, ${progressBarColor} ${progressPercent}%, transparent ${progressPercent}%);background-repeat:no-repeat;background-size:100% 3px;background-position:left bottom;`
                     : `background-image: linear-gradient(90deg, ${progressBarColor} ${progressPercent}%, transparent ${progressPercent}%);background-repeat:no-repeat;`)
                 : '';
             
+            const contentIndent = 12 + depth * 16;
+            const treeGuides = depth > 0
+                ? `<span class="tm-tree-guides" aria-hidden="true">${Array.from({ length: depth }, (_, i) => `<span class="tm-tree-guide-line" style="left:${18 + i * 16}px"></span>`).join('')}</span>`
+                : '';
+            const leadingClass = [
+                'tm-task-leading',
+                hasChildren && depth === 0 ? 'tm-task-leading--toplevel' : '',
+                hasChildren ? 'tm-task-leading--branch' : '',
+                hasChildren && collapsed ? 'tm-task-leading--collapsed' : '',
+            ].filter(Boolean).join(' ');
+            const leadingRing = hasChildren && collapsed
+                ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>'
+                : '';
             const toggle = hasChildren
-                ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${task.id}', event)">${collapsed ? '▸' : '▾'}</span>`
-                : `<span class="tm-tree-spacer"></span>`;
+                ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${task.id}', event)"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
+                : '';
 
             const widths = SettingsStore.data.columnWidths || {};
             const colOrder = SettingsStore.data.columnOrder || ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark'];
@@ -23614,13 +25565,17 @@ async function __tmRefreshAfterWake(reason) {
                                title="置顶">
                     </td>`,
                 content: () => `
-                    <td style="width: ${widths.content || 360}px; min-width: ${widths.content || 360}px; max-width: ${widths.content || 360}px; ${progressBgStyle}">
-                        <div class="tm-task-cell" style="padding-left:${indent}px">
-                            ${toggle}
-                            <input class="tm-task-checkbox ${isGloballyLocked ? 'tm-operating' : ''}"
-                                   type="checkbox" ${done ? 'checked' : ''}
-                                   ${isGloballyLocked ? 'disabled' : ''}
-                                   onchange="tmSetDone('${task.id}', this.checked, event)">
+                    <td class="tm-task-content-cell" style="width: ${widths.content || 360}px; min-width: ${widths.content || 360}px; max-width: ${widths.content || 360}px; ${progressBgStyle}">
+                        <div class="tm-task-cell" style="padding-left:${contentIndent}px">
+                            ${treeGuides}
+                            <span class="${leadingClass}">
+                                ${leadingRing}
+                                <input class="tm-task-checkbox ${isGloballyLocked ? 'tm-operating' : ''}"
+                                       type="checkbox" ${done ? 'checked' : ''}
+                                       ${isGloballyLocked ? 'disabled' : ''}
+                                       onchange="tmSetDone('${task.id}', this.checked, event)">
+                                ${toggle}
+                            </span>
                             <span class="tm-task-text ${done ? 'tm-task-done' : ''}"
                                   data-level="${depth}"
                                   title="${esc(content)}">
@@ -23630,38 +25585,38 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                     </td>`,
                 doc: () => `
-                    <td style="width: ${widths.doc || 180}px; min-width: ${widths.doc || 180}px; max-width: ${widths.doc || 180}px;" title="${esc(docName || '')}">${esc(docName || '')}</td>`,
+                    <td class="tm-cell-editable tm-task-meta-cell" style="width: ${widths.doc || 180}px; min-width: ${widths.doc || 180}px; max-width: ${widths.doc || 180}px;" title="点击移动到当前分组其他文档" onclick="tmPickTaskDocInline('${task.id}', this, event)">${esc(docName || '')}</td>`,
                 h2: () => `
-                    <td class="tm-cell-editable" style="width: ${widths.h2 || 180}px; min-width: ${widths.h2 || 180}px; max-width: ${widths.h2 || 180}px;" title="点击切换标题" onclick="tmPickHeadingInline('${task.id}', this, event)">${esc(task.h2 || '无')}</td>`,
+                    <td class="tm-cell-editable tm-task-meta-cell" style="width: ${widths.h2 || 180}px; min-width: ${widths.h2 || 180}px; max-width: ${widths.h2 || 180}px;" title="点击切换标题" onclick="tmPickHeadingInline('${task.id}', this, event)">${esc(task.h2 || '无')}</td>`,
                 score: () => {
                     const v = Number.isFinite(Number(task.priorityScore)) ? Math.round(Number(task.priorityScore)) : 0;
-                    return `<td style="width: ${widths.score || 96}px; min-width: ${widths.score || 96}px; max-width: ${widths.score || 96}px; text-align: center; font-variant-numeric: tabular-nums;">${v}</td>`;
+                    return `<td class="tm-task-meta-cell" style="width: ${widths.score || 96}px; min-width: ${widths.score || 96}px; max-width: ${widths.score || 96}px; text-align: center; font-variant-numeric: tabular-nums;">${v}</td>`;
                 },
                 priority: () => {
-                    return `<td class="tm-cell-editable" style="width: ${widths.priority || 96}px; min-width: ${widths.priority || 96}px; max-width: ${widths.priority || 96}px; text-align: center;" onclick="tmPickPriority('${task.id}', this, event)">${__tmRenderPriorityJira(priority, false)}</td>`;
+                    return `<td class="tm-cell-editable tm-task-meta-cell" style="width: ${widths.priority || 96}px; min-width: ${widths.priority || 96}px; max-width: ${widths.priority || 96}px; text-align: center;" onclick="tmPickPriority('${task.id}', this, event)">${__tmRenderPriorityJira(priority, false)}</td>`;
                 },
                 startDate: () => `
-                    <td class="tm-cell-editable" style="width: ${widths.startDate || 90}px; min-width: ${widths.startDate || 90}px; max-width: ${widths.startDate || 90}px;" onclick="tmBeginCellEdit('${task.id}','startDate',this,event)">${__tmFormatTaskTime(startDate)}</td>`,
+                    <td class="tm-cell-editable tm-task-meta-cell" style="width: ${widths.startDate || 90}px; min-width: ${widths.startDate || 90}px; max-width: ${widths.startDate || 90}px;" onclick="tmBeginCellEdit('${task.id}','startDate',this,event)">${__tmFormatTaskTime(startDate)}</td>`,
                 completionTime: () => `
-                    <td class="tm-cell-editable" style="width: ${widths.completionTime || 170}px; min-width: ${widths.completionTime || 170}px; max-width: ${widths.completionTime || 170}px;" onclick="tmBeginCellEdit('${task.id}','completionTime',this,event)">${__tmFormatTaskTime(completionTime)}</td>`,
+                    <td class="tm-cell-editable tm-task-meta-cell" style="width: ${widths.completionTime || 170}px; min-width: ${widths.completionTime || 170}px; max-width: ${widths.completionTime || 170}px;" onclick="tmBeginCellEdit('${task.id}','completionTime',this,event)">${__tmFormatTaskTime(completionTime)}</td>`,
                 duration: () => `
-                    <td class="tm-cell-editable" style="width: ${widths.duration || 96}px; min-width: ${widths.duration || 96}px; max-width: ${widths.duration || 96}px;" onclick="tmBeginCellEdit('${task.id}','duration',this,event)">${esc(duration || '')}</td>`,
+                    <td class="tm-cell-editable tm-task-meta-cell" style="width: ${widths.duration || 96}px; min-width: ${widths.duration || 96}px; max-width: ${widths.duration || 96}px;" onclick="tmBeginCellEdit('${task.id}','duration',this,event)">${esc(duration || '')}</td>`,
                 spent: () => {
                     const mode = String(SettingsStore.data.tomatoSpentAttrMode || 'minutes').trim() || 'minutes';
                     const txt = (SettingsStore.data.enableTomatoIntegration && mode === 'hours')
                         ? __tmFormatSpentHours(__tmParseNumber(task?.tomatoHours))
                         : __tmFormatSpentMinutes(__tmGetTaskSpentMinutes(task));
-                    return `<td style="width: ${widths.spent || 96}px; min-width: ${widths.spent || 96}px; max-width: ${widths.spent || 96}px; text-align:center; font-variant-numeric: tabular-nums;">${esc(txt)}</td>`;
+                    return `<td class="tm-task-meta-cell" style="width: ${widths.spent || 96}px; min-width: ${widths.spent || 96}px; max-width: ${widths.spent || 96}px; text-align:center; font-variant-numeric: tabular-nums;">${esc(txt)}</td>`;
                 },
                 remark: () => `
-                    <td class="tm-cell-editable" style="width: ${widths.remark || 240}px; min-width: ${widths.remark || 240}px; max-width: ${widths.remark || 240}px;" title="${esc(remark || '')}" onclick="tmBeginCellEdit('${task.id}','remark',this,event)"><span class="tm-task-remark-text">${esc(remark || '')}</span></td>`,
+                    <td class="tm-cell-editable tm-task-meta-cell" style="width: ${widths.remark || 240}px; min-width: ${widths.remark || 240}px; max-width: ${widths.remark || 240}px;" title="${esc(remark || '')}" onclick="tmBeginCellEdit('${task.id}','remark',this,event)"><span class="tm-task-remark-text">${esc(remark || '')}</span></td>`,
                 status: () => {
                      const statusOptions = SettingsStore.data.customStatusOptions || [];
                      const currentStatus = task.customStatus || 'todo';
                      const statusOption = statusOptions.find(o => o.id === currentStatus) || { name: currentStatus, color: '#757575' };
                      const chipStyle = __tmBuildStatusChipStyle(statusOption.color);
                      return `
-                        <td class="tm-status-cell" style="width: ${widths.status || 96}px; min-width: ${widths.status || 96}px; max-width: ${widths.status || 96}px; text-align: center;" onclick="tmOpenStatusSelect('${task.id}', event)">
+                        <td class="tm-status-cell tm-task-meta-cell" style="width: ${widths.status || 96}px; min-width: ${widths.status || 96}px; max-width: ${widths.status || 96}px; text-align: center;" onclick="tmOpenStatusSelect('${task.id}', event)">
                             <span class="tm-status-cell-inner">
                                 <span class="tm-status-tag" style="${chipStyle}">
                                     ${esc(statusOption.name)}
@@ -23833,7 +25788,7 @@ async function __tmRefreshAfterWake(reason) {
                 // 支持折叠
                 const groupKey = `quadrant_${quadrantId}`;
                 const isCollapsed = state.collapsedGroups?.has(groupKey);
-                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:8px;display:inline-block;width:12px;">${isCollapsed ? '▸' : '▾'}</span>`;
+                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                 
                 // 计算时长总和
                 const durationFormat = SettingsStore.data.durationFormat || 'hours';
@@ -23912,7 +25867,7 @@ async function __tmRefreshAfterWake(reason) {
                 const docName = docEntry.name || '未知文档';
                 const groupKey = `doc_${docId}`;
                 const isCollapsed = state.collapsedGroups?.has(groupKey);
-                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:8px;display:inline-block;width:12px;">${isCollapsed ? '▸' : '▾'}</span>`;
+                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                 const labelColor = __tmGetDocColorHex(docId, isDark) || 'var(--tm-group-doc-label-color)';
 
                 allRows.push(`<tr class="tm-group-row" data-group-key="${groupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">📄 ${esc(docName)}</span><span class="tm-badge tm-badge--count">${docTasks.length}</span></div></td></tr>`);
@@ -23944,7 +25899,7 @@ async function __tmRefreshAfterWake(reason) {
                             const items = Array.isArray(g.items) ? g.items : [];
                             const h2Key = `doc_${docId}__h2_${encodeURIComponent(String(bucket.key || 'label:__none__'))}`;
                             const h2Collapsed = state.collapsedGroups?.has(h2Key);
-                            const toggleH2 = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;margin-right:8px;display:inline-block;width:12px;">${h2Collapsed ? '▸' : '▾'}</span>`;
+                            const toggleH2 = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                             allRows.push(`<tr class="tm-group-row" data-group-kind="h2" data-group-key="${esc(h2Key)}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-secondary-text);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggleH2}<span class="tm-group-label">🧩 ${esc(g.label || '')}</span><span class="tm-badge tm-badge--count">${Array.isArray(items) ? items.length : 0}</span></div></td></tr>`);
                             if (!h2Collapsed) {
                                 items.forEach(task => {
@@ -24039,7 +25994,7 @@ async function __tmRefreshAfterWake(reason) {
 
             sortedGroups.forEach(group => {
                 const isCollapsed = state.collapsedGroups?.has(group.key);
-                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${group.key}', event)" style="cursor:pointer;margin-right:8px;display:inline-block;width:12px;">${isCollapsed ? '▸' : '▾'}</span>`;
+                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${group.key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                 const labelColor = __tmGetTimeGroupLabelColor(group);
                 
                 // 计算该分组下所有任务的时长总和
@@ -24087,7 +26042,7 @@ async function __tmRefreshAfterWake(reason) {
                 const safeContent = String(content || '').replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_');
                 const groupKey = `task_${safeContent}`;
                 const isCollapsed = state.collapsedGroups?.has(groupKey);
-                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:8px;display:inline-block;width:12px;">${isCollapsed ? '▸' : '▾'}</span>`;
+                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                 const labelColor = 'var(--tm-primary-color)';
 
                 allRows.push(`<tr class="tm-group-row" data-group-key="${groupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">🧩 ${esc(content)}</span><span class="tm-badge tm-badge--count">${tasks.length}</span></div></td></tr>`);
@@ -25190,8 +27145,7 @@ async function __tmRefreshAfterWake(reason) {
                         task.priority = value;
                         __tmPersistMetaAndAttrs(id, { priority: value || '' });
                         close();
-                        applyFilters();
-                        render();
+                        __tmRefreshMainViewInPlace({ withFilters: true });
                     } catch (e) {
                         hint(`❌ 更新失败: ${e.message}`, 'error');
                     }
@@ -25241,8 +27195,7 @@ async function __tmRefreshAfterWake(reason) {
                         task.customStatus = opt.id;
                         __tmPersistMetaAndAttrs(id, { customStatus: opt.id });
                         close();
-                        applyFilters();
-                        render();
+                        __tmRefreshMainViewInPlace({ withFilters: true });
                     } catch (e) {
                         hint(`❌ 更新失败: ${e.message}`, 'error');
                     }
@@ -25288,8 +27241,7 @@ async function __tmRefreshAfterWake(reason) {
                         task.customStatus = opt.id;
                         __tmPersistMetaAndAttrs(id, { customStatus: opt.id });
                         close();
-                        applyFilters();
-                        render();
+                        __tmRefreshMainViewInPlace({ withFilters: true });
                     } catch (e) {
                         hint(`❌ 更新失败: ${e.message}`, 'error');
                     }
@@ -25331,155 +27283,13 @@ async function __tmRefreshAfterWake(reason) {
         overlay.id = 'tm-task-detail-overlay';
         overlay.className = 'tm-task-detail-overlay';
 
-        const statusOptionsRaw = Array.isArray(SettingsStore.data.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
-        const statusOptions = statusOptionsRaw
-            .map(o => ({ id: String(o?.id || '').trim(), name: String(o?.name || '').trim() }))
-            .filter(o => o.id);
-        if (!statusOptions.some(o => o.id === 'todo')) statusOptions.unshift({ id: 'todo', name: '待办' });
-
-        const curStatus = String(task.customStatus || '').trim() || 'todo';
-        const curPriority = String(task.priority || '').toLowerCase();
-        const curPinned = !!task.pinned;
-
-        overlay.innerHTML = `
-            <div class="tm-task-detail" role="dialog" aria-modal="true">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
-                    <div style="font-size:16px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">任务详情</div>
-                    <button class="tm-btn tm-btn-gray" data-tm-detail="close" style="padding:0 10px;height:30px;display:inline-flex;align-items:center;justify-content:center;">✖</button>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">内容</div>
-                    <div class="tm-task-detail-value" style="display:flex;gap:8px;align-items:center;">
-                        <div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(task.content || '')}">${esc(task.content || '') || '(无内容)'}</div>
-                        <button class="tm-btn tm-btn-info" data-tm-detail="editContent" style="padding:0 10px;height:30px;">编辑</button>
-                    </div>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">状态</div>
-                    <div class="tm-task-detail-value">
-                        <select class="tm-rule-select" data-tm-detail="status">
-                            ${statusOptions.map(o => `<option value="${esc(o.id)}" ${o.id === curStatus ? 'selected' : ''}>${esc(o.name)}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">重要性</div>
-                    <div class="tm-task-detail-value">
-                        <select class="tm-rule-select" data-tm-detail="priority">
-                            <option value="" ${!curPriority ? 'selected' : ''}>无</option>
-                            <option value="high" ${curPriority === 'high' ? 'selected' : ''}>高</option>
-                            <option value="medium" ${curPriority === 'medium' ? 'selected' : ''}>中</option>
-                            <option value="low" ${curPriority === 'low' ? 'selected' : ''}>低</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">置顶</div>
-                    <div class="tm-task-detail-value">
-                        <label style="display:inline-flex;align-items:center;gap:8px;">
-                            <input type="checkbox" data-tm-detail="pinned" ${curPinned ? 'checked' : ''}>
-                            <span style="color:var(--tm-secondary-text);font-size:12px;">在列表/看板中置顶</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">开始日期</div>
-                    <div class="tm-task-detail-value">
-                        <input class="tm-input" type="date" data-tm-detail="startDate" value="${esc(String(task.startDate || '').trim().slice(0, 10))}">
-                    </div>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">完成日期</div>
-                    <div class="tm-task-detail-value">
-                        <input class="tm-input" type="date" data-tm-detail="completionTime" value="${esc(String(task.completionTime || '').trim().slice(0, 10))}">
-                    </div>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">时长</div>
-                    <div class="tm-task-detail-value">
-                        <input class="tm-input" data-tm-detail="duration" placeholder="如 1h / 30min" value="${esc(task.duration || '')}">
-                    </div>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">备注</div>
-                    <div class="tm-task-detail-value">
-                        <input class="tm-input" data-tm-detail="remark" value="${esc(task.remark || '')}">
-                    </div>
-                </div>
-
-                <div class="tm-task-detail-actions">
-                    <button class="tm-btn tm-btn-secondary" data-tm-detail="cancel" style="padding:0 12px;height:32px;">取消</button>
-                    <button class="tm-btn tm-btn-primary" data-tm-detail="save" style="padding:0 12px;height:32px;">保存</button>
-                </div>
-            </div>
-        `;
+        overlay.innerHTML = __tmBuildTaskDetailInnerHtml(task, { embedded: false });
 
         const close = () => { try { overlay.remove(); } catch (e) {} };
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) close();
         });
-        overlay.querySelector('[data-tm-detail="close"]')?.addEventListener('click', close);
-        overlay.querySelector('[data-tm-detail="cancel"]')?.addEventListener('click', close);
-        overlay.querySelector('[data-tm-detail="editContent"]')?.addEventListener('click', () => {
-            close();
-            tmEdit(tid);
-        });
-        try {
-            const dateInputs = overlay.querySelectorAll('input[type="date"][data-tm-detail]');
-            dateInputs.forEach(inp => {
-                inp.addEventListener('click', () => { try { inp.showPicker?.(); } catch (e) {} });
-            });
-        } catch (e) {}
-        overlay.querySelector('[data-tm-detail="save"]')?.addEventListener('click', async () => {
-            const normalize = (s) => {
-                const v = String(s || '').trim();
-                if (!v) return '';
-                try { if (typeof __tmNormalizeDateOnly === 'function') return __tmNormalizeDateOnly(v); } catch (e) {}
-                return v;
-            };
-            const nextStatus = String(overlay.querySelector('[data-tm-detail="status"]')?.value || '').trim() || 'todo';
-            const nextPriority = String(overlay.querySelector('[data-tm-detail="priority"]')?.value || '').trim();
-            const nextPinned = !!overlay.querySelector('[data-tm-detail="pinned"]')?.checked;
-            const nextStart = normalize(overlay.querySelector('[data-tm-detail="startDate"]')?.value);
-            const nextEnd = normalize(overlay.querySelector('[data-tm-detail="completionTime"]')?.value);
-            const nextDuration = String(overlay.querySelector('[data-tm-detail="duration"]')?.value || '').trim();
-            const nextRemark = String(overlay.querySelector('[data-tm-detail="remark"]')?.value || '').trim();
-
-            const patch = {
-                customStatus: nextStatus,
-                priority: nextPriority,
-                pinned: nextPinned ? '1' : '',
-                startDate: nextStart,
-                completionTime: nextEnd,
-                duration: nextDuration,
-                remark: nextRemark
-            };
-
-            try {
-                task.customStatus = nextStatus;
-                task.priority = nextPriority;
-                task.pinned = nextPinned;
-                task.startDate = nextStart;
-                task.completionTime = nextEnd;
-                task.duration = nextDuration;
-                task.remark = nextRemark;
-                await __tmPersistMetaAndAttrsAsync(tid, patch);
-                close();
-                applyFilters();
-                render();
-                hint('✅ 已保存', 'success');
-            } catch (e) {
-                hint(`❌ 保存失败: ${e.message}`, 'error');
-            }
-        });
+        __tmBindTaskDetailEditor(overlay, tid, { embedded: false, onClose: close });
 
         document.body.appendChild(overlay);
         return true;
@@ -26355,17 +28165,10 @@ async function __tmRefreshAfterWake(reason) {
                             const targetDocs = docs; 
                             const finalIds = new Set();
                             
-                            const promises = targetDocs.map(async (doc) => {
-                                const id = String(doc?.id || doc || '');
-                                if (!id) return;
-                                finalIds.add(id);
-                                if (doc.recursive) {
-                                    try {
-                                        const subIds = await API.getSubDocIds(id);
-                                        subIds.forEach(sid => finalIds.add(sid));
-                                    } catch(e) {}
-                                }
-                            });
+                            const promises = targetDocs.map((doc) => __tmExpandSourceEntryDocIds(doc, (sid) => {
+                                const id = String(sid || '').trim();
+                                if (id) finalIds.add(id);
+                            }));
                             await Promise.all(promises);
                             
                             // 动态查询文档的任务状态（即使不在 taskTree 中）
@@ -26430,10 +28233,10 @@ async function __tmRefreshAfterWake(reason) {
         };
 
         groups.forEach(g => {
-            const docs = Array.isArray(g?.docs) ? g.docs : [];
+            const docs = __tmGetGroupSourceEntries(g);
             if (docs.length === 0) return;
             // 传递 group.id 以便进行动态查询
-            listEl.appendChild(renderGroup(String(g?.name || '分组'), docs, String(g?.id || '')));
+            listEl.appendChild(renderGroup(__tmResolveDocGroupName(g), docs, String(g?.id || '')));
         });
     };
 
@@ -26570,19 +28373,17 @@ async function __tmRefreshAfterWake(reason) {
             // “全部”模式：包含旧版 selectedDocIds 和所有分组中的文档
             // 1. 旧版 selectedDocIds (视为无递归)
             const legacyIds = SettingsStore.data.selectedDocIds || [];
-            legacyIds.forEach(id => targetDocs.push({ id, recursive: false }));
+            legacyIds.forEach(id => targetDocs.push({ id, kind: 'doc', recursive: false }));
             
             // 2. 所有分组中的文档
             groups.forEach(g => {
-                if (Array.isArray(g.docs)) {
-                    targetDocs.push(...g.docs);
-                }
+                targetDocs.push(...__tmGetGroupSourceEntries(g));
             });
         } else {
             // 特定分组模式
             const group = groups.find(g => g.id === currentGroupId);
-            if (group && Array.isArray(group.docs)) {
-                targetDocs = group.docs;
+            if (group) {
+                targetDocs = __tmGetGroupSourceEntries(group);
             }
         }
 
@@ -26591,7 +28392,11 @@ async function __tmRefreshAfterWake(reason) {
             .map((doc) => {
                 const id = String((typeof doc === 'object' ? doc?.id : doc) || '').trim();
                 if (!id) return null;
-                return { id, recursive: !!(typeof doc === 'object' ? doc?.recursive : false) };
+                return {
+                    id,
+                    kind: String((typeof doc === 'object' ? doc?.kind : '') || 'doc').trim() || 'doc',
+                    recursive: !!(typeof doc === 'object' ? doc?.recursive : false)
+                };
             })
             .filter(Boolean);
         const docsInOrder = __tmSortDocEntriesByPinned(normalizedDocs, currentGroupId);
@@ -26607,13 +28412,7 @@ async function __tmRefreshAfterWake(reason) {
         };
         if (quickAddDocId && quickAddDocId !== '__dailyNote__') pushId(quickAddDocId);
 
-        const promises = docsInOrder.map(async (doc) => {
-            pushId(doc.id);
-            if (doc.recursive) {
-                const subIds = await API.getSubDocIds(doc.id);
-                (subIds || []).forEach(id => pushId(id));
-            }
-        });
+        const promises = docsInOrder.map((doc) => __tmExpandSourceEntryDocIds(doc, pushId));
 
         await Promise.all(promises);
         return finalIds;
@@ -26626,6 +28425,7 @@ async function __tmRefreshAfterWake(reason) {
         try { state.doneOverrides = {}; } catch (e) {}
         // 加载设置（包括文档ID列表）
         await SettingsStore.load();
+        try { await __tmRefreshNotebookCache(); } catch (e) {}
         try { __tmBindSqlCacheInvalidation(); } catch (e) {}
         try {
             if (globalThis.__tmCalendar && typeof globalThis.__tmCalendar.setSettingsStore === 'function') {
@@ -26976,6 +28776,16 @@ async function __tmRefreshAfterWake(reason) {
     // 显示设置
     function showSettings() {
         try { __tmHideMobileMenu(); } catch (e) {}
+        try {
+            const notebooksStale = !Array.isArray(state.notebooks)
+                || state.notebooks.length === 0
+                || (Date.now() - (Number(state.notebooksFetchedAt) || 0) > 60000);
+            if (notebooksStale && !state.notebooksLoadingPromise) {
+                __tmRefreshNotebookCache().then(() => {
+                    if (state.settingsModal && document.body.contains(state.settingsModal)) showSettings();
+                }).catch(() => null);
+            }
+        } catch (e) {}
         let savedSettingsSidebarScrollLeft = Number(state.settingsSidebarScrollLeft) || 0;
         let savedSettingsTabsScrollLeft = Number(state.settingsTabsScrollLeft) || 0;
         if (state.settingsModal) {
@@ -27000,38 +28810,158 @@ async function __tmRefreshAfterWake(reason) {
         // 渲染分组选择器
         const renderGroupSelector = () => {
             return `
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                    <button class="tm-btn tm-btn-primary" data-tm-action="createNotebookGroup" style="padding: 6px 12px; font-size: 12px;">+ 按笔记本分组</button>
+                    <button class="tm-btn tm-btn-info" data-tm-action="createCustomGroup" style="padding: 6px 12px; font-size: 12px;">+ 自定义分组</button>
+                </div>
                 <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
                     <select id="groupSelector" data-tm-call="switchDocGroup" 
                             style="flex: 1; padding: 6px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
                         <option value="all" ${currentGroupId === 'all' ? 'selected' : ''}>全部文档</option>
-                        ${groups.map(g => `<option value="${g.id}" ${currentGroupId === g.id ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}
+                        ${groups.map(g => `<option value="${g.id}" ${currentGroupId === g.id ? 'selected' : ''}>${esc(__tmResolveDocGroupName(g))}</option>`).join('')}
                     </select>
-                    <button class="tm-btn tm-btn-primary" data-tm-action="createNewGroup" style="padding: 6px 10px; font-size: 12px;">+ 新建分组</button>
                     ${currentGroupId !== 'all' ? `<button class="tm-btn tm-btn-danger" data-tm-action="deleteCurrentGroup" style="padding: 6px 10px; font-size: 12px;">删除分组</button>
                         <button class="tm-btn tm-btn-success" data-tm-action="exportCurrentGroup" style="padding: 6px 10px; font-size: 12px;">导出任务</button>` : ''}
                 </div>
             `;
         };
 
+        function __tmRenderChecklistBodyHtml() {
+            const rowModel = __tmBuildTaskRowModel();
+            const isDark = __tmIsDarkMode();
+            const enableGroupBg = !!SettingsStore.data.enableGroupTaskBgByGroupColor;
+            const escSq = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const progressBarColor = isDark
+                ? __tmNormalizeHexColor(SettingsStore.data.progressBarColorDark, '#81c784')
+                : __tmNormalizeHexColor(SettingsStore.data.progressBarColorLight, '#4caf50');
+            const selectedId = String(state.detailTaskId || '').trim();
+            const fallbackId = __tmResolveFirstVisibleTaskIdFromRowModel(rowModel);
+            const activeId = state.flatTasks?.[selectedId] ? selectedId : fallbackId;
+            if (activeId !== selectedId) state.detailTaskId = activeId;
+            let currentGroupBg = '';
+
+            const renderGroup = (row) => {
+                const isCollapsed = !!row?.collapsed;
+                const toggle = `<span class="tm-group-toggle" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:16px;color:var(--tm-text-color);"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${isCollapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+                const countHtml = Number(row?.count) > 0 ? `<span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span>` : '';
+                const durationHtml = String(row?.durationSum || '').trim()
+                    ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">📊</span>${esc(String(row.durationSum || '').trim())}</span>`
+                    : '';
+                let labelColor = 'var(--tm-text-color)';
+                if (row.kind === 'doc') labelColor = String(row.labelColor || 'var(--tm-group-doc-label-color)');
+                else if (row.kind === 'task') labelColor = String(row.labelColor || 'var(--tm-primary-color)');
+                else if (row.kind === 'time') labelColor = String(row.labelColor || 'var(--tm-text-color)');
+                else if (row.kind === 'quadrant') {
+                    const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
+                    labelColor = colorMap[String(row.color || '')] || 'var(--tm-text-color)';
+                } else if (row.kind === 'h2') {
+                    labelColor = 'var(--tm-secondary-text)';
+                }
+                if (row.kind === 'task' && row.groupDocColor) {
+                    currentGroupBg = enableGroupBg ? (__tmGroupBgFromLabelColor(row.groupDocColor, isDark) || '') : '';
+                } else {
+                    currentGroupBg = enableGroupBg ? (__tmGroupBgFromLabelColor(labelColor, isDark) || '') : '';
+                }
+                return `
+                    <div class="tm-checklist-group ${row.kind === 'h2' ? 'tm-checklist-group--h2' : ''}" data-group-key="${esc(String(row.key || ''))}" onclick="tmToggleGroupCollapse('${escSq(String(row.key || ''))}', event)">
+                        ${toggle}
+                        <span class="tm-checklist-group-label" style="color:${labelColor};">${esc(String(row.label || ''))}</span>
+                        ${countHtml}
+                        ${durationHtml}
+                    </div>
+                `;
+            };
+
+            const renderTask = (row) => {
+                const task = state.flatTasks?.[String(row?.id || '').trim()];
+                if (!task) return '';
+                if ((state.groupByTaskName || (!state.groupByDocName && !state.groupByTime && !state.quadrantEnabled)) && task.root_id) {
+                    const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
+                    currentGroupBg = (enableGroupBg && taskDocColor) ? (__tmGroupBgFromLabelColor(taskDocColor, isDark) || '') : '';
+                }
+                const depth = Math.max(0, Number(row?.depth) || 0);
+                const hasChildren = !!row?.hasChildren;
+                const collapsed = !!row?.collapsed;
+                const allChildren = Array.isArray(task.children) ? task.children : [];
+                const totalChildren = allChildren.length;
+                const completedChildren = allChildren.filter((child) => child?.done).length;
+                const progressPercent = totalChildren > 0 ? Math.round((completedChildren / totalChildren) * 100) : 0;
+                const baseBg = currentGroupBg ? `background-color:${currentGroupBg};` : '';
+                const progressBg = progressPercent > 0
+                    ? `background-image:linear-gradient(90deg, ${progressBarColor} ${progressPercent}%, transparent ${progressPercent}%);background-repeat:no-repeat;background-size:100% 3px;background-position:left bottom;`
+                    : '';
+                const activeCls = String(task.id) === activeId ? ' tm-checklist-item--active' : '';
+                const doneCls = task.done ? ' tm-checklist-item--done' : '';
+                const reminderHtml = __tmHasReminderMark(task) ? '<span class="tm-task-reminder-emoji" title="已添加提醒">⏰</span>' : '';
+                const statusOptions = SettingsStore.data.customStatusOptions || [];
+                const currentStatus = String(task.customStatus || '').trim() || 'todo';
+                const statusOption = statusOptions.find((o) => String(o?.id || '').trim() === currentStatus) || { name: currentStatus, color: '#757575' };
+                const statusChipStyle = __tmBuildStatusChipStyle(statusOption.color);
+                const indent = depth * 22;
+                const meta = [];
+                if (task.docName) meta.push(`<span class="tm-checklist-meta-chip">📄 ${esc(String(task.docName || ''))}</span>`);
+                if (task.h2) meta.push(`<span class="tm-checklist-meta-chip">🧩 ${esc(String(task.h2 || ''))}</span>`);
+                if (task.completionTime) meta.push(`<span class="tm-checklist-meta-chip">📅 ${esc(__tmFormatTaskTime(task.completionTime))}</span>`);
+                if (task.duration) meta.push(`<span class="tm-checklist-meta-chip">⏱ ${esc(String(task.duration || ''))}</span>`);
+                if (totalChildren > 0) meta.push(`<span class="tm-checklist-meta-chip">子任务 ${completedChildren}/${totalChildren}</span>`);
+                return `
+                    <div class="tm-checklist-item${activeCls}${doneCls}" data-id="${esc(String(task.id || ''))}" style="margin-left:${indent}px;${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')">
+                        <div style="display:flex;align-items:center;gap:8px;padding-top:2px;">
+                            <input class="tm-task-checkbox ${GlobalLock.isLocked() ? 'tm-operating' : ''}" type="checkbox" ${task.done ? 'checked' : ''} ${GlobalLock.isLocked() ? 'disabled' : ''} onchange="tmSetDone('${escSq(String(task.id || ''))}', this.checked, event)">
+                            ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : '<span style="width:16px;display:inline-flex;"></span>'}
+                        </div>
+                        <div class="tm-checklist-item-main">
+                            <div class="tm-checklist-title-row">
+                                <div class="tm-checklist-title">${esc(String(task.content || '').trim() || '(无内容)')}${reminderHtml}</div>
+                                <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
+                                ${task.pinned ? '<span class="tm-checklist-meta-chip">📌</span>' : ''}
+                                ${hasChildren && collapsed ? '<span class="tm-checklist-meta-chip">已折叠</span>' : ''}
+                            </div>
+                            ${meta.length ? `<div class="tm-checklist-meta">${meta.join('')}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            };
+
+            const itemsHtml = rowModel.map((row) => row?.type === 'group' ? renderGroup(row) : renderTask(row)).join('');
+            const detailTask = activeId ? (state.flatTasks?.[activeId] || null) : null;
+            const detailHtml = detailTask
+                ? __tmBuildTaskDetailInnerHtml(detailTask, { embedded: true })
+                : `<div class="tm-checklist-empty-detail">选择左侧任务后，这里会显示可编辑的详情。</div>`;
+            return `
+                <div class="tm-body${bodyAnimClass}">
+                    <div class="tm-checklist-layout">
+                        <div class="tm-checklist-pane">
+                            <div class="tm-checklist-items">${itemsHtml || `<div class="tm-checklist-empty-detail">暂无任务</div>`}</div>
+                        </div>
+                        <aside class="tm-checklist-side">
+                            <div class="tm-checklist-detail-wrap" id="tmChecklistDetailPanel">${detailHtml}</div>
+                        </aside>
+                    </div>
+                </div>
+            `;
+        }
+
         // 获取当前显示的文档列表
         let currentDocs = [];
         if (currentGroupId === 'all') {
             // 显示所有（包括旧版和各分组）
             const legacyIds = SettingsStore.data.selectedDocIds || [];
-            legacyIds.forEach(id => currentDocs.push({ id, recursive: false }));
+            legacyIds.forEach(id => currentDocs.push({ id, kind: 'doc', recursive: false }));
             groups.forEach(g => {
-                if (Array.isArray(g.docs)) currentDocs.push(...g.docs);
+                currentDocs.push(...__tmGetGroupSourceEntries(g));
             });
             // 去重
             const seen = new Set();
             currentDocs = currentDocs.filter(d => {
-                if (seen.has(d.id)) return false;
-                seen.add(d.id);
+                const key = `${String(d?.kind || 'doc')}:${String(d?.id || '')}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
                 return true;
             });
         } else {
             const group = groups.find(g => g.id === currentGroupId);
-            if (group) currentDocs = group.docs || [];
+            if (group) currentDocs = __tmGetGroupSourceEntries(group);
         }
 
         const resolveDocName = (docId) => {
@@ -27068,6 +28998,10 @@ async function __tmRefreshAfterWake(reason) {
             (SettingsStore.data.docGroups || []).forEach(g => {
                 if (Array.isArray(g?.docs)) list.push(...g.docs);
             });
+            (Array.isArray(state.taskTree) ? state.taskTree : []).forEach((doc) => {
+                const id = String(doc?.id || '').trim();
+                if (id) list.push({ id, recursive: false });
+            });
             const seen = new Set();
             return list.filter(d => {
                 const id = String(d?.id || '').trim();
@@ -27092,13 +29026,15 @@ async function __tmRefreshAfterWake(reason) {
             const fallbackName = resolveDocName(newTaskDocId);
             newTaskDocOptions.push(`<option value="${newTaskDocId}" selected>${esc(fallbackName)} (不在当前列表)</option>`);
         }
-        let activeTab = 'main';
+        let activeTab = 'docs';
+        if (state.settingsActiveTab === 'main') activeTab = 'main';
+        if (state.settingsActiveTab === 'docs') activeTab = 'docs';
         if (state.settingsActiveTab === 'appearance') activeTab = 'appearance';
         if (state.settingsActiveTab === 'calendar') activeTab = 'calendar';
         if (state.settingsActiveTab === 'rules') activeTab = 'rules';
         if (state.settingsActiveTab === 'quadrant') activeTab = 'quadrant';
         if (state.settingsActiveTab === 'priority') activeTab = 'priority';
-        if (activeTab === 'main') {
+        if (activeTab === 'main' || activeTab === 'docs') {
             try { __tmEnsureAllDocumentsLoaded(false); } catch (e) {}
         }
 
@@ -27113,6 +29049,7 @@ async function __tmRefreshAfterWake(reason) {
                     <div class="tm-settings-sidebar">
                         <div class="tm-settings-tabs">
                             ${activeTab !== 'rule_editor' ? `
+                            <button class="tm-settings-nav-btn ${activeTab === 'docs' ? 'is-active' : ''}" data-tm-action="tmSwitchSettingsTab" data-tab="docs">📂 文档分组</button>
                             <button class="tm-settings-nav-btn ${activeTab === 'main' ? 'is-active' : ''}" data-tm-action="tmSwitchSettingsTab" data-tab="main">🧩 常规设置</button>
                             <button class="tm-settings-nav-btn ${activeTab === 'appearance' ? 'is-active' : ''}" data-tm-action="tmSwitchSettingsTab" data-tab="appearance">🎨 外观</button>
                             <button class="tm-settings-nav-btn ${activeTab === 'calendar' ? 'is-active' : ''}" data-tm-action="tmSwitchSettingsTab" data-tab="calendar">🗓️ 日历</button>
@@ -27155,7 +29092,7 @@ async function __tmRefreshAfterWake(reason) {
                             </div>
                             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border:1px solid var(--tm-border-color); border-radius:8px; background: var(--tm-card-bg); margin-bottom: 12px;">
                                 <div style="font-size:13px; color: var(--tm-text-color);">时间轴强制按完成日期排序（越近今天越靠前）</div>
-                                <input type="checkbox" ${SettingsStore.data.timelineForceSortByCompletionNearToday ? 'checked' : ''} onchange="tmToggleTimelineForceSortByCompletionNearToday(this.checked)">
+                                <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.timelineForceSortByCompletionNearToday ? 'checked' : ''} onchange="tmToggleTimelineForceSortByCompletionNearToday(this.checked)">
                             </div>
                             <div id="tm-rules-list" style="display: flex; flex-direction: column; gap: 8px;">
                                 ${renderRulesList()}
@@ -27245,7 +29182,7 @@ async function __tmRefreshAfterWake(reason) {
                         </label>
 
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1 1 260px;min-width:220px;">
-                            <input type="checkbox" ${SettingsStore.data.taskAutoWrapEnabled !== false ? 'checked' : ''} onchange="updateTaskAutoWrapEnabled(this.checked)">
+                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.taskAutoWrapEnabled !== false ? 'checked' : ''} onchange="updateTaskAutoWrapEnabled(this.checked)">
                             自动换行（任务内容/备注/看板/白板）
                         </label>
 
@@ -27285,7 +29222,7 @@ async function __tmRefreshAfterWake(reason) {
                     <div style="margin-bottom: 16px; padding: 12px; background: var(--tm-section-bg); border-radius: 8px;">
                         <div style="font-weight: 600; margin-bottom: 8px;">⚡ 性能与显示设置</div>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" ${SettingsStore.data.excludeCompletedTasks ? 'checked' : ''} onchange="updateExcludeCompletedTasks(this.checked)">
+                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.excludeCompletedTasks ? 'checked' : ''} onchange="updateExcludeCompletedTasks(this.checked)">
                             不查找已完成父任务（提升搜索性能和长期使用性能）
                         </label>
                         <div style="font-size: 12px; color: var(--tm-secondary-text); margin-top: 6px; margin-bottom: 12px;">
@@ -27296,15 +29233,42 @@ async function __tmRefreshAfterWake(reason) {
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
                             <span style="font-size:12px;color:var(--tm-secondary-text);">默认视图:</span>
                             <select onchange="updateDefaultViewMode(this.value)" style="padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
-                                <option value="list" ${String(SettingsStore.data.defaultViewMode || 'list') === 'list' ? 'selected' : ''}>表格视图</option>
-                                <option value="timeline" ${String(SettingsStore.data.defaultViewMode || '') === 'timeline' ? 'selected' : ''}>时间轴视图</option>
-                                <option value="kanban" ${String(SettingsStore.data.defaultViewMode || '') === 'kanban' ? 'selected' : ''}>看板视图</option>
-                                <option value="calendar" ${String(SettingsStore.data.defaultViewMode || '') === 'calendar' ? 'selected' : ''}>日历视图</option>
-                                <option value="whiteboard" ${String(SettingsStore.data.defaultViewMode || '') === 'whiteboard' ? 'selected' : ''}>白板视图</option>
+                                ${__tmGetEnabledViews().map((viewId) => {
+                                    const view = __TM_ALL_VIEWS.find(v => v.id === viewId);
+                                    return view ? `<option value="${view.id}" ${String(__tmGetSafeViewMode(SettingsStore.data.defaultViewMode || 'list')) === view.id ? 'selected' : ''}>${view.longLabel}</option>` : '';
+                                }).join('')}
                             </select>
                         </div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+                            <span style="font-size:12px;color:var(--tm-secondary-text);">移动端默认:</span>
+                            <select onchange="updateDefaultViewModeMobile(this.value)" style="padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
+                                ${__tmGetEnabledViews().map((viewId) => {
+                                    const view = __TM_ALL_VIEWS.find(v => v.id === viewId);
+                                    return view ? `<option value="${view.id}" ${String(__tmGetSafeViewMode(SettingsStore.data.defaultViewModeMobile || SettingsStore.data.defaultViewMode || 'list')) === view.id ? 'selected' : ''}>${view.longLabel}</option>` : '';
+                                }).join('')}
+                            </select>
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <div style="font-size:12px;color:var(--tm-secondary-text);margin-bottom:8px;">显示视图:</div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                ${(() => {
+                                    const enabledViews = __tmGetEnabledViews();
+                                    return __TM_ALL_VIEWS.map((view) => {
+                                        const checked = enabledViews.includes(view.id);
+                                        const disabled = checked && enabledViews.length <= 1;
+                                        return `
+                                            <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--tm-border-color);border-radius:999px;background:var(--tm-card-bg);cursor:${disabled ? 'not-allowed' : 'pointer'};opacity:${disabled ? 0.6 : 1};">
+                                                <input class="b3-switch fn__flex-center" type="checkbox" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} onchange="updateEnabledView('${view.id}', this.checked)">
+                                                <span>${view.longLabel}</span>
+                                            </label>
+                                        `;
+                                    }).join('');
+                                })()}
+                            </div>
+                            <div style="font-size:12px;color:var(--tm-secondary-text);margin-top:6px;">顶栏和移动端视图切换会同步隐藏这里关闭的视图，至少保留一个。</div>
+                        </div>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input type="checkbox" ${SettingsStore.data.kanbanCompactMode ? 'checked' : ''} onchange="updateKanbanCompactMode(this.checked)">
+                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.kanbanCompactMode ? 'checked' : ''} onchange="updateKanbanCompactMode(this.checked)">
                             看板紧凑模式（更窄更矮，显示更多卡片）
                         </label>
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
@@ -27313,23 +29277,23 @@ async function __tmRefreshAfterWake(reason) {
                             <span style="font-size:12px;min-width:52px;">${Math.max(220, Math.min(520, Number(SettingsStore.data.kanbanColumnWidth) || 320))}px</span>
                         </div>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input type="checkbox" ${SettingsStore.data.kanbanShowDoneColumn ? 'checked' : ''} onchange="updateKanbanShowDoneColumn(this.checked)">
+                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.kanbanShowDoneColumn ? 'checked' : ''} onchange="updateKanbanShowDoneColumn(this.checked)">
                             看板显示“已完成”列
                         </label>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input type="checkbox" ${SettingsStore.data.kanbanDragSyncSubtasks ? 'checked' : ''} onchange="updateKanbanDragSyncSubtasks(this.checked)">
+                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.kanbanDragSyncSubtasks ? 'checked' : ''} onchange="updateKanbanDragSyncSubtasks(this.checked)">
                             看板拖动父任务时同步更改子任务状态
                         </label>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input type="checkbox" ${SettingsStore.data.docH2SubgroupEnabled !== false ? 'checked' : ''} onchange="updateDocH2SubgroupEnabled(this.checked)">
+                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.docH2SubgroupEnabled !== false ? 'checked' : ''} onchange="updateDocH2SubgroupEnabled(this.checked)">
                             文档分组下按二级标题子分组（时间轴/表格/日历侧边栏）
                         </label>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input type="checkbox" ${SettingsStore.data.groupByTaskName || SettingsStore.data.groupMode === 'task' ? 'checked' : ''} onchange="updateGroupByTaskName(this.checked)">
+                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.groupByTaskName || SettingsStore.data.groupMode === 'task' ? 'checked' : ''} onchange="updateGroupByTaskName(this.checked)">
                             分组模式增加：按任务名分组（相同任务内容分为一组）
                         </label>
                         <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input type="checkbox" ${SettingsStore.data.groupSortByBestSubtaskTimeInTimeQuadrant ? 'checked' : ''} onchange="updateGroupSortByBestSubtaskTimeInTimeQuadrant(this.checked)">
+                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.groupSortByBestSubtaskTimeInTimeQuadrant ? 'checked' : ''} onchange="updateGroupSortByBestSubtaskTimeInTimeQuadrant(this.checked)">
                             <span>按时间/四象限分组时：父任务按子任务时间参与分组排序（已过期远 &gt; 已过期近 &gt; 未过期近 &gt; 未过期远）</span>
                         </label>
                         <div style="display:flex;align-items:center;gap:8px;">
@@ -27344,11 +29308,11 @@ async function __tmRefreshAfterWake(reason) {
                     <div style="margin-bottom: 16px; padding: 12px; background: var(--tm-section-bg); border-radius: 8px;">
                         <div style="font-weight: 600; margin-bottom: 8px;">🧷 任务悬浮条（quickbar）</div>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" ${SettingsStore.data.enableQuickbar ? 'checked' : ''} onchange="updateEnableQuickbar(this.checked)">
+                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.enableQuickbar ? 'checked' : ''} onchange="updateEnableQuickbar(this.checked)">
                             启用任务悬浮条（点击任务块显示自定义字段）
                         </label>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px;">
-                            <input type="checkbox" ${SettingsStore.data.pinNewTasksByDefault ? 'checked' : ''} onchange="updatePinNewTasksByDefault(this.checked)">
+                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.pinNewTasksByDefault ? 'checked' : ''} onchange="updatePinNewTasksByDefault(this.checked)">
                             新建任务默认置顶
                         </label>
                         <div style="font-size: 12px; color: var(--tm-secondary-text); margin-top: 6px;">
@@ -27359,7 +29323,7 @@ async function __tmRefreshAfterWake(reason) {
                     <div style="margin-bottom: 16px; padding: 12px; background: var(--tm-section-bg); border-radius: 8px;">
                         <div style="font-weight: 600; margin-bottom: 8px;">🍅 番茄钟联动</div>
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox" ${SettingsStore.data.enableTomatoIntegration ? 'checked' : ''} onchange="updateEnableTomatoIntegration(this.checked)">
+                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.enableTomatoIntegration ? 'checked' : ''} onchange="updateEnableTomatoIntegration(this.checked)">
                             启用底栏番茄钟相关功能（计时/提醒/耗时列）
                         </label>
                         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;opacity:${SettingsStore.data.enableTomatoIntegration ? 1 : 0.6};">
@@ -27419,15 +29383,22 @@ async function __tmRefreshAfterWake(reason) {
                         <button class="tm-btn tm-btn-primary" data-tm-action="addStatusOption" style="margin-top: 8px; font-size: 12px;">+ 添加状态</button>
                     </div>
 
+                    ` : ''}
+
+                    ${activeTab === 'docs' ? `
                     <div style="margin-bottom: 16px; padding: 12px; background: var(--tm-section-bg); border-radius: 8px;">
                         <div style="font-weight: 600; margin-bottom: 8px;">📂 文档分组与管理</div>
+                        <div style="font-size: 12px; color: var(--tm-secondary-text); line-height: 1.7; margin-bottom: 10px;">
+                            <div><b>按笔记本分组：</b>自动搜索笔记本内有任务的文档，分组名称跟随笔记本名称。</div>
+                            <div style="margin-top: 4px;"><b>自定义分组：</b>可自定义设置分组名称，文档手动添加，也支持选择“包含子文档”自动搜索有任务的子文档。</div>
+                        </div>
                         ${renderGroupSelector()}
                         
                         <div style="display: flex; gap: 8px; margin-top: 12px;">
                             <input type="text" id="manualDocId" placeholder="输入文档ID"
                                    style="flex: 1; padding: 8px 12px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px; font-size: 13px;">
                             <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; user-select: none;">
-                                <input type="checkbox" id="recursiveCheck">
+                                <input class="b3-switch fn__flex-center" type="checkbox" id="recursiveCheck">
                                 包含子文档
                             </label>
                             <button class="tm-btn tm-btn-primary" data-tm-action="addManualDoc">添加</button>
@@ -27439,27 +29410,29 @@ async function __tmRefreshAfterWake(reason) {
 
                     <div style="margin-bottom: 0;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="font-weight: 600;">📚 当前列表文档（${currentDocs.length} 个）</span>
-                            ${currentGroupId !== 'all' ? `<button class="tm-btn tm-btn-danger" data-tm-action="clearCurrentGroupDocs" style="padding: 4px 8px; font-size: 12px;">清空当前分组</button>` : ''}
+                            <span style="font-weight: 600;">📚 当前分组内文档（${currentDocs.length} 个）</span>
+                            ${currentGroupId !== 'all' ? `<button class="tm-btn tm-btn-danger" data-tm-action="clearCurrentGroupDocs" style="padding: 4px 8px; font-size: 12px;">清空分组内文档</button>` : ''}
                         </div>
                         ${currentDocs.length > 0 ? `
-                            <div style="max-height: 150px; overflow-y: auto; border: 1px solid var(--tm-border-color); border-radius: 8px; padding: 8px;">
+                            <div style="max-height: min(42vh, 320px); overflow-y: auto; border: 1px solid var(--tm-border-color); border-radius: 8px; padding: 8px;">
                                 ${currentDocs.map((docItem, index) => {
                                     // 尝试从 allDocuments 中查找
                                     const docId = typeof docItem === 'object' ? docItem.id : docItem;
-                                    const isRecursive = typeof docItem === 'object' ? !!docItem.recursive : false;
+                                    const itemKind = String((typeof docItem === 'object' ? docItem.kind : '') || 'doc').trim() || 'doc';
+                                    const isNotebook = itemKind === 'notebook';
+                                    const isRecursive = !isNotebook && (typeof docItem === 'object' ? !!docItem.recursive : false);
                                     
-                                    let doc = state.allDocuments.find(d => d.id === docId);
+                                    let doc = isNotebook ? null : state.allDocuments.find(d => d.id === docId);
 
                                     // 如果找不到，尝试从 taskTree 中查找
-                                    if (!doc) {
+                                    if (!doc && !isNotebook) {
                                         const docEntry = state.taskTree.find(d => d.id === docId);
                                         if (docEntry) {
                                             doc = { id: docId, name: docEntry.name };
                                         }
                                     }
 
-                                    const docName = doc ? doc.name : '未知文档';
+                                    const docName = isNotebook ? __tmGetNotebookDisplayName(docId, '未知笔记本') : (doc ? doc.name : '未知文档');
                                     const displayName = docName.length > 25 ? docName.substring(0, 25) + '...' : docName;
 
                                     return `
@@ -27468,14 +29441,19 @@ async function __tmRefreshAfterWake(reason) {
                                                 <span style="color: var(--tm-primary-color); font-weight: 500;">${index + 1}.</span>
                                                 <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                                     <span title="${esc(docName)}">${esc(displayName)}</span>
+                                                    ${isNotebook ? '<span style="font-size: 10px; background: var(--tm-info-bg); color: var(--tm-primary-color); padding: 1px 4px; border-radius: 4px; margin-left: 4px;">笔记本</span>' : ''}
                                                     ${isRecursive ? '<span style="font-size: 10px; background: var(--tm-info-bg); color: var(--tm-primary-color); padding: 1px 4px; border-radius: 4px; margin-left: 4px;">+子文档</span>' : ''}
                                                 </div>
                                                 <span style="font-size: 11px; color: var(--tm-task-done-color); font-family: monospace;">${docId.slice(0, 8)}...</span>
                                             </div>
                                             ${currentGroupId !== 'all' ? `
+                                                ${isNotebook ? `<span style="font-size: 11px; color: var(--tm-secondary-text);">使用“清空分组内文档”移除</span>` : `
                                                 <button class="tm-btn tm-btn-danger" onclick="removeDocFromGroup(${index})" style="padding: 2px 6px; font-size: 11px;">移除</button>
+                                                `}
                                             ` : `
+                                                ${isNotebook ? `<span style="font-size: 11px; color: var(--tm-secondary-text);">来自笔记本分组</span>` : `
                                                 <button class="tm-btn tm-btn-danger" onclick="removeDocFromAll('${docId}')" style="padding: 2px 6px; font-size: 11px;">移除</button>
+                                                `}
                                             `}
                                         </div>
                                     `;
@@ -27544,8 +29522,12 @@ async function __tmRefreshAfterWake(reason) {
     }
     window.showSettings = showSettings;
     window.tmSwitchSettingsTab = function(tab) {
-        const prev = state.settingsActiveTab || 'main';
-        if (tab === 'rules') {
+        const prev = state.settingsActiveTab || 'docs';
+        if (tab === 'main') {
+            state.settingsActiveTab = 'main';
+        } else if (tab === 'docs') {
+            state.settingsActiveTab = 'docs';
+        } else if (tab === 'rules') {
             state.settingsActiveTab = 'rules';
         } else if (tab === 'appearance') {
             state.settingsActiveTab = 'appearance';
@@ -27557,9 +29539,9 @@ async function __tmRefreshAfterWake(reason) {
             state.priorityScoreDraft = state.priorityScoreDraft || __tmEnsurePriorityDraft();
             state.settingsActiveTab = 'priority';
         } else {
-            state.settingsActiveTab = 'main';
+            state.settingsActiveTab = 'docs';
         }
-        if ((state.settingsActiveTab || 'main') === prev) return;
+        if ((state.settingsActiveTab || 'docs') === prev) return;
         showSettings();
     };
 
@@ -27657,6 +29639,13 @@ async function __tmRefreshAfterWake(reason) {
                 ]
             },
             {
+                title: '任务其它列字体颜色',
+                rows: [
+                    { label: '亮色', key: 'taskMetaColorLight', value: d.taskMetaColorLight || '#5f6368' },
+                    { label: '夜间', key: 'taskMetaColorDark', value: d.taskMetaColorDark || '#b0b8c4' }
+                ]
+            },
+            {
                 title: '子任务进度条背景',
                 rows: [
                     { label: '亮色', key: 'progressBarColorLight', value: d.progressBarColorLight || '#4caf50' },
@@ -27737,7 +29726,7 @@ async function __tmRefreshAfterWake(reason) {
             </div>
             <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-card-bg);margin-bottom:12px;">
                 <span style="font-size:12px;color:var(--tm-secondary-text);">分组内任务行背景使用分组色</span>
-                <input type="checkbox" ${d.enableGroupTaskBgByGroupColor ? 'checked' : ''} onchange="tmToggleGroupTaskBgByGroupColor(this.checked)">
+                <input class="b3-switch fn__flex-center" type="checkbox" ${d.enableGroupTaskBgByGroupColor ? 'checked' : ''} onchange="tmToggleGroupTaskBgByGroupColor(this.checked)">
             </label>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">
                 ${cards}
@@ -27762,6 +29751,8 @@ async function __tmRefreshAfterWake(reason) {
             topbarTextColorDark: '#ffffff',
             taskContentColorLight: '#333333',
             taskContentColorDark: '#e0e0e0',
+            taskMetaColorLight: '#5f6368',
+            taskMetaColorDark: '#b0b8c4',
             groupDocLabelColorLight: '#333333',
             groupDocLabelColorDark: '#e0e0e0',
             timeGroupBaseColorLight: '#1a73e8',
@@ -27784,6 +29775,7 @@ async function __tmRefreshAfterWake(reason) {
             'topbarGradientLightStart', 'topbarGradientLightEnd', 'topbarGradientDarkStart', 'topbarGradientDarkEnd',
             'topbarTextColorLight', 'topbarTextColorDark',
             'taskContentColorLight', 'taskContentColorDark',
+            'taskMetaColorLight', 'taskMetaColorDark',
             'groupDocLabelColorLight', 'groupDocLabelColorDark',
             'timeGroupBaseColorLight', 'timeGroupBaseColorDark',
             'timeGroupOverdueColorLight', 'timeGroupOverdueColorDark',
@@ -27851,6 +29843,8 @@ async function __tmRefreshAfterWake(reason) {
         SettingsStore.data.topbarTextColorDark = '#ffffff';
         SettingsStore.data.taskContentColorLight = '#333333';
         SettingsStore.data.taskContentColorDark = '#e0e0e0';
+        SettingsStore.data.taskMetaColorLight = '#5f6368';
+        SettingsStore.data.taskMetaColorDark = '#b0b8c4';
         SettingsStore.data.groupDocLabelColorLight = '#333333';
         SettingsStore.data.groupDocLabelColorDark = '#e0e0e0';
         SettingsStore.data.timeGroupBaseColorLight = '#1a73e8';
@@ -28183,22 +30177,44 @@ async function __tmRefreshAfterWake(reason) {
         }
     };
 
-    // 新增：创建分组
-    window.createNewGroup = async function() {
-        const name = await showPrompt('新建分组', '请输入分组名称', '新分组');
-        if (!name) return;
-        
-        const newGroup = {
-            id: 'g_' + Date.now(),
-            name: name,
-            docs: []
-        };
-        
+    async function __tmCreateGroupAndSelect(newGroup) {
+        if (!newGroup || typeof newGroup !== 'object') return;
         const groups = SettingsStore.data.docGroups || [];
         groups.push(newGroup);
         await SettingsStore.updateDocGroups(groups);
         await SettingsStore.updateCurrentGroupId(newGroup.id);
         showSettings();
+    };
+
+    window.createNotebookGroup = async function() {
+        await __tmRefreshNotebookCache(true);
+        const notebooks = (Array.isArray(state.notebooks) ? state.notebooks : []).map((item) => ({
+            value: String(item?.id || item?.box || '').trim(),
+            label: String(item?.name || item?.title || '').trim() || String(item?.id || item?.box || '').trim()
+        })).filter((item) => item.value);
+        if (notebooks.length === 0) {
+            hint('⚠ 未找到可用笔记本', 'warning');
+            return;
+        }
+        const notebookId = await showSelectPrompt('选择笔记本', notebooks, notebooks[0].value);
+        if (!notebookId) return;
+        const notebookName = __tmGetNotebookDisplayName(notebookId, notebooks.find((item) => item.value === notebookId)?.label || '');
+        await __tmCreateGroupAndSelect({
+            id: 'g_' + Date.now(),
+            name: notebookName,
+            notebookId,
+            docs: []
+        });
+    };
+
+    window.createCustomGroup = async function() {
+        const name = await showPrompt('新建自定义分组', '请输入分组名称', '新分组');
+        if (!name) return;
+        await __tmCreateGroupAndSelect({
+            id: 'g_' + Date.now(),
+            name,
+            docs: []
+        });
     };
 
     // 新增：删除当前分组
@@ -28262,12 +30278,10 @@ async function __tmRefreshAfterWake(reason) {
         for (const g of groups) {
             const gid = String(g?.id || '').trim();
             if (!gid) continue;
-            const docs = Array.isArray(g?.docs) ? g.docs : [];
-            const ds = docs.map((d) => {
-                const did = String((typeof d === 'object' ? d?.id : d) || '').trim();
-                const rec = !!(typeof d === 'object' && d && d.recursive);
+            const ds = __tmGetGroupSourceEntries(g).map((d) => {
+                const did = String(d?.id || '').trim();
                 if (!did) return '';
-                return did + (rec ? '*' : '');
+                return did + (d.kind === 'notebook' ? '#nb' : (d.recursive ? '*' : ''));
             }).filter(Boolean);
             parts.push(`${gid}:${ds.join(',')}`);
         }
@@ -28279,22 +30293,13 @@ async function __tmRefreshAfterWake(reason) {
         for (const g of groups) {
             const gid = String(g?.id || '').trim();
             if (!gid) continue;
-            const docs = Array.isArray(g?.docs) ? g.docs : [];
-            for (const d of docs) {
-                const did = String((typeof d === 'object' ? d?.id : d) || '').trim();
-                const rec = !!(typeof d === 'object' && d && d.recursive);
-                if (!did) continue;
-                if (!map.has(did)) map.set(did, gid);
-                if (rec && API && typeof API.getSubDocIds === 'function') {
-                    try {
-                        const subs = await API.getSubDocIds(did);
-                        (Array.isArray(subs) ? subs : []).forEach((sid) => {
-                            const s = String(sid || '').trim();
-                            if (!s) return;
-                            if (!map.has(s)) map.set(s, gid);
-                        });
-                    } catch (e) {}
-                }
+            const entries = __tmGetGroupSourceEntries(g);
+            for (const entry of entries) {
+                await __tmExpandSourceEntryDocIds(entry, (did0) => {
+                    const did = String(did0 || '').trim();
+                    if (!did || map.has(did)) return;
+                    map.set(did, gid);
+                });
             }
         }
         window.__tmSummaryDocToGroupCache = { key, map };
@@ -28333,21 +30338,12 @@ async function __tmRefreshAfterWake(reason) {
         const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
         const set = new Set();
         for (const g of groups) {
-            const docs = Array.isArray(g?.docs) ? g.docs : [];
-            for (const d of docs) {
-                const did = String((typeof d === 'object' ? d?.id : d) || '').trim();
-                const rec = !!(typeof d === 'object' && d && d.recursive);
-                if (!did) continue;
-                set.add(did);
-                if (rec && API && typeof API.getSubDocIds === 'function') {
-                    try {
-                        const subIds = await API.getSubDocIds(did);
-                        (Array.isArray(subIds) ? subIds : []).forEach((sid) => {
-                            const s = String(sid || '').trim();
-                            if (s) set.add(s);
-                        });
-                    } catch (e) {}
-                }
+            const entries = __tmGetGroupSourceEntries(g);
+            for (const entry of entries) {
+                await __tmExpandSourceEntryDocIds(entry, (did) => {
+                    const id = String(did || '').trim();
+                    if (id) set.add(id);
+                });
             }
         }
         if (set.size === 0) {
@@ -28357,6 +30353,53 @@ async function __tmRefreshAfterWake(reason) {
             });
         }
         return Array.from(set);
+    }
+
+    async function __tmSummaryBuildDocNameMapByGroups(baseMap) {
+        const out = (baseMap && typeof baseMap === 'object') ? { ...baseMap } : {};
+        const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
+        for (const g of groups) {
+            const docEntries = __tmNormalizeGroupDocEntries(g);
+            docEntries.forEach((doc) => {
+                const id = String(doc?.id || '').trim();
+                if (!id || out[id]) return;
+                const fromAll = (Array.isArray(state.allDocuments) ? state.allDocuments : []).find((d) => String(d?.id || '').trim() === id);
+                if (fromAll?.name) out[id] = String(fromAll.name).trim() || id;
+            });
+            const notebookId = String(g?.notebookId || '').trim();
+            if (!notebookId) continue;
+            try {
+                const docs = await API.getNotebookDocuments(notebookId);
+                (Array.isArray(docs) ? docs : []).forEach((doc) => {
+                    const id = String(doc?.id || '').trim();
+                    if (!id || out[id]) return;
+                    out[id] = String(doc?.name || '').trim() || id;
+                });
+            } catch (e) {}
+        }
+        return out;
+    }
+
+    async function __tmSummaryBuildGroupDocIdsMap() {
+        const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
+        const out = {};
+        for (const g of groups) {
+            const gid = String(g?.id || '').trim();
+            if (!gid) continue;
+            const ids = [];
+            const seen = new Set();
+            const entries = __tmGetGroupSourceEntries(g);
+            for (const entry of entries) {
+                await __tmExpandSourceEntryDocIds(entry, (did) => {
+                    const id = String(did || '').trim();
+                    if (!id || seen.has(id)) return;
+                    seen.add(id);
+                    ids.push(id);
+                });
+            }
+            out[gid] = ids;
+        }
+        return out;
     }
 
     async function __tmSummaryLoadTasksByDocs(docIds) {
@@ -28399,11 +30442,52 @@ async function __tmRefreshAfterWake(reason) {
         }).filter(Boolean);
     }
 
+    async function __tmSummaryLoadTasksByDocFallback(docId) {
+        const id = String(docId || '').trim();
+        if (!id) return [];
+        const limit = Math.max(2000, Number(SettingsStore.data.queryLimit) || 5000);
+        let list = [];
+        try {
+            const res = await API.getTasksByDocument(id, limit, { doneOnly: false });
+            list = Array.isArray(res?.tasks) ? res.tasks : [];
+        } catch (e) {
+            list = [];
+        }
+        let h2Map = new Map();
+        try {
+            h2Map = await API.fetchH2Contexts(list.map(t => t?.id).filter(Boolean));
+        } catch (e) {
+            h2Map = new Map();
+        }
+        return list.map((task) => {
+            if (!task || typeof task !== 'object') return null;
+            const t = { ...task };
+            let parsedDone = !!t.done;
+            try {
+                const parsed = API.parseTaskStatus(t.markdown);
+                parsedDone = !!parsed.done;
+                t.done = parsedDone;
+                t.content = parsed.content;
+            } catch (e) {}
+            try { MetaStore.applyToTask?.(t); } catch (e) {}
+            t.done = parsedDone;
+            const docName = String(t.docName || t.doc_name || '未命名文档');
+            try { normalizeTaskFields(t, docName); } catch (e) {}
+            const h2ctx = h2Map.get(t.id);
+            if (h2ctx && typeof h2ctx === 'object') {
+                t.h2 = String(h2ctx.content || '').trim();
+                t.h2Id = String(h2ctx.id || '').trim();
+            }
+            return t;
+        }).filter(Boolean);
+    }
+
     function __tmSummaryCollectTasks(ctx, filter) {
         const out = [];
         const arr = Array.isArray(ctx.summaryTasks) ? ctx.summaryTasks : [];
         const docNameMap = ctx.docNameMap || {};
         const docToGroup = ctx.docToGroup || new Map();
+        const groupDocIdsMap = (ctx.groupDocIdsMap && typeof ctx.groupDocIdsMap === 'object') ? ctx.groupDocIdsMap : {};
         const f = filter || {};
         const start = String(f.start || '').trim();
         const end = String(f.end || '').trim();
@@ -28443,10 +30527,11 @@ async function __tmRefreshAfterWake(reason) {
             if (!docId) return;
             if (docIdFilter !== '__all__' && docId !== docIdFilter) return;
             const gid = String(docToGroup.get(docId) || '').trim();
+            const groupDocIds = Array.isArray(groupDocIdsMap[groupId]) ? groupDocIdsMap[groupId] : [];
             if (groupId === '__ungrouped__') {
                 if (gid) return;
-            } else if (groupId !== '__all__' && gid !== groupId) {
-                return;
+            } else if (groupId !== '__all__') {
+                if (!groupDocIds.includes(docId)) return;
             }
 
             const dateKey = __tmSummaryTaskDate(task);
@@ -28610,20 +30695,83 @@ async function __tmRefreshAfterWake(reason) {
         const gid = String(groupSel.value || '__all__').trim();
         const docToGroup = ctx.docToGroup || new Map();
         const docTaskCount = (ctx.docTaskCount && typeof ctx.docTaskCount === 'object') ? ctx.docTaskCount : {};
+        const groupDocIdsMap = (ctx.groupDocIdsMap && typeof ctx.groupDocIdsMap === 'object') ? ctx.groupDocIdsMap : {};
         const allLabel = gid === '__all__' ? '全部分区内文档' : (gid === '__ungrouped__' ? '未分组全部文档' : '当前分区全部文档');
         const options = [{ id: '__all__', name: allLabel }];
-        Object.entries(ctx.docNameMap || {}).forEach(([docId, name]) => {
-            if (!Number(docTaskCount[String(docId)] || 0)) return;
-            const g = String(docToGroup.get(String(docId)) || '').trim();
-            if (gid === '__all__' || (gid === '__ungrouped__' ? !g : g === gid)) {
-                options.push({ id: String(docId), name: String(name || docId) });
-            }
-        });
+        if (gid !== '__all__' && gid !== '__ungrouped__') {
+            const ids = Array.isArray(groupDocIdsMap[gid]) ? groupDocIdsMap[gid] : [];
+            ids.forEach((docId) => {
+                const id = String(docId || '').trim();
+                if (!id) return;
+                const name = String((ctx.docNameMap || {})[id] || id);
+                options.push({ id, name });
+            });
+        } else {
+            Object.entries(ctx.docNameMap || {}).forEach(([docId, name]) => {
+                if (!Number(docTaskCount[String(docId)] || 0)) return;
+                const g = String(docToGroup.get(String(docId)) || '').trim();
+                if (gid === '__all__' || (gid === '__ungrouped__' ? !g : g === gid)) {
+                    options.push({ id: String(docId), name: String(name || docId) });
+                }
+            });
+        }
         docSel.innerHTML = options
+            .filter((it, idx, arr) => arr.findIndex((x) => String(x.id) === String(it.id)) === idx)
             .sort((a, b) => String(a.name).localeCompare(String(b.name), 'zh-Hans-CN'))
             .map((it) => `<option value="${esc(it.id)}">${esc(it.name)}</option>`)
             .join('');
         docSel.value = options.some(it => it.id === prevDoc) ? prevDoc : '__all__';
+    }
+
+    async function __tmSummaryEnsureTasksForFilter(ctx, filter) {
+        if (!ctx || typeof ctx !== 'object') return;
+        const f = (filter && typeof filter === 'object') ? filter : {};
+        const groupDocIdsMap = (ctx.groupDocIdsMap && typeof ctx.groupDocIdsMap === 'object') ? ctx.groupDocIdsMap : {};
+        let targetDocIds = [];
+        const docId = String(f.docId || '__all__').trim();
+        const groupId = String(f.groupId || '__all__').trim();
+        if (docId && docId !== '__all__') {
+            targetDocIds = [docId];
+        } else if (groupId && groupId !== '__all__' && groupId !== '__ungrouped__') {
+            targetDocIds = Array.isArray(groupDocIdsMap[groupId]) ? groupDocIdsMap[groupId] : [];
+        } else {
+            return;
+        }
+        const ids = Array.from(new Set(targetDocIds.map((id) => String(id || '').trim()).filter(Boolean)));
+        if (!ids.length) return;
+
+        let tasks = await __tmSummaryLoadTasksByDocs(ids);
+        const hitDocIds = new Set(tasks.map((t) => String(t?.docId || t?.root_id || '').trim()).filter(Boolean));
+        const missingDocIds = ids.filter((id) => !hitDocIds.has(id));
+        if (missingDocIds.length > 0) {
+            for (const missingId of missingDocIds) {
+                const extra = await __tmSummaryLoadTasksByDocFallback(missingId);
+                if (extra.length > 0) tasks = tasks.concat(extra);
+            }
+        }
+        const prev = Array.isArray(ctx.summaryTasks) ? ctx.summaryTasks : [];
+        const merged = new Map();
+        prev.forEach((t) => {
+            const id = String(t?.id || '').trim();
+            if (id) merged.set(id, t);
+        });
+        tasks.forEach((t) => {
+            const id = String(t?.id || '').trim();
+            if (id) merged.set(id, t);
+            const did = String(t?.docId || t?.root_id || '').trim();
+            if (did) {
+                ctx.docNameMap = (ctx.docNameMap && typeof ctx.docNameMap === 'object') ? ctx.docNameMap : {};
+                if (!ctx.docNameMap[did]) ctx.docNameMap[did] = String(t?.docName || '').trim() || did;
+            }
+        });
+        ctx.summaryTasks = Array.from(merged.values());
+        const nextCount = {};
+        (ctx.summaryTasks || []).forEach((t) => {
+            const did = String(t?.docId || t?.root_id || '').trim();
+            if (!did) return;
+            nextCount[did] = Number(nextCount[did] || 0) + 1;
+        });
+        ctx.docTaskCount = nextCount;
     }
 
     function __tmSummaryUpdatePreview(root, ctx) {
@@ -28659,6 +30807,7 @@ async function __tmRefreshAfterWake(reason) {
             if (!docId) return;
             if (!docNameMap[docId]) docNameMap[docId] = String(t?.docName || '').trim() || docId;
         });
+        Object.assign(docNameMap, await __tmSummaryBuildDocNameMapByGroups(docNameMap));
 
         const statusOptions = Array.isArray(SettingsStore.data.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
         const statusMap = new Map();
@@ -28672,10 +30821,11 @@ async function __tmRefreshAfterWake(reason) {
         const groupNameMap = { '__all__': '全部分组', '__ungrouped__': '未分组' };
         groups.forEach((g) => {
             const gid = String(g?.id || '').trim();
-            if (gid) groupNameMap[gid] = String(g?.name || gid);
+            if (gid) groupNameMap[gid] = __tmResolveDocGroupName(g);
         });
 
         const docToGroup = await __tmBuildSummaryDocToGroupMap();
+        const groupDocIdsMap = await __tmSummaryBuildGroupDocIdsMap();
         const allDocIds = await __tmSummaryResolveAllDocIds();
         const summaryTasks = await __tmSummaryLoadTasksByDocs(allDocIds);
         const docTaskCount = {};
@@ -28687,7 +30837,7 @@ async function __tmRefreshAfterWake(reason) {
         });
         const groupOptions = [
             { id: '__all__', name: '全部分组' },
-            ...groups.map((g) => ({ id: String(g?.id || '').trim(), name: String(g?.name || '').trim() || '未命名分组' })).filter(g => g.id),
+            ...groups.map((g) => ({ id: String(g?.id || '').trim(), name: __tmResolveDocGroupName(g) })).filter(g => g.id),
             { id: '__ungrouped__', name: '未分组' }
         ];
         const statusSelectOptions = [
@@ -28761,16 +30911,19 @@ async function __tmRefreshAfterWake(reason) {
         document.body.appendChild(state.summaryModal);
 
         const root = state.summaryModal;
-        const ctx = { docNameMap, docTaskCount, docToGroup, statusMap, groupNameMap, summaryTasks };
+        const ctx = { docNameMap, docTaskCount, docToGroup, groupDocIdsMap, statusMap, groupNameMap, summaryTasks };
         __tmSummaryRefreshDocOptions(root, ctx);
+        await __tmSummaryEnsureTasksForFilter(ctx, __tmSummaryReadFilter(root));
         __tmSummaryUpdatePreview(root, ctx);
 
-        root.addEventListener('change', (e) => {
+        root.addEventListener('change', async (e) => {
             const target = e.target;
             if (!(target instanceof Element)) return;
             const key = String(target.getAttribute('data-tm-summary') || '').trim();
             if (!key) return;
             if (key === 'group') __tmSummaryRefreshDocOptions(root, ctx);
+            const filter = __tmSummaryReadFilter(root);
+            await __tmSummaryEnsureTasksForFilter(ctx, filter);
             __tmSummaryUpdatePreview(root, ctx);
         });
 
@@ -28783,6 +30936,7 @@ async function __tmRefreshAfterWake(reason) {
                 return;
             }
             if (action === 'refresh') {
+                await __tmSummaryEnsureTasksForFilter(ctx, __tmSummaryReadFilter(root));
                 __tmSummaryUpdatePreview(root, ctx);
                 hint('✅ 已生成摘要', 'success');
                 return;
@@ -28910,7 +31064,7 @@ async function __tmRefreshAfterWake(reason) {
         // 获取当前分组名称
         const groups = SettingsStore.data.docGroups || [];
         const group = groups.find(g => g.id === currentId);
-        const groupName = group ? group.name : '当前分组';
+        const groupName = group ? __tmResolveDocGroupName(group) : '当前分组';
 
         // 显示导出设置对话框
         __tmShowExportDialog(groupName, tasksByDoc, docNames);
@@ -29195,6 +31349,7 @@ async function __tmRefreshAfterWake(reason) {
         const group = groups.find(g => g.id === currentId);
         if (group) {
             group.docs = [];
+            delete group.notebookId;
             await SettingsStore.updateDocGroups(groups);
             showSettings();
         }
@@ -29334,6 +31489,111 @@ async function __tmRefreshAfterWake(reason) {
         hint('✅ 已添加文档', 'success');
     };
 
+    async function __tmAddDocsToGroup(docIdsInput, groupId, options = {}) {
+        const docIds = __tmNormalizeDocIdsForGroupInput(docIdsInput);
+        const targetGroupId = String(groupId || '').trim();
+        if (!docIds.length) {
+            hint('⚠ 未找到可添加的文档', 'warning');
+            return { added: 0, existed: 0, group: null };
+        }
+        if (!targetGroupId) {
+            hint('⚠ 请选择目标分组', 'warning');
+            return { added: 0, existed: 0, group: null };
+        }
+
+        const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
+        const group = groups.find((item) => String(item?.id || '').trim() === targetGroupId);
+        if (!group) {
+            hint('⚠ 目标分组不存在', 'warning');
+            return { added: 0, existed: 0, group: null };
+        }
+
+        if (!Array.isArray(group.docs)) group.docs = [];
+        let added = 0;
+        let existed = 0;
+        docIds.forEach((docId) => {
+            const exists = group.docs.some((item) => String((typeof item === 'object' ? item?.id : item) || '').trim() === docId);
+            if (exists) {
+                existed += 1;
+                return;
+            }
+            group.docs.push({ id: docId, recursive: false });
+            added += 1;
+        });
+
+        if (!added) {
+            const groupName = __tmResolveDocGroupName(group);
+            hint(docIds.length > 1 ? `⚠ 所选文档已都在分组“${groupName}”中` : `⚠ 该文档已在分组“${groupName}”中`, 'warning');
+            return { added: 0, existed, group };
+        }
+
+        await SettingsStore.updateDocGroups(groups);
+
+        await Promise.allSettled(docIds.map(async (docId) => {
+            const docName = await fetchDocName(docId);
+            if (!docName) return;
+            if (!Array.isArray(state.allDocuments)) state.allDocuments = [];
+            const exists = state.allDocuments.some((item) => String(item?.id || '').trim() === docId);
+            if (!exists) state.allDocuments.push({ id: docId, name: docName, path: '', taskCount: 0 });
+        }));
+
+        try {
+            const currentGroupId = String(SettingsStore.data.currentGroupId || 'all').trim() || 'all';
+            if (currentGroupId === targetGroupId || currentGroupId === 'all' || options.forceRefresh) {
+                await loadSelectedDocuments();
+                render();
+                if (state.settingsModal) showSettings();
+            }
+        } catch (e) {}
+
+        return { added, existed, group };
+    }
+
+    window.tmOpenAddDocToGroupDialog = async function(docIdsInput, options = {}) {
+        const docIds = __tmNormalizeDocIdsForGroupInput(docIdsInput);
+        if (!docIds.length) {
+            hint('⚠ 未找到当前文档', 'warning');
+            return;
+        }
+
+        const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
+        if (!groups.length) {
+            hint('⚠ 请先在任务管理器中创建文档分组', 'warning');
+            return;
+        }
+
+        const currentGroupId = String(SettingsStore.data.currentGroupId || '').trim();
+        const defaultGroupId = groups.some((item) => String(item?.id || '').trim() === currentGroupId)
+            ? currentGroupId
+            : String(groups[0]?.id || '').trim();
+        const selectOptions = groups.map((group) => ({
+            value: String(group?.id || '').trim(),
+            label: __tmResolveDocGroupName(group)
+        })).filter((item) => item.value);
+        if (!selectOptions.length) {
+            hint('⚠ 当前没有可用的文档分组', 'warning');
+            return;
+        }
+
+        let title = '添加到任务管理器分组';
+        if (docIds.length > 1) {
+            title = `添加 ${docIds.length} 个文档到任务管理器分组`;
+        }
+
+        const selectedGroupId = await showSelectPrompt(title, selectOptions, defaultGroupId);
+        if (!selectedGroupId) return;
+
+        const result = await __tmAddDocsToGroup(docIds, selectedGroupId, options);
+        if (!result?.group || !result.added) return;
+
+        const groupName = __tmResolveDocGroupName(result.group);
+        if (result.existed > 0) {
+            hint(`✅ 已添加 ${result.added} 个文档到“${groupName}”，${result.existed} 个已存在`, 'success');
+            return;
+        }
+        hint(docIds.length > 1 ? `✅ 已将 ${result.added} 个文档添加到“${groupName}”` : `✅ 已添加到分组“${groupName}”`, 'success');
+    };
+
     // 根据ID获取文档名称
     async function fetchDocName(docId) {
         try {
@@ -29422,12 +31682,40 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.updateDefaultViewMode = async function(mode) {
-        const m0 = String(mode || '').trim();
-        const allow = new Set(['list', 'timeline', 'kanban', 'calendar', 'whiteboard']);
-        const next = allow.has(m0) ? m0 : 'list';
+        const next = __tmGetSafeViewMode(mode);
         SettingsStore.data.defaultViewMode = next;
         await SettingsStore.save();
         showSettings();
+    };
+
+    window.updateDefaultViewModeMobile = async function(mode) {
+        const next = __tmGetSafeViewMode(mode);
+        SettingsStore.data.defaultViewModeMobile = next;
+        await SettingsStore.save();
+        showSettings();
+    };
+
+    window.updateEnabledView = async function(mode, enabled) {
+        const id = String(mode || '').trim();
+        if (!__TM_ALL_VIEWS.some(v => v.id === id)) return;
+        const current = __tmGetEnabledViews();
+        let next = current.slice();
+        if (enabled) {
+            if (!next.includes(id)) next.push(id);
+        } else {
+            if (next.length <= 1) {
+                try { window.siyuan?.showMessage?.('至少保留一个视图'); } catch (e) {}
+                showSettings();
+                return;
+            }
+            next = next.filter(v => v !== id);
+        }
+        SettingsStore.data.enabledViews = __tmNormalizeEnabledViews(next);
+        SettingsStore.data.defaultViewMode = __tmGetSafeViewMode(SettingsStore.data.defaultViewMode);
+        state.viewMode = __tmGetSafeViewMode(state.viewMode);
+        await SettingsStore.save();
+        showSettings();
+        if (state.modal && document.body.contains(state.modal)) render();
     };
 
     window.updateKanbanCompactMode = async function(enabled) {
@@ -29767,6 +32055,7 @@ async function __tmRefreshAfterWake(reason) {
             ev?.stopPropagation?.();
             ev?.preventDefault?.();
         } catch (e) {}
+        const isChecklist = String(state.viewMode || '').trim() === 'checklist';
 
         const k0 = String(groupKey || '').trim();
         const action = state.collapsedGroups.has(k0) ? 'expand' : 'collapse';
@@ -29793,6 +32082,10 @@ async function __tmRefreshAfterWake(reason) {
         try { Storage.set('tm_collapsed_groups', SettingsStore.data.collapsedGroups); } catch (e) {}
         // 同步到云端设置，避免下次加载时被旧云端配置覆盖
         try { SettingsStore.save(); } catch (e) {}
+        if (isChecklist) {
+            __tmRenderChecklistPreserveScroll();
+            return;
+        }
         try { __tmUpdateToggleGlyphInDom({ kind: 'group', key: k0, action }); } catch (e) {}
         if (action === 'collapse') {
             if (state.modal && __tmApplyVisibilityFromState(state.modal)) {
@@ -29812,6 +32105,7 @@ async function __tmRefreshAfterWake(reason) {
             ev?.stopPropagation?.();
             ev?.preventDefault?.();
         } catch (e) {}
+        const isChecklist = String(state.viewMode || '').trim() === 'checklist';
         const key = String(id || '');
         if (!key) return;
 
@@ -29838,6 +32132,10 @@ async function __tmRefreshAfterWake(reason) {
         try { Storage.set('tm_collapsed_task_ids', SettingsStore.data.collapsedTaskIds); } catch (e) {}
         // 同步到云端设置，避免下次加载时被旧云端配置覆盖
         try { SettingsStore.save(); } catch (e) {}
+        if (isChecklist) {
+            __tmRenderChecklistPreserveScroll();
+            return;
+        }
         try { __tmUpdateToggleGlyphInDom({ kind: 'task', key, action }); } catch (e) {}
         if (action === 'collapse') {
             if (state.modal && __tmApplyVisibilityFromState(state.modal)) {
@@ -30280,10 +32578,99 @@ async function __tmRefreshAfterWake(reason) {
         if (!__tmIsMobileDevice()) __tmTopBarTimer = setTimeout(addTopBarIcon, 1000);
     }
 
+    function __tmBindDocGroupMenuEntry() {
+        const eb = globalThis.__taskHorizonPluginInstance?.eventBus || window.siyuan?.eventBus;
+        if (!eb || typeof eb.on !== 'function') return;
+        __tmDocMenuEventBus = eb;
+
+        if (__tmEditorTitleIconMenuHandler && typeof eb.off === 'function') {
+            try { eb.off('click-editortitleicon', __tmEditorTitleIconMenuHandler); } catch (e) {}
+            __tmEditorTitleIconMenuHandler = null;
+        }
+        if (__tmDocTreeMenuHandler && typeof eb.off === 'function') {
+            try { eb.off('open-menu-doctree', __tmDocTreeMenuHandler); } catch (e) {}
+            __tmDocTreeMenuHandler = null;
+        }
+
+        __tmEditorTitleIconMenuHandler = (event) => {
+            const detail = event?.detail || {};
+            const menu = detail.menu;
+            if (!menu || typeof menu.addItem !== 'function') return;
+            const docId = String(detail?.data?.id || detail?.protyle?.block?.rootID || '').trim();
+            if (!docId) return;
+            menu.addItem({
+                icon: 'iconTaskHorizon',
+                label: '添加到任务管理器分组',
+                click: () => {
+                    try { window.tmOpenAddDocToGroupDialog?.(docId); } catch (e) {}
+                }
+            });
+        };
+
+        __tmDocTreeMenuHandler = (event) => {
+            const detail = event?.detail || {};
+            const menu = detail.menu;
+            if (!menu || typeof menu.addItem !== 'function') return;
+            const type = String(detail?.type || '').trim();
+            if (type !== 'doc' && type !== 'docs') return;
+            const docIds = __tmTryCollectDocIdsFromElements(detail?.elements);
+            if (!docIds.length) return;
+            menu.addItem({
+                icon: 'iconTaskHorizon',
+                label: docIds.length > 1 ? '添加所选文档到任务管理器分组' : '添加到任务管理器分组',
+                click: () => {
+                    try { window.tmOpenAddDocToGroupDialog?.(docIds); } catch (e) {}
+                }
+            });
+        };
+
+        eb.on('click-editortitleicon', __tmEditorTitleIconMenuHandler);
+        eb.on('open-menu-doctree', __tmDocTreeMenuHandler);
+    }
+
+    function __tmBindNativeDocMenuEntry() {
+        try {
+            document.removeEventListener('contextmenu', __tmNativeDocMenuCaptureHandler, true);
+            document.removeEventListener('mousedown', __tmNativeDocMenuCaptureHandler, true);
+            document.removeEventListener('click', __tmNativeDocMenuCaptureHandler, true);
+        } catch (e) {}
+
+        __tmNativeDocMenuCaptureHandler = (e) => {
+            try { __tmRememberTitleMenuContext(e?.target); } catch (e2) {}
+        };
+        try { document.addEventListener('contextmenu', __tmNativeDocMenuCaptureHandler, true); } catch (e) {}
+        try { document.addEventListener('mousedown', __tmNativeDocMenuCaptureHandler, true); } catch (e) {}
+        try { document.addEventListener('click', __tmNativeDocMenuCaptureHandler, true); } catch (e) {}
+
+        try { __tmDocMenuObserver?.disconnect?.(); } catch (e) {}
+        __tmDocMenuObserver = new MutationObserver(() => {
+            try {
+                const menuItems = document.querySelector('#commonMenu .b3-menu__items');
+                if (!menuItems) return;
+                const titleMenu = menuItems.closest?.('[data-name="titleMenu"]') || document.querySelector('#commonMenu [data-name="titleMenu"]');
+                if (!titleMenu) return;
+                if (menuItems.querySelector('.tm-doc-group-menu-item')) return;
+                const now = Date.now();
+                const isRecent = __tmLastRightClickedTitleProtyle && __tmLastRightClickedTitleProtyle.isConnected && (now - (Number(__tmLastRightClickedTitleAtMs) || 0) < 3000);
+                const targetProtyle = (isRecent ? __tmLastRightClickedTitleProtyle : null) || __tmFindActiveProtyle?.() || null;
+                const docId = __tmGetDocIdFromProtyle(targetProtyle);
+                if (!docId) return;
+                const menuItem = __tmCreateNativeMenuItem('添加到任务管理器分组', async () => {
+                    await window.tmOpenAddDocToGroupDialog?.(docId);
+                });
+                __tmInsertMenuItem(menuItems, menuItem);
+            } catch (e) {}
+        });
+        try {
+            __tmDocMenuObserver.observe(document.body, { childList: true, subtree: true });
+        } catch (e) {}
+    }
+
     async function init() {
         try { __tmBindWakeReload(); } catch (e) {}
         try { __tmBindTabEnterAutoRefresh(); } catch (e) {}
         try { __tmBindCalendarScheduleUpdated(); } catch (e) {}
+        try { __tmBindDocGroupMenuEntry(); } catch (e) {}
 
         // 监听悬浮条修改任务事件
         try {
@@ -30540,7 +32927,7 @@ async function __tmRefreshAfterWake(reason) {
         // 检查自定义分组
         const groups = SettingsStore.data.docGroups || [];
         for (const group of groups) {
-            if (group.docs && group.docs.length > 0) {
+            if ((group.docs && group.docs.length > 0) || String(group?.notebookId || '').trim()) {
                 return true;
             }
         }
@@ -30630,22 +33017,21 @@ async function __tmRefreshAfterWake(reason) {
         state.wasHidden = false;
 
         await SettingsStore.load();
+        try { await __tmRefreshNotebookCache(); } catch (e) {}
         try {
             if (globalThis.__tmCalendar && typeof globalThis.__tmCalendar.setSettingsStore === 'function') {
                 globalThis.__tmCalendar.setSettingsStore(SettingsStore);
             }
         } catch (e) {}
         try {
-            const allow = new Set(['list', 'timeline', 'kanban', 'calendar', 'whiteboard']);
+            const allow = new Set(['list', 'checklist', 'timeline', 'kanban', 'calendar', 'whiteboard']);
             const isMobileDevice = __tmIsMobileDevice();
             const preserve = !!(options && options.preserveViewMode);
             const current = String(state.viewMode || '').trim();
             if (preserve && state.viewModeInitialized === true && allow.has(current)) {
-                state.viewMode = (isMobileDevice && current === 'timeline') ? 'list' : current;
+                state.viewMode = __tmGetSafeViewMode(current);
             } else {
-                const m0 = String(SettingsStore.data.defaultViewMode || 'list').trim();
-                const m1 = (isMobileDevice && m0 === 'timeline') ? 'list' : m0;
-                state.viewMode = allow.has(m1) ? m1 : 'list';
+                state.viewMode = __tmGetConfiguredDefaultViewMode(isMobileDevice);
             }
             state.viewModeInitialized = true;
         } catch (e) {
@@ -30848,6 +33234,36 @@ async function __tmRefreshAfterWake(reason) {
             if (__tmDomReadyHandler) {
                 document.removeEventListener('DOMContentLoaded', __tmDomReadyHandler);
                 __tmDomReadyHandler = null;
+            }
+        } catch (e) {}
+        try {
+            const eb = __tmDocMenuEventBus || globalThis.__taskHorizonPluginInstance?.eventBus || window.siyuan?.eventBus;
+            if (eb && typeof eb.off === 'function') {
+                if (__tmEditorTitleIconMenuHandler) {
+                    eb.off('click-editortitleicon', __tmEditorTitleIconMenuHandler);
+                    __tmEditorTitleIconMenuHandler = null;
+                }
+                if (__tmDocTreeMenuHandler) {
+                    eb.off('open-menu-doctree', __tmDocTreeMenuHandler);
+                    __tmDocTreeMenuHandler = null;
+                }
+            }
+            __tmDocMenuEventBus = null;
+        } catch (e) {}
+        try {
+            if (__tmNativeDocMenuCaptureHandler) {
+                document.removeEventListener('contextmenu', __tmNativeDocMenuCaptureHandler, true);
+                document.removeEventListener('mousedown', __tmNativeDocMenuCaptureHandler, true);
+                document.removeEventListener('click', __tmNativeDocMenuCaptureHandler, true);
+                __tmNativeDocMenuCaptureHandler = null;
+            }
+            __tmLastRightClickedTitleProtyle = null;
+            __tmLastRightClickedTitleAtMs = 0;
+        } catch (e) {}
+        try {
+            if (__tmDocMenuObserver) {
+                __tmDocMenuObserver.disconnect();
+                __tmDocMenuObserver = null;
             }
         } catch (e) {}
 

@@ -7603,41 +7603,26 @@
         const tomatoRows = s.linkDockTomato ? `
                 <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">月视图隐藏番茄钟</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarMonthAggregate" ${s.monthAggregate ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarMonthAggregate" ${s.monthAggregate ? 'checked' : ''}>
                 </div>
                 <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">显示休息记录</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarShowBreak" ${s.showBreak ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarShowBreak" ${s.showBreak ? 'checked' : ''}>
                 </div>
                 <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">显示闲置记录</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarShowIdle" ${s.showIdle ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarShowIdle" ${s.showIdle ? 'checked' : ''}>
                 </div>
         ` : '';
         containerEl.innerHTML = `
             <div class="tm-calendar-settings">
                 <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">启用日历视图</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarEnabled" ${s.enabled ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarEnabled" ${s.enabled ? 'checked' : ''}>
                 </div>
                 <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">联通底栏番茄钟</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarLinkDockTomato" ${s.linkDockTomato ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarLinkDockTomato" ${s.linkDockTomato ? 'checked' : ''}>
                 </div>
                 <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">日历起始日</div>
@@ -7665,25 +7650,16 @@
                 </div>
                 <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">显示农历</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarShowLunar" ${s.showLunar ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarShowLunar" ${s.showLunar ? 'checked' : ''}>
                 </div>
                 ${tomatoRows}
                 <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">显示跨天任务</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarShowTaskDates" ${s.showTaskDates ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarShowTaskDates" ${s.showTaskDates ? 'checked' : ''}>
                 </div>
                 <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">日程提醒</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarScheduleReminderEnabled" ${s.scheduleReminderEnabled ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarScheduleReminderEnabled" ${s.scheduleReminderEnabled ? 'checked' : ''}>
                 </div>
                 <div class="tm-calendar-settings-row" style="${s.scheduleReminderEnabled ? '' : 'opacity:0.55;pointer-events:none;'}">
                     <div class="tm-calendar-settings-label">日程默认提醒</div>
@@ -7699,31 +7675,19 @@
                 </div>
                 <div class="tm-calendar-settings-row" style="${s.scheduleReminderEnabled ? '' : 'opacity:0.55;pointer-events:none;'}">
                     <div class="tm-calendar-settings-label">系统弹窗提醒</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarScheduleReminderSystemEnabled" ${s.scheduleReminderSystemEnabled ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarScheduleReminderSystemEnabled" ${s.scheduleReminderSystemEnabled ? 'checked' : ''}>
                 </div>
                 <div class="tm-calendar-settings-row" style="${s.scheduleReminderEnabled ? '' : 'opacity:0.55;pointer-events:none;'}">
                     <div class="tm-calendar-settings-label">全天事件提醒</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarAllDayReminderEnabled" ${s.allDayReminderEnabled ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarAllDayReminderEnabled" ${s.allDayReminderEnabled ? 'checked' : ''}>
                 </div>
                 <div class="tm-calendar-settings-row" style="${s.scheduleReminderEnabled ? '' : 'opacity:0.55;pointer-events:none;'}">
                     <div class="tm-calendar-settings-label">跨天事项全天提醒</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarTaskDateAllDayReminderEnabled" ${s.taskDateAllDayReminderEnabled ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarTaskDateAllDayReminderEnabled" ${s.taskDateAllDayReminderEnabled ? 'checked' : ''}>
                 </div>
                 <div class="tm-calendar-settings-row" style="${s.scheduleReminderEnabled ? '' : 'opacity:0.55;pointer-events:none;'}">
                     <div class="tm-calendar-settings-label">全天汇总包含番茄/节日</div>
-                    <label class="tm-switch">
-                        <input type="checkbox" data-tm-cal-setting="calendarAllDaySummaryIncludeExtras" ${s.allDaySummaryIncludeExtras ? 'checked' : ''}>
-                        <span class="tm-switch-slider"></span>
-                    </label>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarAllDaySummaryIncludeExtras" ${s.allDaySummaryIncludeExtras ? 'checked' : ''}>
                 </div>
                 <div class="tm-calendar-settings-row" style="${(s.scheduleReminderEnabled && (s.allDayReminderEnabled || s.taskDateAllDayReminderEnabled)) ? '' : 'opacity:0.55;pointer-events:none;'}">
                     <div class="tm-calendar-settings-label">全天提醒时间</div>
