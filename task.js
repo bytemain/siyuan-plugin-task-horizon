@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.7.6
+// @version      1.7.7
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -14298,6 +14298,21 @@ async function __tmRefreshAfterWake(reason) {
         if (!__tmRefreshChecklistSelectionInPlace(state.modal)) render();
     };
 
+    window.tmChecklistTitlePointerDown = function(ev) {
+        try { ev?.stopPropagation?.(); } catch (e) {}
+    };
+
+    window.tmChecklistTitleClick = function(taskId, ev) {
+        const id = String(taskId || '').trim();
+        if (!id) return;
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        if (__tmIsMobileDevice()) {
+            window.tmChecklistSelectTask(id, ev);
+            return;
+        }
+        window.tmJumpToTask(id, ev);
+    };
+
     window.tmChecklistCloseSheet = function(ev) {
         try { ev?.stopPropagation?.(); } catch (e) {}
         try { ev?.preventDefault?.(); } catch (e) {}
@@ -14846,7 +14861,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main">
                             <div class="tm-checklist-title-row">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" onclick="if(__tmIsMobileDevice()) { tmChecklistSelectTask('${escSq(String(task.id || ''))}', event); } else { event.stopPropagation(); tmJumpToTask('${escSq(String(task.id || ''))}', event); }" title="跳转到任务">${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span>${reminderHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" draggable="false" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)" title="跳转到任务">${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span>${reminderHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
                                 ${hasChildren ? `<span class="tm-checklist-mobile-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : ''}
@@ -25202,7 +25217,7 @@ async function __tmRefreshAfterWake(reason) {
 
         // 1. 优先尝试移动端 API (如果在移动端环境下)
         const openMobile = getOpenMobileFn();
-        if (typeof openMobile === 'function') {
+        if (__tmIsMobileDevice() && typeof openMobile === 'function') {
             try {
                 let docId = id;
                 try {
@@ -29774,7 +29789,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main">
                             <div class="tm-checklist-title-row">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" onclick="if(__tmIsMobileDevice()) { tmChecklistSelectTask('${escSq(String(task.id || ''))}', event); } else { event.stopPropagation(); tmJumpToTask('${escSq(String(task.id || ''))}', event); }" title="跳转到任务">${esc(String(task.content || '').trim() || '(无内容)')}</span>${reminderHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" draggable="false" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)" title="跳转到任务">${esc(String(task.content || '').trim() || '(无内容)')}</span>${reminderHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
                                 ${hasChildren ? `<span class="tm-checklist-mobile-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : ''}
