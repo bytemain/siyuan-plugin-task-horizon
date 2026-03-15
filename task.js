@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.7.7
+// @version      1.7.8
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -98,6 +98,8 @@
             --tm-quadrant-blue: #1a73e8;
             --tm-quadrant-green: #34a853;
             --tm-whiteboard-grid-color: rgba(0,0,0,0.06);
+            --tm-task-leading-ring-bg: rgba(226, 232, 240, 0.95);
+            --tm-task-leading-ring-border: rgba(148, 163, 184, 0.2);
         }
 
         [data-theme-mode="dark"] {
@@ -144,6 +146,8 @@
             --tm-quadrant-blue: #6ba5ff;
             --tm-quadrant-green: #4caf50;
             --tm-whiteboard-grid-color: rgba(255,255,255,0.10);
+            --tm-task-leading-ring-bg: rgba(55, 65, 81, 0.92);
+            --tm-task-leading-ring-border: rgba(120, 120, 120, 0.3);
         }
 
         .tm-color-picker-backdrop {
@@ -388,8 +392,9 @@
             border-radius: 12px;
             box-shadow: var(--tm-shadow);
             padding: 24px;
-            display: flex;
+            display: inline-flex;
             flex-direction: column;
+            align-items: flex-start;
             color: var(--tm-text-color);
         }
         
@@ -1501,6 +1506,13 @@
             height: 100%;
             min-height: 0;
             overscroll-behavior: contain;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tm-body.tm-body--kanban::-webkit-scrollbar {
+            width: 0;
+            height: 0;
         }
 
         .tm-body.tm-body--whiteboard {
@@ -2436,7 +2448,7 @@
             display: flex;
             gap: 10px;
             align-items: stretch;
-            width: max-content;
+            width: auto;
             min-height: 100%;
             height: 100%;
         }
@@ -2588,6 +2600,13 @@
             min-height: 120px;
             flex: 1 1 auto;
             overscroll-behavior: contain;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tm-kanban-col-body::-webkit-scrollbar {
+            width: 0;
+            height: 0;
         }
 
         .tm-kanban-group {
@@ -2654,6 +2673,27 @@
             background: var(--tm-section-bg);
         }
 
+        .tm-kanban-card.tm-kanban-card--done {
+            background: color-mix(in srgb, var(--tm-bg-color) 78%, var(--tm-task-done-color) 22%);
+            border-color: color-mix(in srgb, var(--tm-table-border-color) 72%, var(--tm-task-done-color) 28%);
+            color: var(--tm-task-done-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02);
+        }
+
+        .tm-kanban-card.tm-kanban-card--done .tm-kanban-card-title-inline,
+        .tm-kanban-card.tm-kanban-card--done .tm-task-content-clickable {
+            color: var(--tm-task-done-color);
+            text-decoration: line-through;
+        }
+
+        .tm-kanban-card.tm-kanban-card--done .tm-kanban-parent-line,
+        .tm-kanban-card.tm-kanban-card--done .tm-kanban-parent-line strong,
+        .tm-kanban-card.tm-kanban-card--done .tm-kanban-chip,
+        .tm-kanban-card.tm-kanban-card--done .tm-kanban-priority-chip,
+        .tm-kanban-card.tm-kanban-card--done .tm-kanban-more {
+            color: var(--tm-task-done-color);
+        }
+
         .tm-kanban-card:not(.tm-kanban-card--sub):not(.tm-kanban-card--childroot) .tm-kanban-card-title-inline {
             font-weight: 700;
         }
@@ -2679,7 +2719,8 @@
             min-width: 0;
         }
 
-        .tm-kanban-card-head .tm-task-checkbox {
+        .tm-kanban-card-head .tm-task-checkbox,
+        .tm-kanban-card-head .tm-task-checkbox-wrap {
             margin-top: 1px;
         }
 
@@ -2732,6 +2773,20 @@
             justify-content: center;
             line-height: 1;
             flex: 0 0 auto;
+            position: relative;
+            overflow: visible;
+        }
+
+        .tm-kanban-toggle .tm-tree-toggle-icon {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 10px;
+            height: 10px;
+            display: block;
+            transform: translate(-50%, -50%);
+            transition: transform 0.16s ease;
+            pointer-events: none;
         }
 
         .tm-kanban-toggle:hover {
@@ -3054,6 +3109,7 @@
         }
 
         .tm-checklist-group.tm-checklist-group--time,
+        .tm-checklist-group.tm-checklist-group--task,
         .tm-checklist-group.tm-checklist-group--quadrant {
             padding-left: 8px;
         }
@@ -3119,6 +3175,7 @@
             width: 18px;
             min-width: 18px;
             display: flex;
+            position: relative;
             align-items: center;
             justify-content: flex-start;
             gap: 0;
@@ -3130,6 +3187,17 @@
             flex-basis: 18px;
             width: 18px;
             min-width: 18px;
+        }
+
+        .tm-checklist-leading .tm-task-checkbox {
+            position: relative;
+            z-index: 1;
+        }
+
+        .tm-checklist-leading .tm-task-leading-ring {
+            left: 7px;
+            top: calc(3px + 7px);
+            z-index: 0;
         }
 
         .tm-checklist-leading .tm-tree-toggle {
@@ -3185,6 +3253,8 @@
         .tm-checklist-title-button {
             cursor: pointer;
             transition: color 0.16s ease;
+            display: inline;
+            max-width: none;
         }
 
         .tm-checklist-title-button:hover {
@@ -3282,6 +3352,9 @@
 
         .tm-checklist-pane--compact .tm-checklist-leading .tm-tree-toggle {
             left: 0;
+            width: 16px;
+            min-width: 16px;
+            height: 16px;
         }
 
         .tm-checklist-pane--compact .tm-checklist-leading .tm-task-checkbox {
@@ -3290,14 +3363,14 @@
 
         .tm-checklist-pane--compact .tm-checklist-leading .tm-task-leading-ring {
             position: absolute;
-            left: calc(var(--tm-checklist-checkbox-left) + 8px);
+            left: calc(var(--tm-checklist-checkbox-left) + 7px);
             top: 50%;
             width: 22px;
             height: 22px;
             transform: translate(-50%, -50%);
             border-radius: 999px;
-            background: rgba(226, 232, 240, 0.95);
-            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+            background: var(--tm-task-leading-ring-bg);
+            box-shadow: inset 0 0 0 1px var(--tm-task-leading-ring-border);
             z-index: 0;
             pointer-events: none;
         }
@@ -3400,8 +3473,12 @@
         .tm-checklist-pane--compact .tm-task-checkbox {
             appearance: none;
             -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
+            --tm-task-checkbox-mark-left: 3.5px;
+            --tm-task-checkbox-mark-top: 0px;
+            --tm-task-checkbox-mark-width: 2px;
+            --tm-task-checkbox-mark-height: 6px;
+            width: 14px;
+            height: 14px;
             border-radius: 4px;
             border: 2px solid var(--tm-checklist-checkbox-color, #a9afb8);
             background: var(--tm-bg-color);
@@ -3411,18 +3488,6 @@
 
         .tm-checklist-pane--compact .tm-task-checkbox:checked {
             background: color-mix(in srgb, var(--tm-checklist-checkbox-color, var(--tm-primary-color)) 18%, var(--tm-bg-color));
-        }
-
-        .tm-checklist-pane--compact .tm-task-checkbox:checked::after {
-            content: '';
-            position: absolute;
-            left: 4px;
-            top: 0px;
-            width: 3px;
-            height: 7px;
-            border-right: 2px solid var(--tm-checklist-checkbox-color, var(--tm-primary-color));
-            border-bottom: 2px solid var(--tm-checklist-checkbox-color, var(--tm-primary-color));
-            transform: rotate(42deg);
         }
 
         .tm-checklist-pane--compact .tm-checklist-meta {
@@ -3693,7 +3758,7 @@
 
             .tm-checklist-leading.tm-checklist-leading--branch .tm-tree-toggle {
                 left: -20px;
-                top: 50%;
+                top: calc(50% + 2px);
                 transform: translateY(-50%);
             }
 
@@ -3703,18 +3768,22 @@
             }
 
             .tm-checklist-pane--compact .tm-checklist-leading {
-                --tm-checklist-checkbox-left: 0px;
-                width: 18px;
-                min-width: 18px;
-                flex-basis: 18px;
+                --tm-checklist-checkbox-left: 22px;
+                width: 40px;
+                min-width: 40px;
+                flex-basis: 40px;
             }
 
             .tm-checklist-pane--compact .tm-checklist-leading .tm-tree-toggle,
             .tm-checklist-pane--compact .tm-checklist-leading .tm-tree-toggle--placeholder {
-                display: none;
+                display: inline-flex;
             }
 
             .tm-checklist-pane--compact .tm-checklist-leading .tm-task-checkbox {
+                left: var(--tm-checklist-checkbox-left);
+            }
+
+            .tm-checklist-pane--compact .tm-checklist-leading .tm-tree-toggle {
                 left: 0;
             }
 
@@ -3728,16 +3797,13 @@
             }
 
             .tm-checklist-mobile-toggle {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 18px;
-                min-width: 18px;
-                height: 18px;
-                color: var(--tm-text-color);
-                margin-left: 0;
-                margin-right: -10px;
-                flex: 0 0 18px;
+                display: none;
+            }
+
+            .tm-group-actions {
+                opacity: 1;
+                pointer-events: auto;
+                transform: none;
             }
 
             .tm-checklist-mobile-toggle .tm-tree-toggle-icon {
@@ -4329,6 +4395,164 @@
             text-decoration: underline;
         }
 
+        .tm-subtask-create-btn {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            margin-left: 4px;
+            padding: 0;
+            border: 1px solid color-mix(in srgb, var(--tm-border-color) 82%, transparent);
+            border-radius: 6px;
+            background: color-mix(in srgb, var(--tm-bg-color) 90%, var(--tm-primary-color) 10%);
+            color: var(--tm-secondary-text);
+            cursor: pointer;
+            opacity: 0;
+            transform: translateX(2px);
+            transition: opacity 0.18s ease, transform 0.18s ease, color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        }
+
+        .tm-task-cell:hover .tm-subtask-create-btn,
+        .tm-subtask-create-btn:focus-visible,
+        .tm-subtask-create-btn:active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .tm-subtask-create-btn:hover,
+        .tm-subtask-create-btn:focus-visible {
+            color: var(--tm-primary-color);
+            border-color: color-mix(in srgb, var(--tm-primary-color) 38%, var(--tm-border-color));
+            background: color-mix(in srgb, var(--tm-bg-color) 82%, var(--tm-primary-color) 18%);
+        }
+
+        .tm-subtask-create-btn:focus-visible {
+            outline: 2px solid color-mix(in srgb, var(--tm-primary-color) 45%, transparent);
+            outline-offset: 1px;
+        }
+
+        .tm-subtask-create-btn svg {
+            width: 14px;
+            height: 14px;
+            pointer-events: none;
+        }
+
+        .tm-group-actions {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(2px);
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        .tm-group-create-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 6px;
+            border: 1px solid color-mix(in srgb, var(--tm-border-color) 82%, transparent);
+            border-radius: 6px;
+            background: color-mix(in srgb, var(--tm-bg-color) 88%, var(--tm-primary-color) 12%);
+            color: var(--tm-secondary-text);
+            cursor: pointer;
+            transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        }
+
+        .tm-group-create-btn:hover,
+        .tm-group-create-btn:focus-visible {
+            color: var(--tm-primary-color);
+            border-color: color-mix(in srgb, var(--tm-primary-color) 38%, var(--tm-border-color));
+            background: color-mix(in srgb, var(--tm-bg-color) 80%, var(--tm-primary-color) 20%);
+        }
+
+        .tm-group-create-btn:focus-visible {
+            outline: 2px solid color-mix(in srgb, var(--tm-primary-color) 45%, transparent);
+            outline-offset: 1px;
+        }
+
+        .tm-group-create-btn svg {
+            width: 14px;
+            height: 14px;
+            pointer-events: none;
+        }
+
+        .tm-checklist-group:hover .tm-group-actions,
+        .tm-group-row:hover .tm-group-actions,
+        .tm-group-actions:focus-within {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0);
+        }
+
+        @media (hover: none), (pointer: coarse) {
+            .tm-group-actions {
+                opacity: 1;
+                pointer-events: auto;
+                transform: none;
+            }
+
+            .tm-checklist-pane--compact .tm-checklist-leading {
+                --tm-checklist-checkbox-left: 0px;
+                width: 18px;
+                min-width: 18px;
+                flex-basis: 18px;
+            }
+
+            .tm-checklist-pane--compact .tm-checklist-leading .tm-tree-toggle,
+            .tm-checklist-pane--compact .tm-checklist-leading .tm-tree-toggle--placeholder {
+                display: none;
+            }
+
+            .tm-checklist-pane--compact .tm-checklist-leading .tm-task-checkbox {
+                left: 0;
+            }
+
+            .tm-checklist-pane--compact .tm-checklist-mobile-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 18px;
+                min-width: 18px;
+                height: 18px;
+                color: var(--tm-text-color);
+                margin-left: auto;
+                margin-right: -10px;
+                flex: 0 0 18px;
+            }
+
+            .tm-checklist-pane--compact .tm-checklist-mobile-toggle .tm-tree-toggle-icon {
+                width: 18px;
+                height: 18px;
+            }
+
+            .tm-checklist-pane--compact .tm-status-tag {
+                margin-left: 0;
+                padding: 1px 6px;
+                font-size: 11px;
+                line-height: 16px;
+                border-radius: 5px;
+            }
+
+            .tm-checklist-pane--compact .tm-checklist-meta-chip {
+                padding: 1px 6px;
+                font-size: 11px;
+                line-height: 16px;
+            }
+
+            .tm-checklist-pane--compact .tm-checklist-meta-compact {
+                gap: 2px;
+                font-size: 11px;
+            }
+        }
+
         .tm-task-remark-text {
             display: block;
             overflow: hidden;
@@ -4473,6 +4697,10 @@
             pointer-events: auto;
         }
 
+        .tm-task-leading--branch:not(.tm-task-leading--toplevel) .tm-tree-toggle {
+            left: -14px;
+        }
+
         /* 非顶层任务：hover时显示 */
         .tm-task-cell:hover .tm-tree-toggle,
         .tm-task-leading:hover .tm-tree-toggle,
@@ -4503,12 +4731,64 @@
         }
 
         .tm-task-checkbox {
-            width: 14px;
-            height: 14px;
+            appearance: none;
+            -webkit-appearance: none;
+            width: var(--tm-checkbox-size, 14px);
+            height: var(--tm-checkbox-size, 14px);
             margin: 0;
+            box-sizing: border-box;
             flex-shrink: 0;
             position: relative;
             z-index: 1;
+            border-radius: 4px;
+            border: 2px solid var(--tm-checklist-checkbox-color, #a9afb8);
+            background: var(--tm-bg-color);
+            cursor: pointer;
+            transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .tm-task-checkbox:checked {
+            background: color-mix(in srgb, var(--tm-checklist-checkbox-color, var(--tm-primary-color)) 18%, var(--tm-bg-color));
+        }
+
+        .tm-task-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: var(--tm-task-checkbox-mark-left, 3px);
+            top: var(--tm-task-checkbox-mark-top, 0px);
+            width: var(--tm-task-checkbox-mark-width, 3px);
+            height: var(--tm-task-checkbox-mark-height, 7px);
+            border-right: 2px solid var(--tm-checklist-checkbox-color, var(--tm-primary-color));
+            border-bottom: 2px solid var(--tm-checklist-checkbox-color, var(--tm-primary-color));
+            transform: rotate(42deg);
+        }
+
+        .tm-task-checkbox:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .tm-task-checkbox-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: var(--tm-checkbox-size, 14px);
+            min-width: var(--tm-checkbox-size, 14px);
+            height: var(--tm-checkbox-size, 14px);
+            flex: 0 0 var(--tm-checkbox-size, 14px);
+        }
+
+        .tm-task-checkbox-wrap .tm-task-checkbox {
+            position: relative;
+            z-index: 1;
+        }
+
+        .tm-task-checkbox-wrap .tm-task-leading-ring {
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
         }
 
         .tm-task-leading {
@@ -4524,24 +4804,18 @@
 
         .tm-task-leading-ring {
             position: absolute;
-            left: 50%;
+            left: 7px;
             top: 50%;
             width: 22px;
             height: 22px;
             transform: translate(-50%, -50%);
             border-radius: 999px;
-            background: rgba(226, 232, 240, 0.95);
+            background: var(--tm-task-leading-ring-bg);
             border: 0;
-            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+            box-shadow: inset 0 0 0 1px var(--tm-task-leading-ring-border);
             opacity: 1;
             z-index: 1;
             pointer-events: none;
-        }
-
-        [data-theme-mode="dark"] .tm-task-leading-ring {
-            background: rgba(80, 80, 80, 0.95);
-            box-shadow: inset 0 0 0 1px rgba(120, 120, 120, 0.3);
-            margin-left: -0.5px;
         }
 
         [data-theme-mode="dark"] .tm-tree-guide-line::before {
@@ -4879,6 +5153,115 @@
             margin-bottom: 12px;
         }
 
+        .tm-setting-switch-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 16px;
+            padding: 10px 0;
+            min-height: 0;
+        }
+
+        .tm-setting-switch-row + .tm-setting-switch-row {
+            border-top: 1px solid color-mix(in srgb, var(--tm-border-color) 78%, transparent);
+        }
+
+        .tm-setting-switch-copy {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .tm-setting-switch-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--tm-text-color);
+            line-height: 1.45;
+        }
+
+        .tm-setting-switch-desc {
+            margin-top: 4px;
+            font-size: 13px;
+            color: var(--tm-secondary-text);
+            line-height: 1.6;
+        }
+
+        .tm-setting-switch-control {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            align-self: center;
+            justify-self: end;
+            flex: 0 0 auto;
+            min-width: 44px;
+            margin-left: auto;
+        }
+
+        .tm-setting-field-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(180px, 320px);
+            align-items: center;
+            gap: 16px;
+            padding: 10px 0;
+        }
+
+        .tm-setting-field-row + .tm-setting-field-row {
+            border-top: 1px solid color-mix(in srgb, var(--tm-border-color) 78%, transparent);
+        }
+
+        .tm-setting-field-copy {
+            min-width: 0;
+        }
+
+        .tm-setting-field-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--tm-text-color);
+            line-height: 1.45;
+        }
+
+        .tm-setting-field-desc {
+            margin-top: 4px;
+            font-size: 13px;
+            color: var(--tm-secondary-text);
+            line-height: 1.6;
+        }
+
+        .tm-setting-field-control {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .tm-setting-field-control .b3-select,
+        .tm-setting-field-control .b3-text-field,
+        .tm-setting-field-control input[type="range"] {
+            width: 100%;
+        }
+
+        .tm-setting-field-unit {
+            font-size: 12px;
+            color: var(--tm-secondary-text);
+            white-space: nowrap;
+        }
+
+        .tm-settings-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--tm-text-color);
+            margin-bottom: 6px;
+        }
+
+        .tm-settings-section-desc {
+            font-size: 12px;
+            color: var(--tm-secondary-text);
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 900px) {
             .tm-settings-box {
                 width: min(100vw, 100vw);
@@ -4944,6 +5327,28 @@
             .tm-settings-content label {
                 min-width: 0 !important;
                 flex: 1 1 100% !important;
+            }
+
+            .tm-setting-switch-row {
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 12px;
+                padding: 10px 0;
+                min-height: 0;
+            }
+
+            .tm-setting-field-row {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 8px;
+                padding: 10px 0;
+            }
+
+            .tm-setting-field-control {
+                justify-content: flex-start;
+            }
+
+            .tm-setting-switch-control {
+                min-width: 44px !important;
+                flex: 0 0 auto !important;
             }
 
             .tm-settings-content input[type="text"],
@@ -8433,6 +8838,8 @@
         quickbarModifiedTaskIds: new Set(),
         // 悬浮条最后更新时间（用于判断是否需要刷新）
         lastQuickbarUpdateTime: 0,
+        // 刚插入但 SQL 索引可能尚未返回的任务，短暂保活避免刷新后闪现消失
+        pendingInsertedTasks: {},
 
         // 设置（从 SettingsStore 读取）
         selectedDocIds: [],
@@ -9312,6 +9719,27 @@ async function __tmRefreshAfterWake(reason) {
         const d = document.createElement('div');
         d.textContent = String(s ?? '');
         return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function escSq(s) {
+        return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function __tmParseCreatedTs(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return 0;
+        if (/^\d{14}$/.test(raw)) {
+            const y = Number(raw.slice(0, 4));
+            const m = Number(raw.slice(4, 6)) - 1;
+            const d = Number(raw.slice(6, 8));
+            const hh = Number(raw.slice(8, 10));
+            const mm = Number(raw.slice(10, 12));
+            const ss = Number(raw.slice(12, 14));
+            const ts = new Date(y, m, d, hh, mm, ss, 0).getTime();
+            return Number.isFinite(ts) ? ts : 0;
+        }
+        const ts = new Date(raw).getTime();
+        return Number.isFinite(ts) ? ts : 0;
     }
 
     function __tmCompareTasksByDocFlow(a, b) {
@@ -10347,9 +10775,10 @@ async function __tmRefreshAfterWake(reason) {
                 const durationSum = String(row.durationSum || '').trim();
                 return `<tr class="tm-group-row tm-timeline-row" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">${esc(row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span>${durationSum ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">📊</span>${esc(durationSum)}</span>` : ''}</div></td></tr>`;
             }
-            if (row.kind === 'h2') {
-                return `<tr class="tm-group-row tm-timeline-row" data-group-kind="h2" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-secondary-text);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggle}<span class="tm-group-label">🧩 ${esc(row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span></div></td></tr>`;
-            }
+                if (row.kind === 'h2') {
+                    const createBtnHtml = __tmBuildHeadingGroupCreateBtnHtml(row.docId, row.headingId, '在该标题下新建任务');
+                    return `<tr class="tm-group-row tm-timeline-row" data-group-kind="h2" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-secondary-text);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggle}<span class="tm-group-label">🧩 ${esc(row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span>${createBtnHtml}</div></td></tr>`;
+                }
             if (row.kind === 'quadrant') {
                 const durationSum = String(row.durationSum || '').trim();
                 const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
@@ -10392,7 +10821,7 @@ async function __tmRefreshAfterWake(reason) {
             const completedChildren = allChildren.filter(c => c.done).length;
             const progressPercent = totalChildren > 0 ? Math.round((completedChildren / totalChildren) * 100) : 0;
             const isDoneSubtask = !!task.done && (Math.max(0, Number(row.depth) || 0) > 0);
-            const groupBg = enableGroupBg ? currentGroupBg : '';
+            const groupBg = enableGroupBg ? (currentGroupBg || resolvePinnedTaskGroupBg(task)) : '';
             const doneSubtaskBg = (!enableGroupBg && isDoneSubtask) ? __tmWithAlpha(progressBarColor, isDark ? 0.22 : 0.14) : '';
             const baseBg = groupBg || doneSubtaskBg;
             const progressBgStyle = (row.hasChildren && progressPercent > 0)
@@ -10410,10 +10839,7 @@ async function __tmRefreshAfterWake(reason) {
                                 ${treeGuides}
                                 <span class="${leadingClass}">
                                     ${leadingRing}
-                                    <input class="tm-task-checkbox ${isGloballyLocked ? 'tm-operating' : ''}"
-                                           type="checkbox" ${task.done ? 'checked' : ''}
-                                           ${isGloballyLocked ? 'disabled' : ''}
-                                           onchange="tmSetDone('${task.id}', this.checked, event)">
+                                ${__tmRenderTaskCheckbox(task.id, task, { checked: task.done, disabled: isGloballyLocked, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
                                     ${toggle}
                                 </span>
                             <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}" title="${esc(task.content || '')}">
@@ -11004,6 +11430,18 @@ async function __tmRefreshAfterWake(reason) {
             box.appendChild(buttons);
             modal.appendChild(box);
             document.body.appendChild(modal);
+
+            const focusInput = () => {
+                try {
+                    input.focus({ preventScroll: true });
+                } catch (e) {
+                    try { input.focus(); } catch (e2) {}
+                }
+                try { input.select?.(); } catch (e) {}
+            };
+            focusInput();
+            try { requestAnimationFrame(() => focusInput()); } catch (e) {}
+            setTimeout(() => focusInput(), 30);
 
             okBtn.onclick = () => {
                 const value = String(input.value || '').trim();
@@ -14181,6 +14619,13 @@ async function __tmRefreshAfterWake(reason) {
                     });
                 };
                 updateChildTasks(t, hid, String(h?.content || '').trim(), Number(h?.rank));
+                if (state.pendingInsertedTasks?.[id]) {
+                    state.pendingInsertedTasks[id].root_id = did;
+                    state.pendingInsertedTasks[id].docId = did;
+                    state.pendingInsertedTasks[id].h2 = String(h?.content || '').trim();
+                    state.pendingInsertedTasks[id].h2Id = hid;
+                    state.pendingInsertedTasks[id].h2Rank = Number(h?.rank);
+                }
             }
         } catch (e) {}
         if (!o.silentHint) {
@@ -14792,10 +15237,14 @@ async function __tmRefreshAfterWake(reason) {
                     currentGroupBg = enableGroupBg ? (__tmGroupBgFromLabelColor(labelColor, isDark) || '') : '';
                     currentGroupAccent = enableGroupBg ? String(labelColor || '') : '';
                 }
+                const createBtnHtml = (row.kind === 'h2' && state.groupByDocName)
+                    ? __tmBuildHeadingGroupCreateBtnHtml(row.docId, row.headingId, '在该标题下新建任务')
+                    : '';
                 return `
-                    <div class="tm-checklist-group ${row.kind === 'doc' ? 'tm-checklist-group--doc' : ''} ${row.kind === 'h2' ? 'tm-checklist-group--h2' : ''} ${row.kind === 'time' ? 'tm-checklist-group--time' : ''} ${row.kind === 'quadrant' ? 'tm-checklist-group--quadrant' : ''}" data-group-key="${esc(String(row.key || ''))}" onclick="tmToggleGroupCollapse('${escSq(String(row.key || ''))}', event)">
+                    <div class="tm-checklist-group ${row.kind === 'doc' ? 'tm-checklist-group--doc' : ''} ${row.kind === 'task' ? 'tm-checklist-group--task' : ''} ${row.kind === 'h2' ? 'tm-checklist-group--h2' : ''} ${row.kind === 'time' ? 'tm-checklist-group--time' : ''} ${row.kind === 'quadrant' ? 'tm-checklist-group--quadrant' : ''}" data-group-key="${esc(String(row.key || ''))}" onclick="tmToggleGroupCollapse('${escSq(String(row.key || ''))}', event)">
                         ${toggle}
                         <span class="tm-checklist-group-label" style="color:${labelColor};">${esc(String(row.label || ''))}</span>
+                        ${createBtnHtml}
                         ${countHtml}
                         ${durationHtml}
                     </div>
@@ -14835,8 +15284,6 @@ async function __tmRefreshAfterWake(reason) {
                 const currentStatus = String(task.customStatus || '').trim() || 'todo';
                 const statusOption = statusOptions.find((o) => String(o?.id || '').trim() === currentStatus) || { name: currentStatus, color: '#757575' };
                 const statusChipStyle = __tmBuildStatusChipStyle(statusOption.color);
-                const checkboxAccentColor = __tmGetPriorityAccentColor(task.priority);
-                const checkboxStyle = checkboxAccentColor ? ` style="--tm-checklist-checkbox-color:${checkboxAccentColor};"` : '';
                 const indent = checklistCompact ? depth * 14 : depth * 22;
                 const meta = [];
                 const priorityIcon = __tmRenderPriorityJira(task.priority, false);
@@ -14857,15 +15304,15 @@ async function __tmRefreshAfterWake(reason) {
                         <div class="tm-checklist-leading${hasChildren ? ' tm-checklist-leading--branch' : ''}${hasChildren && collapsed ? ' tm-checklist-leading--collapsed' : ''}">
                             ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : '<span class="tm-tree-toggle tm-tree-toggle--placeholder" aria-hidden="true"></span>'}
                             ${hasChildren && collapsed ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>' : ''}
-                            <input class="tm-task-checkbox ${GlobalLock.isLocked() ? 'tm-operating' : ''}" type="checkbox" ${task.done ? 'checked' : ''} ${GlobalLock.isLocked() ? 'disabled' : ''}${checkboxStyle} onchange="tmSetDone('${escSq(String(task.id || ''))}', this.checked, event)">
+                            ${__tmRenderTaskCheckbox(String(task.id || ''), task, { checked: task.done, disabled: GlobalLock.isLocked(), extraClass: GlobalLock.isLocked() ? 'tm-operating' : '' })}
                         </div>
                         <div class="tm-checklist-item-main">
                             <div class="tm-checklist-title-row">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" draggable="false" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)" title="跳转到任务">${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span>${reminderHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" title="跳转到任务"><span draggable="false" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
-                                ${hasChildren ? `<span class="tm-checklist-mobile-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : ''}
                                 ${task.pinned ? '<span class="tm-checklist-meta-chip">📌</span>' : ''}
+                                ${hasChildren ? `<span class="tm-checklist-mobile-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : ''}
                             </div>
                             ${meta.length ? `<div class="tm-checklist-meta">${meta.join('')}</div>` : ''}
                         </div>
@@ -14921,6 +15368,67 @@ async function __tmRefreshAfterWake(reason) {
                 : __tmNormalizeHexColor(SettingsStore.data.progressBarColorLight, '#4caf50');
             const enableGroupBg = !!SettingsStore.data.enableGroupTaskBgByGroupColor;
             let currentGroupBg = '';
+            const resolvePinnedTaskGroupBg = (task) => {
+                if (!enableGroupBg || !task) return '';
+                if (state.groupByDocName || state.groupByTaskName || (!state.groupByDocName && !state.groupByTime && !state.quadrantEnabled)) {
+                    const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
+                    return taskDocColor ? (__tmGroupBgFromLabelColor(taskDocColor, isDark) || '') : '';
+                }
+                if (state.groupByTime) {
+                    const diffDays = Number(__tmGetTaskTimePriorityInfo(task)?.diffDays);
+                    const groupInfo = !Number.isFinite(diffDays)
+                        ? { key: 'pending', sortValue: Number.POSITIVE_INFINITY }
+                        : (diffDays < 0
+                            ? { key: 'overdue', sortValue: diffDays }
+                            : { key: `days_${diffDays}`, sortValue: diffDays });
+                    const timeBaseColor = isDark
+                        ? __tmNormalizeHexColor(SettingsStore.data.timeGroupBaseColorDark, '#6ba5ff')
+                        : __tmNormalizeHexColor(SettingsStore.data.timeGroupBaseColorLight, '#1a73e8');
+                    const timeOverdueColor = isDark
+                        ? __tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorDark, '#ff6b6b')
+                        : __tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorLight, '#d93025');
+                    const key = String(groupInfo?.key || '');
+                    const sortValue = Number(groupInfo?.sortValue);
+                    const labelColor = (key === 'pending' || !Number.isFinite(sortValue))
+                        ? 'var(--tm-secondary-text)'
+                        : (sortValue < 0
+                            ? (timeOverdueColor || 'var(--tm-danger-color)')
+                            : __tmWithAlpha(timeBaseColor || 'var(--tm-primary-color)', __tmClamp(1 - sortValue * (isDark ? 0.085 : 0.11), isDark ? 0.52 : 0.42, 1)));
+                    return __tmGroupBgFromLabelColor(labelColor, isDark) || '';
+                }
+                if (state.quadrantEnabled) {
+                    const quadrantRules = (SettingsStore.data.quadrantConfig && SettingsStore.data.quadrantConfig.rules) || [];
+                    const priority = String(task.priority || '').toLowerCase();
+                    const importance = (priority === 'a' || priority === '高' || priority === 'high')
+                        ? 'high'
+                        : ((priority === 'b' || priority === '中' || priority === 'medium')
+                            ? 'medium'
+                            : ((priority === 'c' || priority === '低' || priority === 'low') ? 'low' : 'none'));
+                    const diffDays = Number(__tmGetTaskTimePriorityInfo(task)?.diffDays);
+                    const timeRange = !Number.isFinite(diffDays)
+                        ? 'nodate'
+                        : (diffDays < 0 ? 'overdue' : (diffDays <= 7 ? 'within7days' : (diffDays <= 15 ? 'within15days' : (diffDays <= 30 ? 'within30days' : 'beyond30days'))));
+                    let ruleColor = '';
+                    for (const rule of quadrantRules) {
+                        const importanceMatch = Array.isArray(rule?.importance) && rule.importance.includes(importance);
+                        let timeRangeMatch = Array.isArray(rule?.timeRanges) && rule.timeRanges.includes(timeRange);
+                        if (!timeRangeMatch && Array.isArray(rule?.timeRanges)) {
+                            for (const range of rule.timeRanges) {
+                                if (!String(range || '').startsWith('beyond') || range === 'beyond30days') continue;
+                                const days = parseInt(String(range).replace('beyond', '').replace('days', ''), 10);
+                                if (!Number.isNaN(days) && diffDays > days) { timeRangeMatch = true; break; }
+                            }
+                        }
+                        if (importanceMatch && timeRangeMatch) {
+                            const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
+                            ruleColor = colorMap[String(rule?.color || '')] || 'var(--tm-text-color)';
+                            break;
+                        }
+                    }
+                    return ruleColor ? (__tmGroupBgFromLabelColor(ruleColor, isDark) || '') : '';
+                }
+                return '';
+            };
 
             const renderGroupRow = (row) => {
                 const isCollapsed = !!row?.collapsed;
@@ -14941,7 +15449,8 @@ async function __tmRefreshAfterWake(reason) {
                     return `<tr class="tm-group-row tm-timeline-row" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">${esc(row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span>${durationSum ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">📊</span>${esc(durationSum)}</span>` : ''}</div></td></tr>`;
                 }
                 if (row.kind === 'h2') {
-                    return `<tr class="tm-group-row tm-timeline-row" data-group-kind="h2" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-secondary-text);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggle}<span class="tm-group-label">🧩 ${esc(row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span></div></td></tr>`;
+                    const createBtnHtml = __tmBuildHeadingGroupCreateBtnHtml(row.docId, row.headingId, '在该标题下新建任务');
+                    return `<tr class="tm-group-row tm-timeline-row" data-group-kind="h2" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-secondary-text);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggle}<span class="tm-group-label">🧩 ${esc(row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span>${createBtnHtml}</div></td></tr>`;
                 }
                 if (row.kind === 'quadrant') {
                     const durationSum = String(row.durationSum || '').trim();
@@ -14985,7 +15494,7 @@ async function __tmRefreshAfterWake(reason) {
                 const completedChildren = allChildren.filter(c => c.done).length;
                 const progressPercent = totalChildren > 0 ? Math.round((completedChildren / totalChildren) * 100) : 0;
                 const isDoneSubtask = !!task.done && (Math.max(0, Number(row.depth) || 0) > 0);
-                const groupBg = enableGroupBg ? currentGroupBg : '';
+                const groupBg = enableGroupBg ? (currentGroupBg || resolvePinnedTaskGroupBg(task)) : '';
                 const doneSubtaskBg = (!enableGroupBg && isDoneSubtask) ? __tmWithAlpha(progressBarColor, isDark ? 0.22 : 0.14) : '';
                 const baseBg = groupBg || doneSubtaskBg;
                 const progressBgStyle = (row.hasChildren && progressPercent > 0)
@@ -15003,10 +15512,7 @@ async function __tmRefreshAfterWake(reason) {
                                 ${treeGuides}
                                 <span class="${leadingClass}">
                                     ${leadingRing}
-                                    <input class="tm-task-checkbox ${isGloballyLocked ? 'tm-operating' : ''}"
-                                           type="checkbox" ${task.done ? 'checked' : ''}
-                                           ${isGloballyLocked ? 'disabled' : ''}
-                                           onchange="tmSetDone('${task.id}', this.checked, event)">
+                                ${__tmRenderTaskCheckbox(task.id, task, { checked: task.done, disabled: isGloballyLocked, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
                                     ${toggle}
                                 </span>
                                 <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}" title="${esc(task.content || '')}">
@@ -15432,14 +15938,11 @@ async function __tmRefreshAfterWake(reason) {
                 const priorityChip = `<span class="tm-kanban-priority-chip" style="${priorityChipStyle}" onclick="tmPickPriority('${id}', this, event)">${__tmRenderPriorityJira(task?.priority, false)}</span>`;
 
                 return `
-                    <div class="tm-kanban-card${isSub ? ' tm-kanban-card--sub' : ''}${isChildRoot ? ' tm-kanban-card--childroot' : ''}${isParent ? ' tm-kanban-card--parent' : ''}" data-id="${id}" draggable="true" ondragstart="tmKanbanDragStart(event, '${id}')" ondragend="tmKanbanDragEnd(event, '${id}')" oncontextmenu="tmShowTaskContextMenu(event, '${id}')" style="${isSub ? '' : ''}">
+                    <div class="tm-kanban-card${isSub ? ' tm-kanban-card--sub' : ''}${isChildRoot ? ' tm-kanban-card--childroot' : ''}${isParent ? ' tm-kanban-card--parent' : ''}${task?.done ? ' tm-kanban-card--done' : ''}" data-id="${id}" draggable="true" ondragstart="tmKanbanDragStart(event, '${id}')" ondragend="tmKanbanDragEnd(event, '${id}')" ondblclick="tmKanbanCardDblClick('${id}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${id}')" style="${isSub ? '' : ''}">
                         <div class="tm-kanban-card-top">
                             <div class="tm-kanban-card-head">
                                 ${toggleHtml || ''}
-                                <input class="tm-task-checkbox ${isGloballyLocked ? 'tm-operating' : ''}"
-                                       type="checkbox" ${task?.done ? 'checked' : ''}
-                                       ${isGloballyLocked ? 'disabled' : ''}
-                                       onchange="tmSetDone('${id}', this.checked, event)">
+                                    ${__tmRenderTaskCheckboxWrap(id, task, { checked: task?.done, disabled: isGloballyLocked, extraClass: isGloballyLocked ? 'tm-operating' : '', collapsed: !!(isParent && totalChildren > 0 && __tmKanbanGetCollapsedSet().has(id)) })}
                                 <span class="tm-kanban-card-title-inline tm-task-content-clickable" onclick="tmJumpToTask('${id}', event)" title="${esc((content || '(无内容)'))}">${API.renderTaskContentHtml(task.markdown, content || '(无内容)')}</span>
                             </div>
                             <button class="tm-kanban-more" onclick="tmOpenTaskDetail('${id}', event)">⋯</button>
@@ -15532,7 +16035,7 @@ async function __tmRefreshAfterWake(reason) {
                     const childList = childrenByParent.get(id) || [];
                     const collapsed = childList.length ? __tmKanbanGetCollapsedSet().has(id) : false;
                     const toggleHtml = childList.length
-                        ? `<button class="tm-kanban-toggle" onclick="tmKanbanToggleCollapse('${id}', event)" title="${collapsed ? '展开子任务' : '折叠子任务'}"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
+                        ? `<button class="tm-kanban-toggle" onclick="tmKanbanToggleCollapse('${id}', event)" title="${collapsed ? '展开子任务' : '折叠子任务'}"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="10" height="10" style="transform:translate(-50%, -50%) rotate(${collapsed ? '0deg' : '90deg'});"><path d="M4.75 3.25l6.5 4.75-6.5 4.75" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
                         : '';
                     const childrenHtml = (!collapsed && childList.length) ? childList.map(ch => renderTree(ch, depthInCol + 1)).join('') : '';
                     return renderCard(
@@ -16425,7 +16928,7 @@ async function __tmRefreshAfterWake(reason) {
                             ${collapseProxyDot}
                             <div class="tm-whiteboard-card-head">
                                 ${toggleHtml}
-                                <input class="tm-task-checkbox ${GlobalLock.isLocked() ? 'tm-operating' : ''}" type="checkbox" ${task?.done ? 'checked' : ''} ${(GlobalLock.isLocked() || isGhost) ? 'disabled' : ''} ${isGhost ? 'title="快照任务，当前不可直接勾选"' : ''} onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onchange="tmSetDone('${escSq(tid)}', this.checked, event)">
+                                ${__tmRenderTaskCheckboxWrap(tid, task, { checked: task?.done, disabled: (GlobalLock.isLocked() || isGhost), extraClass: GlobalLock.isLocked() ? 'tm-operating' : '', title: isGhost ? '快照任务，当前不可直接勾选' : '', stopMouseDown: true, stopClick: true, collapsed: !!(collapsed && children.length) })}
                                 <div class="tm-whiteboard-card-title ${task?.done ? 'tm-task-done' : ''}">
                                     <span class="tm-task-content-clickable" onclick="tmJumpToTask('${escSq(tid)}', event)" title="${esc(String(task?.content || '').trim() || '(无内容)')}">${API.renderTaskContentHtml(task?.markdown, String(task?.content || '').trim() || '(无内容)')}</span>
                                 </div>
@@ -16722,7 +17225,7 @@ async function __tmRefreshAfterWake(reason) {
                                         <div class="tm-whiteboard-pool-node" style="padding-left:${indent}px;">
                                             <div class="tm-whiteboard-pool-item${doneCls}${parentCls}${topCls}${lockedCls}${selectedCls}" data-task-id="${esc(tid)}" draggable="${draggableAttr}"${mouseDownAttr}${dragStartAttr}${dragEndAttr} title="${itemTitle}">
                                                 ${toggleHtml}
-                                                <input class="tm-task-checkbox" type="checkbox" ${t?.done ? 'checked' : ''} onchange="tmSetDone('${escSq(tid)}', this.checked, event)" onmousedown="event.stopPropagation()" title="完成状态">
+                                                ${__tmRenderTaskCheckboxWrap(tid, t, { checked: t?.done, stopMouseDown: true, title: '完成状态', collapsed: !!collapsed })}
                                                 <span class="tm-whiteboard-pool-item-title"><span class="tm-task-content-clickable" onclick="tmJumpToTask('${escSq(tid)}', event)" title="${esc(String(t?.content || '').trim() || '(无内容)')}">${API.renderTaskContentHtml(t?.markdown, String(t?.content || '').trim() || '(无内容)')}</span></span>
                                             </div>
                                             ${kidsHtml}
@@ -21893,6 +22396,17 @@ async function __tmRefreshAfterWake(reason) {
         render();
     };
 
+    window.tmKanbanCardDblClick = function(id, ev) {
+        const tid = String(id || '').trim();
+        if (!tid) return;
+        const target = ev?.target;
+        if (target?.closest?.('button,input,select,textarea,a,.tm-task-content-clickable,.tm-task-checkbox,.tm-task-checkbox-wrap,.tm-kanban-toggle,.tm-kanban-more,.tm-status-tag,.tm-kanban-chip,.tm-priority-jira,.tm-kanban-priority-chip')) return;
+        const task = state.flatTasks?.[tid];
+        const hasChildren = Array.isArray(task?.children) && task.children.length > 0;
+        if (!hasChildren) return;
+        window.tmKanbanToggleCollapse(tid, ev);
+    };
+
     function __tmKanbanCollectDescendantIds(rootId) {
         const id0 = String(rootId || '').trim();
         if (!id0) return [];
@@ -22666,7 +23180,7 @@ async function __tmRefreshAfterWake(reason) {
             display: flex;
             flex-direction: column;
             gap: 6px;
-            min-width: 140px;
+            min-width: 60px;
         `;
         
         menu.innerHTML = `
@@ -23189,6 +23703,9 @@ async function __tmRefreshAfterWake(reason) {
             const s = String(raw ?? '').trim();
             if (!s) return '';
             const map = {
+                a: 'high',
+                b: 'medium',
+                c: 'low',
                 high: 'high',
                 medium: 'medium',
                 low: 'low',
@@ -23358,6 +23875,9 @@ async function __tmRefreshAfterWake(reason) {
 
     function __tmGetPriorityJiraInfo(value) {
         const p = String(value || '').trim().toLowerCase();
+        if (p === 'a') return { key: 'high', label: '高', iconType: 'high' };
+        if (p === 'b') return { key: 'medium', label: '中', iconType: 'medium' };
+        if (p === 'c') return { key: 'low', label: '低', iconType: 'low' };
         if (p === 'high') return { key: 'high', label: '高', iconType: 'high' };
         if (p === 'medium') return { key: 'medium', label: '中', iconType: 'medium' };
         if (p === 'low') return { key: 'low', label: '低', iconType: 'low' };
@@ -23390,6 +23910,56 @@ async function __tmRefreshAfterWake(reason) {
         if (key === 'medium') return '#ff991f';
         if (key === 'low') return '#1d7afc';
         return '';
+    }
+
+    function __tmResolveTaskPriorityValue(taskOrPriority) {
+        if (taskOrPriority && typeof taskOrPriority === 'object') {
+            const candidates = [
+                taskOrPriority.priority,
+                taskOrPriority.custom_priority,
+                taskOrPriority.customPriority,
+                taskOrPriority.prio,
+                taskOrPriority.custom_prio,
+                taskOrPriority.customPrio,
+            ];
+            for (const candidate of candidates) {
+                const s = String(candidate ?? '').trim();
+                if (s) return s;
+            }
+            return '';
+        }
+        return String(taskOrPriority ?? '').trim();
+    }
+
+    function __tmBuildTaskCheckboxStyle(taskOrPriority) {
+        const accent = __tmGetPriorityAccentColor(__tmResolveTaskPriorityValue(taskOrPriority));
+        return accent ? ` style="--tm-checklist-checkbox-color:${accent};border-color:${accent};"` : '';
+    }
+
+    function __tmRenderTaskCheckbox(taskId, task, options = {}) {
+        const tid = String(taskId || task?.id || '').trim();
+        if (!tid) return '';
+        const jsTid = tid.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const extraClass = String(options?.extraClass || '').trim();
+        const checkedAttr = options?.checked ? ' checked' : '';
+        const disabledAttr = options?.disabled ? ' disabled' : '';
+        const title = String(options?.title || '').trim();
+        const titleAttr = title ? ` title="${esc(title)}"` : '';
+        const mouseDownAttr = options?.stopMouseDown ? ' onmousedown="event.stopPropagation()"' : '';
+        const clickAttr = options?.stopClick ? ' onclick="event.stopPropagation()"' : '';
+        const changeAttr = String(options?.onchange || '').trim()
+            ? ` onchange="${String(options.onchange).trim()}"`
+            : ` onchange="tmSetDone('${jsTid}', this.checked, event)"`;
+        const baseStyle = __tmBuildTaskCheckboxStyle(options?.priority ?? task).replace(/^ style="|"$|^$/g, '');
+        const extraStyle = String(options?.style || '').trim().replace(/;+\s*$/, '');
+        const mergedStyle = [baseStyle, extraStyle].filter(Boolean).join(';');
+        const styleAttr = mergedStyle ? ` style="${mergedStyle};"` : '';
+        return `<input class="tm-task-checkbox${extraClass ? ` ${extraClass}` : ''}" type="checkbox"${checkedAttr}${disabledAttr}${titleAttr}${mouseDownAttr}${clickAttr}${changeAttr}${styleAttr}>`;
+    }
+
+    function __tmRenderTaskCheckboxWrap(taskId, task, options = {}) {
+        const collapsed = !!options?.collapsed;
+        return `<span class="tm-task-checkbox-wrap${collapsed ? ' tm-task-checkbox-wrap--collapsed' : ''}">${collapsed ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>' : ''}${__tmRenderTaskCheckbox(taskId, task, options)}</span>`;
     }
 
     function __tmParseTimeToTs(value) {
@@ -24177,6 +24747,10 @@ async function __tmRefreshAfterWake(reason) {
         }
         if (state.viewMode === 'timeline') {
             if (!__tmRerenderTimelineInPlace(state.modal)) render();
+            return;
+        }
+        if (state.viewMode === 'checklist') {
+            __tmRenderChecklistPreserveScroll();
             return;
         }
         if (state.viewMode !== 'calendar' && state.viewMode !== 'kanban' && state.viewMode !== 'whiteboard' && state.viewMode !== 'checklist') {
@@ -25617,16 +26191,16 @@ async function __tmRefreshAfterWake(reason) {
                     const h2Buckets = __tmBuildDocHeadingBuckets(h2OrderSource, noHeadingLabel);
                     docNormal.forEach(task => {
                         const b = __tmGetDocHeadingBucket(task, noHeadingLabel);
-                        if (!h2Groups.has(b.key)) h2Groups.set(b.key, { label: b.label, items: [] });
+                        if (!h2Groups.has(b.key)) h2Groups.set(b.key, { label: b.label, id: String(b.id || '').trim(), items: [] });
                         h2Groups.get(b.key).items.push(task);
                     });
                     const orderedH2Buckets = h2Buckets
                         .filter((bucket) => (h2Groups.get(bucket.key)?.items || []).length > 0)
                         .concat(Array.from(h2Groups.keys())
                             .filter((k) => !h2Buckets.some((b) => b.key === k))
-                            .map((k) => ({ key: k, label: String(h2Groups.get(k)?.label || '') })));
+                            .map((k) => ({ key: k, label: String(h2Groups.get(k)?.label || ''), id: String(h2Groups.get(k)?.id || '').trim() })));
                     orderedH2Buckets.forEach((bucket) => {
-                        const g = h2Groups.get(bucket.key) || { label: String(bucket.label || ''), items: [] };
+                        const g = h2Groups.get(bucket.key) || { label: String(bucket.label || ''), id: String(bucket.id || '').trim(), items: [] };
                         const items = Array.isArray(g.items) ? g.items : [];
                         const h2Key = `doc_${docId}__h2_${encodeURIComponent(String(bucket.key || 'label:__none__'))}`;
                         const h2Collapsed = state.collapsedGroups?.has(h2Key);
@@ -25635,6 +26209,8 @@ async function __tmRefreshAfterWake(reason) {
                             kind: 'h2',
                             key: h2Key,
                             label: String(g.label || ''),
+                            docId: String(docId || '').trim(),
+                            headingId: String(g.id || bucket.id || '').trim(),
                             count: Array.isArray(items) ? items.length : 0,
                             collapsed: !!h2Collapsed,
                         });
@@ -26320,10 +26896,7 @@ async function __tmRefreshAfterWake(reason) {
                             ${treeGuides}
                             <span class="${leadingClass}">
                                 ${leadingRing}
-                                <input class="tm-task-checkbox ${isGloballyLocked ? 'tm-operating' : ''}"
-                                       type="checkbox" ${done ? 'checked' : ''}
-                                       ${isGloballyLocked ? 'disabled' : ''}
-                                       onchange="tmSetDone('${task.id}', this.checked, event)">
+                                ${__tmRenderTaskCheckbox(task.id, task, { checked: done, disabled: isGloballyLocked, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
                                 ${toggle}
                             </span>
                             <span class="tm-task-text ${done ? 'tm-task-done' : ''}"
@@ -26331,6 +26904,16 @@ async function __tmRefreshAfterWake(reason) {
                                   title="${esc(content)}">
                                 <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)" title="${esc(content)}">${API.renderTaskContentHtml(task.markdown, content)}${__tmHasReminderMark(task) ? '<span class="tm-task-reminder-emoji" title="已添加提醒">⏰</span>' : ''}</span>
                             </span>
+                            <button class="tm-subtask-create-btn"
+                                    type="button"
+                                    title="新建子任务"
+                                    aria-label="新建子任务"
+                                    onpointerdown="event.stopPropagation()"
+                                    onclick="tmCreateSubtask('${task.id}', event)">
+                                <svg viewBox="0 0 16 16" aria-hidden="true">
+                                    <path d="M8 3.25v9.5M3.25 8h9.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </button>
                             ${childStatsHtml}
                         </div>
                     </td>`,
@@ -26635,7 +27218,7 @@ async function __tmRefreshAfterWake(reason) {
                         const h2Buckets = __tmBuildDocHeadingBuckets(h2OrderSource, noHeadingLabel);
                         docNormal.forEach(task => {
                                 const b = __tmGetDocHeadingBucket(task, noHeadingLabel);
-                                if (!h2Groups.has(b.key)) h2Groups.set(b.key, { label: b.label, items: [] });
+                                if (!h2Groups.has(b.key)) h2Groups.set(b.key, { label: b.label, id: String(b.id || '').trim(), items: [] });
                                 h2Groups.get(b.key).items.push(task);
                             });
 
@@ -26643,14 +27226,15 @@ async function __tmRefreshAfterWake(reason) {
                             .filter((bucket) => (h2Groups.get(bucket.key)?.items || []).length > 0)
                             .concat(Array.from(h2Groups.keys())
                                 .filter((k) => !h2Buckets.some((b) => b.key === k))
-                                .map((k) => ({ key: k, label: String(h2Groups.get(k)?.label || '') })));
+                                .map((k) => ({ key: k, label: String(h2Groups.get(k)?.label || ''), id: String(h2Groups.get(k)?.id || '').trim() })));
                         orderedH2Buckets.forEach((bucket) => {
-                            const g = h2Groups.get(bucket.key) || { label: String(bucket.label || ''), items: [] };
+                            const g = h2Groups.get(bucket.key) || { label: String(bucket.label || ''), id: String(bucket.id || '').trim(), items: [] };
                             const items = Array.isArray(g.items) ? g.items : [];
                             const h2Key = `doc_${docId}__h2_${encodeURIComponent(String(bucket.key || 'label:__none__'))}`;
                             const h2Collapsed = state.collapsedGroups?.has(h2Key);
                             const toggleH2 = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
-                            allRows.push(`<tr class="tm-group-row" data-group-kind="h2" data-group-key="${esc(h2Key)}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-secondary-text);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggleH2}<span class="tm-group-label">🧩 ${esc(g.label || '')}</span><span class="tm-badge tm-badge--count">${Array.isArray(items) ? items.length : 0}</span></div></td></tr>`);
+                            const createBtnHtml = __tmBuildHeadingGroupCreateBtnHtml(docId, String(g.id || bucket.id || '').trim(), '在该标题下新建任务');
+                            allRows.push(`<tr class="tm-group-row" data-group-kind="h2" data-group-key="${esc(h2Key)}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-secondary-text);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggleH2}<span class="tm-group-label">🧩 ${esc(g.label || '')}</span><span class="tm-badge tm-badge--count">${Array.isArray(items) ? items.length : 0}</span>${createBtnHtml}</div></td></tr>`);
                             if (!h2Collapsed) {
                                 items.forEach(task => {
                                     allRows.push(...renderTaskTree(task, 0));
@@ -28069,15 +28653,16 @@ async function __tmRefreshAfterWake(reason) {
         const newContent = await showPrompt('编辑任务', '请输入新任务内容', task.content);
         if (newContent === null || newContent === task.content) return;
 
-        const prefix = task.markdown.match(/^(\s*[\*\-]\s*\[x?\])\s*/i)?.[1] || '- ';
-        const newMarkdown = prefix + newContent;
+        const markerMatch = String(task.markdown || '').match(/^(\s*[\*\-])\s*\[(?: |x|X)\]\s*/);
+        const bullet = markerMatch?.[1] || '-';
+        const checked = task.done ? 'x' : ' ';
+        const newMarkdown = `${bullet} [${checked}] ${newContent}`;
 
         try {
             await API.updateBlock(id, newMarkdown);
             task.content = newContent;
             task.markdown = newMarkdown;
-            applyFilters();
-            render();
+            __tmRefreshMainViewInPlace({ withFilters: true });
             hint('✅ 任务已更新', 'success');
         } catch (e) {
             hint(`❌ 更新失败: ${e.message}`, 'error');
@@ -28194,28 +28779,54 @@ async function __tmRefreshAfterWake(reason) {
             position: fixed;
             top: ${event.clientY}px;
             left: ${event.clientX}px;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
             background: var(--b3-theme-background);
             border: 1px solid var(--b3-theme-surface-light);
             border-radius: 4px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             padding: 4px 0;
             z-index: 200000;
-            min-width: 140px;
+            width: auto;
+            max-width: calc(100vw - 16px);
+            min-width: 0;
+            box-sizing: border-box;
             user-select: none;
         `;
+        try {
+            menu.style.setProperty('display', 'inline-flex', 'important');
+            menu.style.setProperty('flex-direction', 'column', 'important');
+            menu.style.setProperty('align-items', 'flex-start', 'important');
+            menu.style.setProperty('width', 'auto', 'important');
+            menu.style.setProperty('min-width', '0', 'important');
+            menu.style.setProperty('max-width', 'calc(100vw - 16px)', 'important');
+            menu.style.setProperty('box-sizing', 'border-box', 'important');
+        } catch (e) {}
 
         const createItem = (label, onClick, isDanger) => {
             const item = document.createElement('div');
             item.textContent = label;
             item.style.cssText = `
-                padding: 6px 12px;
+                padding: 6px 10px;
                 cursor: pointer;
                 font-size: 13px;
                 color: ${isDanger ? 'var(--b3-theme-error)' : 'var(--b3-theme-on-background)'};
-                display: flex;
+                display: inline-flex;
                 align-items: center;
                 gap: 8px;
+                white-space: nowrap;
+                align-self: flex-start;
+                width: auto;
+                box-sizing: border-box;
             `;
+            try {
+                item.style.setProperty('display', 'inline-flex', 'important');
+                item.style.setProperty('align-self', 'flex-start', 'important');
+                item.style.setProperty('width', 'auto', 'important');
+                item.style.setProperty('max-width', '100%', 'important');
+                item.style.setProperty('box-sizing', 'border-box', 'important');
+            } catch (e) {}
             item.onmouseenter = () => item.style.backgroundColor = 'var(--b3-theme-surface-light)';
             item.onmouseleave = () => item.style.backgroundColor = 'transparent';
             item.onclick = (e) => {
@@ -28304,6 +28915,7 @@ async function __tmRefreshAfterWake(reason) {
             }
         }
 
+        menu.appendChild(createItem('➕ 新建子任务', () => tmCreateSubtask(taskId)));
         if (globalThis.__tmCalendar && (typeof globalThis.__tmCalendar.openScheduleEditorById === 'function' || typeof globalThis.__tmCalendar.openScheduleEditorByTaskId === 'function')) {
             menu.appendChild(createItem('📅 编辑日程', () => {
                 if (scheduleId0 && typeof globalThis.__tmCalendar.openScheduleEditorById === 'function') {
@@ -28315,11 +28927,11 @@ async function __tmRefreshAfterWake(reason) {
                 }
             }));
         }
-        menu.appendChild(createItem('✏️ 编辑', () => tmEdit(taskId)));
+        menu.appendChild(createItem('✏️ 修改内容', () => tmEdit(taskId)));
         if (tomatoEnabled) {
-            menu.appendChild(createItem('⏰ 提醒', () => tmReminder(taskId)));
+            menu.appendChild(createItem('⏰ 设置提醒', () => tmReminder(taskId)));
         }
-        menu.appendChild(createItem('🗑️ 删除', () => tmDelete(taskId), true));
+        menu.appendChild(createItem('🗑️ 删除任务', () => tmDelete(taskId), true));
 
         document.body.appendChild(menu);
         requestAnimationFrame(() => {
@@ -28405,7 +29017,21 @@ async function __tmRefreshAfterWake(reason) {
         return seedId;
     }
 
-    async function __tmCreateTaskInDoc({ docId, content, priority, completionTime, pinned, customStatus, atTop } = {}) {
+    function __tmUpsertLocalTask(task) {
+        const nextTask = (task && typeof task === 'object') ? task : null;
+        const taskId = String(nextTask?.id || '').trim();
+        const docId = String(nextTask?.docId || nextTask?.root_id || '').trim();
+        if (!taskId || !docId || !nextTask) return;
+        state.flatTasks[taskId] = nextTask;
+        const doc = state.taskTree.find(d => String(d?.id || '').trim() === docId);
+        if (!doc) return;
+        if (!Array.isArray(doc.tasks)) doc.tasks = [];
+        if (!doc.tasks.some((item) => String(item?.id || '').trim() === taskId)) {
+            doc.tasks.push(nextTask);
+        }
+    }
+
+    async function __tmCreateTaskInDoc({ docId, content, priority, completionTime, pinned, customStatus, atTop, localInsert = true } = {}) {
         const parentDocId = String(docId || '').trim();
         const text = String(content || '').trim();
         if (!parentDocId) throw new Error('未设置文档');
@@ -28468,17 +29094,184 @@ async function __tmRefreshAfterWake(reason) {
             level: 0,
         };
         try { normalizeTaskFields(newTask, docName); } catch (e) {}
+        try {
+            state.pendingInsertedTasks[taskId] = {
+                ...newTask,
+                expiresAt: Date.now() + 10000,
+            };
+        } catch (e) {}
 
-        state.flatTasks[taskId] = newTask;
-        const doc = state.taskTree.find(d => d.id === parentDocId);
-        if (doc) {
-            doc.tasks.push(newTask);
+        if (localInsert !== false) {
+            __tmUpsertLocalTask(newTask);
+            try { recalcStats(); } catch (e) {}
+            try { applyFilters(); } catch (e) {}
+            if (state.modal) render();
         }
-        try { recalcStats(); } catch (e) {}
-        try { applyFilters(); } catch (e) {}
-        if (state.modal) render();
         return taskId;
     }
+
+    function __tmBuildHeadingGroupCreateBtnHtml(docId, headingId, title = '新建任务') {
+        const did = String(docId || '').trim();
+        if (!did) return '';
+        const hid = String(headingId || '').trim();
+        return `
+            <span class="tm-group-actions" onclick="event.stopPropagation()">
+                <button class="tm-group-create-btn"
+                        type="button"
+                        title="${esc(title)}"
+                        aria-label="${esc(title)}"
+                        onpointerdown="event.stopPropagation()"
+                        onclick="tmCreateTaskForHeadingGroup('${escSq(did)}','${escSq(hid)}', event)">
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M8 3.25v9.5M3.25 8h9.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </span>
+        `;
+    }
+
+    window.tmCreateTaskForHeadingGroup = async function(docId, headingId, ev) {
+        try {
+            ev?.stopPropagation?.();
+            ev?.preventDefault?.();
+        } catch (e) {}
+
+        const did = String(docId || '').trim();
+        const hid = String(headingId || '').trim();
+        if (!did) {
+            hint('❌ 未找到文档', 'error');
+            return;
+        }
+        const text = await showPrompt('新建任务', '请输入任务内容', '');
+        if (text == null) return;
+        const nextText = String(text || '').trim();
+        if (!nextText) {
+            hint('⚠ 请输入任务内容', 'warning');
+            return;
+        }
+        try {
+            const taskId = await __tmCreateTaskInDoc({ docId: did, content: nextText, atTop: true, pinned: false, localInsert: false });
+            if (hid && hid !== '__none__') {
+                await __tmMoveTaskToHeading(taskId, did, hid, { silentHint: true });
+            } else {
+                const task = state.pendingInsertedTasks?.[String(taskId || '').trim()];
+                if (task) {
+                    task.h2 = '';
+                    task.h2Id = '';
+                    if (state.pendingInsertedTasks?.[taskId]) {
+                        state.pendingInsertedTasks[taskId].h2 = '';
+                        state.pendingInsertedTasks[taskId].h2Id = '';
+                    }
+                }
+            }
+            const pendingTask = state.pendingInsertedTasks?.[String(taskId || '').trim()];
+            if (pendingTask) __tmUpsertLocalTask(pendingTask);
+            __tmRefreshMainViewInPlace({ withFilters: true });
+            loadSelectedDocuments().catch((err) => {
+                try { console.error('[标题分组新建任务] 刷新失败:', err); } catch (e) {}
+            });
+            hint('✅ 任务已创建', 'success');
+        } catch (e) {
+            hint(`❌ 新建任务失败: ${e.message}`, 'error');
+        }
+    };
+
+    async function __tmCreateSubtaskForTask(parentTaskId, content) {
+        const pid = String(parentTaskId || '').trim();
+        const parentTask = state.flatTasks?.[pid];
+        if (!pid || !parentTask) throw new Error('未找到父任务');
+        const text = String(content || '').trim();
+        if (!text) throw new Error('请输入子任务内容');
+
+        const insertedId = await API.appendBlock(pid, `- [ ] ${text}`);
+        const taskId = await __tmResolveInsertedTaskBlockId(insertedId);
+        try { await __tmPersistMetaAndAttrsAsync(taskId, { pinned: false }); } catch (e) {}
+        try {
+            const docId = String(parentTask.docId || parentTask.root_id || '').trim();
+            if (docId) __tmInvalidateTasksQueryCacheByDocId(docId);
+        } catch (e) {}
+        return taskId;
+    }
+
+    function __tmApplyOptimisticSubtask(parentTaskId, subtaskId, content) {
+        const pid = String(parentTaskId || '').trim();
+        const tid = String(subtaskId || '').trim();
+        const text = String(content || '').trim();
+        const parentTask = state.flatTasks?.[pid];
+        if (!pid || !tid || !text || !parentTask) return;
+
+        const nextTask = {
+            id: tid,
+            done: false,
+            pinned: false,
+            content: text,
+            markdown: `- [ ] ${text}`,
+            priority: '',
+            duration: '',
+            remark: '',
+            completionTime: '',
+            customTime: '',
+            customStatus: '',
+            docName: parentTask.docName || '',
+            root_id: parentTask.root_id || parentTask.docId || '',
+            docId: parentTask.docId || parentTask.root_id || '',
+            parentTaskId: pid,
+            created: new Date().toISOString(),
+            updated: new Date().toISOString(),
+            children: [],
+            level: Math.max(0, Number(parentTask.level) || 0) + 1,
+            h2: parentTask.h2 || '',
+            h2Id: parentTask.h2Id || '',
+        };
+        try { normalizeTaskFields(nextTask, nextTask.docName || '未知文档'); } catch (e) {}
+
+        if (!Array.isArray(parentTask.children)) parentTask.children = [];
+        if (!parentTask.children.some((child) => String(child?.id || '').trim() === tid)) {
+            parentTask.children.push(nextTask);
+        }
+        state.flatTasks[tid] = nextTask;
+        try {
+            state.pendingInsertedTasks[tid] = {
+                ...nextTask,
+                expiresAt: Date.now() + 10000,
+            };
+        } catch (e) {}
+    }
+
+    window.tmCreateSubtask = async function(parentTaskId, ev) {
+        try {
+            ev?.stopPropagation?.();
+            ev?.preventDefault?.();
+        } catch (e) {}
+
+        const pid = String(parentTaskId || '').trim();
+        const parentTask = state.flatTasks?.[pid];
+        if (!pid || !parentTask) {
+            hint('❌ 未找到父任务', 'error');
+            return;
+        }
+
+        const text = await showPrompt('新建子任务', '请输入子任务内容', '');
+        if (text == null) return;
+        const nextText = String(text || '').trim();
+        if (!nextText) {
+            hint('⚠ 请输入子任务内容', 'warning');
+            return;
+        }
+
+        try {
+            const subtaskId = await __tmCreateSubtaskForTask(pid, nextText);
+            try { state.collapsedTaskIds?.delete?.(pid); } catch (e) {}
+            __tmApplyOptimisticSubtask(pid, subtaskId, nextText);
+            __tmRefreshMainViewInPlace({ withFilters: true });
+            loadSelectedDocuments().catch((err) => {
+                try { console.error('[子任务] 刷新失败:', err); } catch (e) {}
+            });
+            hint('✅ 子任务已创建', 'success');
+        } catch (e) {
+            hint(`❌ 新建子任务失败: ${e.message}`, 'error');
+        }
+    };
 
     // 注册全局刷新回调，供悬浮条调用
     globalThis.__taskHorizonRefresh = () => {
@@ -28556,6 +29349,7 @@ async function __tmRefreshAfterWake(reason) {
             customStatus: defaultStatusId,
             priority: 'none',
             completionTime: '',
+            openReminderAfterCreate: false,
         };
 
         const modal = document.createElement('div');
@@ -28604,6 +29398,10 @@ async function __tmRefreshAfterWake(reason) {
                                    style="position:absolute; opacity:0; width:1px; height:1px; left:0; bottom:0; pointer-events:none; border:0; padding:0; margin:0; overflow:hidden; z-index:-1;">
                         </div>
                     </div>
+
+                    <button id="tmQuickAddReminderBtn" class="tm-btn tm-btn-secondary" onclick="tmQuickAddToggleReminder()" style="padding: 6px 12px; font-size: 13px; display:flex; align-items:center; gap:4px;">
+                        ⏰ <span>设置提醒</span>
+                    </button>
 
                     <div style="flex:1;"></div>
                     <button class="tm-btn tm-btn-primary" id="tmQuickAddSubmitBtn" onclick="tmQuickAddSubmit()" style="padding: 6px 14px; font-size: 13px;">提交</button>
@@ -28721,7 +29519,32 @@ async function __tmRefreshAfterWake(reason) {
                     }
                 }
             }
+
+            const reminderBtn = document.getElementById('tmQuickAddReminderBtn');
+            if (reminderBtn) {
+                const enabled = !!SettingsStore.data.enableTomatoIntegration;
+                const active = !!qa.openReminderAfterCreate;
+                reminderBtn.style.opacity = enabled ? '1' : '0.55';
+                reminderBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
+                reminderBtn.style.color = active ? 'var(--tm-primary-color)' : '';
+                reminderBtn.style.borderColor = active ? 'var(--tm-primary-color)' : '';
+                reminderBtn.style.background = active ? 'color-mix(in srgb, var(--tm-bg-color) 82%, var(--tm-primary-color) 18%)' : '';
+                reminderBtn.title = enabled ? (active ? '提交后打开提醒设置' : '点击后提交时会打开提醒设置') : '番茄钟联动未启用';
+                reminderBtn.innerHTML = `⏰ <span>${active ? '设置提醒: 开' : '设置提醒'}</span>`;
+                reminderBtn.disabled = !enabled;
+            }
         } catch (e) {}
+    };
+
+    window.tmQuickAddToggleReminder = function() {
+        const qa = state.quickAdd;
+        if (!qa) return;
+        if (!SettingsStore.data.enableTomatoIntegration) {
+            hint('⚠ 番茄钟联动已关闭', 'warning');
+            return;
+        }
+        qa.openReminderAfterCreate = !qa.openReminderAfterCreate;
+        window.tmQuickAddRenderMeta?.();
     };
 
     window.tmQuickAddStatusChanged = function(value) {
@@ -29116,7 +29939,7 @@ async function __tmRefreshAfterWake(reason) {
                 targetDocId = await API.createDailyNote(notebook);
                 if (!String(targetDocId || '').trim()) throw new Error('获取日记文档失败');
             }
-            await __tmCreateTaskInDoc({
+            const createdTaskId = await __tmCreateTaskInDoc({
                 docId: targetDocId,
                 content,
                 priority: qa.priority,
@@ -29125,6 +29948,11 @@ async function __tmRefreshAfterWake(reason) {
             });
             hint('✅ 任务已创建', 'success');
             window.tmQuickAddClose?.();
+            if (qa.openReminderAfterCreate && createdTaskId) {
+                setTimeout(() => {
+                    try { window.tmReminder?.(createdTaskId); } catch (e) {}
+                }, 80);
+            }
         } catch (e) {
             hint(`❌ 创建失败: ${e.message}`, 'error');
             // 恢复按钮状态
@@ -29320,6 +30148,34 @@ async function __tmRefreshAfterWake(reason) {
             const res = await API.getTasksByDocuments(allDocIds, state.queryLimit, { doneOnly: !!state.__tmQueryDoneOnly });
             
             if (token !== (Number(state.openToken) || 0)) return;
+            try {
+                const pendingMap = (state.pendingInsertedTasks && typeof state.pendingInsertedTasks === 'object')
+                    ? state.pendingInsertedTasks
+                    : {};
+                const nowTs = Date.now();
+                const liveTasks = Array.isArray(res.tasks) ? res.tasks : [];
+                const liveIdSet = new Set(liveTasks.map((t) => String(t?.id || '').trim()).filter(Boolean));
+                Object.keys(pendingMap).forEach((taskId) => {
+                    const id = String(taskId || '').trim();
+                    const pending = pendingMap[id];
+                    if (!id || !pending) {
+                        delete pendingMap[taskId];
+                        return;
+                    }
+                    if (liveIdSet.has(id)) {
+                        delete pendingMap[taskId];
+                        return;
+                    }
+                    const expiresAt = Number(pending.expiresAt) || 0;
+                    const docId = String(pending.root_id || pending.docId || '').trim();
+                    if ((expiresAt && expiresAt < nowTs) || !docId || !allDocIds.includes(docId)) {
+                        delete pendingMap[taskId];
+                        return;
+                    }
+                    liveTasks.push({ ...pending, __tmPendingInserted: true });
+                });
+                res.tasks = liveTasks;
+            } catch (e) {}
             // 更新统计信息
             state.stats.queryTime = res.queryTime || (Date.now() - startTime);
             state.stats.totalTasks = res.totalCount || 0;
@@ -29352,6 +30208,7 @@ async function __tmRefreshAfterWake(reason) {
                         taskFlowRankMap = new Map();
                     }
                 }
+                const semanticTaskBuckets = new Map();
                 const missingPriorityIds = [];
 
                 // 3. 获取层级信息（不再依赖，改用前端递归计算）
@@ -29400,6 +30257,40 @@ async function __tmRefreshAfterWake(reason) {
                         task.h2Rank = Number.NaN;
                     }
                     if (!task.priority) missingPriorityIds.push(task.id);
+
+                    const semanticContent = String(task.content || '').trim();
+                    const semanticDocId = String(task.root_id || '').trim();
+                    const semanticH2Id = String(task.h2Id || '').trim();
+                    const semanticCreatedTs = __tmParseCreatedTs(task.created);
+                    const semanticKey = `${semanticDocId}::${semanticH2Id}::${semanticContent}`;
+                    const isPendingInserted = !!task.__tmPendingInserted;
+                    if (semanticDocId && semanticContent) {
+                        if (!semanticTaskBuckets.has(semanticKey)) semanticTaskBuckets.set(semanticKey, []);
+                        const bucket = semanticTaskBuckets.get(semanticKey);
+                        const duplicateLive = bucket.find((item) => {
+                            if (!!item.isPending === isPendingInserted) return false;
+                            const a = Number(item.createdTs) || 0;
+                            const b = Number(semanticCreatedTs) || 0;
+                            if (!a || !b) return false;
+                            return Math.abs(a - b) <= 120000;
+                        });
+                        if (duplicateLive && isPendingInserted) {
+                            try { delete state.pendingInsertedTasks[String(task.id || '').trim()]; } catch (e) {}
+                            return;
+                        }
+                        if (duplicateLive && !isPendingInserted) {
+                            const pendingDupId = String(duplicateLive.id || '').trim();
+                            if (pendingDupId && nextFlatTasks[pendingDupId]) delete nextFlatTasks[pendingDupId];
+                            if (pendingDupId && state.pendingInsertedTasks?.[pendingDupId]) {
+                                try { delete state.pendingInsertedTasks[pendingDupId]; } catch (e) {}
+                            }
+                        }
+                        bucket.push({
+                            id: String(task.id || '').trim(),
+                            createdTs: semanticCreatedTs,
+                            isPending: isPendingInserted,
+                        });
+                    }
 
                     // 初始化 MetaStore（如果不存在）
                     const existing = MetaStore.get(task.id);
@@ -29722,10 +30613,14 @@ async function __tmRefreshAfterWake(reason) {
                     currentGroupBg = enableGroupBg ? (__tmGroupBgFromLabelColor(labelColor, isDark) || '') : '';
                     currentGroupAccent = enableGroupBg ? String(labelColor || '') : '';
                 }
+                const createBtnHtml = (row.kind === 'h2' && state.groupByDocName)
+                    ? __tmBuildHeadingGroupCreateBtnHtml(row.docId, row.headingId, '在该标题下新建任务')
+                    : '';
                 return `
-                    <div class="tm-checklist-group ${row.kind === 'doc' ? 'tm-checklist-group--doc' : ''} ${row.kind === 'h2' ? 'tm-checklist-group--h2' : ''} ${row.kind === 'time' ? 'tm-checklist-group--time' : ''} ${row.kind === 'quadrant' ? 'tm-checklist-group--quadrant' : ''}" data-group-key="${esc(String(row.key || ''))}" onclick="tmToggleGroupCollapse('${escSq(String(row.key || ''))}', event)">
+                    <div class="tm-checklist-group ${row.kind === 'doc' ? 'tm-checklist-group--doc' : ''} ${row.kind === 'task' ? 'tm-checklist-group--task' : ''} ${row.kind === 'h2' ? 'tm-checklist-group--h2' : ''} ${row.kind === 'time' ? 'tm-checklist-group--time' : ''} ${row.kind === 'quadrant' ? 'tm-checklist-group--quadrant' : ''}" data-group-key="${esc(String(row.key || ''))}" onclick="tmToggleGroupCollapse('${escSq(String(row.key || ''))}', event)">
                         ${toggle}
                         <span class="tm-checklist-group-label" style="color:${labelColor};">${esc(String(row.label || ''))}</span>
+                        ${createBtnHtml}
                         ${countHtml}
                         ${durationHtml}
                     </div>
@@ -29765,8 +30660,6 @@ async function __tmRefreshAfterWake(reason) {
                 const currentStatus = String(task.customStatus || '').trim() || 'todo';
                 const statusOption = statusOptions.find((o) => String(o?.id || '').trim() === currentStatus) || { name: currentStatus, color: '#757575' };
                 const statusChipStyle = __tmBuildStatusChipStyle(statusOption.color);
-                const checkboxAccentColor = __tmGetPriorityAccentColor(task.priority);
-                const checkboxStyle = checkboxAccentColor ? ` style="--tm-checklist-checkbox-color:${checkboxAccentColor};"` : '';
                 const indent = checklistCompact ? depth * 14 : depth * 22;
                 const meta = [];
                 if (task.docName) meta.push(`<span class="tm-checklist-meta-chip">📄 ${esc(String(task.docName || ''))}</span>`);
@@ -29785,15 +30678,15 @@ async function __tmRefreshAfterWake(reason) {
                         <div class="tm-checklist-leading${hasChildren ? ' tm-checklist-leading--branch' : ''}${hasChildren && collapsed ? ' tm-checklist-leading--collapsed' : ''}">
                             ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : '<span class="tm-tree-toggle tm-tree-toggle--placeholder" aria-hidden="true"></span>'}
                             ${hasChildren && collapsed ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>' : ''}
-                            <input class="tm-task-checkbox ${GlobalLock.isLocked() ? 'tm-operating' : ''}" type="checkbox" ${task.done ? 'checked' : ''} ${GlobalLock.isLocked() ? 'disabled' : ''}${checkboxStyle} onchange="tmSetDone('${escSq(String(task.id || ''))}', this.checked, event)">
+                            ${__tmRenderTaskCheckbox(String(task.id || ''), task, { checked: task.done, disabled: GlobalLock.isLocked(), extraClass: GlobalLock.isLocked() ? 'tm-operating' : '' })}
                         </div>
-                        <div class="tm-checklist-item-main">
+                        <div class="tm-checklist-item-main" ondblclick="tmChecklistItemDblClick('${escSq(String(task.id || ''))}', event)">
                             <div class="tm-checklist-title-row">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" draggable="false" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)" title="跳转到任务">${esc(String(task.content || '').trim() || '(无内容)')}</span>${reminderHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" title="跳转到任务"><span draggable="false" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
-                                ${hasChildren ? `<span class="tm-checklist-mobile-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : ''}
                                 ${task.pinned ? '<span class="tm-checklist-meta-chip">📌</span>' : ''}
+                                ${hasChildren ? `<span class="tm-checklist-mobile-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : ''}
                             </div>
                             ${meta.length ? `<div class="tm-checklist-meta">${meta.join('')}</div>` : ''}
                         </div>
@@ -29923,6 +30816,42 @@ async function __tmRefreshAfterWake(reason) {
         if (activeTab === 'main' || activeTab === 'docs') {
             try { __tmEnsureAllDocumentsLoaded(false); } catch (e) {}
         }
+        const renderSingleSwitchSetting = (title, desc, inputHtml, opt = {}) => {
+            const extraClass = String(opt?.className || '').trim();
+            const extraStyle = String(opt?.style || '').trim();
+            const descHtml = String(desc || '').trim()
+                ? `<div class="tm-setting-switch-desc">${desc}</div>`
+                : '';
+            return `
+                <div class="tm-setting-switch-row${extraClass ? ` ${extraClass}` : ''}"${extraStyle ? ` style="${extraStyle}"` : ''}>
+                    <div class="tm-setting-switch-copy">
+                        <div class="tm-setting-switch-title">${title}</div>
+                        ${descHtml}
+                    </div>
+                    <label class="tm-setting-switch-control">
+                        ${inputHtml}
+                    </label>
+                </div>
+            `;
+        };
+        const renderSingleFieldSetting = (title, desc, controlHtml, opt = {}) => {
+            const extraClass = String(opt?.className || '').trim();
+            const extraStyle = String(opt?.style || '').trim();
+            const descHtml = String(desc || '').trim()
+                ? `<div class="tm-setting-field-desc">${desc}</div>`
+                : '';
+            return `
+                <div class="tm-setting-field-row${extraClass ? ` ${extraClass}` : ''}"${extraStyle ? ` style="${extraStyle}"` : ''}>
+                    <div class="tm-setting-field-copy">
+                        <div class="tm-setting-field-title">${title}</div>
+                        ${descHtml}
+                    </div>
+                    <div class="tm-setting-field-control">
+                        ${controlHtml}
+                    </div>
+                </div>
+            `;
+        };
 
         state.settingsModal.innerHTML = `
             <div class="tm-settings-box" style="overflow: hidden;">
@@ -30014,126 +30943,140 @@ async function __tmRefreshAfterWake(reason) {
                     ` : ''}
 
                     ${activeTab === 'main' ? `
-                    <div style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px;">
-                        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-                        <label style="display: inline-flex; flex-wrap: nowrap; align-items: center; gap: 8px; cursor: pointer; flex: 0 1 auto; min-width: 0;">
-                            <span>查询限制: </span>
-                            <input type="number" value="${state.queryLimit}"
-                                   onchange="updateQueryLimit(this.value)"
-                                   style="width: 80px; padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
-                            <span style="white-space:nowrap;">条任务/文档</span>
-                        </label>
-                        <div style="flex:1 1 100%; font-size:12px; color:var(--tm-secondary-text); line-height:1.5;">
-                            此设置无法超出思源笔记的搜索数量限制，遇到任务未查找到的情况请前往：思源笔记「设置 -> 搜索 -> 搜索结果显示数」，调大至超过所有任务的数量。
-                        </div>
-                        </div>
-                        
-                        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-                        <label style="display: inline-flex; flex-wrap: nowrap; align-items: center; gap: 8px; cursor: pointer; flex: 0 1 auto; min-width: 0;">
-                            <span>字体大小: </span>
-                            <input type="number" value="${SettingsStore.data.fontSize}" min="10" max="30"
-                                   onchange="updateFontSize(this.value)"
-                                   style="width: 60px; padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
-                            <span>px</span>
-                        </label>
-
-                        <label style="display: inline-flex; flex-wrap: nowrap; align-items: center; gap: 8px; cursor: pointer; flex: 0 1 auto; min-width: 0;">
-                            <span>移动端字体: </span>
-                            <input type="number" value="${SettingsStore.data.fontSizeMobile || SettingsStore.data.fontSize}" min="10" max="30"
-                                   onchange="updateFontSizeMobile(this.value)"
-                                   style="width: 60px; padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
-                            <span>px</span>
-                        </label>
-                        </div>
-
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start;">
-
-                        <label style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; row-gap: 6px; cursor: pointer; flex: 1 1 240px; min-width: 200px;">
-                            <span>行高: </span>
-                            <select onchange="updateRowHeightMode(this.value)"
-                                    style="padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
+                    <div class="tm-settings-panel">
+                        <div class="tm-settings-section-title">🖥️ 基础显示</div>
+                        <div class="tm-settings-section-desc">调整常规字号、行高和文本展示方式。</div>
+                        ${renderSingleFieldSetting(
+                            '字体大小',
+                            '设置桌面端任务管理器的基础字号。',
+                            `<input class="b3-text-field" type="number" value="${SettingsStore.data.fontSize}" min="10" max="30" onchange="updateFontSize(this.value)" style="width:88px;">
+                             <span class="tm-setting-field-unit">px</span>`
+                        )}
+                        ${renderSingleFieldSetting(
+                            '移动端字体',
+                            '单独设置移动端字号，未设置时跟随桌面端。',
+                            `<input class="b3-text-field" type="number" value="${SettingsStore.data.fontSizeMobile || SettingsStore.data.fontSize}" min="10" max="30" onchange="updateFontSizeMobile(this.value)" style="width:88px;">
+                             <span class="tm-setting-field-unit">px</span>`
+                        )}
+                        ${renderSingleFieldSetting(
+                            '行高模式',
+                            '控制任务行整体密度。',
+                            `<select class="b3-select" onchange="updateRowHeightMode(this.value)" style="width:180px;">
                                 <option value="auto" ${String(SettingsStore.data.rowHeightMode || 'auto') === 'auto' ? 'selected' : ''}>自动</option>
                                 <option value="compact" ${String(SettingsStore.data.rowHeightMode || '') === 'compact' ? 'selected' : ''}>紧凑</option>
                                 <option value="normal" ${String(SettingsStore.data.rowHeightMode || '') === 'normal' ? 'selected' : ''}>标准</option>
                                 <option value="comfortable" ${String(SettingsStore.data.rowHeightMode || '') === 'comfortable' ? 'selected' : ''}>宽松</option>
-                            </select>
-                        </label>
-
-                        <label style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; row-gap: 6px; cursor: pointer; flex: 1 1 260px; min-width: 220px;">
-                            <span>行高(px): </span>
-                            <input type="number" value="${Number(SettingsStore.data.rowHeightPx) || 0}" min="0" max="120"
-                                   onchange="updateRowHeightPx(this.value)"
-                                   style="width: 70px; padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
-                            <span style="font-size:12px;color:var(--tm-secondary-text);">(0=跟随)</span>
-                        </label>
-
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1 1 260px;min-width:220px;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.taskAutoWrapEnabled !== false ? 'checked' : ''} onchange="updateTaskAutoWrapEnabled(this.checked)">
-                            自动换行（任务内容/备注/看板/白板）
-                        </label>
-
-                        <label style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;row-gap:6px;cursor:pointer;flex:1 1 260px;min-width:220px;opacity:${SettingsStore.data.taskAutoWrapEnabled !== false ? 1 : 0.6};">
-                            <span>内容行数: </span>
-                            <input type="number" value="${Math.max(1, Math.min(10, Number(SettingsStore.data.taskContentWrapMaxLines) || 3))}" min="1" max="10"
+                            </select>`
+                        )}
+                        ${renderSingleFieldSetting(
+                            '行高(px)',
+                            '设置具体像素值，0 表示跟随行高模式。',
+                            `<input class="b3-text-field" type="number" value="${Number(SettingsStore.data.rowHeightPx) || 0}" min="0" max="120" onchange="updateRowHeightPx(this.value)" style="width:88px;">
+                             <span class="tm-setting-field-unit">(0=跟随)</span>`
+                        )}
+                        ${renderSingleSwitchSetting(
+                            '自动换行',
+                            '任务内容、备注、看板和白板中的任务内容自动换行显示。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.taskAutoWrapEnabled !== false ? 'checked' : ''} onchange="updateTaskAutoWrapEnabled(this.checked)">`
+                        )}
+                        ${renderSingleFieldSetting(
+                            '内容行数',
+                            '限制任务内容最多显示的行数。',
+                            `<input class="b3-text-field" type="number" value="${Math.max(1, Math.min(10, Number(SettingsStore.data.taskContentWrapMaxLines) || 3))}" min="1" max="10"
                                    ${SettingsStore.data.taskAutoWrapEnabled !== false ? '' : 'disabled'}
-                                   onchange="updateTaskContentWrapMaxLines(this.value)"
-                                   style="width: 70px; padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
-                            <span style="font-size:12px;color:var(--tm-secondary-text);">行</span>
-                        </label>
-
-                        <label style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;row-gap:6px;cursor:pointer;flex:1 1 260px;min-width:220px;opacity:${SettingsStore.data.taskAutoWrapEnabled !== false ? 1 : 0.6};">
-                            <span>备注行数: </span>
-                            <input type="number" value="${Math.max(1, Math.min(10, Number(SettingsStore.data.taskRemarkWrapMaxLines) || 2))}" min="1" max="10"
+                                   onchange="updateTaskContentWrapMaxLines(this.value)" style="width:88px;opacity:${SettingsStore.data.taskAutoWrapEnabled !== false ? 1 : 0.6};">
+                             <span class="tm-setting-field-unit">行</span>`,
+                            { style: `opacity:${SettingsStore.data.taskAutoWrapEnabled !== false ? 1 : 0.6};` }
+                        )}
+                        ${renderSingleFieldSetting(
+                            '备注行数',
+                            '限制备注最多显示的行数。',
+                            `<input class="b3-text-field" type="number" value="${Math.max(1, Math.min(10, Number(SettingsStore.data.taskRemarkWrapMaxLines) || 2))}" min="1" max="10"
                                    ${SettingsStore.data.taskAutoWrapEnabled !== false ? '' : 'disabled'}
-                                   onchange="updateTaskRemarkWrapMaxLines(this.value)"
-                                   style="width: 70px; padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
-                            <span style="font-size:12px;color:var(--tm-secondary-text);">行</span>
-                        </label>
-
-                        <label style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; row-gap: 6px; cursor: pointer; flex: 1 1 240px; min-width: 200px;">
-                            <span>任务标题级别: </span>
-                            <select onchange="updateTaskHeadingLevel(this.value)"
-                                    style="padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
+                                   onchange="updateTaskRemarkWrapMaxLines(this.value)" style="width:88px;opacity:${SettingsStore.data.taskAutoWrapEnabled !== false ? 1 : 0.6};">
+                             <span class="tm-setting-field-unit">行</span>`,
+                            { style: `opacity:${SettingsStore.data.taskAutoWrapEnabled !== false ? 1 : 0.6};` }
+                        )}
+                        ${renderSingleFieldSetting(
+                            '任务标题级别',
+                            '控制任务标题在详情和部分视图中的语义级别。',
+                            `<select class="b3-select" onchange="updateTaskHeadingLevel(this.value)" style="width:180px;">
                                 <option value="h1" ${SettingsStore.data.taskHeadingLevel === 'h1' ? 'selected' : ''}>H1 一级标题</option>
                                 <option value="h2" ${SettingsStore.data.taskHeadingLevel === 'h2' ? 'selected' : ''}>H2 二级标题</option>
                                 <option value="h3" ${SettingsStore.data.taskHeadingLevel === 'h3' ? 'selected' : ''}>H3 三级标题</option>
                                 <option value="h4" ${SettingsStore.data.taskHeadingLevel === 'h4' ? 'selected' : ''}>H4 四级标题</option>
                                 <option value="h5" ${SettingsStore.data.taskHeadingLevel === 'h5' ? 'selected' : ''}>H5 五级标题</option>
                                 <option value="h6" ${SettingsStore.data.taskHeadingLevel === 'h6' ? 'selected' : ''}>H6 六级标题</option>
-                            </select>
-                        </label>
+                            </select>`
+                        )}
+                    </div>
+
+                    <div class="tm-settings-panel">
+                        <div class="tm-settings-section-title">📍 新建任务位置</div>
+                        <div class="tm-settings-section-desc">设置快速新建任务时默认写入的文档位置。</div>
+                        ${renderSingleFieldSetting(
+                            '默认新建文档',
+                            '用于“快速新建任务界面”的默认文档位置，可在新建界面临时切换。',
+                            `<select class="b3-select" onchange="updateNewTaskDocIdFromSelect(this.value)" style="width:100%;">
+                                ${newTaskDocOptions.join('')}
+                            </select>`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        <div style="display:flex; gap:8px; margin-top: 8px; align-items:center;">
+                            <input id="tmNewTaskDocIdInput" class="b3-text-field" list="tmNewTaskDocIdList"
+                                   value="${esc(newTaskDocId === '__dailyNote__' ? '' : (newTaskDocId || ''))}"
+                                   placeholder="也可直接输入文档ID"
+                                   style="flex: 1;">
+                            <button class="tm-btn tm-btn-secondary" onclick="tmApplyNewTaskDocIdInput()" style="padding: 6px 10px; font-size: 12px;">应用</button>
+                            <button class="tm-btn tm-btn-gray" onclick="tmClearNewTaskDocIdInput()" style="padding: 6px 10px; font-size: 12px;">清空</button>
+                        </div>
+                        <datalist id="tmNewTaskDocIdList">
+                            ${allDocsForNewTask.map(docItem => {
+                                const docId = typeof docItem === 'object' ? docItem.id : docItem;
+                                const docName = resolveDocName(docId);
+                                return `<option value="${docId}">${esc(docName)}</option>`;
+                            }).join('')}
+                            ${newTaskDocId && !allDocIdsForNewTask.includes(newTaskDocId) ? `<option value="${newTaskDocId}"></option>` : ''}
+                        </datalist>
+                        <div style="font-size: 12px; color: var(--tm-secondary-text); margin-top: 6px;">
+                            也可以直接输入文档 ID，适合当前列表里没有加载出来的文档。
                         </div>
                     </div>
 
-                    <div style="margin-bottom: 16px; padding: 12px; background: var(--tm-section-bg); border-radius: 8px;">
-                        <div style="font-weight: 600; margin-bottom: 8px;">⚡ 性能与显示设置</div>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.excludeCompletedTasks ? 'checked' : ''} onchange="updateExcludeCompletedTasks(this.checked)">
-                            不查找已完成父任务（提升搜索性能和长期使用性能）
-                        </label>
-                        <div style="font-size: 12px; color: var(--tm-secondary-text); margin-top: 6px; margin-bottom: 12px;">
-                            开启后仅查找未完成任务。含有子任务的任务，如果父任务未完成，已完成的子任务仍会显示。
-                            <br>示例：假设笔记中有 1000 条任务，其中 800 条已完成，则这 800 条任务在开启后不会被查找到。
-                            <br>如需复盘已完成任务：在规则设置中添加/选择条件「完成状态」，将其设置为「所有状态」或「是」均可在筛选已完成任务时搜索到全部已完成任务。
+                    <div class="tm-settings-panel" style="margin-bottom: 16px;">
+                        <div class="tm-settings-section-title">🏷️ 状态选项</div>
+                        <div class="tm-settings-section-desc">维护任务状态列表，影响任务状态菜单和相关视图显示。</div>
+                        <div id="tm-status-options-list">
+                            ${renderStatusOptionsList()}
                         </div>
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-                            <span style="font-size:12px;color:var(--tm-secondary-text);">默认视图:</span>
-                            <select onchange="updateDefaultViewMode(this.value)" style="padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
+                        <button class="tm-btn tm-btn-primary" data-tm-action="addStatusOption" style="margin-top: 8px; font-size: 12px;">+ 添加状态</button>
+                    </div>
+
+                    <div class="tm-settings-panel">
+                        <div class="tm-settings-section-title">🪟 视图与布局</div>
+                        <div class="tm-settings-section-desc">控制默认视图、紧凑模式和各类展示布局。</div>
+                        ${renderSingleFieldSetting(
+                            '默认视图',
+                            '桌面端首次打开任务管理器时默认进入的视图。',
+                            `<select class="b3-select" onchange="updateDefaultViewMode(this.value)" style="width:180px;">
                                 ${__tmGetEnabledViews().map((viewId) => {
                                     const view = __TM_ALL_VIEWS.find(v => v.id === viewId);
                                     return view ? `<option value="${view.id}" ${String(__tmGetSafeViewMode(SettingsStore.data.defaultViewMode || 'list')) === view.id ? 'selected' : ''}>${view.longLabel}</option>` : '';
                                 }).join('')}
-                            </select>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-                            <span style="font-size:12px;color:var(--tm-secondary-text);">移动端默认:</span>
-                            <select onchange="updateDefaultViewModeMobile(this.value)" style="padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
+                            </select>`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleFieldSetting(
+                            '移动端默认',
+                            '移动端首次打开时使用的默认视图。',
+                            `<select class="b3-select" onchange="updateDefaultViewModeMobile(this.value)" style="width:180px;">
                                 ${__tmGetEnabledViews().map((viewId) => {
                                     const view = __TM_ALL_VIEWS.find(v => v.id === viewId);
                                     return view ? `<option value="${view.id}" ${String(__tmGetSafeViewMode(SettingsStore.data.defaultViewModeMobile || SettingsStore.data.defaultViewMode || 'list')) === view.id ? 'selected' : ''}>${view.longLabel}</option>` : '';
                                 }).join('')}
-                            </select>
-                        </div>
+                            </select>`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
                         <div style="margin-bottom:10px;">
                             <div style="font-size:12px;color:var(--tm-secondary-text);margin-bottom:8px;">显示视图:</div>
                             <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -30153,124 +31096,135 @@ async function __tmRefreshAfterWake(reason) {
                             </div>
                             <div style="font-size:12px;color:var(--tm-secondary-text);margin-top:6px;">顶栏和移动端视图切换会同步隐藏这里关闭的视图，至少保留一个。</div>
                         </div>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.kanbanCompactMode ? 'checked' : ''} onchange="updateKanbanCompactMode(this.checked)">
-                            看板紧凑模式（更窄更矮，显示更多卡片）
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.checklistCompactMode ? 'checked' : ''} onchange="updateChecklistCompactMode(this.checked)">
-                            清单紧凑模式（单行任务，右侧显示文档和完成时间）
-                        </label>
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-                            <span style="font-size:12px;color:var(--tm-secondary-text);">看板宽度:</span>
-                            <input type="range" min="220" max="520" step="10" value="${Number(SettingsStore.data.kanbanColumnWidth) || 320}" onchange="updateKanbanColumnWidth(this.value)" style="width: 180px;">
-                            <span style="font-size:12px;min-width:52px;">${Math.max(220, Math.min(520, Number(SettingsStore.data.kanbanColumnWidth) || 320))}px</span>
-                        </div>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.kanbanShowDoneColumn ? 'checked' : ''} onchange="updateKanbanShowDoneColumn(this.checked)">
-                            看板显示“已完成”列
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.kanbanDragSyncSubtasks ? 'checked' : ''} onchange="updateKanbanDragSyncSubtasks(this.checked)">
-                            看板拖动父任务时同步更改子任务状态
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.docH2SubgroupEnabled !== false ? 'checked' : ''} onchange="updateDocH2SubgroupEnabled(this.checked)">
-                            文档分组下按二级标题子分组（时间轴/表格/日历侧边栏）
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.groupByTaskName || SettingsStore.data.groupMode === 'task' ? 'checked' : ''} onchange="updateGroupByTaskName(this.checked)">
-                            分组模式增加：按任务名分组（相同任务内容分为一组）
-                        </label>
-                        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin-bottom:10px;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.groupSortByBestSubtaskTimeInTimeQuadrant ? 'checked' : ''} onchange="updateGroupSortByBestSubtaskTimeInTimeQuadrant(this.checked)">
-                            <span>按时间/四象限分组时：父任务按子任务时间参与分组排序（已过期远 &gt; 已过期近 &gt; 未过期近 &gt; 未过期远）</span>
-                        </label>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <span style="font-size:12px;color:var(--tm-secondary-text);">时长显示格式:</span>
-                            <select onchange="updateDurationFormat(this.value)" style="padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
+                        ${renderSingleSwitchSetting(
+                            '看板紧凑模式',
+                            '更窄更矮，显示更多卡片。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.kanbanCompactMode ? 'checked' : ''} onchange="updateKanbanCompactMode(this.checked)">`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleSwitchSetting(
+                            '清单紧凑模式',
+                            '单行任务，右侧显示文档和完成时间。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.checklistCompactMode ? 'checked' : ''} onchange="updateChecklistCompactMode(this.checked)">`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleFieldSetting(
+                            '看板宽度',
+                            '调整看板列宽，适合不同信息密度。',
+                            `<input type="range" min="220" max="520" step="10" value="${Number(SettingsStore.data.kanbanColumnWidth) || 320}" onchange="updateKanbanColumnWidth(this.value)" style="max-width:180px;">
+                             <span class="tm-setting-field-unit" style="min-width:52px;text-align:right;">${Math.max(220, Math.min(520, Number(SettingsStore.data.kanbanColumnWidth) || 320))}px</span>`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleSwitchSetting(
+                            '看板显示“已完成”列',
+                            '在看板中单独显示已完成任务列。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.kanbanShowDoneColumn ? 'checked' : ''} onchange="updateKanbanShowDoneColumn(this.checked)">`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleSwitchSetting(
+                            '看板拖动父任务时同步更改子任务状态',
+                            '拖动父任务切换状态时，子任务同步更新。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.kanbanDragSyncSubtasks ? 'checked' : ''} onchange="updateKanbanDragSyncSubtasks(this.checked)">`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleFieldSetting(
+                            '时长显示格式',
+                            '控制耗时和番茄累计时间的展示形式。',
+                            `<select class="b3-select" onchange="updateDurationFormat(this.value)" style="width:180px;">
                                 <option value="hours" ${String(SettingsStore.data.durationFormat || 'hours') === 'hours' ? 'selected' : ''}>小时 (如 1.5h)</option>
                                 <option value="minutes" ${String(SettingsStore.data.durationFormat || '') === 'minutes' ? 'selected' : ''}>分钟 (如 90min)</option>
-                            </select>
-                        </div>
+                            </select>`
+                        )}
                     </div>
 
-                    <div style="margin-bottom: 16px; padding: 12px; background: var(--tm-section-bg); border-radius: 8px;">
-                        <div style="font-weight: 600; margin-bottom: 8px;">🧷 任务悬浮条（quickbar）</div>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.enableQuickbar ? 'checked' : ''} onchange="updateEnableQuickbar(this.checked)">
-                            启用任务悬浮条（点击任务块显示自定义字段）
-                        </label>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:8px;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.pinNewTasksByDefault ? 'checked' : ''} onchange="updatePinNewTasksByDefault(this.checked)">
-                            新建任务默认置顶
-                        </label>
+                    <div class="tm-settings-panel">
+                        <div class="tm-settings-section-title">🔎 搜索与分组</div>
+                        <div class="tm-settings-section-desc">控制任务检索范围，以及文档和任务的分组行为。</div>
+                        ${renderSingleFieldSetting(
+                            '查询限制',
+                            '此设置无法超出思源笔记的搜索数量限制，遇到任务未查找到的情况请前往：思源笔记「设置 -> 搜索 -> 搜索结果显示数」，调大至超过所有任务的数量。',
+                            `<input class="b3-text-field" type="number" value="${state.queryLimit}" onchange="updateQueryLimit(this.value)" style="width:96px;">
+                             <span class="tm-setting-field-unit">条任务/文档</span>`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleSwitchSetting(
+                            '不查找已完成父任务',
+                            '提升搜索性能和长期使用性能。开启后仅查找未完成父任务。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.excludeCompletedTasks ? 'checked' : ''} onchange="updateExcludeCompletedTasks(this.checked)">`
+                        )}
+                        <div style="font-size: 12px; color: var(--tm-secondary-text); margin-top: 6px; margin-bottom: 12px;">
+                            开启后仅查找未完成任务。含有子任务的任务，如果父任务未完成，已完成的子任务仍会显示。
+                            <br>示例：假设笔记中有 1000 条任务，其中 800 条已完成，则这 800 条任务在开启后不会被查找到。
+                            <br>如需复盘已完成任务：在规则设置中添加/选择条件「完成状态」，将其设置为「所有状态」或「是」均可在筛选已完成任务时搜索到全部已完成任务。
+                        </div>
+                        ${renderSingleSwitchSetting(
+                            '文档分组下按二级标题子分组',
+                            '用于时间轴、表格和日历侧边栏。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.docH2SubgroupEnabled !== false ? 'checked' : ''} onchange="updateDocH2SubgroupEnabled(this.checked)">`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleSwitchSetting(
+                            '分组模式增加“按任务名分组”',
+                            '开启后，顶部“分组”下拉里会出现“按任务名”选项，用于把相同任务内容分为一组。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.groupByTaskName || SettingsStore.data.groupMode === 'task' ? 'checked' : ''} onchange="updateGroupByTaskName(this.checked)">`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleSwitchSetting(
+                            '父任务按子任务时间参与分组排序',
+                            '按时间或四象限分组时：已过期远 > 已过期近 > 未过期近 > 未过期远。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.groupSortByBestSubtaskTimeInTimeQuadrant ? 'checked' : ''} onchange="updateGroupSortByBestSubtaskTimeInTimeQuadrant(this.checked)">`
+                        )}
+                    </div>
+
+                    <div class="tm-settings-panel">
+                        <div class="tm-settings-section-title">🧷 任务悬浮条</div>
+                        <div class="tm-settings-section-desc">控制任务块点击后的悬浮条和新建任务默认行为。</div>
+                        ${renderSingleSwitchSetting(
+                            '启用任务悬浮条',
+                            '点击任务块显示自定义字段。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.enableQuickbar ? 'checked' : ''} onchange="updateEnableQuickbar(this.checked)">`
+                        )}
+                        ${renderSingleSwitchSetting(
+                            '新建任务默认置顶',
+                            '',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.pinNewTasksByDefault ? 'checked' : ''} onchange="updatePinNewTasksByDefault(this.checked)">`,
+                            { style: 'margin-top:8px;' }
+                        )}
                         <div style="font-size: 12px; color: var(--tm-secondary-text); margin-top: 6px;">
                             关闭后将不再弹出悬浮条，也不会拦截点击/长按事件。
                         </div>
                     </div>
 
-                    <div style="margin-bottom: 16px; padding: 12px; background: var(--tm-section-bg); border-radius: 8px;">
-                        <div style="font-weight: 600; margin-bottom: 8px;">🍅 番茄钟联动</div>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.enableTomatoIntegration ? 'checked' : ''} onchange="updateEnableTomatoIntegration(this.checked)">
-                            启用底栏番茄钟相关功能（计时/提醒/耗时列）
-                        </label>
-                        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;opacity:${SettingsStore.data.enableTomatoIntegration ? 1 : 0.6};">
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <span style="font-size:12px;color:var(--tm-secondary-text);">耗时读取模式:</span>
-                                <select onchange="updateTomatoSpentAttrMode(this.value)" ${SettingsStore.data.enableTomatoIntegration ? '' : 'disabled'} style="padding: 4px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
+                    <div class="tm-settings-panel">
+                        <div class="tm-settings-section-title">🍅 番茄钟联动</div>
+                        <div class="tm-settings-section-desc">管理底栏番茄钟和任务耗时属性的联动方式。</div>
+                        ${renderSingleSwitchSetting(
+                            '启用底栏番茄钟相关功能',
+                            '包含计时、提醒和耗时列。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.enableTomatoIntegration ? 'checked' : ''} onchange="updateEnableTomatoIntegration(this.checked)">`
+                        )}
+                        <div style="margin-top:10px;opacity:${SettingsStore.data.enableTomatoIntegration ? 1 : 0.6};">
+                            ${renderSingleFieldSetting(
+                                '耗时读取模式',
+                                '选择从分钟属性还是小时属性读取任务耗时。',
+                                `<select class="b3-select" onchange="updateTomatoSpentAttrMode(this.value)" ${SettingsStore.data.enableTomatoIntegration ? '' : 'disabled'} style="width:180px;">
                                     <option value="minutes" ${String(SettingsStore.data.tomatoSpentAttrMode || 'minutes') === 'minutes' ? 'selected' : ''}>分钟属性</option>
                                     <option value="hours" ${String(SettingsStore.data.tomatoSpentAttrMode || '') === 'hours' ? 'selected' : ''}>小时属性</option>
-                                </select>
-                            </div>
-                            <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:220px;">
-                                <span style="font-size:12px;color:var(--tm-secondary-text);white-space:nowrap;">分钟属性名</span>
-                                <input type="text" value="${esc(String(SettingsStore.data.tomatoSpentAttrKeyMinutes || 'custom-tomato-minutes'))}" ${SettingsStore.data.enableTomatoIntegration ? '' : 'disabled'} onchange="updateTomatoSpentAttrKeyMinutes(this.value)" style="flex:1; min-width:160px; padding: 6px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
-                            </div>
-                            <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:220px;">
-                                <span style="font-size:12px;color:var(--tm-secondary-text);white-space:nowrap;">小时属性名</span>
-                                <input type="text" value="${esc(String(SettingsStore.data.tomatoSpentAttrKeyHours || 'custom-tomato-time'))}" ${SettingsStore.data.enableTomatoIntegration ? '' : 'disabled'} onchange="updateTomatoSpentAttrKeyHours(this.value)" style="flex:1; min-width:160px; padding: 6px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
-                            </div>
+                                </select>`,
+                                { style: 'margin-bottom:10px;' }
+                            )}
+                            ${renderSingleFieldSetting(
+                                '分钟属性名',
+                                '思源区块属性名，例如 custom-tomato-minutes。',
+                                `<input class="b3-text-field" type="text" value="${esc(String(SettingsStore.data.tomatoSpentAttrKeyMinutes || 'custom-tomato-minutes'))}" ${SettingsStore.data.enableTomatoIntegration ? '' : 'disabled'} onchange="updateTomatoSpentAttrKeyMinutes(this.value)" style="width:100%;">`,
+                                { style: 'margin-bottom:10px;' }
+                            )}
+                            ${renderSingleFieldSetting(
+                                '小时属性名',
+                                '思源区块属性名，例如 custom-tomato-time。',
+                                `<input class="b3-text-field" type="text" value="${esc(String(SettingsStore.data.tomatoSpentAttrKeyHours || 'custom-tomato-time'))}" ${SettingsStore.data.enableTomatoIntegration ? '' : 'disabled'} onchange="updateTomatoSpentAttrKeyHours(this.value)" style="width:100%;">`
+                            )}
                         </div>
-                        <div style="font-size: 12px; color: var(--tm-secondary-text); margin-top: 6px;">
-                            属性名指的是思源区块属性 name，例如 custom-tomato-minutes。
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 16px; padding: 12px; background: var(--tm-section-bg); border-radius: 8px;">
-                        <div style="font-weight: 600; margin-bottom: 8px;">📍 全局新建文档位置设置</div>
-                        <select onchange="updateNewTaskDocIdFromSelect(this.value)" 
-                                style="width: 100%; padding: 6px 8px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px;">
-                            ${newTaskDocOptions.join('')}
-                        </select>
-                        <div style="display:flex; gap:8px; margin-top: 8px; align-items:center;">
-                            <input id="tmNewTaskDocIdInput" class="tm-input" list="tmNewTaskDocIdList"
-                                   value="${esc(newTaskDocId === '__dailyNote__' ? '' : (newTaskDocId || ''))}"
-                                   placeholder="也可直接输入文档ID"
-                                   style="flex: 1; padding: 6px 8px;">
-                            <button class="tm-btn tm-btn-secondary" onclick="tmApplyNewTaskDocIdInput()" style="padding: 6px 10px; font-size: 12px;">应用</button>
-                            <button class="tm-btn tm-btn-gray" onclick="tmClearNewTaskDocIdInput()" style="padding: 6px 10px; font-size: 12px;">清空</button>
-                        </div>
-                        <datalist id="tmNewTaskDocIdList">
-                            ${allDocsForNewTask.map(docItem => {
-                                const docId = typeof docItem === 'object' ? docItem.id : docItem;
-                                const docName = resolveDocName(docId);
-                                return `<option value="${docId}">${esc(docName)}</option>`;
-                            }).join('')}
-                            ${newTaskDocId && !allDocIdsForNewTask.includes(newTaskDocId) ? `<option value="${newTaskDocId}"></option>` : ''}
-                        </datalist>
-                        <div style="font-size: 12px; color: var(--tm-secondary-text); margin-top: 6px;">
-                            用于“快速新建任务界面”的默认文档位置，可在新建界面临时切换。
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 16px; padding: 12px; background: var(--tm-section-bg); border-radius: 8px;">
-                        <div style="font-weight: 600; margin-bottom: 12px;">🏷️ 状态选项设置</div>
-                        <div id="tm-status-options-list">
-                            ${renderStatusOptionsList()}
-                        </div>
-                        <button class="tm-btn tm-btn-primary" data-tm-action="addStatusOption" style="margin-top: 8px; font-size: 12px;">+ 添加状态</button>
                     </div>
 
                     ` : ''}
@@ -34661,6 +35615,67 @@ async function __tmRefreshAfterWake(reason) {
             const enableGroupBg = !!SettingsStore.data.enableGroupTaskBgByGroupColor;
             const isDark = __tmIsDarkMode();
             let currentGroupBg = '';
+            const resolvePinnedTaskGroupBg = (task) => {
+                if (!enableGroupBg || !task) return '';
+                if (state.groupByDocName || state.groupByTaskName || (!state.groupByDocName && !state.groupByTime && !state.quadrantEnabled)) {
+                    const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
+                    return taskDocColor ? (__tmGroupBgFromLabelColor(taskDocColor, isDark) || '') : '';
+                }
+                if (state.groupByTime) {
+                    const diffDays = Number(__tmGetTaskTimePriorityInfo(task)?.diffDays);
+                    const groupInfo = !Number.isFinite(diffDays)
+                        ? { key: 'pending', sortValue: Number.POSITIVE_INFINITY }
+                        : (diffDays < 0
+                            ? { key: 'overdue', sortValue: diffDays }
+                            : { key: `days_${diffDays}`, sortValue: diffDays });
+                    const timeBaseColor = isDark
+                        ? __tmNormalizeHexColor(SettingsStore.data.timeGroupBaseColorDark, '#6ba5ff')
+                        : __tmNormalizeHexColor(SettingsStore.data.timeGroupBaseColorLight, '#1a73e8');
+                    const timeOverdueColor = isDark
+                        ? __tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorDark, '#ff6b6b')
+                        : __tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorLight, '#d93025');
+                    const key = String(groupInfo?.key || '');
+                    const sortValue = Number(groupInfo?.sortValue);
+                    const labelColor = (key === 'pending' || !Number.isFinite(sortValue))
+                        ? 'var(--tm-secondary-text)'
+                        : (sortValue < 0
+                            ? (timeOverdueColor || 'var(--tm-danger-color)')
+                            : __tmWithAlpha(timeBaseColor || 'var(--tm-primary-color)', __tmClamp(1 - sortValue * (isDark ? 0.085 : 0.11), isDark ? 0.52 : 0.42, 1)));
+                    return __tmGroupBgFromLabelColor(labelColor, isDark) || '';
+                }
+                if (state.quadrantEnabled) {
+                    const quadrantRules = (SettingsStore.data.quadrantConfig && SettingsStore.data.quadrantConfig.rules) || [];
+                    const priority = String(task.priority || '').toLowerCase();
+                    const importance = (priority === 'a' || priority === '高' || priority === 'high')
+                        ? 'high'
+                        : ((priority === 'b' || priority === '中' || priority === 'medium')
+                            ? 'medium'
+                            : ((priority === 'c' || priority === '低' || priority === 'low') ? 'low' : 'none'));
+                    const diffDays = Number(__tmGetTaskTimePriorityInfo(task)?.diffDays);
+                    const timeRange = !Number.isFinite(diffDays)
+                        ? 'nodate'
+                        : (diffDays < 0 ? 'overdue' : (diffDays <= 7 ? 'within7days' : (diffDays <= 15 ? 'within15days' : (diffDays <= 30 ? 'within30days' : 'beyond30days'))));
+                    let ruleColor = '';
+                    for (const rule of quadrantRules) {
+                        const importanceMatch = Array.isArray(rule?.importance) && rule.importance.includes(importance);
+                        let timeRangeMatch = Array.isArray(rule?.timeRanges) && rule.timeRanges.includes(timeRange);
+                        if (!timeRangeMatch && Array.isArray(rule?.timeRanges)) {
+                            for (const range of rule.timeRanges) {
+                                if (!String(range || '').startsWith('beyond') || range === 'beyond30days') continue;
+                                const days = parseInt(String(range).replace('beyond', '').replace('days', ''), 10);
+                                if (!Number.isNaN(days) && diffDays > days) { timeRangeMatch = true; break; }
+                            }
+                        }
+                        if (importanceMatch && timeRangeMatch) {
+                            const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
+                            ruleColor = colorMap[String(rule?.color || '')] || 'var(--tm-text-color)';
+                            break;
+                        }
+                    }
+                    return ruleColor ? (__tmGroupBgFromLabelColor(ruleColor, isDark) || '') : '';
+                }
+                return '';
+            };
             for (const r of rowModel) {
                 if (r?.type === 'group') {
                     let labelColor = '';
@@ -34706,7 +35721,8 @@ async function __tmRefreshAfterWake(reason) {
                 const isMilestone = typeof milestoneRaw === 'boolean'
                     ? milestoneRaw
                     : ['1', 'true'].includes(String(milestoneRaw || '').trim().toLowerCase());
-                const rowBgStyle = (enableGroupBg && currentGroupBg) ? `background:${currentGroupBg};` : '';
+                const resolvedGroupBg = currentGroupBg || resolvePinnedTaskGroupBg(task);
+                const rowBgStyle = (enableGroupBg && resolvedGroupBg) ? `background:${resolvedGroupBg};` : '';
                 const dotOpenCls = String(state.timelineDotPinnedTaskId || '').trim() === String(r.id) ? ' tm-gantt-row--dot-open' : '';
                 const dotHoverCls = String(state.timelineLinkHoverTaskId || '').trim() === String(r.id) ? ' tm-gantt-row--link-hover' : '';
                 const multiSelCls = timelineMultiSelectedSet.has(String(r.id)) ? ' tm-gantt-row--multi-selected' : '';
