@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.7.8
+// @version      1.7.9
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -11302,6 +11302,34 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
     }
 
+    async function __tmLoadSelectedDocumentsPreserveChecklistScroll(options = {}) {
+        const isChecklist = String(state.viewMode || '').trim() === 'checklist';
+        if (!isChecklist) return await loadSelectedDocuments(options);
+        const modal = state.modal instanceof Element ? state.modal : null;
+        const pane = modal?.querySelector?.('.tm-checklist-scroll');
+        const top = Number(pane?.scrollTop || 0);
+        const left = Number(pane?.scrollLeft || 0);
+        const nextOptions = { ...(options && typeof options === 'object' ? options : {}), skipRender: true };
+        await loadSelectedDocuments(nextOptions);
+        try {
+            if (!state.viewScroll || typeof state.viewScroll !== 'object') state.viewScroll = {};
+            state.viewScroll.list = { top, left };
+        } catch (e) {}
+        __tmRenderChecklistPreserveScroll();
+        const restore = () => {
+            try {
+                const nextPane = state.modal?.querySelector?.('.tm-checklist-scroll');
+                if (!(nextPane instanceof HTMLElement)) return;
+                nextPane.scrollTop = top;
+                nextPane.scrollLeft = left;
+                try { nextPane.__tmChecklistScrollUpdateThumb?.(); } catch (e2) {}
+            } catch (e) {}
+        };
+        try { restore(); } catch (e) {}
+        try { requestAnimationFrame(restore); } catch (e) {}
+        try { setTimeout(restore, 30); } catch (e) {}
+    }
+
     function __tmBindChecklistScrollVisibility(modalEl) {
         const modal = modalEl instanceof Element ? modalEl : state.modal;
         const pane = modal?.querySelector?.('.tm-checklist-scroll');
@@ -14898,6 +14926,7 @@ async function __tmRefreshAfterWake(reason) {
         const prevWasCalendar = !!(prevModalSnapshot && prevModalSnapshot.querySelector && prevModalSnapshot.querySelector('#tmCalendarRoot'));
         const prevWasKanban = !!(prevModalSnapshot && prevModalSnapshot.querySelector && prevModalSnapshot.querySelector('.tm-body.tm-body--kanban'));
         const prevWasWhiteboard = !!(prevModalSnapshot && prevModalSnapshot.querySelector && prevModalSnapshot.querySelector('.tm-body.tm-body--whiteboard'));
+        const prevWasChecklist = !!(prevModalSnapshot && prevModalSnapshot.querySelector && prevModalSnapshot.querySelector('.tm-checklist-scroll'));
         const __tmGetKanbanColScrollKey = (colEl) => {
             if (!(colEl instanceof Element)) return '';
             const status = String(colEl.getAttribute('data-status') || '').trim();
@@ -14955,6 +14984,12 @@ async function __tmRefreshAfterWake(reason) {
                         savedCalendarScrollLeft = scroller.scrollLeft;
                     }
                 } catch (e) {}
+            } else if (prevWasChecklist) {
+                const pane = prevModalSnapshot.querySelector('.tm-checklist-scroll');
+                if (pane) {
+                    savedScrollTop = Number(pane.scrollTop) || 0;
+                    savedScrollLeft = Number(pane.scrollLeft) || 0;
+                }
             } else {
                 const body = prevModalSnapshot.querySelector('.tm-body');
                 if (body) {
@@ -17866,6 +17901,7 @@ async function __tmRefreshAfterWake(reason) {
         // 恢复滚动位置
         try {
             const isTimeline = state.viewMode === 'timeline';
+            const isChecklist = state.viewMode === 'checklist';
             const isKanban = state.viewMode === 'kanban';
             const isWhiteboard = state.viewMode === 'whiteboard';
             const pickNum = (v, fallback = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
@@ -18155,6 +18191,30 @@ async function __tmRefreshAfterWake(reason) {
                     requestAnimationFrame(() => requestAnimationFrame(() => {
                         try { __tmRunFlipAnimation(state.modal); } catch (e) {}
                         try { __tmScheduleWhiteboardEdgeRedraw(); } catch (e) {}
+                        if (useSoftSwap) {
+                            try { state.modal.style.opacity = '1'; } catch (e) {}
+                            try { state.modal.style.pointerEvents = ''; } catch (e) {}
+                            if (prevModalEl) {
+                                try { prevModalEl.style.visibility = 'hidden'; } catch (e2) {}
+                                setTimeout(() => { try { prevModalEl.remove(); } catch (e2) {} }, 140);
+                            }
+                        }
+                    }));
+                } else if (isChecklist) {
+                    const pane = state.modal.querySelector('.tm-checklist-scroll');
+                    const apply = () => {
+                        try {
+                            if (pane) {
+                                pane.scrollTop = desiredTop;
+                                pane.scrollLeft = desiredLeft;
+                                try { pane.__tmChecklistScrollUpdateThumb?.(); } catch (e) {}
+                            }
+                        } catch (e) {}
+                    };
+                    apply();
+                    requestAnimationFrame(() => requestAnimationFrame(apply));
+                    requestAnimationFrame(() => requestAnimationFrame(() => {
+                        try { __tmRunFlipAnimation(state.modal); } catch (e) {}
                         if (useSoftSwap) {
                             try { state.modal.style.opacity = '1'; } catch (e) {}
                             try { state.modal.style.pointerEvents = ''; } catch (e) {}
@@ -28781,7 +28841,7 @@ async function __tmRefreshAfterWake(reason) {
             left: ${event.clientX}px;
             display: inline-flex;
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch;
             background: var(--b3-theme-background);
             border: 1px solid var(--b3-theme-surface-light);
             border-radius: 4px;
@@ -28797,7 +28857,7 @@ async function __tmRefreshAfterWake(reason) {
         try {
             menu.style.setProperty('display', 'inline-flex', 'important');
             menu.style.setProperty('flex-direction', 'column', 'important');
-            menu.style.setProperty('align-items', 'flex-start', 'important');
+            menu.style.setProperty('align-items', 'stretch', 'important');
             menu.style.setProperty('width', 'auto', 'important');
             menu.style.setProperty('min-width', '0', 'important');
             menu.style.setProperty('max-width', 'calc(100vw - 16px)', 'important');
@@ -28812,18 +28872,18 @@ async function __tmRefreshAfterWake(reason) {
                 cursor: pointer;
                 font-size: 13px;
                 color: ${isDanger ? 'var(--b3-theme-error)' : 'var(--b3-theme-on-background)'};
-                display: inline-flex;
+                display: flex;
                 align-items: center;
                 gap: 8px;
                 white-space: nowrap;
-                align-self: flex-start;
-                width: auto;
+                align-self: stretch;
+                width: 100%;
                 box-sizing: border-box;
             `;
             try {
-                item.style.setProperty('display', 'inline-flex', 'important');
-                item.style.setProperty('align-self', 'flex-start', 'important');
-                item.style.setProperty('width', 'auto', 'important');
+                item.style.setProperty('display', 'flex', 'important');
+                item.style.setProperty('align-self', 'stretch', 'important');
+                item.style.setProperty('width', '100%', 'important');
                 item.style.setProperty('max-width', '100%', 'important');
                 item.style.setProperty('box-sizing', 'border-box', 'important');
             } catch (e) {}
@@ -29167,7 +29227,7 @@ async function __tmRefreshAfterWake(reason) {
             const pendingTask = state.pendingInsertedTasks?.[String(taskId || '').trim()];
             if (pendingTask) __tmUpsertLocalTask(pendingTask);
             __tmRefreshMainViewInPlace({ withFilters: true });
-            loadSelectedDocuments().catch((err) => {
+            __tmLoadSelectedDocumentsPreserveChecklistScroll().catch((err) => {
                 try { console.error('[标题分组新建任务] 刷新失败:', err); } catch (e) {}
             });
             hint('✅ 任务已创建', 'success');
@@ -29264,7 +29324,7 @@ async function __tmRefreshAfterWake(reason) {
             try { state.collapsedTaskIds?.delete?.(pid); } catch (e) {}
             __tmApplyOptimisticSubtask(pid, subtaskId, nextText);
             __tmRefreshMainViewInPlace({ withFilters: true });
-            loadSelectedDocuments().catch((err) => {
+            __tmLoadSelectedDocumentsPreserveChecklistScroll().catch((err) => {
                 try { console.error('[子任务] 刷新失败:', err); } catch (e) {}
             });
             hint('✅ 子任务已创建', 'success');
