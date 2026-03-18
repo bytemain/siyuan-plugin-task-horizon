@@ -19,17 +19,21 @@
         summary: '摘要总结',
     };
     const AI_CONTEXT_SCOPE_LABELS = {
+        none: '纯对话',
         current_doc: '当前文档',
         current_task: '当前任务',
+        current_group: '当前分区',
         current_view: '当前视图前5',
         manual: '手动任务',
     };
     const AI_CONTEXT_MODE_LABELS = {
+        none: '无上下文',
         nearby: '附近上下文',
         fulltext: '全文上下文',
     };
     const AI_DEFAULT_PLANNER_OPTIONS = {
         planDate: '',
+        planDateTo: '',
         breakHours: 2,
         gapMinutes: 30,
         maxTasks: 5,
@@ -42,8 +46,8 @@
         maxTasks: 60,
     };
     const AI_ALLOWED_TYPES = new Set(['chat', 'smart', 'schedule', 'summary']);
-    const AI_ALLOWED_SCOPES = new Set(['current_doc', 'current_task', 'current_view', 'manual']);
-    const AI_ALLOWED_CONTEXT_MODES = new Set(['nearby', 'fulltext']);
+    const AI_ALLOWED_SCOPES = new Set(['none', 'current_doc', 'current_task', 'current_group', 'current_view', 'manual']);
+    const AI_ALLOWED_CONTEXT_MODES = new Set(['none', 'nearby', 'fulltext']);
     const smartRenameCache = new Map();
     let modalEl = null;
     const aiRuntime = {
@@ -54,8 +58,13 @@
         activeConversationId: '',
         currentViewTasks: [],
         currentViewTopTasks: [],
+        currentGroupTasks: [],
+        currentGroupTasksAll: [],
+        currentGroupTaskKey: '',
+        currentGroupTaskAllKey: '',
         setupCollapsed: false,
         taskPickerCollapsed: false,
+        schedulePlannerCollapsed: true,
         labelCache: {
             doc: new Map(),
             task: new Map(),
@@ -84,9 +93,32 @@
         } catch (e) {}
     }
 
+    function loadRememberedPlannerOptions() {
+        const prefs = loadAiUiPrefs();
+        const remembered = normalizePlannerOptions(prefs && typeof prefs === 'object' ? prefs.schedulePlannerOptions : null);
+        return {
+            ...remembered,
+            planDate: '',
+            planDateTo: '',
+        };
+    }
+
+    function saveRememberedPlannerOptions(planner) {
+        const normalized = normalizePlannerOptions(planner);
+        saveAiUiPrefs({
+            schedulePlannerOptions: {
+                breakHours: normalized.breakHours,
+                gapMinutes: normalized.gapMinutes,
+                maxTasks: normalized.maxTasks,
+                note: normalized.note,
+            },
+        });
+    }
+
     {
         const uiPrefs = loadAiUiPrefs();
         aiRuntime.taskPickerCollapsed = !!uiPrefs.taskPickerCollapsed;
+        aiRuntime.schedulePlannerCollapsed = typeof uiPrefs.schedulePlannerCollapsed === 'boolean' ? uiPrefs.schedulePlannerCollapsed : true;
         aiRuntime.chatPromptTemplateId = String(uiPrefs.chatPromptTemplateId || '').trim();
     }
 
@@ -114,9 +146,15 @@
         .replace(/^\s*[-*]\s+\[[ xX]\]\s*/, '')
         .replace(/^\s*[-*]\s+/, '')
         .trim();
+    const normalizeLooseLabel = (value) => String(value || '').trim().toLowerCase().replace(/[\s_\-]+/g, '');
     const parseDateTimeLoose = (value) => {
         const s = String(value || '').trim();
         if (!s) return null;
+        const compactDate = s.match(/^(\d{4})(\d{2})(\d{2})$/);
+        if (compactDate) {
+            const dt = new Date(Number(compactDate[1]), Number(compactDate[2]) - 1, Number(compactDate[3]), 0, 0, 0, 0);
+            return Number.isNaN(dt.getTime()) ? null : dt;
+        }
         const normalized = s.replace('T', ' ').replace(/\//g, '-');
         const m = normalized.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2}))?$/);
         if (m) {
@@ -213,8 +251,13 @@
 
     function normalizePlannerOptions(input = {}) {
         const source = (input && typeof input === 'object') ? input : {};
+        const planDate = normalizeDateKey(String(source.planDate || '').trim()) || '';
+        let planDateTo = normalizeDateKey(String(source.planDateTo || '').trim()) || '';
+        if (planDate && !planDateTo) planDateTo = planDate;
+        if (planDate && planDateTo && planDateTo < planDate) planDateTo = planDate;
         return {
-            planDate: normalizeDateKey(String(source.planDate || '').trim()) || '',
+            planDate,
+            planDateTo,
             breakHours: Math.max(0, Math.min(12, Number(source.breakHours ?? AI_DEFAULT_PLANNER_OPTIONS.breakHours) || 0)),
             gapMinutes: Math.max(0, Math.min(240, Math.round(Number(source.gapMinutes ?? AI_DEFAULT_PLANNER_OPTIONS.gapMinutes) || 0))),
             maxTasks: Math.max(1, Math.min(30, Math.round(Number(source.maxTasks ?? AI_DEFAULT_PLANNER_OPTIONS.maxTasks) || 1))),
@@ -241,6 +284,34 @@
     function dateToKey(dt) {
         if (!(dt instanceof Date) || Number.isNaN(dt.getTime())) return '';
         return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+    }
+
+    function listDateKeysBetween(dateFrom, dateTo) {
+        const startKey = normalizeDateKey(dateFrom || '') || todayKey();
+        const endKey = normalizeDateKey(dateTo || startKey) || startKey;
+        const out = [];
+        const start = parseDateTimeLoose(`${startKey} 00:00`);
+        const end = parseDateTimeLoose(`${endKey} 00:00`);
+        if (!(start instanceof Date) || Number.isNaN(start.getTime())) return [startKey];
+        if (!(end instanceof Date) || Number.isNaN(end.getTime()) || end.getTime() < start.getTime()) return [startKey];
+        for (let dt = new Date(start.getTime()); dt.getTime() <= end.getTime() && out.length < 31; dt.setDate(dt.getDate() + 1)) {
+            out.push(dateToKey(dt));
+        }
+        return out.length ? out : [startKey];
+    }
+
+    function formatPlannerDateRange(planDate, planDateTo) {
+        const from = normalizeDateKey(planDate || '') || todayKey();
+        const to = normalizeDateKey(planDateTo || from) || from;
+        return from === to ? from : `${from} ~ ${to}`;
+    }
+
+    function isDateWithinRange(dateValue, dateFrom, dateTo) {
+        const key = normalizeDateKey(dateValue || '');
+        const from = normalizeDateKey(dateFrom || '') || todayKey();
+        const to = normalizeDateKey(dateTo || from) || from;
+        if (!key) return false;
+        return key >= from && key <= to;
     }
 
     function normalizeSummaryOptions(input = {}) {
@@ -286,10 +357,20 @@
         };
     }
 
+    function resolveTaskUpdatedDateKey(task) {
+        const raw = String(task?.updated || task?.updatedAt || task?.updateTime || task?.update_time || '').trim();
+        if (!raw) return '';
+        const direct = normalizeDateKey(raw);
+        if (direct) return direct;
+        const dt = parseDateTimeLoose(raw);
+        return dt instanceof Date && !Number.isNaN(dt.getTime()) ? dateToKey(dt) : '';
+    }
+
     function taskTouchesSummaryRange(task, range) {
         const target = resolveSummaryRange(range);
+        const updatedKey = resolveTaskUpdatedDateKey(task);
         const dates = [
-            normalizeDateKey(task?.completionTime || ''),
+            updatedKey,
             normalizeDateKey(task?.startDate || ''),
         ].filter(Boolean);
         if (!dates.length) return false;
@@ -325,12 +406,15 @@
     function normalizeConversation(conversation = {}) {
         const cfg = getConfig();
         const type = AI_ALLOWED_TYPES.has(String(conversation?.type || '').trim()) ? String(conversation.type).trim() : 'chat';
+        const rememberedPlanner = loadRememberedPlannerOptions();
         const contextScope = AI_ALLOWED_SCOPES.has(String(conversation?.contextScope || '').trim())
             ? String(conversation.contextScope).trim()
             : (type === 'schedule' ? 'current_view' : 'current_doc');
         const contextMode = AI_ALLOWED_CONTEXT_MODES.has(String(conversation?.contextMode || '').trim())
             ? String(conversation.contextMode).trim()
-            : (String(cfg.contextMode || 'nearby').trim() === 'fulltext' ? 'fulltext' : 'nearby');
+            : (String(cfg.contextMode || 'nearby').trim() === 'fulltext'
+                ? 'fulltext'
+                : (String(cfg.contextMode || 'nearby').trim() === 'none' ? 'none' : 'nearby'));
         const createdAt = Number(conversation?.createdAt || Date.now());
         const updatedAt = Number(conversation?.updatedAt || createdAt || Date.now());
         return {
@@ -341,7 +425,7 @@
             contextMode,
             selectedDocIds: Array.from(new Set((Array.isArray(conversation?.selectedDocIds) ? conversation.selectedDocIds : []).map((it) => String(it || '').trim()).filter(Boolean))),
             selectedTaskIds: Array.from(new Set((Array.isArray(conversation?.selectedTaskIds) ? conversation.selectedTaskIds : []).map((it) => String(it || '').trim()).filter(Boolean))),
-            plannerOptions: normalizePlannerOptions(conversation?.plannerOptions),
+            plannerOptions: normalizePlannerOptions(conversation?.plannerOptions || (type === 'schedule' ? rememberedPlanner : null)),
             summaryOptions: normalizeSummaryOptions(conversation?.summaryOptions),
             messages: (Array.isArray(conversation?.messages) ? conversation.messages : []).map(normalizeMessage).filter((it) => it.content).slice(-40),
             lastResult: (conversation?.lastResult && typeof conversation.lastResult === 'object') ? clone(conversation.lastResult) : null,
@@ -685,6 +769,9 @@
             id: current.id,
             updatedAt: Date.now(),
         });
+        if (patch && typeof patch === 'object' && Object.prototype.hasOwnProperty.call(patch, 'plannerOptions')) {
+            saveRememberedPlannerOptions(next.plannerOptions);
+        }
         await ConversationStore.upsert(next);
         if (ConversationStore.data.activeId === current.id) aiRuntime.activeConversationId = current.id;
         await ConversationStore.saveNow();
@@ -850,6 +937,13 @@
     function getConfig() {
         const s = bridge()?.getSettings?.() || {};
         const provider = String(s.aiProvider || '').trim() === 'deepseek' ? 'deepseek' : 'minimax';
+        const statusOptions = Array.isArray(s.customStatusOptions)
+            ? s.customStatusOptions.map((it) => ({
+                id: String(it?.id || '').trim(),
+                name: String(it?.name || '').trim(),
+                color: String(it?.color || '').trim(),
+            })).filter((it) => it.id || it.name)
+            : [];
         return {
             provider,
             enabled: !!s.aiEnabled,
@@ -865,9 +959,40 @@
             temperature: Number.isFinite(Number(s.aiMiniMaxTemperature)) ? Number(s.aiMiniMaxTemperature) : 0.2,
             maxTokens: Number.isFinite(Number(s.aiMiniMaxMaxTokens)) ? Number(s.aiMiniMaxMaxTokens) : 1600,
             timeoutMs: Number.isFinite(Number(s.aiMiniMaxTimeoutMs)) ? Number(s.aiMiniMaxTimeoutMs) : 30000,
-            contextMode: String(s.aiDefaultContextMode || 'nearby').trim() === 'fulltext' ? 'fulltext' : 'nearby',
+            contextMode: String(s.aiDefaultContextMode || 'nearby').trim() === 'fulltext'
+                ? 'fulltext'
+                : (String(s.aiDefaultContextMode || 'nearby').trim() === 'none' ? 'none' : 'nearby'),
             scheduleWindows: parseScheduleWindows(s.aiScheduleWindows || ['09:00-18:00']),
+            statusOptions,
         };
+    }
+
+    function resolveConfiguredStatusOption(value, options) {
+        const list = Array.isArray(options) ? options : [];
+        const raw = String(value || '').trim();
+        if (!raw) return null;
+        const rawNorm = normalizeLooseLabel(raw);
+        if (!rawNorm) return null;
+        const exactId = list.find((it) => String(it?.id || '').trim() === raw);
+        if (exactId) return exactId;
+        const exactName = list.find((it) => String(it?.name || '').trim() === raw);
+        if (exactName) return exactName;
+        const looseName = list.find((it) => normalizeLooseLabel(it?.name) === rawNorm);
+        if (looseName) return looseName;
+        const looseId = list.find((it) => normalizeLooseLabel(it?.id) === rawNorm);
+        if (looseId) return looseId;
+        return null;
+    }
+
+    function resolveConfiguredStatusId(value, options) {
+        const matched = resolveConfiguredStatusOption(value, options);
+        return matched ? String(matched.id || '').trim() : String(value || '').trim();
+    }
+
+    function formatConfiguredStatusPrompt(options) {
+        const list = Array.isArray(options) ? options.filter((it) => it.id || it.name) : [];
+        if (!list.length) return '当前没有可用的状态配置。';
+        return list.map((it) => `${String(it.name || it.id || '').trim()} -> ${String(it.id || '').trim()}`).join('；');
     }
 
     function assertReady(allowDisabled) {
@@ -1399,12 +1524,14 @@
 .tm-ai-score b{display:block;font-size:22px;}
 .tm-ai-sidebar{height:100%;display:flex;flex-direction:column;background:var(--b3-theme-background);color:var(--b3-theme-on-background);--tm-ai-history-bg:color-mix(in srgb, #ffd54f 18%, var(--b3-theme-background));--tm-ai-setup-bg:color-mix(in srgb, #4f8cff 16%, var(--b3-theme-background));--tm-ai-setup-border:color-mix(in srgb, #4f8cff 34%, var(--b3-theme-surface-light));}
 [data-theme-mode="dark"] .tm-ai-sidebar{--tm-ai-history-bg:color-mix(in srgb, #f2c94c 24%, var(--b3-theme-background));--tm-ai-setup-bg:color-mix(in srgb, #4f8cff 22%, var(--b3-theme-background));--tm-ai-setup-border:color-mix(in srgb, #6ea2ff 42%, var(--b3-theme-surface-light));}
-.tm-ai-sidebar__head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;border-bottom:1px solid var(--b3-theme-surface-light);min-height:42px;box-sizing:border-box;}
-.tm-ai-sidebar__title-row{display:flex;align-items:center;gap:4px;min-width:0;}
+.tm-ai-sidebar__head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 10px;border-bottom:1px solid var(--b3-theme-surface-light);min-height:42px;box-sizing:border-box;}
+.tm-ai-sidebar__title-row{display:flex;align-items:center;gap:4px;min-width:0;flex:0 0 auto;}
 .tm-ai-sidebar__title{font-size:14px;font-weight:700;line-height:1.2;white-space:nowrap;}
 .tm-ai-sidebar__title-toggle{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:none;background:transparent;color:var(--b3-theme-on-background);opacity:.72;cursor:pointer;flex-shrink:0;line-height:1;}
 .tm-ai-sidebar__title-toggle:hover{opacity:1;}
 .tm-ai-sidebar__title-toggle-icon{transition:transform .16s ease;}
+.tm-ai-sidebar__head-title{flex:1 1 auto;min-width:120px;max-width:240px;}
+.tm-ai-sidebar__head-title .tm-ai-sidebar__title-input{min-height:32px;height:32px;padding:0 12px;font-size:12px;border-radius:9px;}
 .tm-ai-sidebar__head-actions{display:flex;gap:6px;align-items:center;flex-wrap:nowrap;justify-content:flex-end;flex-shrink:0;}
 .tm-ai-sidebar__head .tm-btn{height:30px;min-height:30px;padding:0 10px;border-radius:8px;font-size:12px;line-height:1;white-space:nowrap;}
   .tm-ai-sidebar__history{padding:8px 10px;border-bottom:1px solid var(--b3-theme-surface-light);display:flex;flex-direction:column;gap:8px;max-height:170px;overflow:auto;background:var(--tm-ai-history-bg);}
@@ -1420,6 +1547,12 @@
 .tm-ai-sidebar__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
 .tm-ai-sidebar__grid label{display:flex;flex-direction:column;gap:4px;font-size:12px;min-width:0;}
 .tm-ai-sidebar__grid label > span{font-size:12px;font-weight:600;line-height:1.2;opacity:.92;padding-left:2px;}
+.tm-ai-sidebar__setup-row{display:flex;flex-direction:column;gap:4px;}
+.tm-ai-sidebar__setup-row > span{font-size:12px;font-weight:600;line-height:1.2;opacity:.92;padding-left:2px;}
+.tm-ai-sidebar__segmented{display:flex;align-items:center;gap:4px;padding:4px;border:1px solid color-mix(in srgb, var(--b3-theme-surface-light) 78%, var(--b3-theme-on-background) 16%);border-radius:12px;background:color-mix(in srgb, var(--b3-theme-surface) 90%, var(--b3-theme-background));box-shadow:inset 0 1px 0 rgba(255,255,255,.03);overflow:hidden;}
+.tm-ai-sidebar__segmented .tm-ai-sidebar__seg-btn{flex:1 1 25%;min-width:0;height:32px;padding:0 8px;border:none;border-radius:8px;background:transparent;color:var(--b3-theme-on-background);font-size:12px;font-weight:700;line-height:1;cursor:pointer;white-space:nowrap;transition:background-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease;}
+.tm-ai-sidebar__segmented .tm-ai-sidebar__seg-btn:hover{background:rgba(127,127,127,.1);}
+.tm-ai-sidebar__segmented .tm-ai-sidebar__seg-btn.is-active{background:color-mix(in srgb, var(--b3-theme-primary) 20%, var(--b3-theme-surface));color:color-mix(in srgb, var(--b3-theme-primary) 90%, white 6%);box-shadow:0 0 0 1px color-mix(in srgb, var(--b3-theme-primary) 24%, transparent);}
 .tm-ai-sidebar__grid .tm-ai-sidebar__title-input,
 .tm-ai-sidebar__grid .tm-rule-select{width:100%;height:40px;min-height:40px;box-sizing:border-box;border-radius:10px;border:1px solid color-mix(in srgb, var(--b3-theme-surface-light) 78%, var(--b3-theme-on-background) 16%);background-color:color-mix(in srgb, var(--b3-theme-surface) 90%, var(--b3-theme-background));background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.25 4.25 6 8l3.75-3.75' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:12px 12px;color:var(--b3-theme-on-background);font-size:13px;line-height:1.2;box-shadow:inset 0 1px 0 rgba(255,255,255,.03);transition:border-color .16s ease, box-shadow .16s ease, background-color .16s ease;outline:none;appearance:none;-webkit-appearance:none;}
 .tm-ai-sidebar__grid .tm-ai-sidebar__title-input{padding:0 14px;}
@@ -1451,24 +1584,40 @@
  .tm-ai-sidebar__message-body{white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.6;}
  .tm-ai-sidebar__title-input{width:100%;max-width:100%;box-sizing:border-box;min-height:36px;padding:8px 12px;border:1px solid color-mix(in srgb, var(--b3-theme-surface-light) 82%, var(--b3-theme-on-background) 18%);border-radius:10px;background:color-mix(in srgb, var(--b3-theme-surface) 94%, var(--b3-theme-background));color:var(--b3-theme-on-background);box-shadow:inset 0 1px 0 rgba(255,255,255,.03);transition:border-color .16s ease, box-shadow .16s ease, background .16s ease;outline:none;appearance:none;-webkit-appearance:none;font-size:13px;}
  .tm-ai-sidebar__title-input:focus{border-color:color-mix(in srgb, var(--b3-theme-primary) 72%, var(--b3-theme-surface-light));box-shadow:0 0 0 3px color-mix(in srgb, var(--b3-theme-primary) 18%, transparent);background:color-mix(in srgb, var(--b3-theme-surface) 98%, var(--b3-theme-background));}
- .tm-ai-sidebar__composer{display:flex;flex-direction:column;gap:8px;padding:10px 0 2px;border-top:1px solid var(--b3-theme-surface-light);margin-top:auto;background:var(--b3-theme-background);position:sticky;bottom:0;z-index:1;}
- .tm-ai-sidebar__composer .tm-input,
- .tm-ai-sidebar__composer .tm-rule-select{width:100%;height:40px;min-height:40px;box-sizing:border-box;border-radius:10px;border:1px solid color-mix(in srgb, var(--b3-theme-surface-light) 78%, var(--b3-theme-on-background) 16%);background-color:color-mix(in srgb, var(--b3-theme-surface) 90%, var(--b3-theme-background));color:var(--b3-theme-on-background);font-size:13px;line-height:1.2;box-shadow:inset 0 1px 0 rgba(255,255,255,.03);transition:border-color .16s ease, box-shadow .16s ease, background-color .16s ease;outline:none;appearance:none;-webkit-appearance:none;}
+.tm-ai-sidebar__composer{display:flex;flex-direction:column;gap:8px;padding:10px 0 2px;border-top:1px solid var(--b3-theme-surface-light);margin-top:auto;background:var(--b3-theme-background);position:sticky;bottom:0;z-index:1;}
+.tm-ai-sidebar__composer-shell{display:flex;flex-direction:column;gap:10px;padding:12px;border:1px solid color-mix(in srgb, var(--b3-theme-surface-light) 74%, var(--b3-theme-on-background) 12%);border-radius:16px;background:color-mix(in srgb, var(--b3-theme-surface) 86%, var(--b3-theme-background));box-shadow:0 10px 28px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.03);}
+.tm-ai-sidebar__composer--schedule .tm-ai-sidebar__composer-shell{gap:12px;}
+.tm-ai-sidebar__composer-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid color-mix(in srgb, var(--b3-theme-surface-light) 74%, var(--b3-theme-on-background) 10%);border-radius:14px;background:color-mix(in srgb, var(--b3-theme-surface) 90%, var(--b3-theme-background));cursor:pointer;color:inherit;text-align:left;}
+.tm-ai-sidebar__composer-toggle:hover{border-color:color-mix(in srgb, var(--b3-theme-primary) 34%, var(--b3-theme-surface-light));}
+.tm-ai-sidebar__composer-toggle-main{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.tm-ai-sidebar__composer-toggle-title{font-size:12px;font-weight:700;line-height:1.2;opacity:.82;}
+.tm-ai-sidebar__composer-toggle-summary{font-size:12px;line-height:1.4;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tm-ai-sidebar__composer-toggle-icon{flex-shrink:0;opacity:.72;transition:transform .16s ease;}
+.tm-ai-sidebar__composer .tm-input,
+.tm-ai-sidebar__composer .tm-rule-select{width:100%;height:40px;min-height:40px;box-sizing:border-box;border-radius:10px;border:1px solid color-mix(in srgb, var(--b3-theme-surface-light) 78%, var(--b3-theme-on-background) 16%);background-color:color-mix(in srgb, var(--b3-theme-surface) 90%, var(--b3-theme-background));color:var(--b3-theme-on-background);font-size:13px;line-height:1.2;box-shadow:inset 0 1px 0 rgba(255,255,255,.03);transition:border-color .16s ease, box-shadow .16s ease, background-color .16s ease;outline:none;appearance:none;-webkit-appearance:none;}
  .tm-ai-sidebar__composer .tm-rule-select{padding:0 36px 0 14px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.25 4.25 6 8l3.75-3.75' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:12px 12px;}
  .tm-ai-sidebar__composer .tm-input{padding:0 14px;}
 .tm-ai-sidebar__composer .tm-input:focus,
 .tm-ai-sidebar__composer .tm-rule-select:focus{border-color:color-mix(in srgb, var(--b3-theme-primary) 72%, var(--b3-theme-surface-light));box-shadow:0 0 0 3px color-mix(in srgb, var(--b3-theme-primary) 18%, transparent);background-color:color-mix(in srgb, var(--b3-theme-surface) 96%, var(--b3-theme-background));}
 .tm-ai-sidebar__composer .tm-ai-textarea{min-height:72px;padding:12px 14px;border:1px solid color-mix(in srgb, var(--b3-theme-surface-light) 78%, var(--b3-theme-on-background) 16%);border-radius:12px;background:color-mix(in srgb, var(--b3-theme-surface) 90%, var(--b3-theme-background));box-shadow:inset 0 1px 0 rgba(255,255,255,.03);font-size:13px;line-height:1.55;transition:border-color .16s ease, box-shadow .16s ease, background-color .16s ease;}
 .tm-ai-sidebar__composer .tm-ai-textarea:focus{border-color:color-mix(in srgb, var(--b3-theme-primary) 72%, var(--b3-theme-surface-light));box-shadow:0 0 0 3px color-mix(in srgb, var(--b3-theme-primary) 18%, transparent);background-color:color-mix(in srgb, var(--b3-theme-surface) 96%, var(--b3-theme-background));outline:none;}
+.tm-ai-sidebar__composer-note{font-size:12px;line-height:1.5;opacity:.72;padding:0 2px;}
+.tm-ai-sidebar__composer-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;}
+.tm-ai-sidebar__composer-foot .tm-ai-sidebar__composer-note{flex:1 1 auto;}
+.tm-ai-sidebar__composer-foot .tm-btn{flex-shrink:0;}
 .tm-ai-sidebar__promptbar{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;padding:10px 12px;border:1px solid color-mix(in srgb, var(--b3-theme-surface-light) 74%, var(--b3-theme-on-background) 12%);border-radius:12px;background:color-mix(in srgb, var(--b3-theme-surface) 82%, var(--b3-theme-background));}
 .tm-ai-sidebar__promptbar-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .tm-ai-sidebar__promptbar-select{flex:1 1 220px;min-width:180px;}
 .tm-ai-sidebar__promptbar .tm-btn{height:30px;min-height:30px;padding:0 10px;border-radius:8px;font-size:12px;line-height:1;white-space:nowrap;}
 .tm-ai-sidebar__promptbar-meta{font-size:12px;line-height:1.5;opacity:.72;}
 .tm-ai-sidebar__composer .tm-btn.tm-btn-primary{height:42px;min-height:42px;padding:0 18px;border-radius:10px;font-size:13px;font-weight:700;line-height:1;}
-.tm-ai-sidebar__composer-row{display:flex;align-items:flex-end;gap:8px;}
- .tm-ai-sidebar__composer-row .tm-ai-textarea{flex:1 1 auto;margin:0;min-height:64px;}
- .tm-ai-sidebar__send{align-self:flex-end;white-space:nowrap;}
+.tm-ai-sidebar__composer-row{display:flex;align-items:stretch;gap:8px;}
+ .tm-ai-sidebar__composer-row .tm-ai-textarea{flex:1 1 auto;margin:0;min-height:64px;height:64px;}
+ .tm-ai-sidebar__send{align-self:stretch;min-height:64px;height:auto;white-space:nowrap;}
+.tm-ai-sidebar__compact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.tm-ai-sidebar__compact-field{display:flex;flex-direction:column;gap:6px;min-width:0;}
+.tm-ai-sidebar__compact-field span{font-size:12px;font-weight:600;line-height:1.2;opacity:.78;padding-left:2px;}
+.tm-ai-sidebar__compact-field .tm-input{height:38px;min-height:38px;border-radius:12px;background:color-mix(in srgb, var(--b3-theme-surface) 92%, var(--b3-theme-background));}
  .tm-ai-sidebar__actions--left{justify-content:flex-start;}
  .tm-ai-sidebar__result-score{font-size:24px;font-weight:800;}
  .tm-ai-sidebar__result-body{white-space:pre-wrap;word-break:break-word;line-height:1.6;font-size:13px;}
@@ -1483,11 +1632,20 @@
  .tm-ai-sidebar__task-row span{flex:1;min-width:0;word-break:break-word;}
  .tm-ai-sidebar__empty{padding:14px 10px;border:1px dashed var(--b3-theme-surface-light);border-radius:10px;font-size:12px;opacity:.72;}
 .tm-ai-sidebar--mobile .tm-ai-sidebar__head{padding-top:8px;}
+.tm-ai-sidebar--mobile .tm-ai-sidebar__head{flex-wrap:wrap;align-items:flex-start;}
+.tm-ai-sidebar--mobile .tm-ai-sidebar__head-title{order:3;flex:1 1 100%;max-width:none;}
+.tm-ai-sidebar--mobile .tm-ai-sidebar__head-actions{width:100%;justify-content:flex-end;}
 .tm-ai-sidebar--mobile .tm-ai-sidebar__grid,
 .tm-ai-sidebar--mobile .tm-ai-sidebar__grid--planner{grid-template-columns:repeat(2,minmax(0,1fr));}
 @media (max-width: 360px){
+    .tm-ai-sidebar__head{flex-wrap:wrap;align-items:flex-start;}
+    .tm-ai-sidebar__head-title{order:3;flex:1 1 100%;max-width:none;}
+    .tm-ai-sidebar__head-actions{width:100%;justify-content:flex-end;}
     .tm-ai-sidebar--mobile .tm-ai-sidebar__grid,
-    .tm-ai-sidebar--mobile .tm-ai-sidebar__grid--planner{grid-template-columns:minmax(0,1fr);}
+    .tm-ai-sidebar--mobile .tm-ai-sidebar__grid--planner,
+    .tm-ai-sidebar__compact-grid{grid-template-columns:minmax(0,1fr);}
+    .tm-ai-sidebar__composer-foot{flex-direction:column;align-items:stretch;}
+    .tm-ai-sidebar__composer-foot .tm-btn{width:100%;}
 }
         `;
         document.head.appendChild(style);
@@ -1598,6 +1756,9 @@
     }
 
     function taskLite(task) {
+        const statusOptions = getConfig().statusOptions;
+        const statusId = String(task?.customStatus || '').trim();
+        const statusOption = resolveConfiguredStatusOption(statusId, statusOptions);
         return {
             id: String(task?.id || '').trim(),
             content: String(task?.content || '').trim(),
@@ -1606,9 +1767,11 @@
             parentTaskId: String(task?.parentTaskId || task?.parent_task_id || '').trim(),
             done: !!task?.done,
             priority: String(task?.priority || '').trim(),
-            customStatus: String(task?.customStatus || '').trim(),
+            customStatus: statusId,
+            customStatusName: String(statusOption?.name || statusId).trim(),
             startDate: String(task?.startDate || '').trim(),
             completionTime: String(task?.completionTime || '').trim(),
+            updated: String(task?.updated || task?.updatedAt || task?.updateTime || task?.update_time || '').trim(),
             duration: String(task?.duration || '').trim(),
             remark: String(task?.remark || '').trim(),
             pinned: !!task?.pinned,
@@ -1655,7 +1818,7 @@
         if (title.hit) patch.title = String(title.value || '').trim();
         if (done.hit) patch.done = !!done.value;
         if (priority.hit) patch.priority = cleanPriority(priority.value);
-        if (customStatus.hit) patch.customStatus = String(customStatus.value || '').trim();
+        if (customStatus.hit) patch.customStatus = resolveConfiguredStatusId(customStatus.value, getConfig().statusOptions);
         if (startDate.hit) patch.startDate = cleanDate(startDate.value);
         if (completionTime.hit) patch.completionTime = cleanDate(completionTime.value);
         if (duration.hit) patch.duration = String(duration.value || '').trim();
@@ -1706,7 +1869,10 @@
             const label = p === 'high' ? '高' : (p === 'medium' ? '中' : (p === 'low' ? '低' : (p === 'none' ? '无' : p || '空')));
             parts.push(`优先级设为${label}`);
         }
-        if (Object.prototype.hasOwnProperty.call(patch, 'customStatus')) parts.push(`状态设为${String(patch.customStatus || '').trim() || '空'}`);
+        if (Object.prototype.hasOwnProperty.call(patch, 'customStatus')) {
+            const matched = resolveConfiguredStatusOption(patch.customStatus, getConfig().statusOptions);
+            parts.push(`状态设为${String(matched?.name || patch.customStatus || '').trim() || '空'}`);
+        }
         if (Object.prototype.hasOwnProperty.call(patch, 'startDate')) parts.push(`开始日期设为${String(patch.startDate || '').trim() || '空'}`);
         if (Object.prototype.hasOwnProperty.call(patch, 'completionTime')) parts.push(`完成日期设为${String(patch.completionTime || '').trim() || '空'}`);
         if (Object.prototype.hasOwnProperty.call(patch, 'duration')) parts.push(`时长设为${String(patch.duration || '').trim() || '空'}`);
@@ -1723,7 +1889,9 @@
     }
 
     function buildChatSystemPrompt() {
-        return '你是任务与项目管理助手。请只输出 JSON：{"answer":"","highlights":[],"nextActions":[],"warnings":[],"taskOperations":[{"taskId":"","patch":{},"reason":""}],"createOperations":[{"content":"","docId":"","parentTaskId":"","patch":{},"reason":""}]}。taskOperations 仅在用户明确要求修改已有任务时返回；patch 只能包含 title、done、priority、customStatus、startDate、completionTime、duration、remark、pinned、milestone。createOperations 仅在用户明确要求新建任务/子任务时返回；创建顶级任务时填写 docId，创建子任务时填写 parentTaskId；docId 必须来自 document.id 或 tasks[].docId，parentTaskId 必须来自输入 tasks；一次可以返回多个 createOperations。状态请写入 customStatus；开始时间写入 startDate；备注写入 remark。重要：不要在 answer 中声称“已经修改成功/已经创建完成”，真实执行结果由系统完成并反馈。';
+        const cfg = getConfig();
+        const statusGuide = formatConfiguredStatusPrompt(cfg.statusOptions);
+        return `你是任务与项目管理助手。请只输出 JSON：{"answer":"","highlights":[],"nextActions":[],"warnings":[],"taskOperations":[{"taskId":"","patch":{},"reason":""}],"createOperations":[{"content":"","docId":"","parentTaskId":"","patch":{},"reason":""}]}。taskOperations 仅在用户明确要求修改已有任务时返回；patch 只能包含 title、done、priority、customStatus、startDate、completionTime、duration、remark、pinned、milestone。createOperations 仅在用户明确要求新建任务/子任务时返回；创建顶级任务时填写 docId，创建子任务时填写 parentTaskId；docId 必须来自 document.id 或 tasks[].docId，parentTaskId 必须来自输入 tasks；一次可以返回多个 createOperations。状态请写入 customStatus，但要优先使用“状态设置第一列的中文名称”而不是英文 id；系统会自动把中文名称映射为真实状态 id。当前可用状态：${statusGuide}。开始时间写入 startDate；备注写入 remark。重要：不要在 answer 中声称“已经修改成功/已经创建完成”，真实执行结果由系统完成并反馈。`;
     }
 
     async function applyChatTaskOperations(operations, taskPool = []) {
@@ -2005,6 +2173,15 @@
     }
 
     function buildDocExcerpt(docSnapshot, taskId, mode) {
+        if (String(mode || '').trim() === 'none') {
+            return {
+                mode: 'none',
+                intro: '',
+                nearby: '',
+                fulltext: '',
+                contextChars: 0,
+            };
+        }
         const lines = String(docSnapshot?.kramdown || '').split(/\r?\n/);
         const index = taskId ? lines.findIndex((line) => line.includes(`id="${taskId}"`) || line.includes(`id='${taskId}'`)) : -1;
         const intro = lines.slice(0, Math.max(40, index > 0 ? Math.min(index, 70) : 40)).filter((line) => !/id=/.test(line) && !/^\s*[-*]\s+\[[ xX]\]/.test(line));
@@ -2695,6 +2872,15 @@
         `;
     }
 
+    function formatSchedulePlannerSummary(planner) {
+        const value = normalizePlannerOptions(planner);
+        const dateLabel = formatPlannerDateRange(value.planDate || todayKey(), value.planDateTo || value.planDate || todayKey());
+        const breakHours = Number(value.breakHours || 0);
+        const gapMinutes = Number(value.gapMinutes || 0);
+        const maxTasks = Number(value.maxTasks || 0);
+        return `${dateLabel} · 摸鱼${breakHours}h · 间隔${gapMinutes}m · 最多${maxTasks}项`;
+    }
+
     async function applyChatPromptTemplateToConversation(conversationId, templateId) {
         const current = await getConversation(conversationId);
         if (!current) return null;
@@ -2714,6 +2900,23 @@
         aiRuntime.currentViewTasks = Array.isArray(list) ? list.filter(Boolean) : [];
         aiRuntime.currentViewTopTasks = [];
         return aiRuntime.currentViewTasks;
+    }
+
+    async function ensureCurrentGroupTasks(force, options = {}) {
+        const includeDone = !!options?.includeDone;
+        const groupKey = String(bridge()?.getCurrentGroupId?.() || 'all').trim() || 'all';
+        if (includeDone) {
+            if (!force && aiRuntime.currentGroupTaskAllKey === groupKey && Array.isArray(aiRuntime.currentGroupTasksAll) && aiRuntime.currentGroupTasksAll.length) return aiRuntime.currentGroupTasksAll;
+            const list = await bridge()?.getCurrentGroupTasks?.(0, { includeDone: true });
+            aiRuntime.currentGroupTasksAll = Array.isArray(list) ? list.filter(Boolean) : [];
+            aiRuntime.currentGroupTaskAllKey = groupKey;
+            return aiRuntime.currentGroupTasksAll;
+        }
+        if (!force && aiRuntime.currentGroupTaskKey === groupKey && Array.isArray(aiRuntime.currentGroupTasks) && aiRuntime.currentGroupTasks.length) return aiRuntime.currentGroupTasks;
+        const list = await bridge()?.getCurrentGroupTasks?.(0);
+        aiRuntime.currentGroupTasks = Array.isArray(list) ? list.filter(Boolean) : [];
+        aiRuntime.currentGroupTaskKey = groupKey;
+        return aiRuntime.currentGroupTasks;
     }
 
     async function ensureCurrentViewTopTasks(force) {
@@ -2810,6 +3013,10 @@
         const b = bridge();
         const patch = {};
         const force = !!options.force;
+        if (current.contextScope === 'none') {
+            if (current.selectedDocIds.length > 0) patch.selectedDocIds = [];
+            if (current.selectedTaskIds.length > 0) patch.selectedTaskIds = [];
+        }
         if (current.contextScope === 'current_doc') {
             const docId = String(options.docId || b?.getCurrentDocId?.() || '').trim();
             const currentDocIds = current.selectedDocIds.map((it) => String(it || '').trim()).filter(Boolean);
@@ -2836,10 +3043,23 @@
             if (!keepCurrentSelection) patch.selectedTaskIds = nextIds;
             if (current.selectedDocIds.length > 0) patch.selectedDocIds = [];
         }
+        if (current.contextScope === 'current_group') {
+            const groupTasks = await ensureCurrentGroupTasks(force || !!options.refreshView);
+            const nextIds = groupTasks
+                .filter((task) => !task?.done)
+                .map((task) => String(task?.id || '').trim())
+                .filter(Boolean);
+            const currentIds = current.selectedTaskIds.map((it) => String(it || '').trim()).filter(Boolean);
+            const validSet = new Set(nextIds);
+            const keepCurrentSelection = !force && currentIds.length > 0 && currentIds.every((id) => validSet.has(id));
+            if (!keepCurrentSelection) patch.selectedTaskIds = nextIds;
+            if (current.selectedDocIds.length > 0) patch.selectedDocIds = [];
+        }
         if (current.type === 'schedule') {
             patch.plannerOptions = {
                 ...normalizePlannerOptions(current.plannerOptions),
                 planDate: normalizeDateKey(current.plannerOptions?.planDate || todayKey()) || todayKey(),
+                planDateTo: normalizeDateKey(current.plannerOptions?.planDateTo || current.plannerOptions?.planDate || todayKey()) || normalizeDateKey(current.plannerOptions?.planDate || todayKey()) || todayKey(),
             };
         }
         if (Object.keys(patch).length) return await updateConversation(current.id, patch);
@@ -2848,6 +3068,7 @@
 
     async function inferDocIdsFromConversation(conversation) {
         const session = normalizeConversation(conversation || {});
+        if (session.contextScope === 'none') return [];
         const out = Array.from(new Set(session.selectedDocIds.map((it) => String(it || '').trim()).filter(Boolean)));
         if (out.length) return out;
         if (session.contextScope === 'current_doc') {
@@ -2868,10 +3089,18 @@
 
     async function inferTaskIdsFromConversation(conversation) {
         const session = normalizeConversation(conversation || {});
+        if (session.contextScope === 'none') return [];
         if (session.selectedTaskIds.length) return Array.from(new Set(session.selectedTaskIds));
         if (session.contextScope === 'current_task') {
             const taskId = String(bridge()?.getCurrentTaskId?.() || '').trim();
             return taskId ? [taskId] : [];
+        }
+        if (session.contextScope === 'current_group') {
+            const groupTasks = await ensureCurrentGroupTasks(false);
+            return groupTasks
+                .filter((task) => !task?.done)
+                .map((task) => String(task?.id || '').trim())
+                .filter(Boolean);
         }
         if (session.contextScope === 'current_view' || session.type === 'schedule') {
             const viewTasks = await ensureCurrentViewTopTasks(false);
@@ -2899,6 +3128,8 @@
     }
 
     async function getPrimaryDocumentSnapshot(conversation, options = {}) {
+        const session = normalizeConversation(conversation || {});
+        if (session.contextScope === 'none') return null;
         let docIds = await inferDocIdsFromConversation(conversation);
         if (!docIds.length && options.taskId) {
             const task = await bridge()?.getTaskSnapshot?.(options.taskId);
@@ -2923,19 +3154,28 @@
         const plan = (result && typeof result === 'object') ? result : {};
         const blocks = Array.isArray(plan?.timeBlocks) ? plan.timeBlocks : [];
         if (!blocks.length) return 'AI 没有生成可用排期';
-        return [`计划日期：${plan.planDate || todayKey()}`, ...blocks.map((it) => `- ${it.title || it.taskId || '任务'}：${it.start} ~ ${it.end}`)].join('\n');
+        const dateLabel = formatPlannerDateRange(plan.planDate || todayKey(), plan.planDateTo || plan.planDate || todayKey());
+        return [`计划范围：${dateLabel}`, ...blocks.map((it) => `- ${it.title || it.taskId || '任务'}：${it.start} ~ ${it.end}`)].join('\n');
     }
 
     async function buildSummaryCandidateTasks(conversation) {
         const session = normalizeConversation(conversation || {});
         const summary = resolveSummaryRange(session.summaryOptions);
         const maxTasks = summary.maxTasks || AI_DEFAULT_SUMMARY_OPTIONS.maxTasks;
+        const summaryTaskLimit = Math.max(maxTasks, 120);
         let tasks = [];
         if (session.contextScope === 'manual' && session.selectedTaskIds.length) {
             tasks = await getSelectedTaskSnapshots(session.selectedTaskIds);
+        } else if (session.contextScope === 'current_group') {
+            const visibleTasks = await bridge()?.getCurrentFilteredTasks?.(0);
+            const groupDocIds = await bridge()?.getCurrentGroupDocIds?.();
+            const groupTasks = await bridge()?.getSummaryTasksByDocIds?.(groupDocIds, { ignoreExcludeCompleted: true });
+            tasks = mergeSummaryTasks(visibleTasks, groupTasks).slice(0, summaryTaskLimit);
         } else if (session.contextScope === 'current_view') {
-            const viewTasks = await ensureCurrentViewTopTasks(false);
-            tasks = Array.isArray(viewTasks) ? viewTasks.slice(0, maxTasks) : [];
+            const viewTasks = await bridge()?.getCurrentFilteredTasks?.(0);
+            const viewDocIds = Array.from(new Set((Array.isArray(viewTasks) ? viewTasks : []).map((task) => String(task?.docId || task?.root_id || '').trim()).filter(Boolean)));
+            const summaryTasks = await bridge()?.getSummaryTasksByDocIds?.(viewDocIds, { ignoreExcludeCompleted: true });
+            tasks = mergeSummaryTasks(viewTasks, summaryTasks).slice(0, summaryTaskLimit);
         } else if (session.contextScope === 'current_task') {
             const selectedIds = await inferTaskIdsFromConversation(session);
             const seedId = String(selectedIds[0] || '').trim();
@@ -2964,8 +3204,8 @@
         const fallbackTasks = rangedTasks.length ? rangedTasks : allTasks;
         return {
             summary,
-            allTasks: allTasks.slice(0, Math.max(maxTasks, 120)),
-            rangedTasks: rangedTasks.slice(0, Math.max(maxTasks, 120)),
+            allTasks: allTasks.slice(0, summaryTaskLimit),
+            rangedTasks: rangedTasks.slice(0, summaryTaskLimit),
             selectedTasks: fallbackTasks.slice(0, maxTasks),
         };
     }
@@ -2980,19 +3220,64 @@
         return lines.filter(Boolean).join('\n');
     }
 
+    function buildSummaryDebugMessage(summary, tasks, rangedTasks, extra = {}) {
+        const range = resolveSummaryRange(summary);
+        const list = Array.isArray(tasks) ? tasks : [];
+        const ranged = Array.isArray(rangedTasks) ? rangedTasks : [];
+        const samples = list.slice(0, 6).map((task) => {
+            const updatedRaw = String(task?.updated || task?.updatedAt || task?.updateTime || task?.update_time || '').trim();
+            const updatedKey = resolveTaskUpdatedDateKey(task);
+            const hit = taskTouchesSummaryRange(task, range);
+            return `${String(task?.content || task?.id || '任务').trim() || '任务'} | done=${task?.done ? '1' : '0'} | updated=${updatedRaw || '-'} | parsed=${updatedKey || '-'} | hit=${hit ? '1' : '0'}`;
+        });
+        return [
+            '当前范围没有可摘要的任务',
+            `范围=${range.dateFrom}~${range.dateTo}`,
+            `候选=${list.length}`,
+            `命中=${ranged.length}`,
+            extra?.contextScope ? `上下文=${extra.contextScope}` : '',
+            extra?.docCount !== undefined ? `文档数=${extra.docCount}` : '',
+            samples.length ? `样本=${samples.join(' || ')}` : '样本=无',
+        ].filter(Boolean).join('；');
+    }
+
+    function mergeSummaryTasks(...groups) {
+        const map = new Map();
+        groups.forEach((group) => {
+            (Array.isArray(group) ? group : []).forEach((task) => {
+                const tid = String(task?.id || '').trim();
+                if (!tid || map.has(tid)) return;
+                map.set(tid, task);
+            });
+        });
+        return Array.from(map.values());
+    }
+
     async function runSummaryConversation(conversationId) {
         const session0 = await getConversation(conversationId);
         if (!session0) throw new Error('未找到会话');
         const draft = getConversationDraft(session0.id);
         let session = await ensureConversationDefaults(session0);
-        const { summary, allTasks, selectedTasks } = await buildSummaryCandidateTasks(session);
-        if (!allTasks.length) throw new Error('当前范围没有可摘要的任务');
+        const { summary, allTasks, rangedTasks, selectedTasks } = await buildSummaryCandidateTasks(session);
+        if (!allTasks.length) {
+            let docCount = 0;
+            try {
+                if (session.contextScope === 'current_group') docCount = (await bridge()?.getCurrentGroupDocIds?.())?.length || 0;
+                else if (session.contextScope === 'current_view') {
+                    const viewTasks = await ensureCurrentViewTopTasks(false);
+                    docCount = Array.from(new Set((Array.isArray(viewTasks) ? viewTasks : []).map((task) => String(task?.docId || task?.root_id || '').trim()).filter(Boolean))).length;
+                } else {
+                    docCount = (await inferDocIdsFromConversation(session)).length;
+                }
+            } catch (e) {}
+            throw new Error(buildSummaryDebugMessage(summary, allTasks, rangedTasks, { contextScope: session.contextScope, docCount }));
+        }
         const doc = await getPrimaryDocumentSnapshot(session, { taskId: selectedTasks[0]?.id || allTasks[0]?.id || '' });
         const excerpt = buildDocExcerpt(doc, selectedTasks[0]?.id || '', session.contextMode);
         const presetLabel = summary.preset === 'weekly' ? '周报' : (summary.preset === 'custom' ? '摘要' : '日报');
-        const instruction = String(draft.summary || '').trim() || `请生成${presetLabel}，自动筛选 ${summary.dateFrom}${summary.dateFrom === summary.dateTo ? '' : ` 到 ${summary.dateTo}`} 范围内相关任务，优先总结已完成任务，同时补充进行中、阻塞项和下一步。`;
+        const instruction = String(draft.summary || '').trim() || `请生成${presetLabel}，自动筛选 ${summary.dateFrom}${summary.dateFrom === summary.dateTo ? '' : ` 到 ${summary.dateTo}`} 范围内相关任务。已完成任务请以“当前状态为已完成且任务更新时间落在范围内”为准，不要把 completionTime 当成完成发生日；同时补充进行中、阻塞项和下一步。`;
         const result = await callMiniMaxJson(
-            '你是工作复盘与汇报助手。请先根据 reportPreset、dateRange 和 tasks 自动筛选 relevant tasks，再输出 JSON：{"title":"","summary":"","completedHighlights":[],"progressHighlights":[],"risks":[],"nextSteps":[],"notes":[],"includedTaskIds":[],"excludedTaskIds":[],"stats":{"candidate":0,"included":0,"done":0,"todo":0},"reportMarkdown":""}。日报默认优先汇总当天完成任务并补充推进项；周报默认汇总本周完成、推进、风险与下周计划；自定义摘要严格围绕给定 dateRange。includedTaskIds 只能来自输入 tasks[].id。',
+            '你是工作复盘与汇报助手。请先根据 reportPreset、dateRange 和 tasks 自动筛选 relevant tasks，再输出 JSON：{"title":"","summary":"","completedHighlights":[],"progressHighlights":[],"risks":[],"nextSteps":[],"notes":[],"includedTaskIds":[],"excludedTaskIds":[],"stats":{"candidate":0,"included":0,"done":0,"todo":0},"reportMarkdown":""}。日报默认优先汇总当天完成任务并补充推进项；周报默认汇总本周完成、推进、风险与下周计划；自定义摘要严格围绕给定 dateRange。判定“范围内完成”的标准是：任务当前 done=true，且任务 updated/updatedAt 落在 dateRange 内；不要把 completionTime 直接当作完成发生时间。includedTaskIds 只能来自输入 tasks[].id。',
             {
                 conversationType: session.type,
                 contextScope: session.contextScope,
@@ -3216,24 +3501,28 @@
         const { selectedTaskIds, selectedTasks } = await buildScheduleCandidateTasks(session);
         if (!selectedTaskIds.length || !selectedTasks.length) throw new Error('请先选择要排期的任务');
         const dayKey = normalizeDateKey(planner.planDate || todayKey()) || todayKey();
+        const dayKeyTo = normalizeDateKey(planner.planDateTo || planner.planDate || dayKey) || dayKey;
+        const planDays = listDateKeysBetween(dayKey, dayKeyTo);
         const doc = await getPrimaryDocumentSnapshot({ ...session, selectedTaskIds }, { taskId: selectedTaskIds[0] });
         const excerpt = buildDocExcerpt(doc, selectedTaskIds[0], session.contextMode);
-        const existing = globalThis.__tmCalendar?.listTaskSchedulesByDay ? await globalThis.__tmCalendar.listTaskSchedulesByDay(dayKey) : [];
+        const existing = await loadExistingSchedulesByRange(dayKey, dayKeyTo);
         const cfg = getConfig();
         const allowedWindows = Array.isArray(cfg.scheduleWindows) && cfg.scheduleWindows.length ? cfg.scheduleWindows : [{ start: '09:00', end: '18:00', label: '09:00-18:00' }];
-        const userInstruction = [String(draft.schedule || '').trim(), planner.breakHours > 0 ? `我今天要摸鱼 ${planner.breakHours} 小时` : '', planner.gapMinutes > 0 ? `任务之间间隔 ${planner.gapMinutes} 分钟` : '', planner.note ? planner.note : ''].filter(Boolean).join('，');
+        const userInstruction = [String(draft.schedule || '').trim(), planDays.length > 1 ? `请在 ${planDays.length} 天内完成安排` : '', planner.breakHours > 0 ? `我这段时间要摸鱼 ${planner.breakHours} 小时` : '', planner.gapMinutes > 0 ? `任务之间间隔 ${planner.gapMinutes} 分钟` : '', planner.note ? planner.note : ''].filter(Boolean).join('，');
         const result = await callMiniMaxJson(
-            '你是任务排期助手。请只输出 JSON：{"planDate":"YYYY-MM-DD","timeBlocks":[{"taskId":"","title":"","start":"YYYY-MM-DD HH:mm","end":"YYYY-MM-DD HH:mm","allDay":false,"reason":""}],"unscheduledTasks":[],"conflicts":[],"assumptions":[]}。必须只安排 selectedTasks 中的任务；如果 allowedWindows 非空，所有 timeBlocks 必须严格落在这些时间段内；需要显式考虑 breakHours 和 gapMinutes 约束。',
+            '你是任务排期助手。请只输出 JSON：{"planDate":"YYYY-MM-DD","planDateTo":"YYYY-MM-DD","timeBlocks":[{"taskId":"","title":"","start":"YYYY-MM-DD HH:mm","end":"YYYY-MM-DD HH:mm","allDay":false,"reason":""}],"unscheduledTasks":[],"conflicts":[],"assumptions":[]}。必须只安排 selectedTasks 中的任务；如果给出了 planDateTo，则可以在 planDate 到 planDateTo 之间任意一天安排任务；如果 allowedWindows 非空，所有 timeBlocks 必须严格落在这些时间段内；需要显式考虑 breakHours 和 gapMinutes 约束。',
             {
                 conversationType: session.type,
                 contextScope: session.contextScope,
                 plannerOptions: planner,
                 today: todayKey(),
                 planDate: dayKey,
+                planDateTo: dayKeyTo,
+                planDays,
                 document: doc ? { id: doc.id, name: doc.name, path: doc.path, ...excerpt } : null,
                 selectedTasks: selectedTasks.map(taskLite),
                 selectedTaskIds,
-                existingSchedules: (existing || []).slice(0, 80).map((it) => ({ title: String(it?.title || '').trim(), taskId: String(it?.taskId || it?.task_id || it?.linkedTaskId || it?.linked_task_id || '').trim(), start: String(it?.start || '').trim(), end: String(it?.end || '').trim(), allDay: !!it?.allDay })),
+                existingSchedules: (existing || []).slice(0, 200).map((it) => ({ title: String(it?.title || '').trim(), taskId: String(it?.taskId || it?.task_id || it?.linkedTaskId || it?.linked_task_id || '').trim(), start: String(it?.start || '').trim(), end: String(it?.end || '').trim(), allDay: !!it?.allDay, dayKey: String(it?.dayKey || '').trim() })),
                 allowedWindows: allowedWindows.map((win) => win.label),
                 breakHours: planner.breakHours,
                 gapMinutes: planner.gapMinutes,
@@ -3253,6 +3542,10 @@
             const start = parseDateTimeLoose(it?.start);
             const end = parseDateTimeLoose(it?.end);
             if (!(start instanceof Date) || !(end instanceof Date) || end.getTime() <= start.getTime()) return;
+            if (!isDateWithinRange(start, dayKey, dayKeyTo) || !isDateWithinRange(end, dayKey, dayKeyTo)) {
+                conflicts.push(`${it?.title || it?.taskId || '任务'} 超出计划日期范围，已忽略`);
+                return;
+            }
             if (!isBlockWithinWindows(start, end, allowedWindows)) {
                 conflicts.push(`${it?.title || it?.taskId || '任务'} 超出允许时间段，已忽略`);
                 return;
@@ -3267,16 +3560,18 @@
             });
         });
         if (!timeBlocks.length) throw new Error('AI 没有生成可写入日历的排期结果');
+        const normalizedPlanWindow = normalizePlannerOptions({ planDate: String(result?.planDate || dayKey).trim(), planDateTo: String(result?.planDateTo || dayKeyTo).trim() });
         const plan = {
             conversationId: session.id,
-            planDate: String(result?.planDate || dayKey).trim() || dayKey,
+            planDate: normalizedPlanWindow.planDate || dayKey,
+            planDateTo: normalizedPlanWindow.planDateTo || dayKeyTo,
             timeBlocks,
             unscheduledTasks: Array.isArray(result?.unscheduledTasks) ? result.unscheduledTasks.map((it) => String(it || '').trim()).filter(Boolean) : [],
             conflicts,
             assumptions: Array.isArray(result?.assumptions) ? result.assumptions.map((it) => String(it || '').trim()).filter(Boolean) : [],
             allowedWindows,
             selectedTaskIds,
-            existingSchedules: await loadExistingSchedulesByDate(dayKey),
+            existingSchedules: await loadExistingSchedulesByRange(normalizedPlanWindow.planDate || dayKey, normalizedPlanWindow.planDateTo || dayKeyTo),
         };
         session = await updateConversation(session.id, { selectedTaskIds, plannerOptions: planner });
         session = await appendConversationMessage(session.id, 'user', userInstruction || '请生成排期', { scene: 'schedule' });
@@ -3303,6 +3598,16 @@
         }));
     }
 
+    async function loadExistingSchedulesByRange(planDate, planDateTo) {
+        const days = listDateKeysBetween(planDate, planDateTo);
+        const out = [];
+        for (const dayKey of days) {
+            const list = await loadExistingSchedulesByDate(dayKey);
+            list.forEach((item) => out.push({ ...item, dayKey }));
+        }
+        return out;
+    }
+
     async function applyConversationSchedule(conversationId) {
         const session = await getConversation(conversationId);
         const plan = session?.lastResult;
@@ -3325,7 +3630,7 @@
             });
         }
         try { await cal.refreshInPlace?.({ silent: false }); } catch (e) {}
-        const refreshed = await loadExistingSchedulesByDate(plan?.planDate || todayKey());
+        const refreshed = await loadExistingSchedulesByRange(plan?.planDate || todayKey(), plan?.planDateTo || plan?.planDate || todayKey());
         await updateConversation(session.id, { lastResult: { ...(session.lastResult || {}), existingSchedules: refreshed } });
         toast('✅ 已写入日历', 'success');
         return true;
@@ -3429,10 +3734,11 @@
         if (conversation.type === 'schedule') {
             const blocks = Array.isArray(result?.timeBlocks) ? result.timeBlocks : [];
             const existing = Array.isArray(result?.existingSchedules) ? result.existingSchedules : [];
+            const dateLabel = formatPlannerDateRange(result?.planDate || todayKey(), result?.planDateTo || result?.planDate || todayKey());
             return `
                 <div class="tm-ai-sidebar__result">
                     <div class="tm-ai-sidebar__result-title">排期结果</div>
-                    <div class="tm-ai-sidebar__meta">计划日期：${esc(result.planDate || todayKey())}</div>
+                    <div class="tm-ai-sidebar__meta">计划范围：${esc(dateLabel)}</div>
                     <div class="tm-ai-sidebar__smart-list">${blocks.map((item) => `
                         <div class="tm-ai-sidebar__smart-item">
                             <div class="tm-ai-sidebar__smart-head">
@@ -3443,11 +3749,11 @@
                             ${item.taskId ? `<div class="tm-ai-sidebar__actions"><button class="tm-btn tm-btn-secondary" data-ai-sidebar-action="edit-task-schedule" data-ai-task-id="${esc(item.taskId)}">调整/删除该任务日程</button></div>` : ''}
                         </div>
                     `).join('')}</div>
-                    ${existing.length ? `<div class="tm-ai-sidebar__meta" style="margin-top:8px;">当日已有日程（可调整/删除）：</div><div class="tm-ai-sidebar__smart-list">${existing.map((item) => `<div class="tm-ai-sidebar__smart-item"><div class="tm-ai-sidebar__smart-head"><div>${esc(item.title || item.taskId || '日程')}</div><span>${esc(`${item.start} ~ ${item.end}`)}</span></div><div class="tm-ai-sidebar__actions"><button class="tm-btn tm-btn-secondary" data-ai-sidebar-action="edit-schedule" data-ai-id="${esc(item.id || '')}" ${item.id ? '' : 'disabled'}>调整/删除</button></div></div>`).join('')}</div>` : ''}
+                    ${existing.length ? `<div class="tm-ai-sidebar__meta" style="margin-top:8px;">范围内已有日程（可调整/删除）：</div><div class="tm-ai-sidebar__smart-list">${existing.map((item) => `<div class="tm-ai-sidebar__smart-item"><div class="tm-ai-sidebar__smart-head"><div>${esc(item.title || item.taskId || '日程')}</div><span>${esc(`${item.start} ~ ${item.end}`)}</span></div>${item.dayKey ? `<div class="tm-ai-sidebar__meta">${esc(item.dayKey)}</div>` : ''}<div class="tm-ai-sidebar__actions"><button class="tm-btn tm-btn-secondary" data-ai-sidebar-action="edit-schedule" data-ai-id="${esc(item.id || '')}" ${item.id ? '' : 'disabled'}>调整/删除</button></div></div>`).join('')}</div>` : ''}
                     ${Array.isArray(result?.conflicts) && result.conflicts.length ? `<div class="tm-ai-sidebar__meta">冲突：${esc(result.conflicts.join('；'))}</div>` : ''}
                     <div class="tm-ai-sidebar__actions">
                         <button class="tm-btn tm-btn-success" data-ai-sidebar-action="apply-schedule">写入日历</button>
-                        <button class="tm-btn tm-btn-secondary" data-ai-sidebar-action="reload-existing-schedules">刷新当日日程</button>
+                        <button class="tm-btn tm-btn-secondary" data-ai-sidebar-action="reload-existing-schedules">刷新范围日程</button>
                     </div>
                 </div>
             `;
@@ -3483,13 +3789,17 @@
         const session = normalizeConversation(conversation || {});
         const draft = getConversationDraft(session.id);
         const hasContextSelection = session.selectedDocIds.length > 0 || session.selectedTaskIds.length > 0;
-        const canRefreshContext = session.contextScope !== 'manual';
-        const orderedTasks = Array.isArray(aiRuntime.currentViewTopTasks) && aiRuntime.currentViewTopTasks.length
-            ? aiRuntime.currentViewTopTasks
-            : (Array.isArray(aiRuntime.currentViewTasks) ? aiRuntime.currentViewTasks : []);
+        const isCurrentGroupScope = session.contextScope === 'current_group';
+        const canRefreshContext = session.contextScope !== 'manual' && session.contextScope !== 'none';
+        const orderedTasks = session.contextScope === 'current_group'
+            ? (Array.isArray(aiRuntime.currentGroupTasks) ? aiRuntime.currentGroupTasks : [])
+            : (Array.isArray(aiRuntime.currentViewTopTasks) && aiRuntime.currentViewTopTasks.length
+                ? aiRuntime.currentViewTopTasks
+                : (Array.isArray(aiRuntime.currentViewTasks) ? aiRuntime.currentViewTasks : []));
         const planner = normalizePlannerOptions(session.plannerOptions);
         const summary = resolveSummaryRange(session.summaryOptions);
-        const showTaskPicker = session.type === 'schedule' || session.contextScope === 'manual' || session.contextScope === 'current_view';
+        const showTaskPicker = session.contextScope !== 'none' && (session.type === 'schedule' || session.contextScope === 'manual' || session.contextScope === 'current_view');
+        const plannerSummary = formatSchedulePlannerSummary(planner);
         const root = aiRuntime.host;
         if (!(root instanceof HTMLElement)) return;
         root.innerHTML = `
@@ -3502,6 +3812,9 @@
                                 <path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </button>
+                    </div>
+                    <div class="tm-ai-sidebar__head-title">
+                        <input class="tm-ai-sidebar__title-input" data-ai-sidebar-field="title" value="${esc(session.title)}" placeholder="会话标题">
                     </div>
                     <div class="tm-ai-sidebar__head-actions">
                         <button class="tm-btn tm-btn-info" data-ai-sidebar-action="toggle-history">${aiRuntime.historyOpen ? '隐藏会话' : '会话记录'}</button>
@@ -3523,11 +3836,18 @@
                 <div class="tm-ai-sidebar__panel">
                     ${aiRuntime.setupCollapsed ? '' : `
                         <div class="tm-ai-sidebar__setup">
+                            <div class="tm-ai-sidebar__setup-row">
+                                <span>场景</span>
+                                <div class="tm-ai-sidebar__segmented" role="tablist" aria-label="AI 场景">
+                                    <button class="tm-ai-sidebar__seg-btn${session.type === 'chat' ? ' is-active' : ''}" type="button" data-ai-sidebar-action="set-scene" data-ai-value="chat" role="tab" aria-selected="${session.type === 'chat' ? 'true' : 'false'}">AI 对话</button>
+                                    <button class="tm-ai-sidebar__seg-btn${session.type === 'smart' ? ' is-active' : ''}" type="button" data-ai-sidebar-action="set-scene" data-ai-value="smart" role="tab" aria-selected="${session.type === 'smart' ? 'true' : 'false'}">SMART 分析</button>
+                                    <button class="tm-ai-sidebar__seg-btn${session.type === 'schedule' ? ' is-active' : ''}" type="button" data-ai-sidebar-action="set-scene" data-ai-value="schedule" role="tab" aria-selected="${session.type === 'schedule' ? 'true' : 'false'}">日程排期</button>
+                                    <button class="tm-ai-sidebar__seg-btn${session.type === 'summary' ? ' is-active' : ''}" type="button" data-ai-sidebar-action="set-scene" data-ai-value="summary" role="tab" aria-selected="${session.type === 'summary' ? 'true' : 'false'}">摘要总结</button>
+                                </div>
+                            </div>
                             <div class="tm-ai-sidebar__grid">
-                                <label><span>标题</span><input class="tm-ai-sidebar__title-input" data-ai-sidebar-field="title" value="${esc(session.title)}"></label>
-                                <label><span>场景</span><select class="tm-rule-select" data-ai-sidebar-field="type"><option value="chat" ${session.type === 'chat' ? 'selected' : ''}>AI 对话</option><option value="smart" ${session.type === 'smart' ? 'selected' : ''}>SMART 分析</option><option value="schedule" ${session.type === 'schedule' ? 'selected' : ''}>日程排期</option><option value="summary" ${session.type === 'summary' ? 'selected' : ''}>摘要总结</option></select></label>
-                                <label><span>范围</span><select class="tm-rule-select" data-ai-sidebar-field="contextScope"><option value="current_doc" ${session.contextScope === 'current_doc' ? 'selected' : ''}>当前文档</option><option value="current_task" ${session.contextScope === 'current_task' ? 'selected' : ''}>当前任务</option><option value="current_view" ${session.contextScope === 'current_view' ? 'selected' : ''}>当前视图前5</option><option value="manual" ${session.contextScope === 'manual' ? 'selected' : ''}>手动任务</option></select></label>
-                                <label><span>上下文</span><select class="tm-rule-select" data-ai-sidebar-field="contextMode"><option value="nearby" ${session.contextMode === 'nearby' ? 'selected' : ''}>附近上下文</option><option value="fulltext" ${session.contextMode === 'fulltext' ? 'selected' : ''}>全文上下文</option></select></label>
+                                <label><span>范围</span><select class="tm-rule-select" data-ai-sidebar-field="contextScope"><option value="none" ${session.contextScope === 'none' ? 'selected' : ''}>纯对话</option><option value="current_doc" ${session.contextScope === 'current_doc' ? 'selected' : ''}>当前文档</option><option value="current_task" ${session.contextScope === 'current_task' ? 'selected' : ''}>当前任务</option><option value="current_group" ${session.contextScope === 'current_group' ? 'selected' : ''}>当前分区</option><option value="current_view" ${session.contextScope === 'current_view' ? 'selected' : ''}>当前视图前5</option><option value="manual" ${session.contextScope === 'manual' ? 'selected' : ''}>手动任务</option></select></label>
+                                <label><span>上下文</span><select class="tm-rule-select" data-ai-sidebar-field="contextMode"><option value="none" ${session.contextMode === 'none' ? 'selected' : ''}>无上下文</option><option value="nearby" ${session.contextMode === 'nearby' ? 'selected' : ''}>附近上下文</option><option value="fulltext" ${session.contextMode === 'fulltext' ? 'selected' : ''}>全文上下文</option></select></label>
                             </div>
                             <div class="tm-ai-sidebar__context">
                                 <div class="tm-ai-sidebar__section-head">
@@ -3540,7 +3860,9 @@
                                 <div class="tm-ai-sidebar__meta">文档</div>
                                 ${renderSelectionChips(session.selectedDocIds, aiRuntime.labelCache.doc, 'remove-doc')}
                                 <div class="tm-ai-sidebar__meta" style="margin-top:8px;">任务</div>
-                                ${renderSelectionChips(session.selectedTaskIds, aiRuntime.labelCache.task, 'remove-task', '当前还没有手动附加上下文。可拖拽任务添加')}
+                                ${isCurrentGroupScope
+                                    ? `<div class="tm-ai-sidebar__empty">当前分区模式将自动包含本分区内全部未完成任务。</div>`
+                                    : renderSelectionChips(session.selectedTaskIds, aiRuntime.labelCache.task, 'remove-task', '当前还没有手动附加上下文。可拖拽任务添加')}
                             </div>
                             ${showTaskPicker ? `
                                 <div class="tm-ai-sidebar__context">
@@ -3559,7 +3881,7 @@
                                                 if (!tid) return '';
                                                 const checked = session.selectedTaskIds.includes(tid) ? 'checked' : '';
                                                 return `<label class="tm-ai-sidebar__task-row"><input type="checkbox" data-ai-sidebar-field="pickedTask" value="${esc(tid)}" ${checked}> <span>${esc(String(task?.content || tid).trim() || tid)}</span></label>`;
-                                            }).join('') || `<div class="tm-ai-sidebar__empty">当前视图没有可选任务。</div>`}
+                                            }).join('') || `<div class="tm-ai-sidebar__empty">${session.contextScope === 'current_group' ? '当前分区没有可选任务。' : '当前视图没有可选任务。'}</div>`}
                                         </div>
                                     `}
                                 </div>
@@ -3569,15 +3891,32 @@
                     <div class="tm-ai-sidebar__messages">${renderConversationMessages(session.messages)}</div>
                     ${renderLastResult(session)}
                     ${session.type === 'schedule' ? `
-                        <div class="tm-ai-sidebar__composer">
-                            <div class="tm-ai-sidebar__grid tm-ai-sidebar__grid--planner">
-                                <label><span>计划日期</span><input class="tm-input" type="date" data-ai-sidebar-field="planDate" value="${esc(planner.planDate || todayKey())}"></label>
-                                <label><span>摸鱼时长</span><input class="tm-input" type="number" min="0" max="12" step="0.5" data-ai-sidebar-field="breakHours" value="${esc(planner.breakHours)}"></label>
-                                <label><span>任务间隔</span><input class="tm-input" type="number" min="0" max="240" step="5" data-ai-sidebar-field="gapMinutes" value="${esc(planner.gapMinutes)}"></label>
-                                <label><span>最大任务数</span><input class="tm-input" type="number" min="1" max="30" step="1" data-ai-sidebar-field="maxTasks" value="${esc(planner.maxTasks)}"></label>
+                        <div class="tm-ai-sidebar__composer tm-ai-sidebar__composer--schedule">
+                            <div class="tm-ai-sidebar__composer-shell">
+                                <button class="tm-ai-sidebar__composer-toggle" data-ai-sidebar-action="toggle-schedule-planner" aria-expanded="${aiRuntime.schedulePlannerCollapsed ? 'false' : 'true'}" title="${aiRuntime.schedulePlannerCollapsed ? '展开排期参数' : '折叠排期参数'}">
+                                    <span class="tm-ai-sidebar__composer-toggle-main">
+                                        <span class="tm-ai-sidebar__composer-toggle-title">排期参数</span>
+                                        <span class="tm-ai-sidebar__composer-toggle-summary">${esc(plannerSummary)}</span>
+                                    </span>
+                                    <svg class="tm-ai-sidebar__composer-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(${aiRuntime.schedulePlannerCollapsed ? '0deg' : '90deg'});">
+                                        <path d="M5 3.5L10.5 8 5 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                </button>
+                                ${aiRuntime.schedulePlannerCollapsed ? '' : `
+                                    <div class="tm-ai-sidebar__compact-grid">
+                                        <label class="tm-ai-sidebar__compact-field"><span>开始日期</span><input class="tm-input" type="date" data-ai-sidebar-field="planDate" value="${esc(planner.planDate || todayKey())}"></label>
+                                        <label class="tm-ai-sidebar__compact-field"><span>结束日期</span><input class="tm-input" type="date" data-ai-sidebar-field="planDateTo" value="${esc(planner.planDateTo || planner.planDate || todayKey())}"></label>
+                                        <label class="tm-ai-sidebar__compact-field"><span>摸鱼时长</span><input class="tm-input" type="number" min="0" max="12" step="0.5" data-ai-sidebar-field="breakHours" value="${esc(planner.breakHours)}"></label>
+                                        <label class="tm-ai-sidebar__compact-field"><span>任务间隔</span><input class="tm-input" type="number" min="0" max="240" step="5" data-ai-sidebar-field="gapMinutes" value="${esc(planner.gapMinutes)}"></label>
+                                        <label class="tm-ai-sidebar__compact-field"><span>最大任务数</span><input class="tm-input" type="number" min="1" max="30" step="1" data-ai-sidebar-field="maxTasks" value="${esc(planner.maxTasks)}"></label>
+                                    </div>
+                                `}
+                                <textarea class="tm-ai-textarea" data-ai-sidebar-draft="schedule" placeholder="补充约束，例如优先上午安排高能量任务，或在这一周内均匀分配">${esc(draft.schedule || planner.note || '')}</textarea>
+                                <div class="tm-ai-sidebar__composer-foot">
+                                    <div class="tm-ai-sidebar__composer-note">排期参数已集成到输入区，补充一句偏好后可直接生成。</div>
+                                    <button class="tm-btn tm-btn-primary" data-ai-sidebar-action="run-scene" ${aiRuntime.busy ? 'disabled' : ''}>${aiRuntime.busy ? '处理中...' : '生成排期'}</button>
+                                </div>
                             </div>
-                            <textarea class="tm-ai-textarea" data-ai-sidebar-draft="schedule" placeholder="补充约束，例如优先上午安排高能量任务">${esc(draft.schedule || planner.note || '')}</textarea>
-                            <div class="tm-ai-sidebar__actions"><button class="tm-btn tm-btn-primary" data-ai-sidebar-action="run-scene" ${aiRuntime.busy ? 'disabled' : ''}>${aiRuntime.busy ? '处理中...' : '生成排期'}</button></div>
                             ${aiRuntime.busy ? "<div class=\"tm-ai-sidebar__hint\">AI 正在处理，请稍候...</div>" : ""}
                         </div>
                     ` : session.type === 'smart' ? `
@@ -3736,6 +4075,20 @@
                     await refreshSidebar({ activeConversationId: current?.id || aiRuntime.activeConversationId });
                     return;
                 }
+                if (action === 'set-scene') {
+                    if (!current) return;
+                    const nextType = String(actionEl.getAttribute('data-ai-value') || '').trim();
+                    if (!AI_ALLOWED_TYPES.has(nextType) || nextType === current.type) return;
+                    await updateConversation(current.id, { type: nextType });
+                    await refreshSidebar({ activeConversationId: current.id });
+                    return;
+                }
+                if (action === 'toggle-schedule-planner') {
+                    aiRuntime.schedulePlannerCollapsed = !aiRuntime.schedulePlannerCollapsed;
+                    saveAiUiPrefs({ schedulePlannerCollapsed: aiRuntime.schedulePlannerCollapsed });
+                    await refreshSidebar({ activeConversationId: current?.id || aiRuntime.activeConversationId });
+                    return;
+                }
                 if (action === 'close-panel') {
                     try { await bridge()?.closeAiPanel?.(); } catch (e) {}
                     try { globalThis.tmCloseAiSidebar?.(); } catch (e) {}
@@ -3763,8 +4116,8 @@
                     return;
                 }
                 if (action === 'refresh-context') {
-                    if (current.contextScope === 'manual') {
-                        toast('⚠ 手动任务范围没有可刷新的自动上下文', 'warning');
+                    if (current.contextScope === 'manual' || current.contextScope === 'none') {
+                        toast(current.contextScope === 'none' ? '⚠ 纯对话范围没有可刷新的自动上下文' : '⚠ 手动任务范围没有可刷新的自动上下文', 'warning');
                         return;
                     }
                     const next = await ensureConversationDefaults(current, { force: true, refreshView: true });
@@ -3811,8 +4164,9 @@
                 }
                 if (action === 'reload-existing-schedules') {
                     const planDate = normalizeDateKey(current?.lastResult?.planDate || current?.plannerOptions?.planDate || todayKey()) || todayKey();
-                    const existing = await loadExistingSchedulesByDate(planDate);
-                    await updateConversation(current.id, { lastResult: { ...(current.lastResult || {}), planDate, existingSchedules: existing } });
+                    const planDateTo = normalizeDateKey(current?.lastResult?.planDateTo || current?.plannerOptions?.planDateTo || planDate) || planDate;
+                    const existing = await loadExistingSchedulesByRange(planDate, planDateTo);
+                    await updateConversation(current.id, { lastResult: { ...(current.lastResult || {}), planDate, planDateTo, existingSchedules: existing } });
                     await refreshSidebar({ activeConversationId: current.id });
                     return;
                 }
@@ -3884,7 +4238,13 @@
                     return;
                 }
                 if (field === 'contextScope') {
-                    await updateConversation(current.id, { contextScope: target.value });
+                    const nextScope = String(target.value || '').trim();
+                    const patch = { contextScope: nextScope };
+                    if (nextScope === 'none') {
+                        patch.selectedDocIds = [];
+                        patch.selectedTaskIds = [];
+                    }
+                    await updateConversation(current.id, patch);
                     await refreshSidebar();
                     return;
                 }
@@ -3897,8 +4257,9 @@
                     await refreshSidebar({ activeConversationId: current.id });
                     return;
                 }
-                if (field === 'planDate' || field === 'breakHours' || field === 'gapMinutes' || field === 'maxTasks') {
+                if (field === 'planDate' || field === 'planDateTo' || field === 'breakHours' || field === 'gapMinutes' || field === 'maxTasks') {
                     const nextPlanner = normalizePlannerOptions({ ...current.plannerOptions, [field]: target.value });
+                    saveRememberedPlannerOptions(nextPlanner);
                     await updateConversation(current.id, { plannerOptions: nextPlanner });
                     if (field === 'maxTasks' && (current.contextScope === 'current_view' || current.type === 'schedule')) {
                         const tasks = await ensureCurrentViewTopTasks(false);
@@ -3973,6 +4334,7 @@
             });
         }
         await ensureCurrentViewTopTasks(false);
+        await ensureCurrentGroupTasks(false);
         if (aiRuntime.pendingOpen) {
             const pending = aiRuntime.pendingOpen;
             aiRuntime.pendingOpen = null;

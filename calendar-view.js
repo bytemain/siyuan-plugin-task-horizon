@@ -4564,7 +4564,7 @@
         for (let i = 0; i < uniq.length; i += chunkSize) {
             const chunk = uniq.slice(i, i + chunkSize);
             const inList = chunk.map((id) => `'${id.replace(/'/g, "''")}'`).join(',');
-            const sql = `SELECT id, content, markdown FROM blocks WHERE id IN (${inList})`;
+            const sql = `SELECT id, content, markdown FROM blocks WHERE id IN (${inList}) LIMIT ${Math.max(1, Math.min(5000, chunk.length))}`;
             const res = await postJSON('/api/query/sql', { stmt: sql });
             const json = await res.json().catch(() => ({}));
             const rows = (res.ok && json?.code === 0 && Array.isArray(json?.data)) ? json.data : [];
