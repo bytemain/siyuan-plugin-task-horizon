@@ -1555,8 +1555,39 @@
             const reminderOffsetMin0 = reminderMode0 === 'custom'
                 ? ((Number.isFinite(reminderOffsetRaw) && allowed.has(reminderOffsetRaw)) ? reminderOffsetRaw : 0)
                 : null;
+            const repeatType0 = getScheduleRepeatType(base);
+            const repeatEvery0 = getScheduleRepeatEvery(base, repeatType0);
+            const repeatUntil0 = getScheduleRepeatUntil(base);
+            const repeatMonthlyMode0 = getScheduleRepeatMonthlyMode(base, repeatType0);
             const notificationSchedules0 = sanitizeScheduleNotificationSchedules(base.notificationSchedules);
             if (String(base.reminderMode || '').trim() !== reminderMode0) changed = true;
+            if (getScheduleRepeatType({
+                repeatType: base.repeatType,
+                recurrenceType: base.recurrenceType,
+                repeat: base.repeat,
+                recurrence: base.recurrence,
+            }) !== repeatType0) changed = true;
+            if (getScheduleRepeatEvery({
+                repeatEvery: base.repeatEvery,
+                recurrenceEvery: base.recurrenceEvery,
+                intervalEvery: base.intervalEvery,
+                repeatInterval: base.repeatInterval,
+                repeat: base.repeat,
+                recurrence: base.recurrence,
+            }, repeatType0) !== repeatEvery0) changed = true;
+            if (normalizeScheduleRepeatUntil(
+                base.repeatUntil
+                ?? base.recurrenceUntil
+                ?? base.repeatEnd
+                ?? base.repeat?.until
+                ?? base.recurrence?.until
+            ) !== repeatUntil0) changed = true;
+            if (getScheduleRepeatMonthlyMode({
+                repeatMonthlyMode: base.repeatMonthlyMode,
+                recurrenceMonthlyMode: base.recurrenceMonthlyMode,
+                repeat: base.repeat,
+                recurrence: base.recurrence,
+            }, repeatType0) !== repeatMonthlyMode0) changed = true;
             if (JSON.stringify(base.notificationSchedules || {}) !== JSON.stringify(notificationSchedules0)) changed = true;
             return {
                 ...base,
@@ -1565,10 +1596,308 @@
                 reminderMode: reminderMode0,
                 reminderEnabled: reminderEnabled0,
                 reminderOffsetMin: reminderOffsetMin0,
+                repeatType: repeatType0,
+                repeatEvery: repeatEvery0,
+                repeatUntil: repeatUntil0,
+                repeatMonthlyMode: repeatMonthlyMode0,
                 notificationSchedules: notificationSchedules0,
             };
         });
         return { out, changed };
+    }
+
+    function normalizeScheduleRepeatType(value) {
+        const raw = String(value || '').trim().toLowerCase();
+        if (!raw || raw === 'none' || raw === 'once') return 'none';
+        if (raw === 'weekday' || raw === 'weekdays') return 'workday';
+        if (raw === 'everyday') return 'daily';
+        if (raw === 'daily' || raw === 'workday' || raw === 'weekly' || raw === 'monthly' || raw === 'yearly') return raw;
+        return 'none';
+    }
+
+    function normalizeScheduleRepeatEvery(value, repeatType) {
+        if (normalizeScheduleRepeatType(repeatType) === 'none') return 1;
+        const n = parseInt(value, 10);
+        if (!Number.isFinite(n) || n <= 0) return 1;
+        return Math.min(3650, Math.max(1, n));
+    }
+
+    function normalizeScheduleRepeatUntil(value) {
+        if (value instanceof Date && !Number.isNaN(value.getTime())) return formatDateKey(value);
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        const matched = raw.match(/^\d{4}-\d{2}-\d{2}/);
+        if (matched) return matched[0];
+        const dt = new Date(raw);
+        if (Number.isNaN(dt.getTime())) return '';
+        return formatDateKey(dt);
+    }
+
+    function getScheduleRepeatType(item) {
+        const base = (item && typeof item === 'object') ? item : {};
+        const raw = (() => {
+            if (typeof base.repeatType === 'string') return base.repeatType;
+            if (typeof base.recurrenceType === 'string') return base.recurrenceType;
+            if (typeof base.repeat === 'string') return base.repeat;
+            if (typeof base.recurrence === 'string') return base.recurrence;
+            if (base.repeat && typeof base.repeat === 'object') return base.repeat.type;
+            if (base.recurrence && typeof base.recurrence === 'object') return base.recurrence.type;
+            return '';
+        })();
+        return normalizeScheduleRepeatType(raw);
+    }
+
+    function getScheduleRepeatEvery(item, repeatType) {
+        const base = (item && typeof item === 'object') ? item : {};
+        const raw = (
+            base.repeatEvery
+            ?? base.recurrenceEvery
+            ?? base.intervalEvery
+            ?? base.repeatInterval
+            ?? (base.repeat && typeof base.repeat === 'object' ? (base.repeat.every ?? base.repeat.interval) : '')
+            ?? (base.recurrence && typeof base.recurrence === 'object' ? (base.recurrence.every ?? base.recurrence.interval) : '')
+        );
+        return normalizeScheduleRepeatEvery(raw, repeatType || getScheduleRepeatType(base));
+    }
+
+    function normalizeScheduleRepeatMonthlyMode(value, repeatType) {
+        if (normalizeScheduleRepeatType(repeatType) !== 'monthly') return 'date';
+        return String(value || '').trim().toLowerCase() === 'weekday' ? 'weekday' : 'date';
+    }
+
+    function getScheduleRepeatMonthlyMode(item, repeatType) {
+        const base = (item && typeof item === 'object') ? item : {};
+        const raw = (
+            base.repeatMonthlyMode
+            ?? base.recurrenceMonthlyMode
+            ?? (base.repeat && typeof base.repeat === 'object' ? base.repeat.monthlyMode : '')
+            ?? (base.recurrence && typeof base.recurrence === 'object' ? base.recurrence.monthlyMode : '')
+        );
+        return normalizeScheduleRepeatMonthlyMode(raw, repeatType || getScheduleRepeatType(base));
+    }
+
+    function getScheduleRepeatUnitLabel(repeatType, every) {
+        const type = normalizeScheduleRepeatType(repeatType);
+        normalizeScheduleRepeatEvery(every, type);
+        if (type === 'daily') return '天';
+        if (type === 'workday') return '个工作日';
+        if (type === 'weekly') return '周';
+        if (type === 'monthly') return '个月';
+        if (type === 'yearly') return '年';
+        return '次';
+    }
+
+    function getScheduleRepeatUntil(item) {
+        const base = (item && typeof item === 'object') ? item : {};
+        const raw = (
+            base.repeatUntil
+            ?? base.recurrenceUntil
+            ?? base.repeatEnd
+            ?? (base.repeat && typeof base.repeat === 'object' ? base.repeat.until : '')
+            ?? (base.recurrence && typeof base.recurrence === 'object' ? base.recurrence.until : '')
+        );
+        return normalizeScheduleRepeatUntil(raw);
+    }
+
+    function getScheduleWeekdayLabel(weekday) {
+        const labels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        const idx = Number(weekday);
+        return labels[idx] || '周?';
+    }
+
+    function getScheduleMonthWeekOrdinal(dateLike) {
+        const dt = dateLike instanceof Date ? dateLike : new Date(dateLike);
+        if (!(dt instanceof Date) || Number.isNaN(dt.getTime())) return 1;
+        return Math.max(1, Math.min(5, Math.floor((dt.getDate() - 1) / 7) + 1));
+    }
+
+    function getScheduleMonthlyWeekPatternLabel(dateLike) {
+        const dt = dateLike instanceof Date ? dateLike : new Date(dateLike);
+        if (!(dt instanceof Date) || Number.isNaN(dt.getTime())) return '第1个周一';
+        return `第${getScheduleMonthWeekOrdinal(dt)}个${getScheduleWeekdayLabel(dt.getDay())}`;
+    }
+
+    function buildScheduleMonthlyWeekdayOccurrenceDate(baseDate, deltaMonths) {
+        const base = baseDate instanceof Date ? baseDate : new Date(baseDate);
+        if (!(base instanceof Date) || Number.isNaN(base.getTime())) return null;
+        const months = Number(deltaMonths) || 0;
+        const total = base.getFullYear() * 12 + base.getMonth() + months;
+        const year = Math.floor(total / 12);
+        const month = ((total % 12) + 12) % 12;
+        const weekday = base.getDay();
+        const ordinal = getScheduleMonthWeekOrdinal(base);
+        const firstDay = new Date(year, month, 1);
+        const firstWeekday = firstDay.getDay();
+        const offset = (weekday - firstWeekday + 7) % 7;
+        const day = 1 + offset + (ordinal - 1) * 7;
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        if (day > lastDay) return null;
+        return new Date(
+            year,
+            month,
+            day,
+            base.getHours(),
+            base.getMinutes(),
+            base.getSeconds(),
+            base.getMilliseconds()
+        );
+    }
+
+    function buildScheduleOccurrenceDate(baseDate, deltaDays) {
+        const dt = new Date(baseDate.getTime());
+        dt.setDate(dt.getDate() + (Number(deltaDays) || 0));
+        return dt;
+    }
+
+    function buildScheduleMonthlyOccurrenceDate(baseDate, deltaMonths) {
+        const months = Number(deltaMonths) || 0;
+        const total = baseDate.getFullYear() * 12 + baseDate.getMonth() + months;
+        const year = Math.floor(total / 12);
+        const month = ((total % 12) + 12) % 12;
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const day = Math.min(baseDate.getDate(), lastDay);
+        return new Date(
+            year,
+            month,
+            day,
+            baseDate.getHours(),
+            baseDate.getMinutes(),
+            baseDate.getSeconds(),
+            baseDate.getMilliseconds()
+        );
+    }
+
+    function buildScheduleYearlyOccurrenceDate(baseDate, deltaYears) {
+        const year = baseDate.getFullYear() + (Number(deltaYears) || 0);
+        const month = baseDate.getMonth();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const day = Math.min(baseDate.getDate(), lastDay);
+        return new Date(
+            year,
+            month,
+            day,
+            baseDate.getHours(),
+            baseDate.getMinutes(),
+            baseDate.getSeconds(),
+            baseDate.getMilliseconds()
+        );
+    }
+
+    function collectScheduleOccurrencesInRange(item, rangeStart, rangeEnd, options) {
+        const startMs = toMs(item?.start);
+        const endMs = toMs(item?.end);
+        const rangeStartMs0 = toMs(rangeStart);
+        const rangeEndMs0 = toMs(rangeEnd);
+        if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return [];
+        const rangeStartMs = Number.isFinite(rangeStartMs0) ? rangeStartMs0 : startMs;
+        const rangeEndMs = Number.isFinite(rangeEndMs0) ? rangeEndMs0 : endMs;
+        if (!Number.isFinite(rangeStartMs) || !Number.isFinite(rangeEndMs) || rangeEndMs <= rangeStartMs) return [];
+        const durationMs = endMs - startMs;
+        const baseStart = new Date(startMs);
+        const repeatType = getScheduleRepeatType(item);
+        const repeatEvery = getScheduleRepeatEvery(item, repeatType);
+        const repeatUntil = getScheduleRepeatUntil(item);
+        const repeatMonthlyMode = getScheduleRepeatMonthlyMode(item, repeatType);
+        const limit = Math.max(1, Math.min(Number(options?.limit) || 400, 2400));
+        const out = [];
+        const dayMs = 86400000;
+        const pushOccurrence = (occStart) => {
+            if (!(occStart instanceof Date) || Number.isNaN(occStart.getTime())) return false;
+            if (repeatUntil && formatDateKey(occStart) > repeatUntil) return false;
+            const occStartMs = occStart.getTime();
+            if (occStartMs >= rangeEndMs) return false;
+            const occEndMs = occStartMs + durationMs;
+            if (!overlap(occStartMs, occEndMs, rangeStartMs, rangeEndMs)) return true;
+            out.push({
+                start: new Date(occStartMs),
+                end: new Date(occEndMs),
+                startMs: occStartMs,
+                endMs: occEndMs,
+                isRecurring: repeatType !== 'none',
+            });
+            return true;
+        };
+
+        if (repeatType === 'none') {
+            if (overlap(startMs, endMs, rangeStartMs, rangeEndMs)) {
+                out.push({
+                    start: new Date(startMs),
+                    end: new Date(endMs),
+                    startMs,
+                    endMs,
+                    isRecurring: false,
+                });
+            }
+            return out;
+        }
+
+        if (repeatType === 'daily') {
+            const jumpDays = Math.max(0, Math.floor((rangeStartMs - endMs) / dayMs) - 1);
+            const startStep = Math.max(0, Math.floor(jumpDays / repeatEvery) * repeatEvery);
+            for (let i = startStep; out.length < limit; i += repeatEvery) {
+                if (!pushOccurrence(buildScheduleOccurrenceDate(baseStart, i))) break;
+            }
+            return out;
+        }
+        if (repeatType === 'workday') {
+            const jumpDays = Math.max(0, Math.floor((rangeStartMs - endMs) / dayMs) - Math.max(7, repeatEvery * 7));
+            let workdayOrdinal = 0;
+            for (let i = 0; i < jumpDays; i += 1) {
+                const dt = buildScheduleOccurrenceDate(baseStart, i);
+                const weekday = dt.getDay();
+                if (weekday !== 0 && weekday !== 6) workdayOrdinal += 1;
+            }
+            for (let i = jumpDays, guard = 0; out.length < limit && guard < 5000; i += 1, guard += 1) {
+                const occStart = buildScheduleOccurrenceDate(baseStart, i);
+                const weekday = occStart.getDay();
+                if (weekday === 0 || weekday === 6) {
+                    if (occStart.getTime() >= rangeEndMs) break;
+                    if (repeatUntil && formatDateKey(occStart) > repeatUntil) break;
+                    continue;
+                }
+                const shouldInclude = workdayOrdinal % repeatEvery === 0;
+                if (shouldInclude && !pushOccurrence(occStart)) break;
+                workdayOrdinal += 1;
+            }
+            return out;
+        }
+        if (repeatType === 'weekly') {
+            const jumpWeeks = Math.max(0, Math.floor((rangeStartMs - endMs) / (dayMs * 7)) - 1);
+            const startStep = Math.max(0, Math.floor(jumpWeeks / repeatEvery) * repeatEvery);
+            for (let i = startStep; out.length < limit; i += repeatEvery) {
+                if (!pushOccurrence(buildScheduleOccurrenceDate(baseStart, i * 7))) break;
+            }
+            return out;
+        }
+        if (repeatType === 'monthly') {
+            const rangeStartDate = new Date(rangeStartMs);
+            const baseMonthIndex = baseStart.getFullYear() * 12 + baseStart.getMonth();
+            const rangeMonthIndex = rangeStartDate.getFullYear() * 12 + rangeStartDate.getMonth();
+            const jumpMonths = Math.max(0, rangeMonthIndex - baseMonthIndex - 1);
+            const startStep = Math.max(0, Math.floor(jumpMonths / repeatEvery) * repeatEvery);
+            for (let i = startStep, guard = 0; out.length < limit && guard < 600; i += repeatEvery, guard += 1) {
+                const occStart = repeatMonthlyMode === 'weekday'
+                    ? buildScheduleMonthlyWeekdayOccurrenceDate(baseStart, i)
+                    : buildScheduleMonthlyOccurrenceDate(baseStart, i);
+                if (!occStart) continue;
+                if (!pushOccurrence(occStart)) break;
+            }
+            return out;
+        }
+        if (repeatType === 'yearly') {
+            const rangeStartDate = new Date(rangeStartMs);
+            const jumpYears = Math.max(0, rangeStartDate.getFullYear() - baseStart.getFullYear() - 1);
+            const startStep = Math.max(0, Math.floor(jumpYears / repeatEvery) * repeatEvery);
+            for (let i = startStep, guard = 0; out.length < limit && guard < 200; i += repeatEvery, guard += 1) {
+                if (!pushOccurrence(buildScheduleYearlyOccurrenceDate(baseStart, i))) break;
+            }
+            return out;
+        }
+        return out;
+    }
+
+    function hasScheduleOccurrenceInRange(item, rangeStart, rangeEnd) {
+        return collectScheduleOccurrencesInRange(item, rangeStart, rangeEnd, { limit: 1 }).length > 0;
     }
 
     function setScheduleCache(items, sourceSignature) {
@@ -1921,6 +2250,7 @@
 
     const SCHEDULE_SYNC_DEVICE_ID = getOrCreateStableScheduleDeviceId();
     const SCHEDULE_ALL_DAY_MOBILE_WINDOW_DAYS = 7;
+    const SCHEDULE_MOBILE_WINDOW_DAYS = 30;
     const SCHEDULE_ALL_DAY_SUMMARY_REGISTRY_KEY = '__all_day_summary__';
 
     function sanitizeScheduleNotificationEntries(entries) {
@@ -2118,7 +2448,6 @@
         if (allDay) return [];
         const reminderMode = String(item?.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
         const defaultMode = String(settings?.scheduleReminderDefaultMode || '0').trim() || '0';
-        const now = Date.now();
         const out = [];
         if (reminderMode === 'custom') {
             if (item?.reminderEnabled !== true) return out;
@@ -2137,11 +2466,25 @@
             const allowed = new Set([0, 5, 10, 15, 30, 60]);
             return (Number.isFinite(n) && allowed.has(n)) ? n : 0;
         })();
-        const atMs = startMs - offsetMin * 60000;
-        if (atMs <= now) return out;
-        const entry = buildScheduleNotificationEntry(atMs, item?.id);
-        if (!entry) return out;
-        out.push({ ...entry, allDay: false, startMs, offsetMin });
+        const now = Date.now();
+        const repeatType = getScheduleRepeatType(item);
+        const windowDays = repeatType === 'none'
+            ? SCHEDULE_MOBILE_WINDOW_DAYS
+            : SCHEDULE_ALL_DAY_MOBILE_WINDOW_DAYS;
+        const rangeStart = new Date(Math.max(0, now - offsetMin * 60000));
+        const rangeEnd = new Date(now + windowDays * 86400000 + offsetMin * 60000);
+        const occurrences = collectScheduleOccurrencesInRange(item, rangeStart, rangeEnd, {
+            limit: repeatType === 'none' ? 1 : windowDays + 8,
+        });
+        for (const occurrence of occurrences) {
+            const occurrenceStartMs = Number(occurrence?.startMs);
+            if (!Number.isFinite(occurrenceStartMs)) continue;
+            const atMs = occurrenceStartMs - offsetMin * 60000;
+            if (atMs <= now) continue;
+            const entry = buildScheduleNotificationEntry(atMs, item?.id);
+            if (!entry) continue;
+            out.push({ ...entry, allDay: false, startMs: occurrenceStartMs, offsetMin });
+        }
         return out;
     }
 
@@ -2156,6 +2499,10 @@
             String(item?.reminderMode || '').trim(),
             String(item?.reminderEnabled ?? ''),
             String(item?.reminderOffsetMin ?? ''),
+            String(getScheduleRepeatType(item) || 'none'),
+            String(getScheduleRepeatEvery(item) || '1'),
+            String(getScheduleRepeatUntil(item) || ''),
+            String(getScheduleRepeatMonthlyMode(item) || 'date'),
             String(settings?.scheduleReminderDefaultMode || '').trim(),
             String(settings?.allDayReminderEnabled ? '1' : '0'),
             String(settings?.allDayReminderTime || '').trim(),
@@ -2187,28 +2534,32 @@
         const grouped = new Map();
         for (const item of (Array.isArray(list) ? list : [])) {
             if (!shouldIncludeAllDayScheduleInMobileSummary(item, settings)) continue;
-            const startMs = toMs(item?.start);
-            const endMs = toMs(item?.end);
             const title = String(item?.title || '').trim() || '全天日程';
-            const sDay = new Date(startMs);
-            sDay.setHours(0, 0, 0, 0);
-            const eDay = new Date(endMs);
-            eDay.setHours(0, 0, 0, 0);
-            let dayMs = Math.max(sDay.getTime(), today.getTime());
-            let guard = 0;
-            while (dayMs < eDay.getTime() && dayMs < windowEnd && guard < SCHEDULE_ALL_DAY_MOBILE_WINDOW_DAYS + 2) {
-                const day = new Date(dayMs);
-                const dateKey = formatDateKey(day);
-                const at = new Date(dayMs);
-                at.setHours(allDayTime.hh, allDayTime.mm, 0, 0);
-                const atMs = at.getTime();
-                if (atMs > now) {
-                    const existing = grouped.get(dateKey) || { dateKey, timeKey: `${pad2(at.getHours())}:${pad2(at.getMinutes())}`, atMs, titles: [] };
-                    existing.titles.push(title);
-                    grouped.set(dateKey, existing);
+            const occurrences = collectScheduleOccurrencesInRange(item, today, new Date(windowEnd), {
+                limit: getScheduleRepeatType(item) === 'none' ? 1 : SCHEDULE_ALL_DAY_MOBILE_WINDOW_DAYS + 6,
+            });
+            for (const occurrence of occurrences) {
+                const sDay = occurrence?.start instanceof Date ? new Date(occurrence.start.getTime()) : null;
+                const eDay = occurrence?.end instanceof Date ? new Date(occurrence.end.getTime()) : null;
+                if (!(sDay instanceof Date) || !(eDay instanceof Date)) continue;
+                sDay.setHours(0, 0, 0, 0);
+                eDay.setHours(0, 0, 0, 0);
+                let dayMs = Math.max(sDay.getTime(), today.getTime());
+                let guard = 0;
+                while (dayMs < eDay.getTime() && dayMs < windowEnd && guard < SCHEDULE_ALL_DAY_MOBILE_WINDOW_DAYS + 2) {
+                    const day = new Date(dayMs);
+                    const dateKey = formatDateKey(day);
+                    const at = new Date(dayMs);
+                    at.setHours(allDayTime.hh, allDayTime.mm, 0, 0);
+                    const atMs = at.getTime();
+                    if (atMs > now) {
+                        const existing = grouped.get(dateKey) || { dateKey, timeKey: `${pad2(at.getHours())}:${pad2(at.getMinutes())}`, atMs, titles: [] };
+                        existing.titles.push(title);
+                        grouped.set(dateKey, existing);
+                    }
+                    dayMs += 86400000;
+                    guard += 1;
                 }
-                dayMs += 86400000;
-                guard += 1;
             }
         }
         return Array.from(grouped.values())
@@ -2785,26 +3136,32 @@
                 }
             }
             if (allDay) {
-                const sDay = new Date(startMs);
-                sDay.setHours(0, 0, 0, 0);
-                const eDay = new Date(endMs);
-                eDay.setHours(0, 0, 0, 0);
-                let dayMs = sDay.getTime();
-                const endDayMs = eDay.getTime();
-                while (dayMs < endDayMs && dayMs < windowEnd) {
-                    const dt = new Date(dayMs);
-                    dt.setHours(allDayTime.hh, allDayTime.mm, 0, 0);
-                    const atMs = dt.getTime();
-                    const dateKey = formatDateKey(dt);
-                    const inWindow = (atMs < windowEnd) && (atMs > now);
-                    if (inWindow) {
-                        const fired = loadScheduleReminderFiredSet(dateKey);
-                        const key = buildScheduleReminderKey(id, atMs);
-                        if (!fired.has(key)) {
-                            desired.set(key, { kind: 'schedule', atMs, scheduleId: id, title: String(it.title || '日程').trim() || '日程', allDay: true, dateKey });
+                const occurrences = collectScheduleOccurrencesInRange(it, new Date(now), new Date(windowEnd), {
+                    limit: getScheduleRepeatType(it) === 'none' ? 1 : 8,
+                });
+                for (const occurrence of occurrences) {
+                    const sDay = occurrence?.start instanceof Date ? new Date(occurrence.start.getTime()) : null;
+                    const eDay = occurrence?.end instanceof Date ? new Date(occurrence.end.getTime()) : null;
+                    if (!(sDay instanceof Date) || !(eDay instanceof Date)) continue;
+                    sDay.setHours(0, 0, 0, 0);
+                    eDay.setHours(0, 0, 0, 0);
+                    let dayMs = sDay.getTime();
+                    const endDayMs = eDay.getTime();
+                    while (dayMs < endDayMs && dayMs < windowEnd) {
+                        const dt = new Date(dayMs);
+                        dt.setHours(allDayTime.hh, allDayTime.mm, 0, 0);
+                        const atMs = dt.getTime();
+                        const dateKey = formatDateKey(dt);
+                        const inWindow = (atMs < windowEnd) && (atMs > now);
+                        if (inWindow) {
+                            const fired = loadScheduleReminderFiredSet(dateKey);
+                            const key = buildScheduleReminderKey(id, atMs);
+                            if (!fired.has(key)) {
+                                desired.set(key, { kind: 'schedule', atMs, scheduleId: id, title: String(it.title || '日程').trim() || '日程', allDay: true, dateKey });
+                            }
                         }
+                        dayMs += 86400000;
                     }
-                    dayMs += 86400000;
                 }
                 continue;
             }
@@ -2814,14 +3171,24 @@
                 const allowed = new Set([0, 5, 10, 15, 30, 60]);
                 return (Number.isFinite(n) && allowed.has(n)) ? n : 0;
             })();
-            const atMs = startMs - offsetMin * 60000;
-            if (atMs <= now || atMs >= windowEnd) continue;
-            const dt = new Date(atMs);
-            const dateKey = formatDateKey(dt);
-            const fired = loadScheduleReminderFiredSet(dateKey);
-            const key = buildScheduleReminderKey(id, atMs);
-            if (fired.has(key)) continue;
-            desired.set(key, { kind: 'schedule', atMs, startMs, scheduleId: id, title: String(it.title || '日程').trim() || '日程', allDay: false, dateKey, offsetMin });
+            const occurrences = collectScheduleOccurrencesInRange(
+                it,
+                new Date(Math.max(0, now - offsetMin * 60000)),
+                new Date(windowEnd + offsetMin * 60000),
+                { limit: getScheduleRepeatType(it) === 'none' ? 1 : 8 }
+            );
+            for (const occurrence of occurrences) {
+                const occurrenceStartMs = Number(occurrence?.startMs);
+                if (!Number.isFinite(occurrenceStartMs)) continue;
+                const atMs = occurrenceStartMs - offsetMin * 60000;
+                if (atMs <= now || atMs >= windowEnd) continue;
+                const dt = new Date(atMs);
+                const dateKey = formatDateKey(dt);
+                const fired = loadScheduleReminderFiredSet(dateKey);
+                const key = buildScheduleReminderKey(id, atMs);
+                if (fired.has(key)) continue;
+                desired.set(key, { kind: 'schedule', atMs, startMs: occurrenceStartMs, scheduleId: id, title: String(it.title || '日程').trim() || '日程', allDay: false, dateKey, offsetMin });
+            }
         }
 
         if (settings.taskDateAllDayReminderEnabled && typeof window.tmQueryCalendarTaskDateEvents === 'function') {
@@ -3524,6 +3891,7 @@
                 try { state.sideDay.previewEl.style.display = 'none'; } catch (e) {}
             }
         };
+        try { abort.signal.addEventListener('abort', clearDropPreview, { once: true }); } catch (e) {}
         const rememberLiveDrag = (payload, x, y) => {
             if (!payload?.taskId) {
                 liveDrag = null;
@@ -4204,7 +4572,7 @@
                         applyCnLunarLabels(rootEl);
                     } catch (e0) {}
                     const scheduleTaskTitleMap = await __tmBuildScheduleLinkedTaskTitleMap(schedules).catch(() => new Map());
-                    const b = buildEventsFromSchedule(schedules, curSettings, scheduleTaskTitleMap);
+                    const b = buildEventsFromSchedule(schedules, info.start, info.end, curSettings, scheduleTaskTitleMap);
                     const c = buildEventsFromTaskDates(taskDates, curSettings);
                     const d = curSettings.showCnHoliday ? buildCnHolidayEvents(cnHolidayDays, info.start, info.end, 'timeGridDay', curSettings) : [];
                     const e = buildEventsFromReminders(reminders, info.start, info.end, curSettings);
@@ -4238,11 +4606,13 @@
                 }
                 if (source === 'schedule') {
                     try {
+                        const baseStart = String(ext.__tmScheduleBaseStart || '').trim();
+                        const baseEnd = String(ext.__tmScheduleBaseEnd || '').trim();
                         openScheduleModal({
                             id: String(ext.__tmScheduleId || arg?.event?.id || ''),
                             title: String(arg?.event?.title || ''),
-                            start: arg?.event?.start,
-                            end: arg?.event?.end,
+                            start: baseStart ? new Date(baseStart) : arg?.event?.start,
+                            end: baseEnd ? new Date(baseEnd) : arg?.event?.end,
                             allDay: arg?.event?.allDay === true,
                             color: String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'),
                             calendarId: String(ext.calendarId || 'default'),
@@ -4250,6 +4620,10 @@
                             reminderMode: String(ext.__tmReminderMode || ''),
                             reminderEnabled: ext.__tmReminderEnabled === true,
                             reminderOffsetMin: Number(ext.__tmReminderOffsetMin),
+                            repeatType: String(ext.__tmRepeatType || ''),
+                            repeatEvery: Number(ext.__tmRepeatEvery),
+                            repeatUntil: String(ext.__tmRepeatUntil || ''),
+                            repeatMonthlyMode: String(ext.__tmRepeatMonthlyMode || ''),
                             notificationSchedules: sanitizeScheduleNotificationSchedules(ext.__tmNotificationSchedules),
                         });
                     } catch (e2) {
@@ -4261,6 +4635,11 @@
                 const ext = arg?.event?.extendedProps || {};
                 const source = String(ext.__tmSource || '').trim();
                 if (source === 'schedule') {
+                    if (getScheduleRepeatType({ repeatType: ext.__tmRepeatType }) !== 'none') {
+                        toast('⚠ 循环日程请在编辑窗口中修改', 'warning');
+                        try { arg.revert(); } catch (e) {}
+                        return;
+                    }
                     const id = String(ext.__tmScheduleId || arg?.event?.id || '').trim();
                     const start = arg?.event?.start;
                     const end0 = arg?.event?.end;
@@ -4322,6 +4701,11 @@
                 const ext = arg?.event?.extendedProps || {};
                 const source = String(ext.__tmSource || '').trim();
                 if (source !== 'schedule') {
+                    try { arg.revert(); } catch (e) {}
+                    return;
+                }
+                if (getScheduleRepeatType({ repeatType: ext.__tmRepeatType }) !== 'none') {
+                    toast('⚠ 循环日程请在编辑窗口中修改', 'warning');
                     try { arg.revert(); } catch (e) {}
                     return;
                 }
@@ -4516,15 +4900,8 @@
     }
 
     async function loadScheduleForRange(rangeStart, rangeEnd) {
-        const startMs = toMs(rangeStart);
-        const endMs = toMs(rangeEnd);
         const list = await loadScheduleAll();
-        return list.filter((it) => {
-            const s = toMs(it?.start);
-            const e = toMs(it?.end);
-            if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) return false;
-            return overlap(s, e, startMs, endMs);
-        });
+        return list.filter((it) => hasScheduleOccurrenceInRange(it, rangeStart, rangeEnd));
     }
 
     function __tmNormalizeTaskTitleFromRow(row) {
@@ -4610,25 +4987,27 @@
         return out;
     }
 
-    function buildEventsFromSchedule(items, settings, linkedTaskTitleMap) {
+    function buildEventsFromSchedule(items, rangeStart, rangeEnd, settings, linkedTaskTitleMap) {
         if (!settings.showSchedule) return [];
         const defs = getCalendarDefs(settings);
         const defMap = new Map(defs.map((d) => [d.id, d]));
         const registry = shouldPreferDeviceNotificationBackend() ? loadScheduleMobileRegistry() : null;
-        return (Array.isArray(items) ? items : []).map((it) => {
+        const out = [];
+        for (const it of (Array.isArray(items) ? items : [])) {
             const rs = toMs(it?.start);
             const re = toMs(it?.end);
+            if (!Number.isFinite(rs) || !Number.isFinite(re) || re <= rs) continue;
             const start = new Date(rs);
             const end = new Date(re);
             const taskId = String(it?.taskId || it?.task_id || it?.linkedTaskId || it?.linked_task_id || '').trim();
             const linkedTitle = (linkedTaskTitleMap instanceof Map && taskId) ? String(linkedTaskTitleMap.get(taskId) || '').trim() : '';
             const titleBase = linkedTitle || (String(it?.title || '').trim() || '日程');
             const calendarId = String(it?.calendarId || 'default');
-            if (!isCalendarEnabled(calendarId, settings)) return null;
+            if (!isCalendarEnabled(calendarId, settings)) continue;
             const calColor = defMap.get(calendarId)?.color || '#0078d4';
             const rawColor = String(it?.color || '').trim();
             const color = rawColor || settings.scheduleColor || calColor;
-            const allDay = (it?.allDay === true) || isAllDayRange(start, end);
+            const allDayBase = (it?.allDay === true) || isAllDayRange(start, end);
             const reminderMode = String(it?.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
             const reminderEnabled = reminderMode === 'custom' ? (it?.reminderEnabled === true) : null;
             const reminderOffsetMin = (() => {
@@ -4637,28 +5016,52 @@
                 const allowed = new Set([0, 5, 10, 15, 30, 60]);
                 return (Number.isFinite(n) && allowed.has(n)) ? n : 0;
             })();
-            return {
-                id: String(it?.id || uuid()),
-                title: titleBase,
-                start,
-                end,
-                allDay,
-                backgroundColor: color,
-                borderColor: color,
-                __tmRank: 1,
-                extendedProps: {
-                    __tmSource: 'schedule',
-                    __tmScheduleId: String(it?.id || ''),
-                    __tmTaskId: taskId,
+            const repeatType = getScheduleRepeatType(it);
+            const repeatEvery = getScheduleRepeatEvery(it, repeatType);
+            const repeatUntil = getScheduleRepeatUntil(it);
+            const repeatMonthlyMode = getScheduleRepeatMonthlyMode(it, repeatType);
+            const occurrences = collectScheduleOccurrencesInRange(it, rangeStart, rangeEnd, {
+                limit: String(repeatType || 'none') === 'none' ? 1 : 300,
+            });
+            for (const occurrence of occurrences) {
+                const occStart = occurrence?.start instanceof Date ? occurrence.start : start;
+                const occEnd = occurrence?.end instanceof Date ? occurrence.end : end;
+                const allDay = allDayBase || isAllDayRange(occStart, occEnd);
+                const occStartMs = Number(occurrence?.startMs || occStart.getTime());
+                out.push({
+                    id: repeatType === 'none' ? String(it?.id || uuid()) : `${String(it?.id || uuid())}:${occStartMs}`,
+                    title: titleBase,
+                    start: occStart,
+                    end: occEnd,
+                    allDay,
+                    editable: repeatType === 'none',
+                    startEditable: repeatType === 'none',
+                    durationEditable: repeatType === 'none',
+                    backgroundColor: color,
+                    borderColor: color,
                     __tmRank: 1,
-                    __tmReminderMode: reminderMode,
-                    __tmReminderEnabled: reminderEnabled,
-                    __tmReminderOffsetMin: reminderOffsetMin,
-                    __tmNotificationSchedules: buildScheduleNotificationSchedulesView(it, registry),
-                    calendarId,
-                },
-            };
-        }).filter(Boolean);
+                    extendedProps: {
+                        __tmSource: 'schedule',
+                        __tmScheduleId: String(it?.id || ''),
+                        __tmTaskId: taskId,
+                        __tmRank: 1,
+                        __tmReminderMode: reminderMode,
+                        __tmReminderEnabled: reminderEnabled,
+                        __tmReminderOffsetMin: reminderOffsetMin,
+                        __tmNotificationSchedules: buildScheduleNotificationSchedulesView(it, registry),
+                        __tmRepeatType: repeatType,
+                        __tmRepeatEvery: repeatEvery,
+                        __tmRepeatUntil: repeatUntil,
+                        __tmRepeatMonthlyMode: repeatMonthlyMode,
+                        __tmScheduleBaseStart: safeISO(start),
+                        __tmScheduleBaseEnd: safeISO(end),
+                        __tmOccurrenceStartMs: occStartMs,
+                        calendarId,
+                    },
+                });
+            }
+        }
+        return out;
     }
 
     function buildEventsFromTaskDates(items, settings) {
@@ -5875,6 +6278,10 @@
             if (!reminderEnabled0) return 'off';
             return String(reminderOffset0);
         })();
+        const repeatType0 = getScheduleRepeatType(init);
+        const repeatEvery0 = getScheduleRepeatEvery(init, repeatType0);
+        const repeatUntil0 = getScheduleRepeatUntil(init);
+        const repeatMonthlyMode0 = getScheduleRepeatMonthlyMode(init, repeatType0);
         const start = init.start instanceof Date ? init.start : null;
         const end = init.end instanceof Date ? init.end : null;
         const title0 = String(init.title || '').trim();
@@ -5929,6 +6336,34 @@
                     </select>
                 </div>
                 <div class="tm-calendar-edit-row">
+                    <div class="tm-calendar-edit-label">循环</div>
+                    <select class="tm-calendar-edit-input" data-tm-cal-field="repeatType">
+                        <option value="none" ${repeatType0 === 'none' ? 'selected' : ''}>不循环</option>
+                        <option value="daily" ${repeatType0 === 'daily' ? 'selected' : ''}>每天</option>
+                        <option value="workday" ${repeatType0 === 'workday' ? 'selected' : ''}>工作日</option>
+                        <option value="weekly" ${repeatType0 === 'weekly' ? 'selected' : ''}>每周</option>
+                        <option value="monthly" ${repeatType0 === 'monthly' ? 'selected' : ''}>每月</option>
+                        <option value="yearly" ${repeatType0 === 'yearly' ? 'selected' : ''}>每年</option>
+                    </select>
+                </div>
+                <div class="tm-calendar-edit-row">
+                    <div class="tm-calendar-edit-label">间隔</div>
+                    <input class="tm-calendar-edit-input" type="number" min="1" step="1" value="${esc(String(repeatEvery0 || 1))}" data-tm-cal-field="repeatEvery" style="width:96px;flex:none;">
+                    <div class="tm-calendar-edit-value" data-tm-cal-field="repeatEveryUnit" style="opacity:.85;">${esc(getScheduleRepeatUnitLabel(repeatType0, repeatEvery0))}</div>
+                </div>
+                <div class="tm-calendar-edit-row">
+                    <div class="tm-calendar-edit-label">月规则</div>
+                    <select class="tm-calendar-edit-input" data-tm-cal-field="repeatMonthlyMode" style="width:140px;flex:none;">
+                        <option value="date" ${repeatMonthlyMode0 !== 'weekday' ? 'selected' : ''}>按日期</option>
+                        <option value="weekday" ${repeatMonthlyMode0 === 'weekday' ? 'selected' : ''}>按星期</option>
+                    </select>
+                    <div class="tm-calendar-edit-value" data-tm-cal-field="repeatMonthlySummary" style="opacity:.85;">${esc(start ? `每月${getScheduleMonthlyWeekPatternLabel(start)}` : '根据开始时间自动计算')}</div>
+                </div>
+                <div class="tm-calendar-edit-row">
+                    <div class="tm-calendar-edit-label">循环截止</div>
+                    <input class="tm-calendar-edit-input" type="date" value="${esc(repeatUntil0)}" data-tm-cal-field="repeatUntil">
+                </div>
+                <div class="tm-calendar-edit-row">
                     <div class="tm-calendar-edit-label">当前设备预约</div>
                     <div class="tm-calendar-edit-value" data-tm-cal-field="deviceScheduleSummary" style="flex:1;line-height:1.4;opacity:.85;">${esc(deviceSummary0)}</div>
                     ${isEdit ? `<button class="tm-btn tm-btn-secondary" type="button" data-tm-cal-action="viewDeviceSchedule" style="margin-left:8px;">查看</button>` : ''}
@@ -5958,6 +6393,11 @@
             const el = modal.querySelector(`[data-tm-cal-field="${field}"]`);
             return el ? String(el.value || '').trim() : '';
         };
+        const getStartDraft = () => {
+            const raw = getInputValue('start');
+            const dt = raw ? new Date(raw) : start;
+            return (dt instanceof Date && !Number.isNaN(dt.getTime())) ? dt : start;
+        };
         const syncColorToCalendar = () => {
             const calendarId = getInputValue('calendarId') || calendarId0 || 'default';
             const colorEl = modal.querySelector('[data-tm-cal-field="color"]');
@@ -5967,12 +6407,92 @@
             const nextColor = String(def?.color || '#0078d4').trim() || '#0078d4';
             colorEl.value = nextColor;
         };
+        const syncMonthlyModeSummary = () => {
+            const monthlyModeEl = modal.querySelector('[data-tm-cal-field="repeatMonthlyMode"]');
+            const summaryEl = modal.querySelector('[data-tm-cal-field="repeatMonthlySummary"]');
+            if (!(monthlyModeEl instanceof HTMLSelectElement) || !summaryEl) return;
+            const repeatType = normalizeScheduleRepeatType(getInputValue('repeatType') || repeatType0);
+            const startDraft = getStartDraft();
+            const isMonthly = repeatType === 'monthly';
+            monthlyModeEl.disabled = !isMonthly;
+            monthlyModeEl.style.opacity = isMonthly ? '1' : '0.55';
+            if (!isMonthly) {
+                summaryEl.textContent = '仅每月循环时生效';
+                return;
+            }
+            const monthlyMode = normalizeScheduleRepeatMonthlyMode(monthlyModeEl.value || repeatMonthlyMode0, repeatType);
+            if (!(startDraft instanceof Date) || Number.isNaN(startDraft.getTime())) {
+                summaryEl.textContent = monthlyMode === 'weekday' ? '根据开始时间计算第 N 个星期几' : '根据开始时间确定每月日期';
+                return;
+            }
+            summaryEl.textContent = monthlyMode === 'weekday'
+                ? `每月${getScheduleMonthlyWeekPatternLabel(startDraft)}`
+                : `每月${startDraft.getDate()}日`;
+        };
         const calendarSelEl = modal.querySelector('[data-tm-cal-field="calendarId"]');
         if (calendarSelEl) {
             calendarSelEl.addEventListener('change', () => {
                 syncColorToCalendar();
             }, { signal: abort.signal });
         }
+        const syncRepeatRuleState = () => {
+            const repeatType = normalizeScheduleRepeatType(getInputValue('repeatType') || repeatType0);
+            const repeatEveryEl = modal.querySelector('[data-tm-cal-field="repeatEvery"]');
+            const repeatEveryUnitEl = modal.querySelector('[data-tm-cal-field="repeatEveryUnit"]');
+            const untilEl = modal.querySelector('[data-tm-cal-field="repeatUntil"]');
+            if (!(untilEl instanceof HTMLInputElement)) return;
+            const disabled = repeatType === 'none';
+            if (repeatEveryEl instanceof HTMLInputElement) {
+                repeatEveryEl.disabled = disabled;
+                repeatEveryEl.style.opacity = disabled ? '0.55' : '1';
+                if (!repeatEveryEl.value || Number(repeatEveryEl.value) <= 0) repeatEveryEl.value = String(repeatEvery0 || 1);
+            }
+            if (repeatEveryUnitEl) {
+                repeatEveryUnitEl.textContent = disabled
+                    ? '关闭循环时忽略'
+                    : `每 ${getScheduleRepeatUnitLabel(repeatType, getInputValue('repeatEvery') || repeatEvery0)}`;
+            }
+            syncMonthlyModeSummary();
+            untilEl.disabled = disabled;
+            untilEl.style.opacity = disabled ? '0.55' : '1';
+            if (disabled) untilEl.value = '';
+        };
+        const repeatTypeEl = modal.querySelector('[data-tm-cal-field="repeatType"]');
+        if (repeatTypeEl) {
+            repeatTypeEl.addEventListener('change', () => {
+                syncRepeatRuleState();
+            }, { signal: abort.signal });
+        }
+        const repeatEveryEl = modal.querySelector('[data-tm-cal-field="repeatEvery"]');
+        if (repeatEveryEl) {
+            repeatEveryEl.addEventListener('input', () => {
+                syncRepeatRuleState();
+            }, { signal: abort.signal });
+        }
+        const repeatMonthlyModeEl = modal.querySelector('[data-tm-cal-field="repeatMonthlyMode"]');
+        if (repeatMonthlyModeEl) {
+            repeatMonthlyModeEl.addEventListener('change', () => {
+                syncMonthlyModeSummary();
+            }, { signal: abort.signal });
+        }
+        const startEl = modal.querySelector('[data-tm-cal-field="start"]');
+        if (startEl) {
+            startEl.addEventListener('input', () => {
+                syncMonthlyModeSummary();
+            }, { signal: abort.signal });
+        }
+        syncRepeatRuleState();
+        const readRepeatRuleFromModal = (nextStart) => {
+            const repeatType = normalizeScheduleRepeatType(getInputValue('repeatType') || repeatType0);
+            const repeatEvery = normalizeScheduleRepeatEvery(getInputValue('repeatEvery') || repeatEvery0, repeatType);
+            const repeatUntil = repeatType === 'none' ? '' : normalizeScheduleRepeatUntil(getInputValue('repeatUntil'));
+            const repeatMonthlyMode = normalizeScheduleRepeatMonthlyMode(getInputValue('repeatMonthlyMode') || repeatMonthlyMode0, repeatType);
+            const startKey = nextStart instanceof Date && !Number.isNaN(nextStart.getTime()) ? formatDateKey(nextStart) : '';
+            if (repeatType !== 'none' && repeatUntil && startKey && repeatUntil < startKey) {
+                throw new Error('循环截止不能早于开始日期');
+            }
+            return { repeatType, repeatEvery, repeatUntil, repeatMonthlyMode };
+        };
 
         modal.addEventListener('click', async (e) => {
             const btn = findActionTarget(e?.target, 'data-tm-cal-action');
@@ -6003,6 +6523,9 @@
                     && !Number.isNaN(nextEnd.getTime())
                     && nextEnd.getTime() > nextStart.getTime()
                 );
+                const repeatDraft = canUseInputTime
+                    ? readRepeatRuleFromModal(nextStart)
+                    : { repeatType: repeatType0, repeatEvery: repeatEvery0, repeatUntil: repeatUntil0, repeatMonthlyMode: repeatMonthlyMode0 };
                 const currentViewItem = {
                     ...(init && typeof init === 'object' ? init : {}),
                     id: scheduleId,
@@ -6013,6 +6536,10 @@
                     color,
                     calendarId,
                     taskId: String(taskId0 || init?.taskId || '').trim(),
+                    repeatType: repeatDraft.repeatType,
+                    repeatEvery: repeatDraft.repeatEvery,
+                    repeatUntil: repeatDraft.repeatUntil,
+                    repeatMonthlyMode: repeatDraft.repeatMonthlyMode,
                     notificationSchedules: sanitizeScheduleNotificationSchedules(
                         init?.notificationSchedules
                     ),
@@ -6047,6 +6574,7 @@
                             if (Number.isNaN(nextStart2.getTime()) || Number.isNaN(nextEnd2.getTime()) || nextEnd2.getTime() <= nextStart2.getTime()) {
                                 throw new Error('时间不合法');
                             }
+                            const repeatDraft2 = readRepeatRuleFromModal(nextStart2);
                             const list = await loadScheduleAll();
                             const nextList = cloneScheduleList(list);
                             const idx = nextList.findIndex((x) => String(x?.id || '') === scheduleId);
@@ -6066,6 +6594,10 @@
                                 reminderMode: reminderModeNow,
                                 reminderEnabled: reminderEnabledNow,
                                 reminderOffsetMin: (isAllDayRange(nextStart2, nextEnd2) || (initAllDay && isAllDayRange(nextStart2, nextEnd2))) ? null : reminderOffsetMinNow,
+                                repeatType: repeatDraft2.repeatType,
+                                repeatEvery: repeatDraft2.repeatEvery,
+                                repeatUntil: repeatDraft2.repeatUntil,
+                                repeatMonthlyMode: repeatDraft2.repeatMonthlyMode,
                                 notificationSchedules: sanitizeScheduleNotificationSchedules(prevItem?.notificationSchedules),
                             };
                             nextList[idx] = {
@@ -6121,6 +6653,13 @@
                     toast('⚠ 时间不合法', 'warning');
                     return;
                 }
+                let repeatDraft;
+                try {
+                    repeatDraft = readRepeatRuleFromModal(nextStart);
+                } catch (err) {
+                    toast(`⚠ ${String(err?.message || err || '')}`, 'warning');
+                    return;
+                }
                 const allDay = isAllDayRange(nextStart, nextEnd) || (initAllDay && isAllDayRange(nextStart, nextEnd));
                 const id = scheduleId || uuid();
                 const list = await loadScheduleAll();
@@ -6141,6 +6680,10 @@
                     reminderMode,
                     reminderEnabled,
                     reminderOffsetMin: allDay ? null : reminderOffsetMin,
+                    repeatType: repeatDraft.repeatType,
+                    repeatEvery: repeatDraft.repeatEvery,
+                    repeatUntil: repeatDraft.repeatUntil,
+                    repeatMonthlyMode: repeatDraft.repeatMonthlyMode,
                 };
                 if (idx >= 0) list[idx] = item;
                 else list.push(item);
@@ -6675,7 +7218,7 @@
                         }
                     }
                     const scheduleTaskTitleMap = await __tmBuildScheduleLinkedTaskTitleMap(schedules).catch(() => new Map());
-                    const b = buildEventsFromSchedule(schedules, settings, scheduleTaskTitleMap);
+                    const b = buildEventsFromSchedule(schedules, info.start, info.end, settings, scheduleTaskTitleMap);
                     const c = buildEventsFromTaskDates(taskDates, settings);
                     const d = settings.showCnHoliday ? buildCnHolidayEvents(cnHolidayDays, info.start, info.end, viewType, settings) : [];
                     const e = buildEventsFromReminders(reminders, info.start, info.end, settings);
@@ -6738,15 +7281,25 @@
                 }
                 if (source === 'schedule') {
                     try {
+                        const baseStart = String(ext.__tmScheduleBaseStart || '').trim();
+                        const baseEnd = String(ext.__tmScheduleBaseEnd || '').trim();
                         openScheduleModal({
                             id: String(ext.__tmScheduleId || arg?.event?.id || ''),
                             title: String(arg?.event?.title || ''),
-                            start: arg?.event?.start,
-                            end: arg?.event?.end,
+                            start: baseStart ? new Date(baseStart) : arg?.event?.start,
+                            end: baseEnd ? new Date(baseEnd) : arg?.event?.end,
                             allDay: arg?.event?.allDay === true,
                             color: String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'),
                             calendarId: String(ext.calendarId || 'default'),
                             taskId: String(ext.__tmTaskId || ''),
+                            reminderMode: String(ext.__tmReminderMode || ''),
+                            reminderEnabled: ext.__tmReminderEnabled === true,
+                            reminderOffsetMin: Number(ext.__tmReminderOffsetMin),
+                            repeatType: String(ext.__tmRepeatType || ''),
+                            repeatEvery: Number(ext.__tmRepeatEvery),
+                            repeatUntil: String(ext.__tmRepeatUntil || ''),
+                            repeatMonthlyMode: String(ext.__tmRepeatMonthlyMode || ''),
+                            notificationSchedules: sanitizeScheduleNotificationSchedules(ext.__tmNotificationSchedules),
                         });
                     } catch (e2) {
                         try { toast(`❌ 打开编辑窗失败：${String(e2?.message || e2 || '')}`, 'error'); } catch (e3) {}
@@ -6777,6 +7330,11 @@
                 const ext = arg?.event?.extendedProps || {};
                 const source = String(ext.__tmSource || '').trim();
                 if (source === 'schedule') {
+                    if (getScheduleRepeatType({ repeatType: ext.__tmRepeatType }) !== 'none') {
+                        toast('⚠ 循环日程请在编辑窗口中修改', 'warning');
+                        try { arg.revert(); } catch (e) {}
+                        return;
+                    }
                     const id = String(ext.__tmScheduleId || arg?.event?.id || '').trim();
                     const start = arg?.event?.start;
                     const end = arg?.event?.end;
@@ -6858,6 +7416,11 @@
                 const ext = arg?.event?.extendedProps || {};
                 const source = String(ext.__tmSource || '').trim();
                 if (source === 'schedule') {
+                    if (getScheduleRepeatType({ repeatType: ext.__tmRepeatType }) !== 'none') {
+                        toast('⚠ 循环日程请在编辑窗口中修改', 'warning');
+                        try { arg.revert(); } catch (e) {}
+                        return;
+                    }
                     const id = String(ext.__tmScheduleId || arg?.event?.id || '').trim();
                     const start = arg?.event?.start;
                     const end = arg?.event?.end;
@@ -7260,11 +7823,13 @@
                 }
                 if (source === 'schedule') {
                     try {
+                        const baseStart = String(ext.__tmScheduleBaseStart || '').trim();
+                        const baseEnd = String(ext.__tmScheduleBaseEnd || '').trim();
                         openScheduleModal({
                             id: String(ext.__tmScheduleId || api?.id || ''),
                             title: String(api?.title || ''),
-                            start: api?.start,
-                            end: api?.end,
+                            start: baseStart ? new Date(baseStart) : api?.start,
+                            end: baseEnd ? new Date(baseEnd) : api?.end,
                             allDay: api?.allDay === true,
                             color: String(api?.backgroundColor || api?.borderColor || '#0078d4'),
                             calendarId: String(ext.calendarId || 'default'),
@@ -7272,6 +7837,10 @@
                             reminderMode: String(ext.__tmReminderMode || ''),
                             reminderEnabled: ext.__tmReminderEnabled === true,
                             reminderOffsetMin: Number(ext.__tmReminderOffsetMin),
+                            repeatType: String(ext.__tmRepeatType || ''),
+                            repeatEvery: Number(ext.__tmRepeatEvery),
+                            repeatUntil: String(ext.__tmRepeatUntil || ''),
+                            repeatMonthlyMode: String(ext.__tmRepeatMonthlyMode || ''),
                             notificationSchedules: sanitizeScheduleNotificationSchedules(ext.__tmNotificationSchedules),
                         });
                     } catch (e2) {
@@ -7888,6 +8457,10 @@
                 reminderMode: String(item.reminderMode || ''),
                 reminderEnabled: item.reminderEnabled,
                 reminderOffsetMin: item.reminderOffsetMin,
+                repeatType: getScheduleRepeatType(item),
+                repeatEvery: getScheduleRepeatEvery(item),
+                repeatUntil: getScheduleRepeatUntil(item),
+                repeatMonthlyMode: getScheduleRepeatMonthlyMode(item),
                 notificationSchedules: buildScheduleNotificationSchedulesView(item),
             });
             return true;

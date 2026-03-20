@@ -1632,9 +1632,6 @@
  .tm-ai-sidebar__task-row span{flex:1;min-width:0;word-break:break-word;}
  .tm-ai-sidebar__empty{padding:14px 10px;border:1px dashed var(--b3-theme-surface-light);border-radius:10px;font-size:12px;opacity:.72;}
 .tm-ai-sidebar--mobile .tm-ai-sidebar__head{padding-top:8px;}
-.tm-ai-sidebar--mobile .tm-ai-sidebar__head{flex-wrap:wrap;align-items:flex-start;}
-.tm-ai-sidebar--mobile .tm-ai-sidebar__head-title{order:3;flex:1 1 100%;max-width:none;}
-.tm-ai-sidebar--mobile .tm-ai-sidebar__head-actions{width:100%;justify-content:flex-end;}
 .tm-ai-sidebar--mobile .tm-ai-sidebar__grid,
 .tm-ai-sidebar--mobile .tm-ai-sidebar__grid--planner{grid-template-columns:repeat(2,minmax(0,1fr));}
 @media (max-width: 360px){
@@ -3817,7 +3814,7 @@
                         <input class="tm-ai-sidebar__title-input" data-ai-sidebar-field="title" value="${esc(session.title)}" placeholder="会话标题">
                     </div>
                     <div class="tm-ai-sidebar__head-actions">
-                        <button class="tm-btn tm-btn-info" data-ai-sidebar-action="toggle-history">${aiRuntime.historyOpen ? '隐藏会话' : '会话记录'}</button>
+                        <button class="tm-btn tm-btn-info" data-ai-sidebar-action="toggle-history">${aiRuntime.historyOpen ? '隐藏' : '会话'}</button>
                         <button class="tm-btn tm-btn-info" data-ai-sidebar-action="new-conversation">新建</button>
                         <button class="tm-btn tm-btn-gray" data-ai-sidebar-action="close-panel">${aiRuntime.mobile ? '关闭' : '收起'}</button>
                     </div>
@@ -4511,11 +4508,11 @@
                 confidence: String(suggestion?.confidence || '').trim(),
                 reason: String(suggestion?.reason || '未识别到明确日期').trim(),
             };
-        }).filter((it) => it.taskId);
+        }).filter((it) => it.taskId && it.suggestedDate);
         const modal = setModal(title, `
             <div class="tm-ai-box">
                 <h4>批量预览</h4>
-                <div class="tm-ai-hint">只会写入勾选任务的 completionTime；未识别项默认不勾选。</div>
+                <div class="tm-ai-hint">这里只展示识别到明确日期的任务；只会写入勾选任务的 completionTime。</div>
             </div>
             <div class="tm-ai-box">
                 <div class="tm-ai-list">
@@ -4528,7 +4525,7 @@
                                 <div class="tm-ai-hint">置信：${esc(item.confidence || '无')}；${esc(item.reason)}</div>
                             </div>
                         </label>
-                    `).join('') || `<div class="tm-ai-hint">没有可预览的任务。</div>`}
+                    `).join('') || `<div class="tm-ai-hint">没有识别到明确日期的任务。</div>`}
                 </div>
             </div>
             <div class="tm-ai-actions">
