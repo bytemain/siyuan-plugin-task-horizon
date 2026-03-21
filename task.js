@@ -11842,7 +11842,19 @@ async function __tmRefreshAfterWake(reason) {
 
         const grid = document.createElement('div');
         grid.className = 'tm-color-grid-10';
-        swatches.forEach((c) => {
+        const pickColorInput = document.createElement('input');
+        pickColorInput.type = 'color';
+        pickColorInput.value = __tmNormalizeLiteralHexColor(current) || __tmNormalizeLiteralHexColor(defaultColor) || '#f44336';
+        pickColorInput.style.cssText = 'position:absolute;inset:0;opacity:0;cursor:pointer;border:none;padding:0;';
+        pickColorInput.oninput = () => {
+            const norm = __tmNormalizeHexColor(pickColorInput.value, '');
+            if (!norm) return;
+            current = norm;
+            hexInput.value = __tmFormatColorDisplayValue(current);
+            hexInput.style.borderColor = 'var(--tm-input-border)';
+            previewBox.style.background = current;
+        };
+        swatches.forEach((c, index) => {
             const norm = __tmNormalizeHexColor(c, '');
             if (!norm) return;
             const btn = document.createElement('button');
@@ -11850,10 +11862,19 @@ async function __tmRefreshAfterWake(reason) {
             btn.style.background = norm;
             btn.onclick = () => {
                 current = norm;
+                pickColorInput.value = __tmNormalizeLiteralHexColor(current) || pickColorInput.value;
                 hexInput.value = __tmFormatColorDisplayValue(current);
                 hexInput.style.borderColor = 'var(--tm-input-border)';
                 previewBox.style.background = current;
             };
+            if (index === swatches.length - 1) {
+                btn.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;background:conic-gradient(from 180deg,#ff4d4f,#ffa940,#fadb14,#73d13d,#36cfc9,#40a9ff,#9254de,#ff4d4f);overflow:hidden;';
+                const inner = document.createElement('span');
+                inner.textContent = 'pick';
+                inner.style.cssText = 'padding:2px 5px;border-radius:999px;background:rgba(255,255,255,0.92);color:#111827;font-size:10px;font-weight:700;line-height:1;text-transform:uppercase;pointer-events:none;box-shadow:0 1px 2px rgba(0,0,0,0.12);';
+                btn.appendChild(inner);
+                btn.appendChild(pickColorInput);
+            }
             grid.appendChild(btn);
         });
         dialog.appendChild(grid);
