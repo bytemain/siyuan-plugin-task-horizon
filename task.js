@@ -30946,13 +30946,20 @@ async function __tmRefreshAfterWake(reason) {
 
         overlay.innerHTML = __tmBuildTaskDetailInnerHtml(task, { embedded: false });
 
-        const close = () => { try { overlay.remove(); } catch (e) {} };
+        const cleanupKey = () => {
+            try { document.removeEventListener('keydown', onKey, true); } catch (e) {}
+        };
+        const close = () => { cleanupKey(); try { overlay.remove(); } catch (e) {} };
+        function onKey(e) {
+            if (e.key === 'Escape') close();
+        }
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) close();
         });
         __tmBindTaskDetailEditor(overlay, tid, { embedded: false, onClose: close });
 
         document.body.appendChild(overlay);
+        document.addEventListener('keydown', onKey, true);
         return true;
     };
 
@@ -34123,6 +34130,13 @@ async function __tmRefreshAfterWake(reason) {
         `;
 
         document.body.appendChild(state.settingsModal);
+        if (state._settingsKeyHandler) {
+            try { document.removeEventListener('keydown', state._settingsKeyHandler, true); } catch (e) {}
+        }
+        state._settingsKeyHandler = function(e) {
+            if (e.key === 'Escape') closeSettings();
+        };
+        document.addEventListener('keydown', state._settingsKeyHandler, true);
         try {
             const settingsSidebar = state.settingsModal.querySelector('.tm-settings-sidebar');
             const settingsTabs = state.settingsModal.querySelector('.tm-settings-tabs');
@@ -37070,6 +37084,10 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.closeSettings = function() {
+        if (state._settingsKeyHandler) {
+            try { document.removeEventListener('keydown', state._settingsKeyHandler, true); } catch (e) {}
+            state._settingsKeyHandler = null;
+        }
         if (state.settingsModal) {
             state.settingsModal.remove();
             state.settingsModal = null;
