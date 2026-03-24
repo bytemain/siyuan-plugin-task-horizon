@@ -2091,8 +2091,9 @@
                 });
                 return true;
             }
-            const hostWidth = Math.ceil(host.getBoundingClientRect().width || host.offsetWidth || 0);
-            const hostHeight = Math.ceil(host.getBoundingClientRect().height || host.offsetHeight || 20);
+            const hostMeasureRect = host.getBoundingClientRect();
+            const hostWidth = Math.ceil(hostMeasureRect.width || host.offsetWidth || 0);
+            const hostHeight = Math.ceil(hostMeasureRect.height || host.offsetHeight || 20);
             const layerWidth = Math.max(0, Math.round(layer.clientWidth || bounds?.width || layerRect.width || 0));
             const minLeft = 8;
             const maxLeft = Math.max(minLeft, layerWidth - hostWidth - 8);
@@ -2116,8 +2117,9 @@
             host.style.left = leftPx;
             host.style.top = topPx;
             host.style.maxWidth = maxWidthPx;
-            const actualHostWidth = Math.ceil(host.getBoundingClientRect().width || host.offsetWidth || 0);
-            const actualHostHeight = Math.ceil(host.getBoundingClientRect().height || host.offsetHeight || 20);
+            const actualHostRect = host.getBoundingClientRect();
+            const actualHostWidth = Math.ceil(actualHostRect.width || host.offsetWidth || 0);
+            const actualHostHeight = Math.ceil(actualHostRect.height || host.offsetHeight || 20);
             const candidateRect = {
                 left: finalLeft,
                 top: finalTop,
@@ -2173,7 +2175,7 @@
             if (!textAnchor) return;
             const host = ensureInlineHost(blockEl);
             if (!host) return;
-            host.dataset.blockId = taskId;
+            if (host.dataset.blockId !== taskId) host.dataset.blockId = taskId;
             const cfg = getQuickbarInlineSettings();
             const hasCached = inlineMetaCache.has(taskId) && !forceRefresh;
             const html = renderInlineMetaHtml(cfg, getInlineCachedProps(taskId));
@@ -2270,7 +2272,7 @@
                         try { refreshInlineMetaPositions(); } catch (e2) {}
                     });
                 }
-                if (e?.type !== 'resize' && (now - inlineMetaLastScrollRenderTs) > 24) {
+                if (e?.type !== 'resize' && (now - inlineMetaLastScrollRenderTs) > 160) {
                     inlineMetaLastScrollRenderTs = now;
                     requestInlineMetaRender(false);
                 }
@@ -2285,7 +2287,7 @@
                     inlineMetaScrollIdleTimer = null;
                     setInlineMetaScrolling(false);
                     requestInlineMetaRender(e?.type === 'resize');
-                }, e?.type === 'resize' ? 70 : 28);
+                }, e?.type === 'resize' ? 70 : 120);
             };
             try { document.addEventListener('scroll', inlineMetaScrollHandler, { capture: true, passive: true }); } catch (e) {}
             try { window.addEventListener('resize', inlineMetaScrollHandler, true); } catch (e) {}
