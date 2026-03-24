@@ -2246,7 +2246,9 @@
             }
             // Estimate actual dimensions from calculated values (avoid forced reflow from reading after writes)
             const estHostWidth = Math.min(hostWidth, finalMaxWidth);
-            const estHostHeight = hostHeight;
+            // In wrap mode, estimate rows from how much content overflows finalMaxWidth (row-gap: 4px)
+            const estWrapRows = wrapMode ? Math.max(1, Math.ceil(hostWidth / Math.max(finalMaxWidth, 1))) : 1;
+            const estHostHeight = hostHeight * estWrapRows + Math.max(0, estWrapRows - 1) * 4;
             const candidateRect = {
                 left: finalLeft,
                 top: finalTop,
@@ -2268,7 +2270,7 @@
             const leftPx = `${finalLeft}px`;
             const topPx = `${finalTop}px`;
             const maxWidthPx = `${finalMaxWidth}px`;
-            if (wrapMode) host.classList.add('is-wrap');
+            if (wrapMode) host.classList.add('is-wrap'); else host.classList.remove('is-wrap');
             host.style.left = leftPx;
             host.style.top = topPx;
             host.style.maxWidth = maxWidthPx;
