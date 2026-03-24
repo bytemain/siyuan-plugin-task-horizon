@@ -2046,9 +2046,8 @@
             rebindInlineMetaObservers();
         }
 
-        function layoutInlineMetaHost(blockEl, host, taskId, textAnchor, html, forceRefresh = false, visibilityBuffer = 0) {
-            if (!blockEl || !host || !taskId || !textAnchor) return false;
-            host.classList.remove('is-wrap');
+        function measureInlineMetaLayout(blockEl, host, taskId, textAnchor, html, forceRefresh, visibilityBuffer) {
+            if (!blockEl || !host || !taskId || !textAnchor) return null;
             const layer = host.parentElement;
             const layerRect = layer?.getBoundingClientRect?.();
             const blockRect = blockEl.getBoundingClientRect();
@@ -2059,14 +2058,10 @@
             const textRect = getInlineTextTailRect(textAnchor);
             const bounds = getInlineViewportBounds(blockEl);
             if (!layerRect || !blockRect || (!blockRect.width && !blockRect.height) || !plainText || !textRect) {
-                host.classList.remove('is-ready');
-                inlineMetaLayoutCache.delete(taskId);
-                return false;
+                return { action: 'hide', taskId };
             }
             if (!isInlineRectVisibleInBounds(textRect, bounds, visibilityBuffer)) {
-                host.classList.remove('is-ready');
-                inlineMetaLayoutCache.delete(taskId);
-                return false;
+                return { action: 'hide', taskId };
             }
             const layoutHtml = String(html ?? prevLayout?.html ?? host.innerHTML ?? '');
             const localTextRect = {
@@ -2078,18 +2073,20 @@
             };
             const viewportSig = `${localTextRect.right}:${localTextRect.top}:${localTextRect.height}`;
             if (!forceRefresh && prevLayout && prevLayout.textSig === textSig && prevLayout.widthSig === widthSig && prevLayout.viewportSig === viewportSig && prevLayout.html === layoutHtml) {
-                host.classList.toggle('is-wrap', !!prevLayout.wrapMode);
-                host.style.left = prevLayout.left;
-                host.style.top = prevLayout.top;
-                host.style.maxWidth = prevLayout.maxWidth;
-                host.classList.add('is-ready');
-                inlineMetaOccupiedRects.push({
+                const cw = prevLayout.cachedWidth || 72;
+                const ch = prevLayout.cachedHeight || 20;
+                const cachedRect = {
                     left: Number.parseInt(prevLayout.left, 10) || 0,
                     top: Number.parseInt(prevLayout.top, 10) || 0,
-                    right: (Number.parseInt(prevLayout.left, 10) || 0) + Math.max(host.offsetWidth || 0, 72),
-                    bottom: (Number.parseInt(prevLayout.top, 10) || 0) + Math.max(host.offsetHeight || 0, 20)
-                });
-                return true;
+                    right: (Number.parseInt(prevLayout.left, 10) || 0) + Math.max(cw, 72),
+                    bottom: (Number.parseInt(prevLayout.top, 10) || 0) + Math.max(ch, 20)
+                };
+                inlineMetaOccupiedRects.push(cachedRect);
+                return {
+                    action: 'cached', taskId,
+                    wrapMode: !!prevLayout.wrapMode,
+                    left: prevLayout.left, top: prevLayout.top, maxWidth: prevLayout.maxWidth
+                };
             }
             const hostMeasureRect = host.getBoundingClientRect();
             const hostWidth = Math.ceil(hostMeasureRect.width || host.offsetWidth || 0);
@@ -2100,31 +2097,25 @@
             const left = Math.max(minLeft, Math.min(maxLeft, Math.round(localTextRect.right + 6)));
             const top = Math.max(2, Math.round(localTextRect.top + ((localTextRect.height - hostHeight) / 2)));
             const remain = Math.max(96, Math.round(layerWidth - left - 8));
-            const maxWidth = Math.max(72, Math.min(remain, Math.max(hostWidth, 320)));
+            const maxWidthVal = Math.max(72, Math.min(remain, Math.max(hostWidth, 320)));
             let wrapMode = remain < Math.max(140, Math.min(hostWidth + 12, 260));
             let finalLeft = left;
             let finalTop = top;
-            let finalMaxWidth = maxWidth;
+            let finalMaxWidth = maxWidthVal;
             if (wrapMode) {
                 finalLeft = Math.max(minLeft, Math.min(Math.max(minLeft, layerWidth - 180), Math.round(localTextRect.left)));
                 finalTop = Math.max(2, Math.round(localTextRect.bottom + 4));
                 finalMaxWidth = Math.max(180, Math.min(Math.max(180, layerWidth - finalLeft - 8), Math.max(220, Math.min(560, Math.round(layerWidth * 0.76)))));
-                host.classList.add('is-wrap');
             }
             const leftPx = `${finalLeft}px`;
             const topPx = `${finalTop}px`;
             const maxWidthPx = `${finalMaxWidth}px`;
-            host.style.left = leftPx;
-            host.style.top = topPx;
-            host.style.maxWidth = maxWidthPx;
-            const actualHostRect = host.getBoundingClientRect();
-            const actualHostWidth = Math.ceil(actualHostRect.width || host.offsetWidth || 0);
-            const actualHostHeight = Math.ceil(actualHostRect.height || host.offsetHeight || 20);
+            const estHostWidth = Math.max(Math.min(hostWidth, finalMaxWidth), 72);
+            const estHostHeight = Math.max(hostHeight, 20);
             const candidateRect = {
-                left: finalLeft,
-                top: finalTop,
-                right: finalLeft + Math.max(actualHostWidth, 72),
-                bottom: finalTop + Math.max(actualHostHeight, 20)
+                left: finalLeft, top: finalTop,
+                right: finalLeft + estHostWidth,
+                bottom: finalTop + estHostHeight
             };
             const expandedTextRect = {
                 left: Math.max(0, Math.round(localTextRect.left - 2)),
@@ -2133,15 +2124,54 @@
                 bottom: Math.round(localTextRect.bottom + 2)
             };
             if (rectsOverlap(candidateRect, expandedTextRect, 2) || inlineMetaOccupiedRects.some((rect) => rectsOverlap(candidateRect, rect, 4))) {
+                return { action: 'overlap', taskId };
+            }
+            inlineMetaOccupiedRects.push(candidateRect);
+            return {
+                action: 'layout', taskId, wrapMode,
+                left: leftPx, top: topPx, maxWidth: maxWidthPx,
+                cachedWidth: estHostWidth, cachedHeight: estHostHeight,
+                textSig, widthSig, viewportSig, html: layoutHtml
+            };
+        }
+
+        function applyInlineMetaLayout(host, plan) {
+            if (!host || !plan) return false;
+            if (plan.action === 'hide' || plan.action === 'overlap') {
                 host.classList.remove('is-wrap');
                 host.classList.remove('is-ready');
-                inlineMetaLayoutCache.delete(taskId);
+                inlineMetaLayoutCache.delete(plan.taskId);
                 return false;
             }
-            inlineMetaLayoutCache.set(taskId, { textSig, widthSig, viewportSig, html: layoutHtml, left: leftPx, top: topPx, maxWidth: maxWidthPx, wrapMode });
-            inlineMetaOccupiedRects.push(candidateRect);
-            host.classList.add('is-ready');
-            return true;
+            if (plan.action === 'cached') {
+                host.classList.toggle('is-wrap', plan.wrapMode);
+                host.style.left = plan.left;
+                host.style.top = plan.top;
+                host.style.maxWidth = plan.maxWidth;
+                host.classList.add('is-ready');
+                return true;
+            }
+            if (plan.action === 'layout') {
+                host.classList.toggle('is-wrap', plan.wrapMode);
+                host.style.left = plan.left;
+                host.style.top = plan.top;
+                host.style.maxWidth = plan.maxWidth;
+                inlineMetaLayoutCache.set(plan.taskId, {
+                    textSig: plan.textSig, widthSig: plan.widthSig,
+                    viewportSig: plan.viewportSig, html: plan.html,
+                    left: plan.left, top: plan.top, maxWidth: plan.maxWidth,
+                    wrapMode: plan.wrapMode,
+                    cachedWidth: plan.cachedWidth, cachedHeight: plan.cachedHeight
+                });
+                host.classList.add('is-ready');
+                return true;
+            }
+            return false;
+        }
+
+        function layoutInlineMetaHost(blockEl, host, taskId, textAnchor, html, forceRefresh = false, visibilityBuffer = 0) {
+            const plan = measureInlineMetaLayout(blockEl, host, taskId, textAnchor, html, forceRefresh, visibilityBuffer);
+            return applyInlineMetaLayout(host, plan);
         }
 
         function refreshInlineMetaPositions() {
@@ -2151,17 +2181,25 @@
                 : document.querySelector('.sy-custom-props-inline-layer');
             if (!layer) return;
             inlineMetaOccupiedRects = [];
-            Array.from(layer.querySelectorAll('.sy-custom-props-inline-host[data-block-id]')).forEach((host) => {
+            const hosts = Array.from(layer.querySelectorAll('.sy-custom-props-inline-host[data-block-id]'));
+            const plans = [];
+            hosts.forEach((host) => {
                 const taskId = String(host?.dataset?.blockId || '').trim();
-                if (!taskId) return;
+                if (!taskId) {
+                    plans.push({ host, plan: { action: 'hide', taskId: '' } });
+                    return;
+                }
                 const blockEl = getBlockElById(taskId);
                 const textAnchor = getInlineTextAnchor(blockEl);
                 if (!blockEl || !textAnchor) {
-                    host.classList.remove('is-ready');
-                    inlineMetaLayoutCache.delete(taskId);
+                    plans.push({ host, plan: { action: 'hide', taskId } });
                     return;
                 }
-                layoutInlineMetaHost(blockEl, host, taskId, textAnchor, inlineMetaLayoutCache.get(taskId)?.html || host.innerHTML || '', false);
+                const plan = measureInlineMetaLayout(blockEl, host, taskId, textAnchor, inlineMetaLayoutCache.get(taskId)?.html || host.innerHTML || '', false);
+                plans.push({ host, plan });
+            });
+            plans.forEach(({ host, plan }) => {
+                applyInlineMetaLayout(host, plan);
             });
         }
 
@@ -2224,10 +2262,54 @@
                 pruneInlineMetaOutsideViewport(keepBlocks);
                 prefetchInlineMetaProps(preRenderBlocks, 680);
                 const coreSet = new Set(blocks.map((el) => String(el?.dataset?.nodeId || '').trim()).filter(Boolean));
+                const cfg = getQuickbarInlineSettings();
+                const items = [];
                 preRenderBlocks.forEach((blockEl) => {
                     const blockId = String(blockEl?.dataset?.nodeId || '').trim();
                     const buffer = coreSet.has(blockId) ? 420 : 1800;
-                    Promise.resolve(renderInlineMetaForBlock(blockEl, forceRefresh, buffer)).catch(() => null);
+                    const taskId = String(resolveTaskNodeIdForDetail(blockEl) || blockEl?.dataset?.nodeId || '').trim();
+                    if (!taskId) return;
+                    const hostParent = getInlineHostParent(blockEl);
+                    if (!hostParent) return;
+                    const textAnchor = getInlineTextAnchor(blockEl);
+                    if (!textAnchor) return;
+                    const host = ensureInlineHost(blockEl);
+                    if (!host) return;
+                    if (host.dataset.blockId !== taskId) host.dataset.blockId = taskId;
+                    const hasCached = inlineMetaCache.has(taskId) && !forceRefresh;
+                    const html = renderInlineMetaHtml(cfg, getInlineCachedProps(taskId));
+                    items.push({ blockEl, taskId, hostParent, textAnchor, host, hasCached, html, buffer, cfg });
+                });
+                items.forEach((item) => {
+                    if (!item.html) {
+                        item.host.remove();
+                        inlineMetaLayoutCache.delete(item.taskId);
+                        item.removed = true;
+                        return;
+                    }
+                    if (item.host.innerHTML !== item.html) item.host.innerHTML = item.html;
+                });
+                const layoutItems = items.filter((item) => !item.removed);
+                layoutItems.forEach((item) => {
+                    item.plan = measureInlineMetaLayout(item.hostParent, item.host, item.taskId, item.textAnchor, item.html, forceRefresh, item.buffer);
+                });
+                layoutItems.forEach((item) => {
+                    applyInlineMetaLayout(item.host, item.plan);
+                });
+                layoutItems.forEach((item) => {
+                    if (item.hasCached) return;
+                    Promise.resolve(ensureTaskPropsReady(item.taskId, forceRefresh)).then((freshProps) => {
+                        if (!item.host.isConnected) return;
+                        if (String(item.host.dataset.blockId || '').trim() !== item.taskId) return;
+                        const freshHtml = renderInlineMetaHtml(item.cfg, freshProps);
+                        if (!freshHtml) {
+                            try { item.host.remove(); } catch (e) {}
+                            inlineMetaLayoutCache.delete(item.taskId);
+                            return;
+                        }
+                        if (item.host.innerHTML !== freshHtml) item.host.innerHTML = freshHtml;
+                        layoutInlineMetaHost(item.hostParent, item.host, item.taskId, item.textAnchor, freshHtml, true, item.buffer);
+                    }).catch(() => null);
                 });
             };
             if (inlineMetaRenderTimer) clearTimeout(inlineMetaRenderTimer);
@@ -2272,7 +2354,7 @@
                         try { refreshInlineMetaPositions(); } catch (e2) {}
                     });
                 }
-                if (e?.type !== 'resize' && (now - inlineMetaLastScrollRenderTs) > 160) {
+                if (e?.type !== 'resize' && (now - inlineMetaLastScrollRenderTs) > 24) {
                     inlineMetaLastScrollRenderTs = now;
                     requestInlineMetaRender(false);
                 }
@@ -2287,7 +2369,7 @@
                     inlineMetaScrollIdleTimer = null;
                     setInlineMetaScrolling(false);
                     requestInlineMetaRender(e?.type === 'resize');
-                }, e?.type === 'resize' ? 70 : 120);
+                }, e?.type === 'resize' ? 70 : 28);
             };
             try { document.addEventListener('scroll', inlineMetaScrollHandler, { capture: true, passive: true }); } catch (e) {}
             try { window.addEventListener('resize', inlineMetaScrollHandler, true); } catch (e) {}
