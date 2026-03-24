@@ -1150,6 +1150,210 @@
     font-weight: 600;
 }
 
+.tm-calendar-host .fc .fc-event[data-tm-cal-source="schedule"],
+#tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"],
+.tm-calendar-host .fc .fc-event.tm-cal-schedule-event,
+#tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event {
+    --tm-cal-schedule-accent: #0078d4;
+    --tm-cal-schedule-text: #222;
+    --tm-cal-schedule-bg: rgba(0, 120, 212, 0.36);
+    --tm-cal-schedule-border: rgba(0, 120, 212, 0.42);
+    --tm-cal-schedule-hover-bg: rgba(0, 120, 212, 0.44);
+    border: 1px solid var(--tm-cal-schedule-border) !important;
+    border-left: 4px solid var(--tm-cal-schedule-accent) !important;
+    border-radius: 5px !important;
+    background: var(--tm-cal-schedule-bg) !important;
+    box-shadow: none !important;
+    color: var(--tm-cal-schedule-text) !important;
+    overflow: hidden !important;
+}
+
+.tm-calendar-host .fc .fc-event[data-tm-cal-source="schedule"]:hover,
+#tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"]:hover,
+.tm-calendar-host .fc .fc-event.tm-cal-schedule-event:hover,
+#tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event:hover {
+    background: var(--tm-cal-schedule-hover-bg) !important;
+}
+
+.tm-calendar-host .fc .fc-timegrid-event.fc-event-mirror,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-event.fc-event-mirror {
+    --tm-cal-selection-accent: #0078d4;
+    --tm-cal-selection-text: #222;
+    --tm-cal-selection-bg: rgba(0, 120, 212, 0.36);
+    --tm-cal-selection-border: rgba(0, 120, 212, 0.42);
+    border: 1px solid var(--tm-cal-selection-border) !important;
+    border-left: 4px solid var(--tm-cal-selection-accent) !important;
+    border-radius: 5px !important;
+    background: var(--tm-cal-selection-bg) !important;
+    box-shadow: none !important;
+    color: var(--tm-cal-selection-text) !important;
+    opacity: 1 !important;
+    overflow: hidden !important;
+}
+
+.tm-calendar-host .fc .fc-timegrid-event.fc-event-mirror .fc-event-main,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-event.fc-event-mirror .fc-event-main,
+.tm-calendar-host .fc .fc-timegrid-event.fc-event-mirror .fc-event-main-frame,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-event.fc-event-mirror .fc-event-main-frame,
+.tm-calendar-host .fc .fc-timegrid-event.fc-event-mirror .fc-event-time,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-event.fc-event-mirror .fc-event-time,
+.tm-calendar-host .fc .fc-timegrid-event.fc-event-mirror .fc-event-title,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-event.fc-event-mirror .fc-event-title {
+    color: var(--tm-cal-selection-text) !important;
+}
+
+.tm-calendar-host .fc .fc-highlight,
+#tmCalendarSideDockTimeline .fc .fc-highlight {
+    --tm-cal-selection-accent: #0078d4;
+    --tm-cal-selection-bg: rgba(0, 120, 212, 0.22);
+    --tm-cal-selection-border: rgba(0, 120, 212, 0.32);
+    background: var(--tm-cal-selection-bg) !important;
+    border: 1px solid var(--tm-cal-selection-border) !important;
+    border-left: 4px solid var(--tm-cal-selection-accent) !important;
+    border-radius: 5px !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+}
+
+[data-theme-mode="dark"] .tm-calendar-host .fc .fc-timegrid-event.fc-event-mirror,
+[data-theme-mode="dark"] #tmCalendarSideDockTimeline .fc .fc-timegrid-event.fc-event-mirror {
+    --tm-cal-selection-text: rgba(255, 255, 255, 0.96);
+}
+
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event,
+.tm-calendar-host .fc .fc-popover .fc-event.tm-cal-allday-soft-event,
+#tmCalendarSideDockTimeline .fc .fc-popover .fc-event.tm-cal-allday-soft-event {
+    --tm-cal-schedule-text: #222;
+    --tm-cal-schedule-bg: rgba(0, 120, 212, 0.36);
+    --tm-cal-schedule-border: rgba(0, 120, 212, 0.42);
+    border: 1px solid var(--tm-cal-schedule-border) !important;
+    border-left-width: 1px !important;
+    border-radius: 5px !important;
+    background: var(--tm-cal-schedule-bg) !important;
+    color: var(--tm-cal-schedule-text) !important;
+    padding: 0 4px !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+}
+
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .fc-event-main,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .fc-event-main,
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .fc-event-main-frame,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .fc-event-main-frame,
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .fc-event-time,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .fc-event-time,
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .fc-event-title,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .fc-event-title,
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .tm-cal-task-event,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .tm-cal-task-event,
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .tm-cal-task-event-title,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .tm-cal-task-event-title,
+.tm-calendar-host .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .tm-cal-task-event-title-text,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event .tm-cal-task-event-title-text,
+.tm-calendar-host .fc .fc-popover .fc-event.tm-cal-allday-soft-event .fc-event-main,
+#tmCalendarSideDockTimeline .fc .fc-popover .fc-event.tm-cal-allday-soft-event .fc-event-main,
+.tm-calendar-host .fc .fc-popover .fc-event.tm-cal-allday-soft-event .fc-event-main-frame,
+#tmCalendarSideDockTimeline .fc .fc-popover .fc-event.tm-cal-allday-soft-event .fc-event-main-frame,
+.tm-calendar-host .fc .fc-popover .fc-event.tm-cal-allday-soft-event .fc-event-time,
+#tmCalendarSideDockTimeline .fc .fc-popover .fc-event.tm-cal-allday-soft-event .fc-event-time,
+.tm-calendar-host .fc .fc-popover .fc-event.tm-cal-allday-soft-event .fc-event-title,
+#tmCalendarSideDockTimeline .fc .fc-popover .fc-event.tm-cal-allday-soft-event .fc-event-title,
+.tm-calendar-host .fc .fc-popover .fc-event.tm-cal-allday-soft-event .tm-cal-task-event,
+#tmCalendarSideDockTimeline .fc .fc-popover .fc-event.tm-cal-allday-soft-event .tm-cal-task-event,
+.tm-calendar-host .fc .fc-popover .fc-event.tm-cal-allday-soft-event .tm-cal-task-event-title,
+#tmCalendarSideDockTimeline .fc .fc-popover .fc-event.tm-cal-allday-soft-event .tm-cal-task-event-title,
+.tm-calendar-host .fc .fc-popover .fc-event.tm-cal-allday-soft-event .tm-cal-task-event-title-text,
+#tmCalendarSideDockTimeline .fc .fc-popover .fc-event.tm-cal-allday-soft-event .tm-cal-task-event-title-text {
+    color: var(--tm-cal-schedule-text) !important;
+}
+
+[data-theme-mode="dark"] .tm-calendar-host .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event,
+[data-theme-mode="dark"] #tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event,
+[data-theme-mode="dark"] .tm-calendar-host .fc .fc-popover .fc-event.tm-cal-allday-soft-event,
+[data-theme-mode="dark"] #tmCalendarSideDockTimeline .fc .fc-popover .fc-event.tm-cal-allday-soft-event {
+    --tm-cal-schedule-text: rgba(255, 255, 255, 0.96);
+}
+
+.tm-calendar-host .fc .fc-daygrid-event[data-tm-cal-source="schedule"],
+#tmCalendarSideDockTimeline .fc .fc-daygrid-event[data-tm-cal-source="schedule"],
+.tm-calendar-host .fc .fc-daygrid-event.tm-cal-schedule-event,
+#tmCalendarSideDockTimeline .fc .fc-daygrid-event.tm-cal-schedule-event {
+    padding: 1px 4px 1px 0 !important;
+}
+
+.tm-calendar-host .fc .fc-timegrid-event[data-tm-cal-source="schedule"],
+#tmCalendarSideDockTimeline .fc .fc-timegrid-event[data-tm-cal-source="schedule"],
+.tm-calendar-host .fc .fc-timegrid-event.tm-cal-schedule-event,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-event.tm-cal-schedule-event {
+    inset-inline-start: 0 !important;
+}
+
+.tm-calendar-host .fc .fc-event[data-tm-cal-source="schedule"] .fc-event-main,
+#tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"] .fc-event-main,
+.tm-calendar-host .fc .fc-event[data-tm-cal-source="schedule"] .fc-event-main-frame,
+#tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"] .fc-event-main-frame,
+.tm-calendar-host .fc .fc-event.tm-cal-schedule-event .fc-event-main,
+#tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event .fc-event-main,
+.tm-calendar-host .fc .fc-event.tm-cal-schedule-event .fc-event-main-frame,
+#tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event .fc-event-main-frame {
+    padding: 2px 6px !important;
+    color: var(--tm-cal-schedule-text) !important;
+}
+
+.tm-calendar-host .fc .fc-event[data-tm-cal-source="schedule"] .fc-event-time,
+#tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"] .fc-event-time,
+.tm-calendar-host .fc .fc-event.tm-cal-schedule-event .fc-event-time,
+#tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event .fc-event-time {
+    color: var(--tm-cal-schedule-text) !important;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.tm-calendar-host .fc .fc-event[data-tm-cal-source="schedule"] .fc-event-title,
+#tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"] .fc-event-title,
+.tm-calendar-host .fc .fc-event[data-tm-cal-source="schedule"] .tm-cal-task-event-title,
+#tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"] .tm-cal-task-event-title,
+.tm-calendar-host .fc .fc-event[data-tm-cal-source="schedule"] .tm-cal-task-event-title-text,
+#tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"] .tm-cal-task-event-title-text,
+.tm-calendar-host .fc .fc-event.tm-cal-schedule-event .fc-event-title,
+#tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event .fc-event-title,
+.tm-calendar-host .fc .fc-event.tm-cal-schedule-event .tm-cal-task-event-title,
+#tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event .tm-cal-task-event-title,
+.tm-calendar-host .fc .fc-event.tm-cal-schedule-event .tm-cal-task-event-title-text,
+#tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event .tm-cal-task-event-title-text {
+    color: var(--tm-cal-schedule-text) !important;
+    font-weight: 600;
+    line-height: 1.3 !important;
+}
+
+.tm-calendar-host .fc .fc-event[data-tm-cal-source="schedule"] .tm-cal-task-event,
+#tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"] .tm-cal-task-event,
+.tm-calendar-host .fc .fc-event.tm-cal-schedule-event .tm-cal-task-event,
+#tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event .tm-cal-task-event,
+.tm-calendar-host .fc .tm-cal-task-event.tm-cal-task-event--schedule,
+#tmCalendarSideDockTimeline .fc .tm-cal-task-event.tm-cal-task-event--schedule {
+    align-items: center;
+    gap: 6px;
+    color: var(--tm-cal-schedule-text) !important;
+}
+
+.tm-calendar-host .fc .fc-event[data-tm-cal-source="schedule"] .tm-cal-task-event-check,
+#tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"] .tm-cal-task-event-check,
+.tm-calendar-host .fc .fc-event.tm-cal-schedule-event .tm-cal-task-event-check,
+#tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event .tm-cal-task-event-check,
+.tm-calendar-host .fc .tm-cal-task-event.tm-cal-task-event--schedule .tm-cal-task-event-check,
+#tmCalendarSideDockTimeline .fc .tm-cal-task-event.tm-cal-task-event--schedule .tm-cal-task-event-check {
+    accent-color: var(--tm-cal-schedule-accent);
+}
+
+[data-theme-mode="dark"] .tm-calendar-host .fc .fc-event[data-tm-cal-source="schedule"],
+[data-theme-mode="dark"] #tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"],
+[data-theme-mode="dark"] .tm-calendar-host .fc .fc-event.tm-cal-schedule-event,
+[data-theme-mode="dark"] #tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event {
+    --tm-cal-schedule-text: rgba(255, 255, 255, 0.96);
+}
+
 .tm-calendar-host .fc .fc-daygrid-event,
 #tmCalendarSideDockTimeline .fc .fc-daygrid-event,
 .tm-calendar-host .fc .fc-timegrid-event,
@@ -1517,8 +1721,8 @@
 
 .tm-calendar-host .fc .fc-event.tm-cal-drag-preview,
 #tmCalendarSideDockTimeline .fc .fc-event.tm-cal-drag-preview {
-    opacity: 0.55;
-    border-style: dashed !important;
+    opacity: 1 !important;
+    border-style: solid !important;
     box-shadow: none !important;
     pointer-events: none !important;
 }
@@ -1534,7 +1738,7 @@
 #tmCalendarSideDockTimeline .tm-cal-side-drag-ghost > .fc-event {
     position: absolute;
     inset: 0;
-    opacity: 0.58;
+    opacity: 1 !important;
     pointer-events: none;
 }
 

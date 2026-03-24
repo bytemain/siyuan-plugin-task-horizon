@@ -257,6 +257,107 @@
         return Number.isFinite(n) ? n : NaN;
     }
 
+    function parseColorToRgb(color) {
+        const raw = String(color || '').trim();
+        if (!raw) return null;
+        const hex = raw.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+        if (hex) {
+            const body = hex[1];
+            if (body.length === 3) {
+                return {
+                    r: parseInt(body[0] + body[0], 16),
+                    g: parseInt(body[1] + body[1], 16),
+                    b: parseInt(body[2] + body[2], 16),
+                };
+            }
+            return {
+                r: parseInt(body.slice(0, 2), 16),
+                g: parseInt(body.slice(2, 4), 16),
+                b: parseInt(body.slice(4, 6), 16),
+            };
+        }
+        const rgb = raw.match(/^rgba?\(\s*(\d{1,3})\s*[, ]\s*(\d{1,3})\s*[, ]\s*(\d{1,3})(?:\s*[,/]\s*[\d.]+\s*)?\)$/i);
+        if (!rgb) return null;
+        const r = Math.min(255, Math.max(0, Number(rgb[1])));
+        const g = Math.min(255, Math.max(0, Number(rgb[2])));
+        const b = Math.min(255, Math.max(0, Number(rgb[3])));
+        if (![r, g, b].every((v) => Number.isFinite(v))) return null;
+        return { r, g, b };
+    }
+
+    function toRgbaString(rgb, alpha) {
+        if (!rgb || !Number.isFinite(rgb.r) || !Number.isFinite(rgb.g) || !Number.isFinite(rgb.b)) return '';
+        const a = Math.min(1, Math.max(0, Number(alpha)));
+        return `rgba(${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)}, ${a})`;
+    }
+
+    function isDarkThemeMode() {
+        try {
+            const roots = [document?.documentElement, document?.body];
+            return roots.some((el) => String(el?.getAttribute?.('data-theme-mode') || '').trim() === 'dark');
+        } catch (e) {}
+        return false;
+    }
+
+    function applyScheduleEventColorVars(eventEl, color) {
+        const el = eventEl instanceof Element ? eventEl : null;
+        if (!el) return;
+        const accent = String(color || '').trim() || '#0078d4';
+        const rgb = parseColorToRgb(accent);
+        const softBg = rgb ? toRgbaString(rgb, 0.36) : 'rgba(0, 120, 212, 0.36)';
+        const softBorder = rgb ? toRgbaString(rgb, 0.42) : 'rgba(0, 120, 212, 0.42)';
+        const hoverBg = rgb ? toRgbaString(rgb, 0.44) : 'rgba(0, 120, 212, 0.44)';
+        const textColor = isDarkThemeMode() ? 'rgba(255, 255, 255, 0.96)' : '#222';
+        try { el.style.setProperty('--tm-cal-schedule-accent', accent); } catch (e) {}
+        try { el.style.setProperty('--tm-cal-schedule-text', textColor); } catch (e) {}
+        try { el.style.setProperty('--tm-cal-schedule-bg', softBg); } catch (e) {}
+        try { el.style.setProperty('--tm-cal-schedule-border', softBorder); } catch (e) {}
+        try { el.style.setProperty('--tm-cal-schedule-hover-bg', hoverBg); } catch (e) {}
+        try { el.classList.add('tm-cal-schedule-event'); } catch (e) {}
+        try { el.style.setProperty('background', softBg, 'important'); } catch (e) {}
+        try { el.style.setProperty('background-color', softBg, 'important'); } catch (e) {}
+        try { el.style.setProperty('border', `1px solid ${softBorder}`, 'important'); } catch (e) {}
+        try { el.style.setProperty('border-left', `4px solid ${accent}`, 'important'); } catch (e) {}
+        try { el.style.setProperty('border-radius', '5px', 'important'); } catch (e) {}
+        try { el.style.setProperty('box-shadow', 'none', 'important'); } catch (e) {}
+        try { el.style.setProperty('color', textColor, 'important'); } catch (e) {}
+        try {
+            const nodes = el.querySelectorAll('.fc-event-main, .fc-event-main-frame, .fc-event-time, .fc-event-title, .tm-cal-task-event, .tm-cal-task-event-title, .tm-cal-task-event-title-text');
+            nodes.forEach((node) => {
+                try { node.style.setProperty('color', textColor, 'important'); } catch (e2) {}
+            });
+        } catch (e) {}
+    }
+
+    function applyAllDaySoftEventColorVars(eventEl, color) {
+        const el = eventEl instanceof Element ? eventEl : null;
+        if (!el) return;
+        const accent = String(color || '').trim() || '#0078d4';
+        const rgb = parseColorToRgb(accent);
+        const textColor = isDarkThemeMode() ? 'rgba(255, 255, 255, 0.96)' : '#222';
+        const softBg = rgb ? toRgbaString(rgb, 0.36) : 'rgba(0, 120, 212, 0.36)';
+        const softBorder = rgb ? toRgbaString(rgb, 0.42) : 'rgba(0, 120, 212, 0.42)';
+        try { el.classList.add('tm-cal-allday-soft-event'); } catch (e) {}
+        try { el.classList.remove('tm-cal-schedule-event'); } catch (e) {}
+        try { el.style.setProperty('--tm-cal-schedule-accent', accent); } catch (e) {}
+        try { el.style.setProperty('--tm-cal-schedule-text', textColor); } catch (e) {}
+        try { el.style.setProperty('--tm-cal-schedule-bg', softBg); } catch (e) {}
+        try { el.style.setProperty('--tm-cal-schedule-border', softBorder); } catch (e) {}
+        try { el.style.setProperty('background', softBg, 'important'); } catch (e) {}
+        try { el.style.setProperty('background-color', softBg, 'important'); } catch (e) {}
+        try { el.style.setProperty('border', `1px solid ${softBorder}`, 'important'); } catch (e) {}
+        try { el.style.setProperty('border-left', `1px solid ${softBorder}`, 'important'); } catch (e) {}
+        try { el.style.setProperty('border-radius', '5px', 'important'); } catch (e) {}
+        try { el.style.setProperty('box-shadow', 'none', 'important'); } catch (e) {}
+        try { el.style.setProperty('color', textColor, 'important'); } catch (e) {}
+        try {
+            const nodes = el.querySelectorAll('.fc-event-main, .fc-event-main-frame, .fc-event-time, .fc-event-title, .tm-cal-task-event, .tm-cal-task-event-title, .tm-cal-task-event-title-text');
+            nodes.forEach((node) => {
+                try { node.style.setProperty('color', textColor, 'important'); } catch (e2) {}
+            });
+        } catch (e) {}
+    }
+
     function isAllDayRange(start, end) {
         if (!(start instanceof Date) || !(end instanceof Date)) return false;
         if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
@@ -3938,7 +4039,7 @@
                 harness.className = 'tm-cal-side-drag-ghost fc-timegrid-event-harness';
                 harness.style.display = 'none';
                 harness.innerHTML = `
-                    <div class="fc-timegrid-event fc-v-event fc-event fc-event-start fc-event-end tm-cal-drag-preview">
+                    <div class="fc-timegrid-event fc-v-event fc-event fc-event-start fc-event-end tm-cal-drag-preview tm-cal-selection-mirror tm-cal-schedule-event">
                         <div class="fc-event-main">
                             <span class="tm-cal-task-event">
                                 <span class="tm-cal-task-event-title">
@@ -4043,8 +4144,10 @@
             try { ghost.style.display = 'block'; } catch (e) {}
             try { ghost.style.top = `${Math.round(top)}px`; } catch (e) {}
             try { ghost.style.height = `${Math.round(height)}px`; } catch (e) {}
-            try { eventEl.style.background = color; } catch (e) {}
-            try { eventEl.style.borderColor = color; } catch (e) {}
+            try { eventEl.classList.add('tm-cal-selection-mirror', 'tm-cal-schedule-event'); } catch (e) {}
+            try { eventEl.classList.toggle('tm-cal-allday-soft-event', !!allDay); } catch (e) {}
+            if (allDay) applyAllDaySoftEventColorVars(eventEl, color);
+            else applyScheduleEventColorVars(eventEl, color);
         };
         const getDropInfo = (target, x, y) => {
             const pickCurrentSideDay = () => {
@@ -4437,6 +4540,10 @@
             ...slotLayout,
             eventOrder: '__tmRank,title',
             eventOrderStrict: true,
+            eventClassNames: (arg) => {
+                if (arg?.isMirror) return ['tm-cal-selection-mirror', 'tm-cal-schedule-event'];
+                return [];
+            },
             eventContent: (arg) => {
                 const ext = arg?.event?.extendedProps || {};
                 const source = String(ext.__tmSource || '').trim();
@@ -4448,7 +4555,7 @@
                         try { return !!window.tmIsTaskDone(tid); } catch (e) { return false; }
                     })();
                     const wrapEl = document.createElement('span');
-                    wrapEl.className = 'tm-cal-task-event';
+                    wrapEl.className = source === 'schedule' ? 'tm-cal-task-event tm-cal-task-event--schedule' : 'tm-cal-task-event';
                     wrapEl.oncontextmenu = (ev) => {
                         try { ev.stopPropagation(); } catch (e) {}
                         try { ev.preventDefault(); } catch (e) {}
@@ -4497,7 +4604,7 @@
                 }
                 if (source === 'reminder') {
                     const wrapEl = document.createElement('span');
-                    wrapEl.className = 'tm-cal-task-event';
+                    wrapEl.className = source === 'schedule' ? 'tm-cal-task-event tm-cal-task-event--schedule' : 'tm-cal-task-event';
                     const tid = String(ext.__tmReminderBlockId || '').trim();
                     const title = document.createElement('span');
                     title.className = 'tm-cal-task-event-title';
@@ -4549,6 +4656,8 @@
                         const eid = String(arg?.event?.id || '').trim();
                         if (eid) el.setAttribute('data-tm-cal-event-id', eid);
                         if (source) el.setAttribute('data-tm-cal-source', source);
+                        if (source === 'schedule' || source === 'tomato' || arg?.isMirror) applyScheduleEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'));
+                        if ((source === 'schedule' || source === 'taskdate') && arg?.event?.allDay === true) applyAllDaySoftEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'));
                         const tid = String(ext.__tmTaskId || '').trim();
                         if (tid) el.setAttribute('data-tm-cal-task-id', tid);
                         const rid = String(ext.__tmReminderBlockId || '').trim();
@@ -5129,6 +5238,7 @@
                     start: occStart,
                     end: occEnd,
                     allDay,
+                    classNames: allDay ? ['tm-cal-allday-soft-event'] : ['tm-cal-schedule-event'],
                     editable: repeatType === 'none',
                     startEditable: repeatType === 'none',
                     durationEditable: repeatType === 'none',
@@ -6063,6 +6173,7 @@
                 title: `${titleBase} · ${formatDurationMinutes(minutes)}`,
                 start,
                 end,
+                classNames: ['tm-cal-schedule-event', 'tm-cal-tomato-event'],
                 backgroundColor: color,
                 borderColor: color,
                 __tmRank: 0,
@@ -7032,7 +7143,7 @@
                         try { return !!window.tmIsTaskDone(tid); } catch (e) { return false; }
                     })();
                     const wrapEl = document.createElement('span');
-                    wrapEl.className = 'tm-cal-task-event';
+                    wrapEl.className = source === 'schedule' ? 'tm-cal-task-event tm-cal-task-event--schedule' : 'tm-cal-task-event';
                     wrapEl.oncontextmenu = (ev) => {
                         try { ev.stopPropagation(); } catch (e) {}
                         try { ev.preventDefault(); } catch (e) {}
@@ -7091,7 +7202,7 @@
                 }
                 if (source === 'reminder') {
                     const wrapEl = document.createElement('span');
-                    wrapEl.className = 'tm-cal-task-event';
+                    wrapEl.className = source === 'schedule' ? 'tm-cal-task-event tm-cal-task-event--schedule' : 'tm-cal-task-event';
                     const tid = String(ext.__tmReminderBlockId || '').trim();
                     const title = document.createElement('span');
                     title.className = 'tm-cal-task-event-title';
@@ -7152,6 +7263,8 @@
                             const eid = String(arg?.event?.id || '').trim();
                             if (eid) el.setAttribute('data-tm-cal-event-id', eid);
                             if (source) el.setAttribute('data-tm-cal-source', source);
+                            if (source === 'schedule' || source === 'tomato' || arg?.isMirror) applyScheduleEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'));
+                            if ((source === 'schedule' || source === 'taskdate') && arg?.event?.allDay === true) applyAllDaySoftEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'));
                             const aggDay = String(ext.__tmAggregateDay || '').trim();
                             if (aggDay) el.setAttribute('data-tm-cal-agg-day', aggDay);
                             const tid = String(ext.__tmTaskId || '').trim();
@@ -7225,6 +7338,10 @@
             },
             eventOrder: '__tmRank,title',
             eventOrderStrict: true,
+            eventClassNames: (arg) => {
+                if (arg?.isMirror) return ['tm-cal-selection-mirror', 'tm-cal-schedule-event'];
+                return [];
+            },
             editable: true,
             eventStartEditable: true,
             eventDurationEditable: true,
