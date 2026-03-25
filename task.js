@@ -29692,15 +29692,17 @@ async function __tmRefreshAfterWake(reason) {
         const id = String(docId || '').trim();
         if (!id || id === 'all') return false;
         const app = __getPluginApp();
-        const isMobile = __tmIsMobileDevice();
+        const isDock = __tmIsDockHost();
+        const isRealMobile = __tmIsRuntimeMobileClient();
+        const topWin = isDock ? (window.parent || window.top || window) : window;
         const closeAfterOpen = () => {
-            if (!isMobile) return;
+            if (!isRealMobile) return;
             setTimeout(() => {
                 try { window.tmClose?.(); } catch (e) {}
             }, 120);
         };
 
-        if (isMobile) {
+        if (isRealMobile) {
             const openMobile = getOpenMobileFn();
             if (typeof openMobile === 'function') {
                 try {
@@ -29721,7 +29723,7 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         try {
-            window.open(`siyuan://blocks/${id}`);
+            topWin.open(`siyuan://blocks/${id}`);
             closeAfterOpen();
             return true;
         } catch (e) {}
@@ -29734,16 +29736,19 @@ async function __tmRefreshAfterWake(reason) {
             event.stopPropagation();
         }
         const app = __getPluginApp();
+        const isDock = __tmIsDockHost();
+        const isRealMobile = __tmIsRuntimeMobileClient();
+        const topWin = isDock ? (window.parent || window.top || window) : window;
+        const topDoc = topWin.document || document;
         const closeAfterJump = () => {
-            if (!__tmIsMobileDevice()) return;
+            if (!isRealMobile) return;
             setTimeout(() => {
                 try { window.tmClose?.(); } catch (e) {}
             }, 120);
         };
 
-        // 1. 优先尝试移动端 API (如果在移动端环境下)
         const openMobile = getOpenMobileFn();
-        if (__tmIsMobileDevice() && typeof openMobile === 'function') {
+        if (isRealMobile && typeof openMobile === 'function') {
             try {
                 let docId = id;
                 try {
@@ -29759,57 +29764,44 @@ async function __tmRefreshAfterWake(reason) {
             } catch (e) {}
         }
         
-        // 2. 桌面端优先尝试 findDocumentIdByBlockId + openTab (参照 tomato.js)
         const openTab = getOpenTabFn();
         if (typeof openTab === 'function') {
             try {
-                // 获取所在文档ID
                 const sql = `SELECT root_id FROM blocks WHERE id = '${id}' LIMIT 1`;
                 const res = await API.call('/api/query/sql', { stmt: sql });
-                // API.call 返回的是 {code:0, data: [...]}
                 const rows = (res && res.code === 0) ? res.data : [];
                 const docId = (rows && rows[0]) ? rows[0].root_id : id;
 
-                // 使用 openTab 打开文档
-                // 构造参数：打开文档 root_id
                 const params = { 
                     app, 
                     doc: { id: docId }
                 };
                 
-                // 如果目标块不是文档本身，尝试通过 block 参数定位（注意：不同版本思源对 block 参数支持不同）
-                // 另一种常见的定位方式是先打开文档，再通过 hash 定位，但 openTab 封装了这些
                 if (docId !== id) {
-                    // 尝试同时传入 block 信息，这通常会触发滚动高亮
-                    params.block = { id: id, mode: 0 }; // mode: 0 可能表示不高亮聚焦？尝试一下
+                    params.block = { id: id, mode: 0 };
                 }
 
                 openTab(params);
                 __tmScheduleScrollToBlock(id);
                 closeAfterJump();
-                // 补充：如果 openTab 不支持直接定位到块，可能需要发送消息或执行脚本
-                // 但通常 openTab({doc:{id: rootId}}) 会打开文档，如果我们要定位到块，
-                // 在新版思源中，可能需要 openFileById 风格的参数
                 
                 return;
             } catch (e) {}
         }
 
-        // 3. 兜底：模拟点击 block-ref
         try {
-            const tempSpan = document.createElement('span');
+            const tempSpan = topDoc.createElement('span');
             tempSpan.setAttribute('data-type', 'block-ref');
             tempSpan.setAttribute('data-id', id);
-            // 使用对布局无影响但可被交互的样式
             tempSpan.style.position = 'fixed';
             tempSpan.style.top = '-9999px';
             tempSpan.style.left = '-9999px';
             tempSpan.style.opacity = '0';
             tempSpan.style.pointerEvents = 'none';
-            document.body.appendChild(tempSpan);
+            topDoc.body.appendChild(tempSpan);
             
             const opts = {
-                view: window,
+                view: topWin,
                 bubbles: true,
                 cancelable: true,
                 buttons: 1
@@ -29823,8 +29815,7 @@ async function __tmRefreshAfterWake(reason) {
             return;
         } catch (e) {}
 
-        // 4. 兜底：使用 URL Scheme
-        window.open(`siyuan://blocks/${id}`);
+        topWin.open(`siyuan://blocks/${id}`);
         closeAfterJump();
     };
 
