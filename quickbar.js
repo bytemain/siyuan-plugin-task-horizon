@@ -101,6 +101,10 @@
     const quickbarInlineFieldAllowSet = new Set(quickbarInlineFieldDefs.map(item => item.attrKey));
     let inlineMetaCache = new Map();
     let inlineMetaLayoutCache = new Map();
+    const _origClear = inlineMetaLayoutCache.clear.bind(inlineMetaLayoutCache);
+    const _origDelete = inlineMetaLayoutCache.delete.bind(inlineMetaLayoutCache);
+    inlineMetaLayoutCache.clear = function() { console.log('[layoutCache] CLEAR', new Error().stack?.split('\n')[2]?.trim()); return _origClear(); };
+    inlineMetaLayoutCache.delete = function(k) { console.log(`[layoutCache] DELETE key=${String(k).slice(-6)}`, new Error().stack?.split('\n')[2]?.trim()); return _origDelete(k); };
     let inlineMetaObserver = null;
     let inlineMetaObservedRoots = [];
     let inlineMetaStarted = false;
@@ -118,10 +122,13 @@
     let inlineMetaVisibleTaskBlocks = new Map();
     let inlineMetaNeedSyncBlocks = true;
     let inlineMetaMutationTimer = null;
+    let inlineMetaMutationHasStructural = false;
     let inlineMetaLastScrollRenderTs = 0;
     let inlineMetaPropsInflight = new Map();
     let inlineMetaScrollDirection = 0;
     let inlineMetaLastScrollPos = 0;
+    let inlineMetaWsHandler = null;
+    let inlineMetaWsTimer = null;
     let inlineMetaScopeDocIds = null;
     let inlineMetaScopeDocIdsTs = 0;
     let inlineMetaScopeDocIdsPromise = null;
@@ -2168,11 +2175,23 @@
                     return true;
                 });
                 if (!hasRelevantMutation) return;
+                const hasStructuralChange = mutations.some((m) => {
+                    if (m.type !== 'childList') return false;
+                    if (m.target instanceof Element && m.target.closest('.sy-custom-props-inline-layer')) return false;
+                    const nodes = [...m.addedNodes, ...m.removedNodes];
+                    return nodes.some((n) => n.nodeType === Node.ELEMENT_NODE && (n.hasAttribute?.('data-node-id') || n.querySelector?.('[data-node-id]')));
+                });
                 inlineMetaNeedSyncBlocks = true;
+                if (hasStructuralChange && !inlineMetaScrolling) {
+                    inlineMetaMutationHasStructural = true;
+                    inlineMetaLayoutCache.clear();
+                }
                 if (inlineMetaMutationTimer) clearTimeout(inlineMetaMutationTimer);
                 inlineMetaMutationTimer = setTimeout(() => {
                     inlineMetaMutationTimer = null;
-                    requestInlineMetaRender(false);
+                    const structural = inlineMetaMutationHasStructural;
+                    inlineMetaMutationHasStructural = false;
+                    requestInlineMetaRender(structural);
                 }, 80);
             });
             const roots = getInlineMetaObserveRoots();
@@ -2194,13 +2213,13 @@
             rebindInlineMetaObservers();
         }
 
-        function layoutInlineMetaHost(blockEl, host, taskId, textAnchor, html, forceRefresh = false, visibilityBuffer = 0) {
+        function layoutInlineMetaHost(blockEl, host, taskId, textAnchor, html, forceRefresh = false, visibilityBuffer = 0, _caller = '') {
             if (!blockEl || !host || !taskId || !textAnchor) return false;
             // --- FAST PATH: skip expensive geometry reads when content is unchanged ---
             const textSig = getInlineTextFastSignature(textAnchor);
             const prevLayout = inlineMetaLayoutCache.get(taskId);
             const layoutHtml = String(html ?? prevLayout?.html ?? host.innerHTML ?? '');
-            if (!forceRefresh && prevLayout && prevLayout.textSig === textSig && prevLayout.html === layoutHtml) {
+            if (!forceRefresh && prevLayout && prevLayout.textSig === textSig && prevLayout.html === layoutHtml && !inlineMetaScrolling) {
                 host.classList.toggle('is-wrap', !!prevLayout.wrapMode);
                 host.style.left = prevLayout.left;
                 host.style.top = prevLayout.top;
@@ -2214,6 +2233,7 @@
                 });
                 return true;
             }
+            if (isInlineMetaEditingBlock(blockEl)) console.log(`[editing:${taskId.slice(-4)}] NO_FAST caller=${_caller} forceRefresh=${forceRefresh} scroll=${inlineMetaScrolling} hasPrev=${!!prevLayout} textSigMatch=${prevLayout?.textSig === textSig} htmlMatch=${prevLayout?.html === layoutHtml}`);
             // --- READ PHASE: batch all geometry reads before any writes ---
             const layer = host.parentElement;
             const layerRect = layer?.getBoundingClientRect?.();
@@ -2222,18 +2242,18 @@
             const plainText = getInlinePlainText(textAnchor);
             const textRect = getInlineTextTailRect(textAnchor);
             const bounds = getInlineViewportBounds(blockEl);
+            const editing = isInlineMetaEditingBlock(blockEl);
             if (!layerRect || !blockRect || (!blockRect.width && !blockRect.height) || !plainText || !textRect) {
-                if (!inlineMetaScrolling) {
-                    host.classList.remove('is-ready');
-                    inlineMetaLayoutCache.delete(taskId);
-                }
+                if (editing) console.log(`[editing:${taskId.slice(-4)}] GEOM_FAIL caller=${_caller} forceRefresh=${forceRefresh} scroll=${inlineMetaScrolling} hasPrev=${!!prevLayout} layerRect=${!!layerRect} blockW=${blockRect?.width} plainText=${!!plainText} textRect=${!!textRect}`);
+                if (editing && prevLayout) return true;
+                host.classList.remove('is-ready');
+                inlineMetaLayoutCache.delete(taskId);
                 return false;
             }
             if (!isInlineRectVisibleInBounds(textRect, bounds, visibilityBuffer)) {
-                if (!inlineMetaScrolling) {
-                    host.classList.remove('is-ready');
-                    inlineMetaLayoutCache.delete(taskId);
-                }
+                if (editing) console.log(`[editing:${taskId.slice(-4)}] VIS_FAIL caller=${_caller} forceRefresh=${forceRefresh} scroll=${inlineMetaScrolling} textRect=${JSON.stringify({t:Math.round(textRect.top),b:Math.round(textRect.bottom)})} bounds=${JSON.stringify({t:Math.round(bounds?.top),b:Math.round(bounds?.bottom)})} buffer=${visibilityBuffer}`);
+                host.classList.remove('is-ready');
+                inlineMetaLayoutCache.delete(taskId);
                 return false;
             }
             const localTextRect = {
@@ -2246,6 +2266,7 @@
             const viewportSig = `${localTextRect.right}:${localTextRect.top}:${localTextRect.height}`;
             // --- CACHE HIT: reuse cached layout, use cached dimensions to avoid forced reflow ---
             if (!forceRefresh && prevLayout && prevLayout.textSig === textSig && prevLayout.widthSig === widthSig && prevLayout.viewportSig === viewportSig && prevLayout.html === layoutHtml) {
+                if (editing) console.log(`[editing:${taskId.slice(-4)}] CACHE_HIT caller=${_caller} scroll=${inlineMetaScrolling}`);
                 host.classList.toggle('is-wrap', !!prevLayout.wrapMode);
                 host.style.left = prevLayout.left;
                 host.style.top = prevLayout.top;
@@ -2298,18 +2319,21 @@
                 right: Math.round(localTextRect.right + 2),
                 bottom: Math.round(localTextRect.bottom + 2)
             };
-            if (rectsOverlap(candidateRect, expandedTextRect, 2) || inlineMetaOccupiedRects.some((rect) => rectsOverlap(candidateRect, rect, 4))) {
-                if (inlineMetaScrolling && prevLayout) {
-                    host.classList.toggle('is-wrap', !!prevLayout.wrapMode);
-                    host.style.left = prevLayout.left;
-                    host.style.top = prevLayout.top;
-                    host.style.maxWidth = prevLayout.maxWidth;
-                    inlineMetaOccupiedRects.push({
-                        left: Number.parseInt(prevLayout.left, 10) || 0,
-                        top: Number.parseInt(prevLayout.top, 10) || 0,
-                        right: (Number.parseInt(prevLayout.left, 10) || 0) + Math.max(prevLayout.hostWidth || 72, 72),
-                        bottom: (Number.parseInt(prevLayout.top, 10) || 0) + Math.max(prevLayout.hostHeight || 20, 20)
-                    });
+            const textCollision = rectsOverlap(candidateRect, expandedTextRect, 2);
+            const occupiedCollision = inlineMetaOccupiedRects.some((rect) => rectsOverlap(candidateRect, rect, 4));
+            if (editing) console.log(`[editing:${taskId.slice(-4)}] COLLISION caller=${_caller} scroll=${inlineMetaScrolling} textCol=${textCollision} occCol=${occupiedCollision} candidate=${JSON.stringify({l:candidateRect.left,t:candidateRect.top,r:candidateRect.right,b:candidateRect.bottom})} expText=${JSON.stringify({l:expandedTextRect.left,t:expandedTextRect.top,r:expandedTextRect.right,b:expandedTextRect.bottom})} isReady=${host.classList.contains('is-ready')}`);
+            if ((textCollision && !editing) || occupiedCollision) {
+                if (editing) {
+                    inlineMetaOccupiedRects.push(candidateRect);
+                    const leftPx = `${finalLeft}px`;
+                    const topPx = `${finalTop}px`;
+                    const maxWidthPx = `${finalMaxWidth}px`;
+                    if (wrapMode) host.classList.add('is-wrap'); else host.classList.remove('is-wrap');
+                    host.style.left = leftPx;
+                    host.style.top = topPx;
+                    host.style.maxWidth = maxWidthPx;
+                    host.classList.add('is-ready');
+                    inlineMetaLayoutCache.set(taskId, { textSig, widthSig, viewportSig, html: layoutHtml, left: leftPx, top: topPx, maxWidth: maxWidthPx, wrapMode, hostWidth: estHostWidth, hostHeight: estHostHeight });
                     return true;
                 }
                 host.classList.remove('is-ready');
@@ -2317,6 +2341,7 @@
                 return false;
             }
             // --- WRITE PHASE: batch all DOM writes together ---
+            if (editing) console.log(`[editing:${taskId.slice(-4)}] WRITE caller=${_caller} scroll=${inlineMetaScrolling} left=${finalLeft} top=${finalTop} wrap=${wrapMode}`);
             const leftPx = `${finalLeft}px`;
             const topPx = `${finalTop}px`;
             const maxWidthPx = `${finalMaxWidth}px`;
@@ -2338,7 +2363,6 @@
             if (!layer) return;
             inlineMetaOccupiedRects = [];
             const hosts = Array.from(layer.querySelectorAll('.sy-custom-props-inline-host[data-block-id]'));
-            // --- READ PHASE: gather all block/text anchors before any writes ---
             const entries = [];
             for (let i = 0; i < hosts.length; i++) {
                 const host = hosts[i];
@@ -2352,7 +2376,6 @@
                 }
                 entries.push({ host, taskId, blockEl, textAnchor, html: inlineMetaLayoutCache.get(taskId)?.html || host.innerHTML || '', skip: false });
             }
-            // --- WRITE PHASE: apply layouts using gathered data ---
             for (let i = 0; i < entries.length; i++) {
                 const e = entries[i];
                 if (e.skip) {
@@ -2362,7 +2385,15 @@
                     }
                     continue;
                 }
-                layoutInlineMetaHost(e.blockEl, e.host, e.taskId, e.textAnchor, e.html, false);
+                const prevLayout = inlineMetaScrolling ? inlineMetaLayoutCache.get(e.taskId) : null;
+                const ok = layoutInlineMetaHost(e.blockEl, e.host, e.taskId, e.textAnchor, e.html, false, 0, 'refreshPos');
+                if (!ok && prevLayout) {
+                    e.host.classList.toggle('is-wrap', !!prevLayout.wrapMode);
+                    e.host.style.left = prevLayout.left;
+                    e.host.style.top = prevLayout.top;
+                    e.host.style.maxWidth = prevLayout.maxWidth;
+                    e.host.classList.add('is-ready');
+                }
             }
         }
 
@@ -2392,7 +2423,7 @@
                 return;
             }
             if (host.innerHTML !== html) host.innerHTML = html;
-            layoutInlineMetaHost(hostParent, host, taskId, textAnchor, html, forceRefresh, visibilityBuffer);
+            layoutInlineMetaHost(hostParent, host, taskId, textAnchor, html, forceRefresh, visibilityBuffer, 'renderBlock');
             if (hasCached) return;
             Promise.resolve(ensureTaskPropsReady(taskId, forceRefresh)).then((freshProps) => {
                 if (!host.isConnected) return;
@@ -2403,12 +2434,10 @@
                     inlineMetaLayoutCache.delete(taskId);
                     return;
                 }
-                requestAnimationFrame(() => {
-                    if (!host.isConnected) return;
-                    if (String(host.dataset.blockId || '').trim() !== taskId) return;
-                    if (host.innerHTML !== freshHtml) host.innerHTML = freshHtml;
-                    layoutInlineMetaHost(hostParent, host, taskId, textAnchor, freshHtml, true, visibilityBuffer);
-                });
+                if (host.innerHTML === freshHtml) return;
+                host.innerHTML = freshHtml;
+                inlineMetaLayoutCache.delete(taskId);
+                requestInlineMetaRender(false);
             }).catch(() => null);
         }
 
@@ -2419,7 +2448,7 @@
                     removeInlineMetaNodes();
                     return;
                 }
-                if (!inlineMetaScrolling) {
+                if (!inlineMetaScrolling || inlineMetaNeedSyncBlocks) {
                     syncInlineMetaObserveRoots();
                     syncInlineMetaTaskBlocks(false);
                 }
@@ -2508,6 +2537,35 @@
             };
             try { document.addEventListener('scroll', inlineMetaScrollHandler, { capture: true, passive: true }); } catch (e) {}
             try { window.addEventListener('resize', inlineMetaScrollHandler, true); } catch (e) {}
+            try {
+                const eb = globalThis.__taskHorizonPluginInstance?.eventBus || window.siyuan?.eventBus;
+                if (eb && typeof eb.on === 'function' && !inlineMetaWsHandler) {
+                    inlineMetaWsHandler = (msg) => {
+                        const cmd = msg?.detail?.cmd || msg?.cmd;
+                        if (cmd !== 'transactions') return;
+                        const structuralActions = new Set(['insert', 'delete', 'move', 'append', 'prepend', 'foldHeading', 'unfoldHeading']);
+                        let hasStructural = false;
+                        try {
+                            const data = msg?.detail?.data || msg?.data;
+                            const txs = Array.isArray(data) ? data : (data ? [data] : []);
+                            for (const tx of txs) {
+                                const ops = tx?.doOperations || tx?.operations || [];
+                                if (ops.some((op) => structuralActions.has(op?.action))) { hasStructural = true; break; }
+                            }
+                        } catch (e) {}
+                        if (hasStructural) {
+                            inlineMetaLayoutCache.clear();
+                            inlineMetaNeedSyncBlocks = true;
+                            if (inlineMetaWsTimer) clearTimeout(inlineMetaWsTimer);
+                            inlineMetaWsTimer = setTimeout(() => {
+                                inlineMetaWsTimer = null;
+                                requestInlineMetaRender(true);
+                            }, 60);
+                        }
+                    };
+                    eb.on('ws-main', inlineMetaWsHandler);
+                }
+            } catch (e) {}
             requestInlineMetaRender(true);
         }
 
@@ -2528,6 +2586,15 @@
             try { if (inlineMetaScrollHandler) document.removeEventListener('scroll', inlineMetaScrollHandler, true); } catch (e) {}
             try { if (inlineMetaScrollHandler) window.removeEventListener('resize', inlineMetaScrollHandler, true); } catch (e) {}
             inlineMetaScrollHandler = null;
+            try {
+                const eb = globalThis.__taskHorizonPluginInstance?.eventBus || window.siyuan?.eventBus;
+                if (eb && typeof eb.off === 'function' && inlineMetaWsHandler) {
+                    eb.off('ws-main', inlineMetaWsHandler);
+                }
+            } catch (e) {}
+            inlineMetaWsHandler = null;
+            if (inlineMetaWsTimer) clearTimeout(inlineMetaWsTimer);
+            inlineMetaWsTimer = null;
             setInlineMetaScrolling(false);
             removeInlineMetaNodes();
         }
