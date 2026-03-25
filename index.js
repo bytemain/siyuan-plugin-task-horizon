@@ -6,6 +6,8 @@ const AI_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/ai.js`;
 const QUICKBAR_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/quickbar.js`;
 const FULLCALENDAR_MIN_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/src/fullcalendar/index.global.min.js`;
 const FULLCALENDAR_ZH_LOCALE_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/src/fullcalendar/locales/zh-cn.global.min.js`;
+const BASECOAT_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/src/basecoat/basecoat.js`;
+const BASECOAT_CSS_PATH = `/data/plugins/${PLUGIN_ID}/src/basecoat/basecoat.css`;
 const CALENDAR_VIEW_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/calendar-view.js`;
 const CALENDAR_VIEW_CSS_PATH = `/data/plugins/${PLUGIN_ID}/calendar-view.css`;
 const TAB_TYPE = "task-horizon";
@@ -439,9 +441,11 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         try {
             delete globalThis.__tmCalendar;
         } catch (e) {}
+        await loadScriptText(BASECOAT_SCRIPT_PATH, "basecoat/basecoat.js");
         await loadScriptText(TASK_SCRIPT_PATH, "task.js");
         await loadScriptText(AI_SCRIPT_PATH, "ai.js");
         await loadScriptText(QUICKBAR_SCRIPT_PATH, "quickbar.js");
+        await loadStyleText(BASECOAT_CSS_PATH, "basecoat/basecoat.css");
         await loadScriptText(FULLCALENDAR_MIN_SCRIPT_PATH, "fullcalendar/index.global.min.js");
         await loadScriptText(FULLCALENDAR_ZH_LOCALE_SCRIPT_PATH, "fullcalendar/locales/zh-cn.global.min.js");
         await loadScriptText(CALENDAR_VIEW_SCRIPT_PATH, "calendar-view.js");
@@ -937,8 +941,10 @@ button,input,select,textarea{font:inherit;}
 
         this.syncTaskDockTheme(frame);
 
+        await loadScriptTextIntoDocument(doc, BASECOAT_SCRIPT_PATH, "basecoat/basecoat.js");
         await loadScriptTextIntoDocument(doc, TASK_SCRIPT_PATH, "task.js");
         await loadScriptTextIntoDocument(doc, AI_SCRIPT_PATH, "ai.js");
+        await loadStyleTextIntoDocument(doc, BASECOAT_CSS_PATH, "basecoat/basecoat.css");
         await loadScriptTextIntoDocument(doc, FULLCALENDAR_MIN_SCRIPT_PATH, "fullcalendar/index.global.min.js");
         await loadScriptTextIntoDocument(doc, FULLCALENDAR_ZH_LOCALE_SCRIPT_PATH, "fullcalendar/locales/zh-cn.global.min.js");
         await loadScriptTextIntoDocument(doc, CALENDAR_VIEW_SCRIPT_PATH, "calendar-view.js");

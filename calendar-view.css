@@ -942,8 +942,11 @@
     padding: 2px 4px;
 }
 
-.tm-calendar-wrap {
+.tm-calendar-wrap,
+.tm-calendar-host {
     --tm-calendar-half-hour-slot-height: 29px;
+    --tm-calendar-now-indicator-dot-size: 10px;
+    --tm-calendar-now-indicator-line-width: 2px;
     --fc-slot-min-height: 29px;
     --fc-timegrid-slot-min-height: 29px;
     --fc-page-bg-color: var(--tm-bg-color);
@@ -959,12 +962,15 @@
     --fc-button-active-border-color: rgba(0,0,0,0.22);
 }
 
-[data-theme-mode="dark"] .tm-calendar-wrap {
+[data-theme-mode="dark"] .tm-calendar-wrap,
+[data-theme-mode="dark"] .tm-calendar-host {
     --fc-border-color: rgba(255,255,255,0.14);
 }
 
 #tmCalendarSideDockTimeline {
     --tm-calendar-half-hour-slot-height: 29px;
+    --tm-calendar-now-indicator-dot-size: 10px;
+    --tm-calendar-now-indicator-line-width: 2px;
     --fc-slot-min-height: 29px;
     --fc-timegrid-slot-min-height: 29px;
     --fc-page-bg-color: var(--tm-bg-color);
@@ -976,6 +982,42 @@
 
 [data-theme-mode="dark"] #tmCalendarSideDockTimeline {
     --fc-border-color: rgba(255,255,255,0.14);
+}
+
+.tm-calendar-host .fc .fc-timegrid-now-indicator-container,
+.tm-calendar-wrap .fc .fc-timegrid-now-indicator-container,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-container {
+    overflow: visible;
+}
+
+.tm-calendar-host .fc .fc-timegrid-now-indicator-line,
+.tm-calendar-wrap .fc .fc-timegrid-now-indicator-line,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-line {
+    border-top-width: var(--tm-calendar-now-indicator-line-width);
+    margin-top: calc(var(--tm-calendar-now-indicator-line-width) / -2);
+    overflow: visible;
+    z-index: 6;
+}
+
+.tm-calendar-host .fc .fc-timegrid-now-indicator-line::before,
+.tm-calendar-wrap .fc .fc-timegrid-now-indicator-line::before,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-line::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: var(--tm-calendar-now-indicator-dot-size);
+    height: var(--tm-calendar-now-indicator-dot-size);
+    border-radius: 50%;
+    background: var(--fc-now-indicator-color);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 2px var(--fc-page-bg-color);
+}
+
+.tm-calendar-host .fc .fc-timegrid-now-indicator-arrow,
+.tm-calendar-wrap .fc .fc-timegrid-now-indicator-arrow,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-arrow {
+    display: none;
 }
 
 #tmCalendarSideDockTimeline .fc .fc-timegrid-col.fc-day-today,

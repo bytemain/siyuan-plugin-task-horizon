@@ -1,0 +1,336 @@
+:root {
+    --background: var(--tm-ui-background, #ffffff);
+    --foreground: var(--tm-ui-foreground, #111827);
+    --card: var(--tm-ui-card, var(--background));
+    --card-foreground: var(--foreground);
+    --popover: var(--tm-ui-popover, var(--background));
+    --popover-foreground: var(--foreground);
+    --primary: var(--tm-ui-primary, #2563eb);
+    --primary-foreground: var(--tm-ui-primary-foreground, #ffffff);
+    --secondary: var(--tm-ui-secondary, rgba(0, 0, 0, 0.06));
+    --secondary-foreground: var(--tm-ui-secondary-foreground, var(--foreground));
+    --muted: var(--tm-ui-muted, rgba(0, 0, 0, 0.05));
+    --muted-foreground: var(--tm-ui-muted-foreground, rgba(17, 24, 39, 0.72));
+    --accent: var(--tm-ui-accent, rgba(37, 99, 235, 0.16));
+    --accent-foreground: var(--tm-ui-accent-foreground, var(--foreground));
+    --destructive: var(--tm-ui-destructive, #dc2626);
+    --destructive-foreground: var(--tm-ui-destructive-foreground, #ffffff);
+    --border: var(--tm-ui-border, rgba(17, 24, 39, 0.16));
+    --input: var(--tm-ui-input, rgba(255, 255, 255, 0.14));
+    --ring: var(--tm-ui-ring, rgba(255, 255, 255, 0.45));
+    --radius: var(--tm-ui-radius, 10px);
+    --shadow-sm: 0 10px 26px rgba(15, 23, 42, 0.16);
+}
+
+.bc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid var(--border);
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
+}
+
+.bc-btn:hover {
+    background: color-mix(in srgb, var(--secondary) 72%, white 28%);
+}
+
+.bc-btn:focus-visible,
+.bc-select:focus-visible,
+.bc-tabs-trigger:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ring);
+}
+
+.bc-btn--sm {
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 13px;
+}
+
+.bc-btn--primary {
+    border-color: color-mix(in srgb, var(--primary) 68%, transparent 32%);
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.bc-btn--ghost {
+    background: transparent;
+}
+
+.bc-select {
+    height: 32px;
+    min-width: 96px;
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid var(--border);
+    background: var(--input);
+    color: var(--foreground);
+    padding: 0 34px 0 12px;
+    font: inherit;
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, currentColor 50%),
+        linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+        calc(100% - 16px) 13px,
+        calc(100% - 11px) 13px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+
+.bc-select-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 30px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 2px);
+    background: var(--input);
+    color: var(--foreground);
+    font: inherit;
+    font-weight: 600;
+    line-height: 1;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    text-align: left;
+    vertical-align: middle;
+    position: relative;
+    top: 0;
+    left: 0;
+    transform: none;
+    margin: 0;
+    outline: none;
+}
+
+.bc-select-trigger:hover,
+.bc-select-trigger:active,
+.bc-select-trigger:focus,
+.bc-select-trigger:focus-visible,
+.tm-topbar-select[data-open="true"] .bc-select-trigger {
+    top: 0;
+    left: 0;
+    transform: none;
+    margin: 0;
+}
+
+.bc-select-trigger__value {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bc-select-trigger__chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    opacity: 0.85;
+    transition: transform 120ms ease;
+}
+
+.bc-select-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 200050;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 100%;
+    max-height: min(320px, 60vh);
+    overflow: auto;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) + 2px);
+    background: var(--popover);
+    color: var(--popover-foreground);
+    box-shadow: var(--shadow-sm);
+}
+
+.bc-select-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: calc(var(--radius) - 4px);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.bc-select-option:hover {
+    background: var(--accent);
+    color: var(--accent-foreground);
+}
+
+.bc-select-option.is-selected {
+    background: color-mix(in srgb, var(--accent) 72%, transparent 28%);
+    color: var(--foreground);
+}
+
+.bc-select-option__check {
+    opacity: 0;
+    font-size: 12px;
+}
+
+.bc-select-option.is-selected .bc-select-option__check {
+    opacity: 1;
+}
+
+.tm-topbar-select {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    vertical-align: middle;
+    flex: 0 0 auto;
+}
+
+.tm-topbar-select[data-open="true"] .bc-select-trigger__chevron {
+    transform: rotate(180deg);
+}
+
+.bc-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.bc-field__label {
+    color: var(--muted-foreground);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.bc-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.bc-tabs-list {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--muted);
+    box-sizing: border-box;
+}
+
+.bc-tabs-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: calc(var(--radius) - 4px);
+    background: transparent;
+    color: var(--muted-foreground);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.bc-tabs-trigger[data-state="active"] {
+    background: var(--card);
+    color: var(--foreground);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.14);
+}
+
+.bc-dropdown-menu {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 220px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) + 2px);
+    background: var(--popover);
+    color: var(--popover-foreground);
+    box-shadow: var(--shadow-sm);
+}
+
+.bc-dropdown-menu [aria-disabled="true"] {
+    opacity: 0.65;
+}
+
+[data-tooltip]::before,
+[data-tooltip]::after {
+    content: none !important;
+    display: none !important;
+}
+
+.bc-toast-viewport {
+    position: fixed;
+    top: 86px;
+    right: 46px;
+    z-index: 200020;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(260px, calc(100vw - 54px));
+}
+
+.bc-toast {
+    display: grid;
+    gap: 4px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) + 2px);
+    background: var(--popover);
+    color: var(--popover-foreground);
+    box-shadow: var(--shadow-sm);
+}
+
+.bc-toast[data-variant="success"] {
+    border-color: color-mix(in srgb, var(--tm-success-color, #16a34a) 45%, var(--border) 55%);
+}
+
+.bc-toast[data-variant="error"] {
+    border-color: color-mix(in srgb, var(--destructive) 55%, var(--border) 45%);
+}
+
+.bc-toast[data-variant="warning"] {
+    border-color: color-mix(in srgb, #f59e0b 45%, var(--border) 55%);
+}
+
+.bc-toast__title {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.bc-toast__description {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--muted-foreground);
+}

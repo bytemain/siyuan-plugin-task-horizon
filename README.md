@@ -6,9 +6,20 @@
 视图介绍：
 [任务管理器插件 V1.5发布：支持白板视图，附时间轴、看板、日历、表格 视图使用介绍](https://ld246.com/article/1771900014059)
 
-赞助者名单：[bigyelloworange](https://ld246.com/member/bigyelloworange) / [Floria233](https://ld246.com/member/Floria233) / [nj90hou](https://ld246.com/member/nj90hou) / [sky90038528](https://ld246.com/member/sky90038528) / [Lu9693](https://ld246.com/member/Lu9693) / [ggltxj](https://ld246.com/member/ggltxj) 
+PR贡献名单：[bytemain](https://github.com/bytemain)
+赞助者名单：[bigyelloworange](https://ld246.com/member/bigyelloworange) / [Floria233](https://ld246.com/member/Floria233) / [nj90hou](https://ld246.com/member/nj90hou) / [sky90038528](https://ld246.com/member/sky90038528) / [Lu9693](https://ld246.com/member/Lu9693) / [ggltxj](https://ld246.com/member/ggltxj) / [mozhu](https://ld246.com/member/mozhu) / [ppt68298100](https://ld246.com/member/ppt68298100) 
 
 # 更新记录
+
+## 1.9.1更新内容
+- 新增：常规设置->新建任务位置 新增“今天日记默认笔记本”设置，可选择新建任务至日记的默认笔记本
+- 新增：外观设置->表格视图待定分组任务行背景 颜色设置，可调整表格视图按时间分组时待定分组的任务背景颜色
+- 优化：引入Basecoat UI组件，整体外观更现代
+- 优化：日历时间指示器样式优化
+- 优化：清单视图在打开日历侧边栏时，任务详情变为抽屉模式弹出
+- 优化：减少笔记内任务块常驻标签元素大量重绘 PR贡献:bytemain
+- 修复：侧边栏跳转至文档导致侧边栏空白 PR贡献:bytemain
+- 修复：部分设置项可能未保存的问题
 
 ## 1.9.0更新内容
 - 优化：日程块外观样式
@@ -54,6 +65,9 @@
 - 修复：看板视图含有子任务的任务，执行全部折叠无效的问题
 - 修复：白板有概率丢失卡片问题
 
+<details>
+<summary>历史版本更新（点击展开）</summary>
+
 ## 1.8.3更新内容
 - **新增：文档页签排序，默认按文档创建时间降序，右击文档页签的菜单可设置排序规则**
 - **新增：常规设置->搜索与分组增加：全部折叠展开包含分组设置，开启后，顶部和右上角菜单里的“全部折叠/展开”会连同当前视图里的分组一起处理**
@@ -63,9 +77,6 @@
 - 优化：置顶任务增加分组栏，分类更清晰
 - 修复：AI工作台摘要总结无法获取已完成任务问题
 - 修复：1.8.2子任务进度条不显示问题
-
-<details>
-<summary>历史版本更新（点击展开）</summary>
 
 ## 1.8.1更新内容
 ### 新增：AI工作台🤖
@@ -498,3 +509,4 @@
 - dhtmlxGantt：时间轴视图开发
 - FullCalendar：日历视图开发
 - holiday.ailcc.com：日历节假日api
+- Basecoatui：交互控件开发

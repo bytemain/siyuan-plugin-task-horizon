@@ -209,6 +209,14 @@
 .fc a.fc-event:focus,
 .fc .fc-daygrid-event:focus,
 .fc .fc-daygrid-event:focus-within{outline:none !important;box-shadow:none !important;}
+.tm-calendar-host .fc .fc-timegrid-now-indicator-container,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-container{overflow:visible !important;}
+.tm-calendar-host .fc .fc-timegrid-now-indicator-line,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-line{border-top-width:2px !important;margin-top:-1px !important;overflow:visible !important;z-index:6 !important;}
+.tm-calendar-host .fc .fc-timegrid-now-indicator-line::before,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-line::before{content:"";position:absolute;left:0;top:50%;width:10px;height:10px;border-radius:999px;background:var(--fc-now-indicator-color, #0078d4);transform:translate(-50%, -50%);box-shadow:0 0 0 2px var(--fc-page-bg-color, #fff);}
+.tm-calendar-host .fc .fc-timegrid-now-indicator-arrow,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-arrow{display:none !important;}
         `.trim();
         const existing = document.getElementById(id);
         if (existing && existing.tagName === 'STYLE') {
@@ -672,13 +680,59 @@
         try { calendar?.setOption?.('contentHeight', contentHeight); } catch (e) {}
         try { forceSideDaySlotHeight(rootEl, nextSettings); } catch (e) {}
         try { calendar?.updateSize?.(); } catch (e) {}
+        try { enhanceNowIndicator(rootEl); } catch (e) {}
         try {
             requestAnimationFrame(() => {
                 try { forceSideDaySlotHeight(rootEl, nextSettings); } catch (e2) {}
                 try { calendar?.updateSize?.(); } catch (e2) {}
+                try { enhanceNowIndicator(rootEl); } catch (e2) {}
             });
         } catch (e) {}
         return true;
+    }
+
+    function enhanceNowIndicator(rootEl) {
+        if (!(rootEl instanceof HTMLElement)) return false;
+        const pageBg = String(window.getComputedStyle(rootEl).getPropertyValue('--fc-page-bg-color') || '').trim() || '#fff';
+        const nowColor = String(window.getComputedStyle(rootEl).getPropertyValue('--fc-now-indicator-color') || '').trim() || '#0078d4';
+        const containers = rootEl.querySelectorAll('.fc-timegrid-now-indicator-container');
+        containers.forEach((node) => {
+            if (!(node instanceof HTMLElement)) return;
+            try { node.style.setProperty('overflow', 'visible', 'important'); } catch (e) {}
+        });
+        const arrows = rootEl.querySelectorAll('.fc-timegrid-now-indicator-arrow');
+        arrows.forEach((node) => {
+            if (!(node instanceof HTMLElement)) return;
+            try { node.style.setProperty('display', 'none', 'important'); } catch (e) {}
+        });
+        const lines = rootEl.querySelectorAll('.fc-timegrid-now-indicator-line');
+        lines.forEach((node) => {
+            if (!(node instanceof HTMLElement)) return;
+            try { node.style.setProperty('border-top-width', '2px', 'important'); } catch (e) {}
+            try { node.style.setProperty('margin-top', '-1px', 'important'); } catch (e) {}
+            try { node.style.setProperty('overflow', 'visible', 'important'); } catch (e) {}
+            try { node.style.setProperty('z-index', '6', 'important'); } catch (e) {}
+            let dot = node.querySelector('.tm-now-indicator-dot');
+            if (!(dot instanceof HTMLElement)) {
+                dot = document.createElement('span');
+                dot.className = 'tm-now-indicator-dot';
+                try { node.appendChild(dot); } catch (e) { dot = null; }
+            }
+            if (!(dot instanceof HTMLElement)) return;
+            try { dot.style.position = 'absolute'; } catch (e) {}
+            try { dot.style.left = '0'; } catch (e) {}
+            try { dot.style.top = '50%'; } catch (e) {}
+            try { dot.style.width = '10px'; } catch (e) {}
+            try { dot.style.height = '10px'; } catch (e) {}
+            try { dot.style.borderRadius = '999px'; } catch (e) {}
+            try { dot.style.transform = 'translate(-50%, -50%)'; } catch (e) {}
+            try { dot.style.background = nowColor; } catch (e) {}
+            try { dot.style.boxShadow = `0 0 0 2px ${pageBg}`; } catch (e) {}
+            try { dot.style.pointerEvents = 'none'; } catch (e) {}
+            try { dot.style.display = 'block'; } catch (e) {}
+            try { dot.style.zIndex = '1'; } catch (e) {}
+        });
+        return lines.length > 0;
     }
 
     function refreshCalendarSlotHeight(settings) {
@@ -7728,10 +7782,12 @@
                 } catch (e) {}
                 try {
                     requestAnimationFrame(() => {
+                        try { enhanceNowIndicator(host); } catch (e2) {}
                         try { applyCnHolidayDots(wrap); } catch (e2) {}
                         try { applyCnLunarLabels(wrap); } catch (e2) {}
                     });
                     setTimeout(() => {
+                        try { enhanceNowIndicator(host); } catch (e2) {}
                         try { applyCnHolidayDots(wrap); } catch (e2) {}
                         try { applyCnLunarLabels(wrap); } catch (e2) {}
                     }, 0);
@@ -7740,7 +7796,10 @@
             loading: (isLoading) => {
                 try {
                     if (!isLoading) {
-                        requestAnimationFrame(() => { try { calendar.updateSize(); } catch (e2) {} });
+                        requestAnimationFrame(() => {
+                            try { calendar.updateSize(); } catch (e2) {}
+                            try { enhanceNowIndicator(host); } catch (e2) {}
+                        });
                     }
                 } catch (e) {}
             },
@@ -7757,6 +7816,7 @@
         try {
             requestAnimationFrame(() => {
                 try { calendar.updateSize(); } catch (e2) {}
+                try { enhanceNowIndicator(host); } catch (e2) {}
             });
         } catch (e) {}
         try { renderMiniCalendar(wrap); } catch (e) {}

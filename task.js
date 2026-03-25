@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.9.0
+// @version      1.9.1
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -88,6 +88,40 @@
             --tm-topbar-search-text: #333333;
             --tm-topbar-search-border: rgba(255,255,255,0.3);
             --tm-topbar-scrollbar-thumb: rgba(255,255,255,0.25);
+            --tm-ui-background: var(--tm-bg-color);
+            --tm-ui-foreground: var(--tm-text-color);
+            --tm-ui-card: var(--tm-card-bg);
+            --tm-ui-popover: color-mix(in srgb, var(--tm-header-bg) 82%, var(--tm-bg-color) 18%);
+            --tm-ui-primary: var(--tm-primary-color);
+            --tm-ui-primary-foreground: #ffffff;
+            --tm-ui-secondary: var(--tm-topbar-control-bg);
+            --tm-ui-secondary-foreground: var(--tm-topbar-control-text);
+            --tm-ui-muted: var(--tm-topbar-seg-bg);
+            --tm-ui-muted-foreground: var(--tm-topbar-seg-item-text);
+            --tm-ui-accent: var(--tm-topbar-seg-item-active-bg);
+            --tm-ui-accent-foreground: var(--tm-topbar-control-text);
+            --tm-ui-border: var(--tm-topbar-control-border);
+            --tm-ui-input: var(--tm-topbar-control-bg);
+            --tm-ui-ring: rgba(255,255,255,0.4);
+            --tm-ui-radius: 10px;
+            --background: var(--tm-ui-background);
+            --foreground: var(--tm-ui-foreground);
+            --card: var(--tm-ui-card);
+            --card-foreground: var(--tm-ui-foreground);
+            --popover: var(--tm-ui-popover);
+            --popover-foreground: var(--tm-ui-foreground);
+            --primary: var(--tm-ui-primary);
+            --primary-foreground: var(--tm-ui-primary-foreground);
+            --secondary: var(--tm-ui-secondary);
+            --secondary-foreground: var(--tm-ui-secondary-foreground);
+            --muted: var(--tm-ui-muted);
+            --muted-foreground: var(--tm-ui-muted-foreground);
+            --accent: var(--tm-ui-accent);
+            --accent-foreground: var(--tm-ui-accent-foreground);
+            --border: var(--tm-ui-border);
+            --input: var(--tm-ui-input);
+            --ring: var(--tm-ui-ring);
+            --radius: var(--tm-ui-radius);
             --tm-task-content-color: var(--tm-text-color);
             --tm-task-meta-color: var(--tm-secondary-text);
             --tm-group-doc-label-color: var(--tm-text-color);
@@ -136,6 +170,8 @@
             --tm-topbar-grad-start: #3b49b7;
             --tm-topbar-grad-end: #5b2d7a;
             --tm-topbar-text-color: #ffffff;
+            --tm-ui-primary-foreground: #ffffff;
+            --tm-ui-ring: rgba(255,255,255,0.34);
             --tm-task-content-color: var(--tm-text-color);
             --tm-task-meta-color: var(--tm-secondary-text);
             --tm-group-doc-label-color: var(--tm-text-color);
@@ -835,6 +871,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            min-height: 48px;
+            overflow-x: auto;
+            overflow-y: visible;
+            box-sizing: border-box;
         }
 
         .tm-filter-rule-bar .tm-btn-info {
@@ -924,6 +964,7 @@
             min-width: 0;
             flex-wrap: nowrap;
             overflow-x: auto;
+            overflow-y: visible;
             -webkit-overflow-scrolling: touch;
         }
 
@@ -1533,44 +1574,115 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tm-search-box::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tm-search-box::-webkit-scrollbar-thumb {
+            background: var(--tm-topbar-scrollbar-thumb);
+            border-radius: 999px;
         }
 
         .tm-view-segmented {
             display: inline-flex;
-            align-items: stretch;
-            height: 30px;
-            border-radius: 999px;
-            overflow: hidden;
+            align-items: center;
+            min-height: 32px;
+            border-radius: var(--tm-ui-radius);
+            overflow: visible;
             background: var(--tm-topbar-seg-bg);
             border: 1px solid var(--tm-topbar-seg-border);
+            gap: 2px;
+            padding: 1px;
             flex: none;
+            box-sizing: border-box;
         }
 
         .tm-view-seg-item {
             appearance: none;
-            border: none;
+            border: 1px solid transparent;
             background: transparent;
             color: var(--tm-topbar-seg-item-text);
             padding: 0 12px;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            line-height: 30px;
+            line-height: 28px;
             white-space: nowrap;
             user-select: none;
+            min-height: 28px;
+            box-sizing: border-box;
+            border-radius: calc(var(--tm-ui-radius) - 3px);
         }
 
-        .tm-view-seg-item + .tm-view-seg-item {
-            border-left: 1px solid var(--tm-topbar-seg-item-sep);
+        .tm-filter-rule-bar .bc-btn--sm,
+        .tm-filter-rule-bar .bc-select,
+        .tm-filter-rule-bar .bc-select-trigger,
+        .tm-filter-rule-bar .bc-tabs-trigger {
+            height: 30px !important;
+            min-height: 30px !important;
+        }
+
+        .tm-filter-rule-bar .bc-tabs-list {
+            height: 30px;
+            min-height: 30px;
+            border-radius: calc(var(--tm-ui-radius) - 2px);
+            padding: 1px;
+            align-items: center;
+        }
+
+        .tm-filter-rule-bar .tm-view-segmented {
+            height: 30px;
+            min-height: 30px;
+        }
+
+        .tm-filter-rule-bar .tm-view-seg-item,
+        .tm-filter-rule-bar .bc-tabs-trigger {
+            height: 28px !important;
+            min-height: 28px !important;
+            line-height: 28px !important;
+        }
+
+        .tm-filter-rule-bar .tm-topbar-row {
+            min-width: max-content;
+            flex-wrap: nowrap !important;
+        }
+
+        .tm-filter-rule-bar .tm-rule-selector {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex: 0 0 auto;
+            align-self: center;
+            vertical-align: middle;
+        }
+
+        .tm-filter-rule-bar .tm-topbar-select {
+            min-width: 0;
+        }
+
+        .tm-filter-rule-bar .tm-topbar-select--narrow {
+            min-width: 0;
+        }
+
+        .tm-filter-rule-bar .tm-topbar-select--wide {
+            min-width: 0;
         }
 
         .tm-view-seg-item:hover {
             background: var(--tm-topbar-seg-item-hover);
+            border-color: var(--tm-topbar-seg-border);
         }
 
         .tm-view-seg-item--active {
             background: var(--tm-topbar-seg-item-active-bg);
             color: var(--tm-topbar-control-text);
+            border-color: var(--tm-topbar-seg-border);
         }
 
         .tm-view-seg-item--active:hover {
@@ -5950,7 +6062,7 @@
             checklistCompactMode: true,
             kanbanColumnWidth: 320,
             kanbanShowDoneColumn: false,
-            kanbanDragSyncSubtasks: false,
+            kanbanDragSyncSubtasks: true,
             kanbanHeadingGroupMode: false,
             docH2SubgroupEnabled: true,
             groupByTaskName: false,
@@ -5989,6 +6101,7 @@
             aiSideDockEnabled: true,
             pinNewTasksByDefault: false,
             newTaskDocId: '',
+            newTaskDailyNoteNotebookId: '',
             newTaskDailyNoteAppendToBottom: false,
             headingGroupCreateAtSectionEnd: false,
             enableTomatoIntegration: true,
@@ -6117,6 +6230,8 @@
             timeGroupBaseColorDark: '#6ba5ff',
             timeGroupOverdueColorLight: '#d93025',
             timeGroupOverdueColorDark: '#ff6b6b',
+            timeGroupPendingTaskBgColorLight: '#9aa0a6',
+            timeGroupPendingTaskBgColorDark: '#8ab4f8',
             progressBarColorLight: '#4caf50',
             progressBarColorDark: '#81c784',
             tableBorderColorLight: '#e9ecef',
@@ -6266,6 +6381,7 @@
                                 if (typeof cloudData.aiSideDockEnabled === 'boolean') this.data.aiSideDockEnabled = cloudData.aiSideDockEnabled;
                                 if (typeof cloudData.pinNewTasksByDefault === 'boolean') this.data.pinNewTasksByDefault = cloudData.pinNewTasksByDefault;
                                 if (typeof cloudData.newTaskDocId === 'string') this.data.newTaskDocId = cloudData.newTaskDocId;
+                                if (typeof cloudData.newTaskDailyNoteNotebookId === 'string') this.data.newTaskDailyNoteNotebookId = cloudData.newTaskDailyNoteNotebookId;
                                 if (typeof cloudData.newTaskDailyNoteAppendToBottom === 'boolean') this.data.newTaskDailyNoteAppendToBottom = cloudData.newTaskDailyNoteAppendToBottom;
                                 if (typeof cloudData.headingGroupCreateAtSectionEnd === 'boolean') this.data.headingGroupCreateAtSectionEnd = cloudData.headingGroupCreateAtSectionEnd;
                                 if (typeof cloudData.enableTomatoIntegration === 'boolean') this.data.enableTomatoIntegration = cloudData.enableTomatoIntegration;
@@ -6321,6 +6437,7 @@
                                 if (typeof cloudData.docTopbarButtonMobile === 'boolean') this.data.docTopbarButtonMobile = cloudData.docTopbarButtonMobile;
                                 if (typeof cloudData.windowTopbarIconDesktop === 'boolean') this.data.windowTopbarIconDesktop = cloudData.windowTopbarIconDesktop;
                                 if (typeof cloudData.windowTopbarIconMobile === 'boolean') this.data.windowTopbarIconMobile = cloudData.windowTopbarIconMobile;
+                                if (typeof cloudData.checklistDetailWidth === 'number') this.data.checklistDetailWidth = cloudData.checklistDetailWidth;
                                 if (typeof cloudData.defaultDocId === 'string') this.data.defaultDocId = cloudData.defaultDocId;
                                 if (cloudData.defaultDocIdByGroup && typeof cloudData.defaultDocIdByGroup === 'object') this.data.defaultDocIdByGroup = cloudData.defaultDocIdByGroup;
                                 if (cloudData.priorityScoreConfig && typeof cloudData.priorityScoreConfig === 'object') this.data.priorityScoreConfig = cloudData.priorityScoreConfig;
@@ -6368,6 +6485,8 @@
                                 if (typeof cloudData.timelineContentWidth === 'number') this.data.timelineContentWidth = cloudData.timelineContentWidth;
                                 if (typeof cloudData.timelineForceSortByCompletionNearToday === 'boolean') this.data.timelineForceSortByCompletionNearToday = cloudData.timelineForceSortByCompletionNearToday;
                                 if (typeof cloudData.groupSortByBestSubtaskTimeInTimeQuadrant === 'boolean') this.data.groupSortByBestSubtaskTimeInTimeQuadrant = cloudData.groupSortByBestSubtaskTimeInTimeQuadrant;
+                                if (typeof cloudData.collapseAllIncludesGroups === 'boolean') this.data.collapseAllIncludesGroups = cloudData.collapseAllIncludesGroups;
+                                if (typeof cloudData.enableGroupTaskBgByGroupColor === 'boolean') this.data.enableGroupTaskBgByGroupColor = cloudData.enableGroupTaskBgByGroupColor;
                                 if (Array.isArray(cloudData.whiteboardLinks)) this.data.whiteboardLinks = cloudData.whiteboardLinks;
                                 if (typeof cloudData.whiteboardAutoConnectByCreated === 'boolean') this.data.whiteboardAutoConnectByCreated = cloudData.whiteboardAutoConnectByCreated;
                                 if (cloudData.whiteboardDetachedChildren && typeof cloudData.whiteboardDetachedChildren === 'object') this.data.whiteboardDetachedChildren = cloudData.whiteboardDetachedChildren;
@@ -6384,6 +6503,7 @@
                                 if (typeof cloudData.whiteboardSequenceMode === 'boolean') this.data.whiteboardSequenceMode = cloudData.whiteboardSequenceMode;
                                 if (cloudData.docColorMap && typeof cloudData.docColorMap === 'object') this.data.docColorMap = cloudData.docColorMap;
                                 if (typeof cloudData.docColorSeed === 'number') this.data.docColorSeed = cloudData.docColorSeed;
+                                if (typeof cloudData.docTabSortMode === 'string') this.data.docTabSortMode = cloudData.docTabSortMode;
                                 if (typeof cloudData.aiEnabled === 'boolean') this.data.aiEnabled = cloudData.aiEnabled;
                                 if (typeof cloudData.aiProvider === 'string') this.data.aiProvider = cloudData.aiProvider;
                                 if (typeof cloudData.aiMiniMaxApiKey === 'string') this.data.aiMiniMaxApiKey = cloudData.aiMiniMaxApiKey;
@@ -6506,6 +6626,8 @@
             this.data.timeGroupBaseColorDark = Storage.get('tm_time_group_base_color_dark', this.data.timeGroupBaseColorDark);
             this.data.timeGroupOverdueColorLight = Storage.get('tm_time_group_overdue_color_light', this.data.timeGroupOverdueColorLight);
             this.data.timeGroupOverdueColorDark = Storage.get('tm_time_group_overdue_color_dark', this.data.timeGroupOverdueColorDark);
+            this.data.timeGroupPendingTaskBgColorLight = Storage.get('tm_time_group_pending_task_bg_color_light', this.data.timeGroupPendingTaskBgColorLight);
+            this.data.timeGroupPendingTaskBgColorDark = Storage.get('tm_time_group_pending_task_bg_color_dark', this.data.timeGroupPendingTaskBgColorDark);
             this.data.progressBarColorLight = Storage.get('tm_progress_bar_color_light', this.data.progressBarColorLight);
             this.data.progressBarColorDark = Storage.get('tm_progress_bar_color_dark', this.data.progressBarColorDark);
             this.data.tableBorderColorLight = Storage.get('tm_table_border_color_light', this.data.tableBorderColorLight);
@@ -6516,6 +6638,7 @@
             this.data.quickbarInlineShowOnMobile = !!Storage.get('tm_quickbar_inline_show_on_mobile', this.data.quickbarInlineShowOnMobile);
             this.data.pinNewTasksByDefault = Storage.get('tm_pin_new_tasks_by_default', false);
             this.data.newTaskDocId = Storage.get('tm_new_task_doc_id', '');
+            this.data.newTaskDailyNoteNotebookId = String(Storage.get('tm_new_task_daily_note_notebook_id', this.data.newTaskDailyNoteNotebookId) || '').trim();
             this.data.docTabSortMode = String(Storage.get('tm_doc_tab_sort_mode', this.data.docTabSortMode) || this.data.docTabSortMode || 'created_desc').trim() || 'created_desc';
             this.data.taskAutoWrapEnabled = Storage.get('tm_task_auto_wrap_enabled', this.data.taskAutoWrapEnabled);
             this.data.taskContentWrapMaxLines = Number(Storage.get('tm_task_content_wrap_max_lines', this.data.taskContentWrapMaxLines));
@@ -6546,6 +6669,8 @@
             this.data.calendarTaskDateColorMode = Storage.get('tm_calendar_task_date_color_mode', this.data.calendarTaskDateColorMode);
             this.data.calendarNewScheduleMaxDurationMin = Number(Storage.get('tm_calendar_new_schedule_max_duration_min', this.data.calendarNewScheduleMaxDurationMin));
             this.data.calendarHourSlotHeightMode = Storage.get('tm_calendar_hour_slot_height_mode', this.data.calendarHourSlotHeightMode);
+            this.data.calendarVisibleStartTime = String(Storage.get('tm_calendar_visible_start_time', this.data.calendarVisibleStartTime) || this.data.calendarVisibleStartTime || '00:00');
+            this.data.calendarVisibleEndTime = String(Storage.get('tm_calendar_visible_end_time', this.data.calendarVisibleEndTime) || this.data.calendarVisibleEndTime || '24:00');
             this.data.calendarScheduleColor = Storage.get('tm_calendar_schedule_color', this.data.calendarScheduleColor);
             this.data.calendarTaskDatesColor = Storage.get('tm_calendar_task_dates_color', this.data.calendarTaskDatesColor);
             this.data.calendarShowCnHoliday = Storage.get('tm_calendar_show_cn_holiday', this.data.calendarShowCnHoliday);
@@ -6581,6 +6706,7 @@
             this.data.docPinnedByGroup = Storage.get('tm_doc_pinned_by_group', this.data.docPinnedByGroup) || {};
             this.data.currentGroupId = Storage.get('tm_current_group_id', 'all');
             this.data.customStatusOptions = Storage.get('tm_custom_status_options', this.data.customStatusOptions);
+            this.data.taskHeadingLevel = Storage.get('tm_task_heading_level', this.data.taskHeadingLevel);
             this.data.columnOrder = Storage.get('tm_column_order', this.data.columnOrder);
             this.data.durationFormat = Storage.get('tm_duration_format', this.data.durationFormat);
             this.data.excludeCompletedTasks = Storage.get('tm_exclude_completed_tasks', this.data.excludeCompletedTasks);
@@ -6606,6 +6732,7 @@
             this.data.whiteboardSequenceMode = Storage.get('tm_whiteboard_sequence_mode', this.data.whiteboardSequenceMode);
             this.data.docColorMap = Storage.get('tm_doc_color_map', this.data.docColorMap) || {};
             this.data.docColorSeed = Storage.get('tm_doc_color_seed', this.data.docColorSeed);
+            this.data.enableGroupTaskBgByGroupColor = Storage.get('tm_enable_group_task_bg_by_group_color', this.data.enableGroupTaskBgByGroupColor);
             this.data.aiEnabled = !!Storage.get('tm_ai_enabled', this.data.aiEnabled);
             this.data.aiSideDockEnabled = !!Storage.get('tm_ai_side_dock_enabled', this.data.aiSideDockEnabled);
             this.data.aiProvider = String(Storage.get('tm_ai_provider', this.data.aiProvider) || this.data.aiProvider).trim() === 'deepseek' ? 'deepseek' : 'minimax';
@@ -6747,6 +6874,8 @@
             Storage.set('tm_time_group_base_color_dark', String(this.data.timeGroupBaseColorDark || '').trim());
             Storage.set('tm_time_group_overdue_color_light', String(this.data.timeGroupOverdueColorLight || '').trim());
             Storage.set('tm_time_group_overdue_color_dark', String(this.data.timeGroupOverdueColorDark || '').trim());
+            Storage.set('tm_time_group_pending_task_bg_color_light', String(this.data.timeGroupPendingTaskBgColorLight || '').trim());
+            Storage.set('tm_time_group_pending_task_bg_color_dark', String(this.data.timeGroupPendingTaskBgColorDark || '').trim());
             Storage.set('tm_progress_bar_color_light', String(this.data.progressBarColorLight || '').trim());
             Storage.set('tm_progress_bar_color_dark', String(this.data.progressBarColorDark || '').trim());
             Storage.set('tm_table_border_color_light', String(this.data.tableBorderColorLight || '').trim());
@@ -6757,6 +6886,7 @@
             Storage.set('tm_quickbar_inline_show_on_mobile', !!this.data.quickbarInlineShowOnMobile);
             Storage.set('tm_pin_new_tasks_by_default', !!this.data.pinNewTasksByDefault);
             Storage.set('tm_new_task_doc_id', String(this.data.newTaskDocId || '').trim());
+            Storage.set('tm_new_task_daily_note_notebook_id', String(this.data.newTaskDailyNoteNotebookId || '').trim());
             Storage.set('tm_new_task_daily_note_append_to_bottom', !!this.data.newTaskDailyNoteAppendToBottom);
             Storage.set('tm_heading_group_create_at_section_end', !!this.data.headingGroupCreateAtSectionEnd);
             Storage.set('tm_doc_tab_sort_mode', String(this.data.docTabSortMode || 'created_desc').trim() || 'created_desc');
@@ -6789,6 +6919,8 @@
             Storage.set('tm_calendar_task_date_color_mode', String(this.data.calendarTaskDateColorMode || 'group').trim() || 'group');
             Storage.set('tm_calendar_new_schedule_max_duration_min', Number(this.data.calendarNewScheduleMaxDurationMin) || 60);
             Storage.set('tm_calendar_hour_slot_height_mode', String(this.data.calendarHourSlotHeightMode || 'normal').trim() || 'normal');
+            Storage.set('tm_calendar_visible_start_time', String(this.data.calendarVisibleStartTime || '00:00').trim() || '00:00');
+            Storage.set('tm_calendar_visible_end_time', String(this.data.calendarVisibleEndTime || '24:00').trim() || '24:00');
             Storage.set('tm_calendar_schedule_color', String(this.data.calendarScheduleColor || '').trim());
             Storage.set('tm_calendar_task_dates_color', String(this.data.calendarTaskDatesColor || '').trim());
             Storage.set('tm_calendar_show_cn_holiday', !!this.data.calendarShowCnHoliday);
@@ -6826,8 +6958,12 @@
             Storage.set('tm_doc_pinned_by_group', this.data.docPinnedByGroup || {});
             Storage.set('tm_current_group_id', this.data.currentGroupId);
             Storage.set('tm_custom_status_options', this.data.customStatusOptions);
+            Storage.set('tm_task_heading_level', String(this.data.taskHeadingLevel || 'h2').trim() || 'h2');
             Storage.set('tm_column_widths', this.data.columnWidths);
             Storage.set('tm_column_order', this.data.columnOrder);
+            Storage.set('tm_duration_format', String(this.data.durationFormat || 'hours').trim() === 'minutes' ? 'minutes' : 'hours');
+            Storage.set('tm_exclude_completed_tasks', !!this.data.excludeCompletedTasks);
+            Storage.set('tm_start_date', Number(this.data.startDate) || 90);
             Storage.set('tm_timeline_left_width', this.data.timelineLeftWidth);
             Storage.set('tm_timeline_content_width', this.data.timelineContentWidth);
             Storage.set('tm_timeline_force_sort_completion_near_today', !!this.data.timelineForceSortByCompletionNearToday);
@@ -6849,6 +6985,7 @@
             Storage.set('tm_whiteboard_sequence_mode', !!this.data.whiteboardSequenceMode);
             Storage.set('tm_doc_color_map', this.data.docColorMap || {});
             Storage.set('tm_doc_color_seed', Number(this.data.docColorSeed) || 1);
+            Storage.set('tm_enable_group_task_bg_by_group_color', !!this.data.enableGroupTaskBgByGroupColor);
             Storage.set('tm_ai_enabled', !!this.data.aiEnabled);
             Storage.set('tm_ai_side_dock_enabled', !!this.data.aiSideDockEnabled);
             Storage.set('tm_ai_provider', String(this.data.aiProvider || '').trim() === 'deepseek' ? 'deepseek' : 'minimax');
@@ -11290,6 +11427,12 @@ async function __tmRefreshAfterWake(reason) {
         return __tmGetSafeViewMode(raw);
     };
 
+    const __tmEscAttr = (value) => String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
     const __tmDispatchDockSettingsChanged = (reason = '') => {
         const runtimeMobile = __tmIsRuntimeMobileClient();
         const detail = {
@@ -11314,9 +11457,46 @@ async function __tmRefreshAfterWake(reason) {
             const extra = view.id === 'calendar'
                 ? ' oncontextmenu="return tmHandleCalendarViewButtonContextMenu(event)"'
                 : '';
-            return `<button class="tm-view-seg-item ${activeMode === view.id ? 'tm-view-seg-item--active' : ''}" onclick="tmSwitchViewMode('${view.id}')"${extra} role="tab" aria-selected="${activeMode === view.id ? 'true' : 'false'}"${buttonStyle} title="${view.label}">${view.label}</button>`;
+            const active = activeMode === view.id;
+            return `<button class="tm-view-seg-item bc-tabs-trigger ${active ? 'tm-view-seg-item--active' : ''}" data-state="${active ? 'active' : 'inactive'}" onclick="tmSwitchViewMode('${view.id}')"${extra} role="tab" aria-selected="${active ? 'true' : 'false'}"${buttonStyle} title="${view.label}" data-tooltip="${view.label}">${view.label}</button>`;
         }).join('');
         return buttons;
+    };
+
+    const __tmRenderTopbarSelect = (opts = {}) => {
+        const id = String(opts.id || '').trim();
+        const label = String(opts.label || '').trim();
+        const options = Array.isArray(opts.options) ? opts.options : [];
+        const extraClass = String(opts.className || '').trim();
+        const current = options.find((item) => item && item.selected) || options[0] || { label: '' };
+        const maxChars = options.reduce((max, item) => {
+            const len = String(item?.label || '').trim().length;
+            return Math.max(max, len);
+        }, String(current?.label || '').trim().length || 0);
+        const widthPx = Math.max(96, Math.min(220, Math.round(maxChars * 16 + 44)));
+        const styleParts = [];
+        if (opts.style) styleParts.push(String(opts.style));
+        styleParts.push(`width:${widthPx}px;`);
+        const styleAttr = styleParts.length ? ` style="${__tmEscAttr(styleParts.join(' '))}"` : '';
+        return `
+            <div class="tm-topbar-select ${extraClass}" id="${__tmEscAttr(id)}" data-open="false"${styleAttr}>
+                <button class="bc-select-trigger" type="button" onclick="tmToggleTopbarSelect('${escSq(id)}', event)" aria-haspopup="listbox" aria-expanded="false" title="${__tmEscAttr(label || current.label || '')}">
+                    <span class="bc-select-trigger__value">${esc(String(current?.label || ''))}</span>
+                    <span class="bc-select-trigger__chevron" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" width="14" height="14"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                </button>
+                <div class="bc-select-menu" role="listbox" aria-label="${__tmEscAttr(label)}">
+                    ${options.map((item) => {
+                        const itemValue = String(item?.value || '');
+                        const itemLabel = String(item?.label || itemValue);
+                        const action = String(item?.action || '').trim();
+                        const selected = item?.selected === true;
+                        return `<button class="bc-select-option ${selected ? 'is-selected' : ''}" type="button" role="option" aria-selected="${selected ? 'true' : 'false'}" onclick="${__tmEscAttr(action)}; tmCloseTopbarSelects();"><span>${esc(itemLabel)}</span><span class="bc-select-option__check" aria-hidden="true">✓</span></button>`;
+                    }).join('')}
+                </div>
+            </div>
+        `;
     };
 
     const __tmApplyRowHeightVars = () => {
@@ -11685,6 +11865,16 @@ async function __tmRefreshAfterWake(reason) {
         const a = baseA * alpha0;
         const out = `rgba(${soft.r}, ${soft.g}, ${soft.b}, ${a})`;
         return __tmRememberSmallCache(__tmGroupBgColorCache, cacheKey, out, 400);
+    }
+
+    function __tmGetPendingTimeGroupTaskBg(isDark) {
+        const raw = String(
+            isDark
+                ? (SettingsStore.data?.timeGroupPendingTaskBgColorDark || '#8ab4f8')
+                : (SettingsStore.data?.timeGroupPendingTaskBgColorLight || '#9aa0a6')
+        ).trim();
+        const normalized = __tmNormalizeHexColor(raw, isDark ? '#8ab4f8' : '#9aa0a6') || (isDark ? '#8ab4f8' : '#9aa0a6');
+        return __tmGroupBgFromLabelColor(normalized, isDark);
     }
 
     function __tmWithAlpha(hex, alpha) {
@@ -12794,6 +12984,15 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     function hint(msg, type) {
+        try {
+            if (window.__tmBasecoat?.toast) {
+                return window.__tmBasecoat.toast({
+                    title: String(msg || '').trim(),
+                    variant: String(type || 'info').trim() || 'info',
+                    duration: 2500,
+                });
+            }
+        } catch (e) {}
         const colors = { success: '#34a853', error: '#ea4335', info: '#4285f4', warning: '#f9ab00' };
         const el = document.createElement('div');
         el.className = 'tm-hint';
@@ -17989,6 +18188,68 @@ async function __tmRefreshAfterWake(reason) {
                 ${esc(rule.name)}
             </option>`)
             .join('');
+        const docGroupMenuOptions = [
+            {
+                value: 'all',
+                label: '全部文档',
+                selected: currentGroupId === 'all',
+                action: `tmSwitchDocGroup('all')`
+            },
+            ...docGroups.map((group) => ({
+                value: String(group?.id || '').trim(),
+                label: __tmResolveDocGroupName(group),
+                selected: currentGroupId === String(group?.id || '').trim(),
+                action: `tmSwitchDocGroup('${escSq(String(group?.id || '').trim())}')`
+            }))
+        ];
+        const ruleMenuOptions = [
+            {
+                value: '',
+                label: '全部',
+                selected: !state.currentRule,
+                action: `applyFilterRule('')`
+            },
+            ...state.filterRules
+                .filter((rule) => rule.enabled)
+                .map((rule) => ({
+                    value: String(rule?.id || '').trim(),
+                    label: String(rule?.name || '').trim() || '未命名规则',
+                    selected: state.currentRule === rule.id,
+                    action: `applyFilterRule('${escSq(String(rule?.id || '').trim())}')`
+                }))
+        ];
+        const groupModeMenuOptions = [
+            {
+                value: 'none',
+                label: '不分组',
+                selected: (!state.groupByDocName && !state.groupByTaskName && !state.groupByTime && !state.quadrantEnabled),
+                action: `tmSwitchGroupMode('none')`
+            },
+            {
+                value: 'doc',
+                label: '按文档',
+                selected: state.groupByDocName,
+                action: `tmSwitchGroupMode('doc')`
+            },
+            {
+                value: 'time',
+                label: '按时间',
+                selected: state.groupByTime,
+                action: `tmSwitchGroupMode('time')`
+            },
+            {
+                value: 'quadrant',
+                label: '四象限',
+                selected: state.quadrantEnabled,
+                action: `tmSwitchGroupMode('quadrant')`
+            },
+            ...(hasTaskModeOption ? [{
+                value: 'task',
+                label: '按任务名',
+                selected: state.groupByTaskName,
+                action: `tmSwitchGroupMode('task')`
+            }] : [])
+        ];
 
         const __tmRenderListBodyHtml = () => `
                 <div class="tm-body${bodyAnimClass}">
@@ -20372,53 +20633,41 @@ async function __tmRefreshAfterWake(reason) {
 
         state.modal.innerHTML = `
             <div class="tm-box${showCalendarSideDock || showAiSideDock ? ' tm-box--with-cal-dock' : ''}">
-                <div class="tm-filter-rule-bar" style="padding: 8px 12px;">
-                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;justify-content:space-between;min-width:0;">
-                        <div style="display:flex;align-items:center;gap:10px;">
+                <div class="tm-filter-rule-bar" style="padding: 10px 10px;">
+                    <div class="tm-topbar-row" style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;justify-content:space-between;min-width:0;">
+                        <div class="tm-topbar-row" style="display:flex;align-items:center;gap:10px;">
                             <div class="tm-title" style="font-size: 16px; font-weight: 700; white-space: nowrap; display:inline-flex; align-items:center; gap:4px;">
                                 <span onclick="tmHandleManagerIconClick(event)" style="cursor:${isMobile ? 'default' : 'pointer'};">📋</span>
                                 <span onclick="tmHandleManagerTitleClick(event)" style="cursor:pointer;">任务管理器</span>
                             </div>
-                            <button class="tm-btn tm-btn-success" onclick="tmAdd()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">+</button>
-                            ${isMobile ? `<button class="tm-btn tm-btn-info" onclick="tmRefresh()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">🔄️</button>` : ''}
-                            ${isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info" onclick="tmCalendarToggleSidebar()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="侧边栏">📅</button>` : ''}
+                            <button class="tm-btn tm-btn-success bc-btn bc-btn--sm bc-btn--primary" onclick="tmAdd()" style="padding: 0; width: 30px; height: 30px; min-width: 30px; min-height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="新建任务" data-tooltip="新建任务">+</button>
+                            ${isMobile ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmRefresh()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="刷新" data-tooltip="刷新">🔄️</button>` : ''}
+                            ${isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCalendarToggleSidebar()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="侧边栏" data-tooltip="日历侧边栏">📅</button>` : ''}
                             ${(state.viewMode === 'timeline' && ((isMobile && isLandscape) || isDesktopNarrow)) ? `
-                                <button class="tm-btn tm-btn-info" onclick="tmGanttZoomOut()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="缩小">－</button>
-                                <button class="tm-btn tm-btn-info" onclick="tmGanttZoomIn()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="放大">＋</button>
-                                <button class="tm-btn tm-btn-info" onclick="tmGanttFit()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="适配范围">🗺️</button>
-                                <button class="tm-btn tm-btn-info" onclick="tmGanttToday()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="定位今天">📅</button>
+                                <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttZoomOut()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="缩小" data-tooltip="缩小">－</button>
+                                <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttZoomIn()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="放大" data-tooltip="放大">＋</button>
+                                <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttFit()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="适配范围" data-tooltip="适配范围">🗺️</button>
+                                <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttToday()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="定位今天" data-tooltip="定位今天">📅</button>
                             ` : ''}
                         </div>
 
                         <!-- 桌面端工具栏 -->
                         <div class="tm-desktop-toolbar tm-header-selectors" style="display:${isMobile ? 'none' : 'flex'};align-items:center;gap:8px;flex:1;min-width:0;">
                             <div class="tm-rule-selector" style="margin-left: 6px;">
-                                <span class="tm-rule-label">文档:</span>
-                                <select class="tm-rule-select" onchange="tmSwitchDocGroup(this.value)" aria-label="文档" title="文档">
-                                    <option value="all" ${currentGroupId === 'all' ? 'selected' : ''}>全部文档</option>
-                                    ${docGroups.map(g => `<option value="${g.id}" ${currentGroupId === g.id ? 'selected' : ''}>${esc(__tmResolveDocGroupName(g))}</option>`).join('')}
-                                </select>
+                                <span class="tm-rule-label bc-field__label">文档:</span>
+                                ${__tmRenderTopbarSelect({ id: 'tmTopbarDocSelect', label: '文档', options: docGroupMenuOptions })}
                             </div>
 
                             <div class="tm-rule-selector">
-                                <span class="tm-rule-label">规则:</span>
-                                <select class="tm-rule-select" onchange="applyFilterRule(this.value)" aria-label="规则" title="规则">
-                                    <option value="">全部</option>
-                                    ${ruleOptions}
-                                </select>
+                                <span class="tm-rule-label bc-field__label">规则:</span>
+                                ${__tmRenderTopbarSelect({ id: 'tmTopbarRuleSelect', label: '规则', options: ruleMenuOptions })}
                             </div>
                             ${currentRule ? `<div class="tm-rule-display"><span class="tm-rule-stats">${filteredCount} 个任务</span></div>` : ''}
                             <div style="flex: 1 1 auto;"></div>
                             
                             <div class="tm-rule-selector">
-                                <span class="tm-rule-label">分组:</span>
-                                <select class="tm-rule-select" onchange="tmSwitchGroupMode(this.value)" aria-label="分组" title="分组">
-                                    <option value="none" ${(!state.groupByDocName && !state.groupByTaskName && !state.groupByTime && !state.quadrantEnabled) ? 'selected' : ''}>不分组</option>
-                                    <option value="doc" ${state.groupByDocName ? 'selected' : ''}>按文档</option>
-                                    <option value="time" ${state.groupByTime ? 'selected' : ''}>按时间</option>
-                                    <option value="quadrant" ${state.quadrantEnabled ? 'selected' : ''}>四象限</option>
-                                    ${hasTaskModeOption ? `<option value="task" ${state.groupByTaskName ? 'selected' : ''}>按任务名</option>` : ''}
-                                </select>
+                                <span class="tm-rule-label bc-field__label">分组:</span>
+                                ${__tmRenderTopbarSelect({ id: 'tmTopbarGroupModeSelect', label: '分组', options: groupModeMenuOptions })}
                             </div>
 
                         </div>
@@ -20426,37 +20675,37 @@ async function __tmRefreshAfterWake(reason) {
                         <!-- 移动端菜单按钮 -->
                             <div class="tm-mobile-menu-btn" style="display:${isMobile ? 'flex' : 'none'};margin-left:auto;">
                             <div style="display:flex;align-items:center;gap:10px;">
-                                <button class="tm-btn tm-btn-info" onclick="tmToggleMobileMenu(event)" ontouchend="tmToggleMobileMenu(event)" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">
+                                <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmToggleMobileMenu(event)" ontouchend="tmToggleMobileMenu(event)" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="菜单" data-tooltip="菜单">
                                     <span style="font-size: 16px; transform: translateY(1px); line-height: 1;">☰</span>
                                     <span style="margin-left: 4px;">菜单</span>
                                 </button>
-                                ${isMobile && !isDockHost ? `<button class="tm-btn tm-btn-gray" onclick="tmClose(event)" ontouchend="tmClose(event)" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"><span style="transform: translateY(1px); line-height: 1;">✖</span></button>` : ''}
+                                ${isMobile && !isDockHost ? `<button class="tm-btn tm-btn-gray bc-btn bc-btn--sm bc-btn--ghost" onclick="tmClose(event)" ontouchend="tmClose(event)" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;" title="关闭" data-tooltip="关闭"><span style="transform: translateY(1px); line-height: 1;">✖</span></button>` : ''}
                             </div>
                         </div>
                     </div>
                     
                     <!-- 桌面端搜索栏 -->
-                    <div class="tm-search-box tm-desktop-toolbar" style="display:${isMobile ? 'none' : 'flex'}; flex-wrap: wrap;">
-                        <div class="tm-view-segmented" role="tablist" aria-label="视图">
+                    <div class="tm-search-box tm-desktop-toolbar" style="display:${isMobile ? 'none' : 'flex'}; flex-wrap: nowrap;">
+                        <div class="tm-view-segmented bc-tabs-list" role="tablist" aria-label="视图">
                             ${__tmRenderViewSwitcherButtons()}
                         </div>
                         ${state.viewMode === 'kanban' ? `
-                            <div class="tm-view-segmented tm-kanban-mode-segmented" role="tablist" aria-label="看板模式">
-                                <button class="tm-view-seg-item ${!SettingsStore.data.kanbanHeadingGroupMode ? 'tm-view-seg-item--active' : ''}" onclick="tmSetKanbanHeadingGroupMode('status', event)" role="tab" aria-selected="${!SettingsStore.data.kanbanHeadingGroupMode ? 'true' : 'false'}" title="状态看板">状态</button>
-                                <button class="tm-view-seg-item ${SettingsStore.data.kanbanHeadingGroupMode ? 'tm-view-seg-item--active' : ''}" onclick="tmSetKanbanHeadingGroupMode('heading', event)" role="tab" aria-selected="${SettingsStore.data.kanbanHeadingGroupMode ? 'true' : 'false'}" title="标题看板">标题</button>
+                            <div class="tm-view-segmented tm-kanban-mode-segmented bc-tabs-list" role="tablist" aria-label="看板模式">
+                                <button class="tm-view-seg-item bc-tabs-trigger ${!SettingsStore.data.kanbanHeadingGroupMode ? 'tm-view-seg-item--active' : ''}" data-state="${!SettingsStore.data.kanbanHeadingGroupMode ? 'active' : 'inactive'}" onclick="tmSetKanbanHeadingGroupMode('status', event)" role="tab" aria-selected="${!SettingsStore.data.kanbanHeadingGroupMode ? 'true' : 'false'}" title="状态看板" data-tooltip="状态看板">状态</button>
+                                <button class="tm-view-seg-item bc-tabs-trigger ${SettingsStore.data.kanbanHeadingGroupMode ? 'tm-view-seg-item--active' : ''}" data-state="${SettingsStore.data.kanbanHeadingGroupMode ? 'active' : 'inactive'}" onclick="tmSetKanbanHeadingGroupMode('heading', event)" role="tab" aria-selected="${SettingsStore.data.kanbanHeadingGroupMode ? 'true' : 'false'}" title="标题看板" data-tooltip="标题看板">标题</button>
                             </div>
                         ` : ''}
                         ${state.viewMode === 'timeline' ? `
-                            <button class="tm-btn tm-btn-info" onclick="tmGanttZoomOut()" style="padding: 4px 10px;" title="缩小">－</button>
-                            <button class="tm-btn tm-btn-info" onclick="tmGanttZoomIn()" style="padding: 4px 10px;" title="放大">＋</button>
-                            <button class="tm-btn tm-btn-info" onclick="tmGanttFit()" style="padding: 4px 10px;" title="适配范围">🗺️</button>
-                            <button class="tm-btn tm-btn-info" onclick="tmGanttToday()" style="padding: 4px 10px;" title="定位今天">📅</button>
+                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttZoomOut()" style="padding: 4px 10px;" title="缩小" data-tooltip="缩小">－</button>
+                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttZoomIn()" style="padding: 4px 10px;" title="放大" data-tooltip="放大">＋</button>
+                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttFit()" style="padding: 4px 10px;" title="适配范围" data-tooltip="适配范围">🗺️</button>
+                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttToday()" style="padding: 4px 10px;" title="定位今天" data-tooltip="定位今天">📅</button>
                         ` : ''}
-                        <button class="tm-btn tm-btn-info" onclick="tmRefresh()" style="padding: 4px 10px;" title="刷新">🔄️</button>
-                        ${__tmIsAiFeatureEnabled() ? `<button class="tm-btn tm-btn-info" onclick="tmToggleAiSidebar()" style="padding: 4px 10px;" title="${state.aiSidebarOpen ? '收起 AI 工作台' : '展开 AI 工作台'}">🤖</button>` : ''}
-                        <button class="tm-btn tm-btn-info" onclick="showSettings()" style="padding: 4px 10px;">⚙️ 设置</button>
+                        <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmRefresh()" style="padding: 4px 10px;" title="刷新" data-tooltip="刷新">🔄️</button>
+                        ${__tmIsAiFeatureEnabled() ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmToggleAiSidebar()" style="padding: 4px 10px;" title="${__tmEscAttr(state.aiSidebarOpen ? '收起 AI 工作台' : '展开 AI 工作台')}" data-tooltip="${__tmEscAttr(state.aiSidebarOpen ? '收起 AI 工作台' : '展开 AI 工作台')}">🤖</button>` : ''}
+                        <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="showSettings()" style="padding: 4px 10px;" title="设置" data-tooltip="设置">⚙️ 设置</button>
                         ${!false ? `
-                            <button class="tm-btn tm-btn-info tm-desktop-menu-btn" onclick="tmToggleDesktopMenu(event)" style="padding: 4px 10px; display: flex; align-items: center; gap: 4px;">
+                            <button class="tm-btn tm-btn-info tm-desktop-menu-btn bc-btn bc-btn--sm" onclick="tmToggleDesktopMenu(event)" style="padding: 4px 10px; display: flex; align-items: center; gap: 4px;" title="菜单" data-tooltip="菜单">
                                 <span>☰</span> 菜单
                             </button>
                         ` : ''}
@@ -20468,84 +20717,72 @@ async function __tmRefreshAfterWake(reason) {
                                 <div class="tm-mobile-only-item" style="display:flex; flex-direction:column; gap:6px; align-items:stretch;">
                                     <span style="color:var(--tm-text-color);">视图:</span>
                                     <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
-                                        <div class="tm-view-segmented" role="tablist" aria-label="视图" style="height:28px; min-width:max-content;">
+                                        <div class="tm-view-segmented bc-tabs-list" role="tablist" aria-label="视图" style="height:28px; min-width:max-content;">
                                             ${__tmRenderViewSwitcherButtons({ compact: true })}
                                         </div>
                                     </div>
                                     ${state.viewMode === 'kanban' ? `
                                         <div style="margin-top:6px;">
-                                            <div class="tm-view-segmented tm-kanban-mode-segmented" role="tablist" aria-label="看板模式" style="width:100%;">
-                                                <button class="tm-view-seg-item ${!SettingsStore.data.kanbanHeadingGroupMode ? 'tm-view-seg-item--active' : ''}" onclick="tmSetKanbanHeadingGroupMode('status', event)" role="tab" aria-selected="${!SettingsStore.data.kanbanHeadingGroupMode ? 'true' : 'false'}" style="flex:1;line-height:30px;">状态</button>
-                                                <button class="tm-view-seg-item ${SettingsStore.data.kanbanHeadingGroupMode ? 'tm-view-seg-item--active' : ''}" onclick="tmSetKanbanHeadingGroupMode('heading', event)" role="tab" aria-selected="${SettingsStore.data.kanbanHeadingGroupMode ? 'true' : 'false'}" style="flex:1;line-height:30px;">标题</button>
+                                            <div class="tm-view-segmented tm-kanban-mode-segmented bc-tabs-list" role="tablist" aria-label="看板模式" style="width:100%;">
+                                                <button class="tm-view-seg-item bc-tabs-trigger ${!SettingsStore.data.kanbanHeadingGroupMode ? 'tm-view-seg-item--active' : ''}" data-state="${!SettingsStore.data.kanbanHeadingGroupMode ? 'active' : 'inactive'}" onclick="tmSetKanbanHeadingGroupMode('status', event)" role="tab" aria-selected="${!SettingsStore.data.kanbanHeadingGroupMode ? 'true' : 'false'}" style="flex:1;line-height:30px;">状态</button>
+                                                <button class="tm-view-seg-item bc-tabs-trigger ${SettingsStore.data.kanbanHeadingGroupMode ? 'tm-view-seg-item--active' : ''}" data-state="${SettingsStore.data.kanbanHeadingGroupMode ? 'active' : 'inactive'}" onclick="tmSetKanbanHeadingGroupMode('heading', event)" role="tab" aria-selected="${SettingsStore.data.kanbanHeadingGroupMode ? 'true' : 'false'}" style="flex:1;line-height:30px;">标题</button>
                                             </div>
                                         </div>
                                     ` : ''}
                                 </div>
                                 <div class="tm-mobile-only-item tm-mobile-menu-row" style="display:flex; gap:10px; align-items:center;">
                                     <span class="tm-mobile-menu-label" style="color:var(--tm-text-color);width:60px;">文档:</span>
-                                    <select class="tm-rule-select" style="flex:1;" onchange="tmSwitchDocGroup(this.value)">
-                                        <option value="all" ${currentGroupId === 'all' ? 'selected' : ''}>全部文档</option>
-                                        ${docGroups.map(g => `<option value="${g.id}" ${currentGroupId === g.id ? 'selected' : ''}>${esc(__tmResolveDocGroupName(g))}</option>`).join('')}
-                                    </select>
+                                    ${__tmRenderTopbarSelect({ id: 'tmMobileDocSelect', label: '文档', options: docGroupMenuOptions, style: 'flex:1;' })}
                                 </div>
                                 <div class="tm-mobile-only-item tm-mobile-menu-row" style="display:flex; gap:10px; align-items:center;">
                                     <span class="tm-mobile-menu-label" style="color:var(--tm-text-color);width:60px;">规则:</span>
-                                    <select class="tm-rule-select" style="flex:1;" onchange="applyFilterRule(this.value)">
-                                        <option value="">全部</option>
-                                        ${ruleOptions}
-                                    </select>
+                                    ${__tmRenderTopbarSelect({ id: 'tmMobileRuleSelect', label: '规则', options: ruleMenuOptions, style: 'flex:1;' })}
                                 </div>
                                 <div class="tm-mobile-only-item tm-mobile-menu-row" style="display:flex; gap:10px; align-items:center;">
                                     <span class="tm-mobile-menu-label" style="color:var(--tm-text-color);width:60px;">分组:</span>
-                                    <select class="tm-rule-select" style="flex:1;" onchange="tmSwitchGroupMode(this.value)">
-                                        <option value="none" ${(!state.groupByDocName && !state.groupByTaskName && !state.groupByTime && !state.quadrantEnabled) ? 'selected' : ''}>不分组</option>
-                                        <option value="doc" ${state.groupByDocName ? 'selected' : ''}>按文档</option>
-                                        <option value="time" ${state.groupByTime ? 'selected' : ''}>按时间</option>
-                                        <option value="quadrant" ${state.quadrantEnabled ? 'selected' : ''}>四象限</option>
-                                        ${hasTaskModeOption ? `<option value="task" ${state.groupByTaskName ? 'selected' : ''}>按任务名</option>` : ''}
-                                    </select>
+                                    ${__tmRenderTopbarSelect({ id: 'tmMobileGroupModeSelect', label: '分组', options: groupModeMenuOptions, style: 'flex:1;' })}
                                 </div>
                                 <div style="display:flex; gap:10px; align-items:center;">
-                                    <button class="tm-btn tm-btn-info" onclick="tmShowSearchModal()" style="flex:1; padding: 6px;">
+                                    <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmShowSearchModal()" style="flex:1; padding: 6px;">
                                         🔍 搜索 ${state.searchKeyword ? `(${state.searchKeyword})` : ''}
                                     </button>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
-                                    <button class="tm-btn tm-btn-info" onclick="tmShowSummaryModal(); tmHideMobileMenu();" style="flex:1; padding: 6px;">
+                                    <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmShowSummaryModal(); tmHideMobileMenu();" style="flex:1; padding: 6px;">
                                         📝 摘要
                                     </button>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
-                                    <button class="tm-btn tm-btn-info" onclick="window.tmAiSemanticCompletionPreview?.(); tmHideMobileMenu();" style="flex:1; padding: 6px;">
+                                    <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="window.tmAiSemanticCompletionPreview?.(); tmHideMobileMenu();" style="flex:1; padding: 6px;">
                                         📅 语义日期
                                     </button>
                                 </div>
                                 ${__tmIsAiFeatureEnabled() ? `
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
-                                    <div class="tm-btn tm-btn-info" style="flex:1; padding: 6px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px; opacity:.6; cursor:not-allowed;" title="移动端不启用 AI 对话侧栏" aria-disabled="true">
+                                    <div class="tm-btn tm-btn-info bc-btn bc-btn--sm" style="flex:1; padding: 6px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px; opacity:.6; cursor:not-allowed;" title="移动端不启用 AI 对话侧栏" aria-disabled="true">
                                         <span>AI 对话（移动端关闭）</span>
                                         <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.aiSideDockEnabled ? 'checked' : ''} disabled>
                                     </div>
                                 </div>
                                 ` : ''}
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
-                                    <div class="tm-btn tm-btn-info" style="flex:1; padding: 6px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px; opacity:.6; cursor:not-allowed;" title="移动端不启用日历侧边栏" aria-disabled="true">
+                                    <div class="tm-btn tm-btn-info bc-btn bc-btn--sm" style="flex:1; padding: 6px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px; opacity:.6; cursor:not-allowed;" title="移动端不启用日历侧边栏" aria-disabled="true">
                                         <span>日历侧边栏（移动端关闭）</span>
                                         <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.calendarSideDockEnabled ? 'checked' : ''} disabled>
                                     </div>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
-                                    <div class="tm-btn tm-btn-info" style="flex:1; padding: 6px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                                    <div class="tm-btn tm-btn-info bc-btn bc-btn--sm" style="flex:1; padding: 6px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
                                         <span>白板顺序模式</span>
                                         <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.whiteboardSequenceMode ? 'checked' : ''} onchange="tmToggleWhiteboardSequenceMode(this.checked); tmHideMobileMenu();">
                                     </div>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px;">
-                                     <button class="tm-btn tm-btn-info" onclick="showSettings()" style="flex:1; padding: 6px;">⚙️ 设置</button>
+                                     <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="showSettings()" style="flex:1; padding: 6px;">⚙️ 设置</button>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px;">
-                                     <button class="tm-btn tm-btn-info" onclick="tmCollapseAllTasks()" style="flex:1; padding: 6px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(0deg);margin-right:4px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>折叠</button>
-                                     <button class="tm-btn tm-btn-info" onclick="tmExpandAllTasks()" style="flex:1; padding: 6px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(90deg);margin-right:4px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>展开</button>
+                                     <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCollapseAllTasks()" style="flex:1; padding: 6px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(0deg);margin-right:4px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>折叠</button>
+                                     <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmExpandAllTasks()" style="flex:1; padding: 6px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(90deg);margin-right:4px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>展开</button>
                                 </div>
                                 ${currentRule ? `<div class="tm-mobile-only-item" style="color:var(--tm-secondary-text);font-size:12px;">当前规则: ${esc(currentRule.name)} (${filteredCount}任务)</div>` : ''}
                             </div>
@@ -26524,15 +26761,13 @@ async function __tmRefreshAfterWake(reason) {
         
         const menu = document.createElement('div');
         menu.id = 'tmDesktopMenu';
-        menu.className = 'tm-popup-menu';
+        menu.className = 'tm-popup-menu bc-dropdown-menu';
         menu.style.cssText = `
-            position: absolute;
-            top: 45px;
-            right: 15px;
-            background: var(--tm-bg-color);
-            border: 1px solid var(--tm-border-color);
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: fixed;
+            background: var(--tm-ui-popover);
+            border: 1px solid var(--tm-ui-border);
+            border-radius: 12px;
+            box-shadow: 0 10px 26px rgba(15,23,42,0.16);
             padding: 8px;
             z-index: 10000;
             display: flex;
@@ -26542,26 +26777,26 @@ async function __tmRefreshAfterWake(reason) {
         `;
         
         menu.innerHTML = `
-            <button class="tm-btn tm-btn-info" onclick="tmShowSearchModal(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;">🔍 搜索${state.searchKeyword ? ` (${String(state.searchKeyword || '').trim()})` : ''}</button>
-            <button class="tm-btn tm-btn-info" onclick="tmShowSummaryModal(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;">📝 摘要</button>
-            <button class="tm-btn tm-btn-info" onclick="window.tmAiSemanticCompletionPreview?.(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;">📅 语义日期</button>
+            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmShowSearchModal(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; justify-content:flex-start; padding: 6px 12px;">🔍 搜索${state.searchKeyword ? ` (${String(state.searchKeyword || '').trim()})` : ''}</button>
+            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmShowSummaryModal(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; justify-content:flex-start; padding: 6px 12px;">📝 摘要</button>
+            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="window.tmAiSemanticCompletionPreview?.(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; justify-content:flex-start; padding: 6px 12px;">📅 语义日期</button>
             ${__tmIsAiFeatureEnabled() ? `
-            <div class="tm-btn tm-btn-info" style="text-align:left; padding: 6px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div class="tm-btn tm-btn-info bc-btn bc-btn--sm" style="text-align:left; padding: 6px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
                 <span>AI 对话</span>
                 <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.aiSideDockEnabled ? 'checked' : ''} onchange="tmToggleAiSideDock(this.checked); document.getElementById('tmDesktopMenu').remove()">
             </div>
             ` : ''}
-            <div class="tm-btn tm-btn-info" style="text-align:left; padding: 6px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div class="tm-btn tm-btn-info bc-btn bc-btn--sm" style="text-align:left; padding: 6px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
                 <span>日历侧边栏</span>
                 <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.calendarSideDockEnabled ? 'checked' : ''} onchange="tmToggleCalendarSideDock(this.checked); document.getElementById('tmDesktopMenu').remove()">
             </div>
-            ${state.searchKeyword ? `<button class="tm-btn tm-btn-secondary" onclick="tmSearch(''); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;">清除搜索</button>` : ''}
-            <div class="tm-btn tm-btn-info" style="text-align:left; padding: 6px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            ${state.searchKeyword ? `<button class="tm-btn tm-btn-secondary bc-btn bc-btn--sm" onclick="tmSearch(''); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; justify-content:flex-start; padding: 6px 12px;">清除搜索</button>` : ''}
+            <div class="tm-btn tm-btn-info bc-btn bc-btn--sm" style="text-align:left; padding: 6px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
                 <span>白板顺序模式</span>
                 <input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.whiteboardSequenceMode ? 'checked' : ''} onchange="tmToggleWhiteboardSequenceMode(this.checked); document.getElementById('tmDesktopMenu').remove()">
             </div>
-            <button class="tm-btn tm-btn-info" onclick="tmCollapseAllTasks(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(0deg);margin-right:6px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>全部折叠</button>
-            <button class="tm-btn tm-btn-info" onclick="tmExpandAllTasks(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; padding: 6px 12px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(90deg);margin-right:6px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>全部展开</button>
+            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCollapseAllTasks(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; justify-content:flex-start; padding: 6px 12px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(0deg);margin-right:6px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>全部折叠</button>
+            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmExpandAllTasks(); document.getElementById('tmDesktopMenu').remove()" style="text-align:left; justify-content:flex-start; padding: 6px 12px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(90deg);margin-right:6px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>全部展开</button>
         `;
         
         // 点击外部关闭
@@ -26578,12 +26813,30 @@ async function __tmRefreshAfterWake(reason) {
             try { document.addEventListener('click', closeHandler); } catch (e2) {}
             try { state.desktopMenuCloseTimer = null; } catch (e2) {}
         }, 0);
-        
-        const container = document.querySelector('.tm-filter-rule-bar');
-        if (container) {
-            container.style.position = 'relative';
-            container.appendChild(menu);
-        }
+
+        const trigger = e?.currentTarget instanceof Element
+            ? e.currentTarget
+            : (e?.target instanceof Element ? e.target.closest('.tm-desktop-menu-btn') : null);
+        const rect = trigger instanceof Element ? trigger.getBoundingClientRect() : null;
+        const fallbackWidth = 220;
+        const left0 = rect ? Math.round(rect.right - fallbackWidth) : Math.max(8, window.innerWidth - fallbackWidth - 16);
+        const top0 = rect ? Math.round(rect.bottom + 8) : 56;
+        menu.style.left = `${Math.max(8, left0)}px`;
+        menu.style.top = `${Math.max(8, top0)}px`;
+        document.body.appendChild(menu);
+        try {
+            const menuRect = menu.getBoundingClientRect();
+            const nextLeft = Math.min(
+                Math.max(8, rect ? Math.round(rect.right - menuRect.width) : left0),
+                Math.max(8, window.innerWidth - menuRect.width - 8)
+            );
+            const nextTop = Math.min(
+                Math.max(8, top0),
+                Math.max(8, window.innerHeight - menuRect.height - 8)
+            );
+            menu.style.left = `${nextLeft}px`;
+            menu.style.top = `${nextTop}px`;
+        } catch (e2) {}
     };
 
     window.tmToggleWhiteboardSequenceMode = async function(enabled) {
@@ -26652,6 +26905,65 @@ async function __tmRefreshAfterWake(reason) {
     window.tmHideMobileMenu = function() {
         try { __tmHideMobileMenu(); } catch (e) {}
     };
+
+    function __tmCloseTopbarSelects() {
+        try {
+            document.querySelectorAll('.tm-topbar-select[data-open="true"]').forEach((el) => {
+                try { el.dataset.open = 'false'; } catch (e) {}
+                try { el.querySelector('.bc-select-trigger')?.setAttribute('aria-expanded', 'false'); } catch (e) {}
+            });
+        } catch (e) {}
+        try { document.getElementById('tmTopbarFloatingMenu')?.remove?.(); } catch (e) {}
+    }
+
+    window.tmCloseTopbarSelects = function() {
+        try { __tmCloseTopbarSelects(); } catch (e) {}
+    };
+
+    window.tmToggleTopbarSelect = function(id, event) {
+        try { event?.stopPropagation?.(); } catch (e) {}
+        try { event?.preventDefault?.(); } catch (e) {}
+        const root = document.getElementById(String(id || '').trim());
+        if (!(root instanceof HTMLElement)) return;
+        const open = String(root.dataset.open || '') === 'true';
+        __tmCloseTopbarSelects();
+        if (!open) {
+            try { root.dataset.open = 'true'; } catch (e) {}
+            const trigger = root.querySelector('.bc-select-trigger');
+            const sourceMenu = root.querySelector('.bc-select-menu');
+            try { trigger?.setAttribute('aria-expanded', 'true'); } catch (e) {}
+            if (trigger instanceof HTMLElement && sourceMenu instanceof HTMLElement) {
+                const rect = trigger.getBoundingClientRect();
+                const menu = document.createElement('div');
+                menu.id = 'tmTopbarFloatingMenu';
+                menu.className = 'bc-select-menu';
+                menu.style.display = 'flex';
+                menu.style.position = 'fixed';
+                menu.style.left = `${Math.max(8, Math.round(rect.left))}px`;
+                menu.style.top = `${Math.round(rect.bottom + 8)}px`;
+                menu.style.minWidth = `${Math.max(Math.round(rect.width), 160)}px`;
+                menu.style.maxWidth = `min(${Math.max(Math.round(rect.width), 160)}px, calc(100vw - 16px))`;
+                menu.innerHTML = sourceMenu.innerHTML;
+                document.body.appendChild(menu);
+                const menuRect = menu.getBoundingClientRect();
+                const maxLeft = Math.max(8, window.innerWidth - menuRect.width - 8);
+                const maxTop = Math.max(8, window.innerHeight - menuRect.height - 8);
+                menu.style.left = `${Math.min(Math.max(8, Math.round(rect.left)), maxLeft)}px`;
+                menu.style.top = `${Math.min(Math.round(rect.bottom + 8), maxTop)}px`;
+            }
+        }
+    };
+
+    if (!window.__tmTopbarSelectOutsideBound) {
+        window.__tmTopbarSelectOutsideBound = true;
+        document.addEventListener('click', (event) => {
+            if (event?.target instanceof Element && event.target.closest('.tm-topbar-select')) return;
+            __tmCloseTopbarSelects();
+        }, true);
+        document.addEventListener('keydown', (event) => {
+            if (String(event?.key || '') === 'Escape') __tmCloseTopbarSelects();
+        }, true);
+    }
 
     window.tmClose = function(event) {
         if (event) {
@@ -29692,15 +30004,17 @@ async function __tmRefreshAfterWake(reason) {
         const id = String(docId || '').trim();
         if (!id || id === 'all') return false;
         const app = __getPluginApp();
-        const isMobile = __tmIsMobileDevice();
+        const isDock = __tmIsDockHost();
+        const isRealMobile = __tmIsRuntimeMobileClient();
+        const topWin = isDock ? (window.parent || window.top || window) : window;
         const closeAfterOpen = () => {
-            if (!isMobile) return;
+            if (!isRealMobile) return;
             setTimeout(() => {
                 try { window.tmClose?.(); } catch (e) {}
             }, 120);
         };
 
-        if (isMobile) {
+        if (isRealMobile) {
             const openMobile = getOpenMobileFn();
             if (typeof openMobile === 'function') {
                 try {
@@ -29721,7 +30035,7 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         try {
-            window.open(`siyuan://blocks/${id}`);
+            topWin.open(`siyuan://blocks/${id}`);
             closeAfterOpen();
             return true;
         } catch (e) {}
@@ -29734,16 +30048,19 @@ async function __tmRefreshAfterWake(reason) {
             event.stopPropagation();
         }
         const app = __getPluginApp();
+        const isDock = __tmIsDockHost();
+        const isRealMobile = __tmIsRuntimeMobileClient();
+        const topWin = isDock ? (window.parent || window.top || window) : window;
+        const topDoc = topWin.document || document;
         const closeAfterJump = () => {
-            if (!__tmIsMobileDevice()) return;
+            if (!isRealMobile) return;
             setTimeout(() => {
                 try { window.tmClose?.(); } catch (e) {}
             }, 120);
         };
 
-        // 1. 优先尝试移动端 API (如果在移动端环境下)
         const openMobile = getOpenMobileFn();
-        if (__tmIsMobileDevice() && typeof openMobile === 'function') {
+        if (isRealMobile && typeof openMobile === 'function') {
             try {
                 let docId = id;
                 try {
@@ -29759,57 +30076,44 @@ async function __tmRefreshAfterWake(reason) {
             } catch (e) {}
         }
         
-        // 2. 桌面端优先尝试 findDocumentIdByBlockId + openTab (参照 tomato.js)
         const openTab = getOpenTabFn();
         if (typeof openTab === 'function') {
             try {
-                // 获取所在文档ID
                 const sql = `SELECT root_id FROM blocks WHERE id = '${id}' LIMIT 1`;
                 const res = await API.call('/api/query/sql', { stmt: sql });
-                // API.call 返回的是 {code:0, data: [...]}
                 const rows = (res && res.code === 0) ? res.data : [];
                 const docId = (rows && rows[0]) ? rows[0].root_id : id;
 
-                // 使用 openTab 打开文档
-                // 构造参数：打开文档 root_id
                 const params = { 
                     app, 
                     doc: { id: docId }
                 };
                 
-                // 如果目标块不是文档本身，尝试通过 block 参数定位（注意：不同版本思源对 block 参数支持不同）
-                // 另一种常见的定位方式是先打开文档，再通过 hash 定位，但 openTab 封装了这些
                 if (docId !== id) {
-                    // 尝试同时传入 block 信息，这通常会触发滚动高亮
-                    params.block = { id: id, mode: 0 }; // mode: 0 可能表示不高亮聚焦？尝试一下
+                    params.block = { id: id, mode: 0 };
                 }
 
                 openTab(params);
                 __tmScheduleScrollToBlock(id);
                 closeAfterJump();
-                // 补充：如果 openTab 不支持直接定位到块，可能需要发送消息或执行脚本
-                // 但通常 openTab({doc:{id: rootId}}) 会打开文档，如果我们要定位到块，
-                // 在新版思源中，可能需要 openFileById 风格的参数
                 
                 return;
             } catch (e) {}
         }
 
-        // 3. 兜底：模拟点击 block-ref
         try {
-            const tempSpan = document.createElement('span');
+            const tempSpan = topDoc.createElement('span');
             tempSpan.setAttribute('data-type', 'block-ref');
             tempSpan.setAttribute('data-id', id);
-            // 使用对布局无影响但可被交互的样式
             tempSpan.style.position = 'fixed';
             tempSpan.style.top = '-9999px';
             tempSpan.style.left = '-9999px';
             tempSpan.style.opacity = '0';
             tempSpan.style.pointerEvents = 'none';
-            document.body.appendChild(tempSpan);
+            topDoc.body.appendChild(tempSpan);
             
             const opts = {
-                view: window,
+                view: topWin,
                 bubbles: true,
                 cancelable: true,
                 buttons: 1
@@ -29823,8 +30127,7 @@ async function __tmRefreshAfterWake(reason) {
             return;
         } catch (e) {}
 
-        // 4. 兜底：使用 URL Scheme
-        window.open(`siyuan://blocks/${id}`);
+        topWin.open(`siyuan://blocks/${id}`);
         closeAfterJump();
     };
 
@@ -30663,6 +30966,9 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     function __tmChecklistUseSheetMode(modalEl) {
+        if (String(state.viewMode || '').trim() === 'checklist' && __tmShouldShowCalendarSideDock()) {
+            return true;
+        }
         const modal = modalEl instanceof Element ? modalEl : state.modal;
         const modalWidth = Number(modal?.clientWidth || 0);
         if (__tmIsMobileDevice()) return true;
@@ -31351,7 +31657,9 @@ async function __tmRefreshAfterWake(reason) {
                 allRows.push(`<tr class="tm-group-row" data-group-key="${esc(group.key)}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${group.key}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">${esc(group.label)}</span><span class="tm-badge tm-badge--count">${group.items.length}</span>${durationSum ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">📊</span>${esc(durationSum)}</span>` : ''}</div></td></tr>`);
 
                 if (!isCollapsed) {
-                    currentGroupBg = enableGroupBg ? __tmGroupBgFromLabelColor(labelColor, isDark) : '';
+                    currentGroupBg = enableGroupBg
+                        ? (group.key === 'pending' ? __tmGetPendingTimeGroupTaskBg(isDark) : __tmGroupBgFromLabelColor(labelColor, isDark))
+                        : '';
                     // 组内任务按照全局顺序排列
                     const prefer = !!SettingsStore.data.groupSortByBestSubtaskTimeInTimeQuadrant;
                     if (allowDocFlowForRender) group.items.sort(compareRootByDocFlowUngroup);
@@ -33175,6 +33483,14 @@ async function __tmRefreshAfterWake(reason) {
         return __tmResolveDefaultDocId();
     }
 
+    function __tmResolveConfiguredDailyNoteNotebookId() {
+        const configured = String(SettingsStore.data.newTaskDailyNoteNotebookId || '').trim();
+        if (!configured) return '';
+        const notebooks = Array.isArray(state.notebooks) ? state.notebooks : [];
+        const exists = notebooks.some((item) => String(item?.id || item?.box || '').trim() === configured);
+        return exists ? configured : '';
+    }
+
     async function __tmResolveInsertedTaskBlockId(insertedId) {
         const seedId = String(insertedId || '').trim();
         if (!seedId) return '';
@@ -34176,7 +34492,12 @@ async function __tmRefreshAfterWake(reason) {
         try {
             let targetDocId = qa.docId;
             if (qa.docMode === 'dailyNote') {
-                const notebook = await API.getDocNotebook(qa.docId);
+                let notebook = __tmResolveConfiguredDailyNoteNotebookId();
+                if (!notebook) {
+                    try { await __tmRefreshNotebookCache(); } catch (e) {}
+                    notebook = __tmResolveConfiguredDailyNoteNotebookId();
+                }
+                if (!notebook) notebook = await API.getDocNotebook(qa.docId);
                 if (!notebook) throw new Error('无法确定日记所属笔记本');
                 targetDocId = await API.createDailyNote(notebook);
                 if (!String(targetDocId || '').trim()) throw new Error('获取日记文档失败');
@@ -35192,6 +35513,7 @@ async function __tmRefreshAfterWake(reason) {
         })();
         const allDocIdsForNewTask = allDocsForNewTask.map(d => String(d?.id || '').trim()).filter(Boolean);
         const newTaskDocId = String(SettingsStore.data.newTaskDocId || '').trim();
+        const newTaskDailyNoteNotebookId = String(SettingsStore.data.newTaskDailyNoteNotebookId || '').trim();
         const newTaskDocOptions = [
             `<option value="" ${newTaskDocId ? '' : 'selected'}>未设置</option>`,
             `<option value="__dailyNote__" ${newTaskDocId === '__dailyNote__' ? 'selected' : ''}>今天日记</option>`
@@ -35204,6 +35526,18 @@ async function __tmRefreshAfterWake(reason) {
         if (newTaskDocId && !allDocIdsForNewTask.includes(newTaskDocId)) {
             const fallbackName = resolveDocName(newTaskDocId);
             newTaskDocOptions.push(`<option value="${newTaskDocId}" selected>${esc(fallbackName)} (不在当前列表)</option>`);
+        }
+        const dailyNoteNotebookOptions = [
+            `<option value="" ${newTaskDailyNoteNotebookId ? '' : 'selected'}>跟随当前文档所属笔记本</option>`
+        ];
+        (Array.isArray(state.notebooks) ? state.notebooks : []).forEach((notebook) => {
+            const notebookId = String(notebook?.id || notebook?.box || '').trim();
+            if (!notebookId) return;
+            const notebookName = String(notebook?.name || notebook?.title || notebookId).trim() || notebookId;
+            dailyNoteNotebookOptions.push(`<option value="${notebookId}" ${newTaskDailyNoteNotebookId === notebookId ? 'selected' : ''}>${esc(notebookName)}</option>`);
+        });
+        if (newTaskDailyNoteNotebookId && !(Array.isArray(state.notebooks) ? state.notebooks : []).some((item) => String(item?.id || item?.box || '').trim() === newTaskDailyNoteNotebookId)) {
+            dailyNoteNotebookOptions.push(`<option value="${newTaskDailyNoteNotebookId}" selected>${esc(__tmGetNotebookDisplayName(newTaskDailyNoteNotebookId, newTaskDailyNoteNotebookId))} (不在当前列表)</option>`);
         }
         let activeTab = 'docs';
         if (state.settingsActiveTab === 'main') activeTab = 'main';
@@ -35539,6 +35873,15 @@ async function __tmRefreshAfterWake(reason) {
                         </datalist>
                         <div style="font-size: 12px; color: var(--tm-secondary-text); margin-top: 6px;">
                             也可以直接输入文档 ID，适合当前列表里没有加载出来的文档。
+                        </div>
+                        <div style="margin-top:10px;">
+                            ${renderSingleFieldSetting(
+                                '今天日记默认笔记本',
+                                '当默认新建文档或快速新建目标选择“今天日记”时，优先在这里指定的笔记本下创建/写入今天日记；留空则继续跟随当前文档所属笔记本。',
+                                `<select class="b3-select" onchange="updateNewTaskDailyNoteNotebookId(this.value)" style="width:100%;">
+                                    ${dailyNoteNotebookOptions.join('')}
+                                </select>`
+                            )}
                         </div>
                         <div style="margin-top:10px;">
                             ${renderSingleSwitchSetting(
@@ -36168,6 +36511,13 @@ async function __tmRefreshAfterWake(reason) {
                     { label: '已过期 亮色', key: 'timeGroupOverdueColorLight', value: d.timeGroupOverdueColorLight || '#d93025' },
                     { label: '已过期 夜间', key: 'timeGroupOverdueColorDark', value: d.timeGroupOverdueColorDark || '#ff6b6b' }
                 ]
+            },
+            {
+                title: '表格视图待定分组任务行背景',
+                rows: [
+                    { label: '亮色', key: 'timeGroupPendingTaskBgColorLight', value: d.timeGroupPendingTaskBgColorLight || '#9aa0a6' },
+                    { label: '夜间', key: 'timeGroupPendingTaskBgColorDark', value: d.timeGroupPendingTaskBgColorDark || '#8ab4f8' }
+                ]
             }
         ];
 
@@ -36245,6 +36595,8 @@ async function __tmRefreshAfterWake(reason) {
             timeGroupBaseColorDark: '#6ba5ff',
             timeGroupOverdueColorLight: '#d93025',
             timeGroupOverdueColorDark: '#ff6b6b',
+            timeGroupPendingTaskBgColorLight: '#9aa0a6',
+            timeGroupPendingTaskBgColorDark: '#8ab4f8',
             progressBarColorLight: '#4caf50',
             progressBarColorDark: '#81c784',
             tableBorderColorLight: '#e9ecef',
@@ -36265,6 +36617,7 @@ async function __tmRefreshAfterWake(reason) {
             'groupDocLabelColorLight', 'groupDocLabelColorDark',
             'timeGroupBaseColorLight', 'timeGroupBaseColorDark',
             'timeGroupOverdueColorLight', 'timeGroupOverdueColorDark',
+            'timeGroupPendingTaskBgColorLight', 'timeGroupPendingTaskBgColorDark',
             'progressBarColorLight', 'progressBarColorDark',
             'tableBorderColorLight', 'tableBorderColorDark'
         ]);
@@ -36343,6 +36696,8 @@ async function __tmRefreshAfterWake(reason) {
         SettingsStore.data.timeGroupBaseColorDark = '#6ba5ff';
         SettingsStore.data.timeGroupOverdueColorLight = '#d93025';
         SettingsStore.data.timeGroupOverdueColorDark = '#ff6b6b';
+        SettingsStore.data.timeGroupPendingTaskBgColorLight = '#9aa0a6';
+        SettingsStore.data.timeGroupPendingTaskBgColorDark = '#8ab4f8';
         SettingsStore.data.progressBarColorLight = '#4caf50';
         SettingsStore.data.progressBarColorDark = '#81c784';
         SettingsStore.data.tableBorderColorLight = '#e9ecef';
@@ -38407,7 +38762,7 @@ async function __tmRefreshAfterWake(reason) {
             if (!next.includes(id)) next.push(id);
         } else {
             if (next.length <= 1) {
-                try { window.siyuan?.showMessage?.('至少保留一个视图'); } catch (e) {}
+                try { hint('至少保留一个视图', 'warning'); } catch (e) {}
                 showSettings();
                 return;
             }
@@ -38509,6 +38864,12 @@ async function __tmRefreshAfterWake(reason) {
 
     window.updateNewTaskDailyNoteAppendToBottom = async function(enabled) {
         SettingsStore.data.newTaskDailyNoteAppendToBottom = !!enabled;
+        await SettingsStore.save();
+        showSettings();
+    };
+
+    window.updateNewTaskDailyNoteNotebookId = async function(value) {
+        SettingsStore.data.newTaskDailyNoteNotebookId = String(value || '').trim();
         await SettingsStore.save();
         showSettings();
     };
