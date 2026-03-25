@@ -2153,10 +2153,10 @@
                 // Ignore mutations originating from the inline meta layer itself
                 // to prevent a feedback loop where our own DOM writes trigger re-renders.
                 const hasRelevantMutation = mutations.some((m) => {
-                    const t = m.target;
-                    if (t instanceof Element) {
-                        if (t.closest('.sy-custom-props-inline-layer')) return false;
-                    } else if (t?.parentElement?.closest('.sy-custom-props-inline-layer')) {
+                    const target = m.target;
+                    if (target instanceof Element) {
+                        if (target.closest('.sy-custom-props-inline-layer')) return false;
+                    } else if (target?.parentElement?.closest('.sy-custom-props-inline-layer')) {
                         return false;
                     }
                     return true;
