@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.9.7
+// @version      1.9.8
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -70,9 +70,9 @@
             --tm-task-content-wrap-lines: 3;
             --tm-task-remark-wrap-lines: 2;
             --tm-empty-cell-bg: #f1f3f4;
-            --tm-topbar-grad-start: #667eea;
-            --tm-topbar-grad-end: #764ba2;
-            --tm-topbar-text-color: #ffffff;
+            --tm-topbar-grad-start: #E3ECF2;
+            --tm-topbar-grad-end: #E3ECF2;
+            --tm-topbar-text-color: #003252;
             --tm-topbar-control-bg: rgba(255,255,255,0.12);
             --tm-topbar-control-text: #ffffff;
             --tm-topbar-control-border: rgba(255,255,255,0.34);
@@ -135,6 +135,7 @@
             --tm-quadrant-blue: #1a73e8;
             --tm-quadrant-green: #34a853;
             --tm-whiteboard-grid-color: rgba(0,0,0,0.06);
+            --tm-whiteboard-stream-tree-line-color: rgba(120, 130, 148, 0.52);
             --tm-task-leading-ring-bg: rgba(226, 232, 240, 0.95);
             --tm-task-leading-ring-border: rgba(148, 163, 184, 0.2);
         }
@@ -170,9 +171,9 @@
             --tm-section-bg: #252525;
             --tm-card-bg: #2d2d2d;
             --tm-empty-cell-bg: #1a1a1a;
-            --tm-topbar-grad-start: #3b49b7;
-            --tm-topbar-grad-end: #5b2d7a;
-            --tm-topbar-text-color: #ffffff;
+            --tm-topbar-grad-start: #2D2D2D;
+            --tm-topbar-grad-end: #2D2D2D;
+            --tm-topbar-text-color: #FFFFFF;
             --tm-ui-primary-foreground: #ffffff;
             --tm-ui-ring: rgba(255,255,255,0.34);
             --tm-task-content-color: var(--tm-text-color);
@@ -185,6 +186,7 @@
             --tm-quadrant-blue: #6ba5ff;
             --tm-quadrant-green: #4caf50;
             --tm-whiteboard-grid-color: rgba(255,255,255,0.10);
+            --tm-whiteboard-stream-tree-line-color: rgba(156, 167, 185, 0.42);
             --tm-task-leading-ring-bg: rgba(55, 65, 81, 0.92);
             --tm-task-leading-ring-border: rgba(120, 120, 120, 0.3);
         }
@@ -2820,7 +2822,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            padding: 8px 10px 6px;
+            padding: 8px 10px 6px 7px;
             margin-top: 6px;
             border-top: 1px solid var(--tm-border-color);
             color: var(--tm-secondary-text);
@@ -2881,6 +2883,11 @@
             align-items: center;
             justify-content: center;
             flex: 0 0 20px;
+            margin-left: auto;
+        }
+
+        .tm-whiteboard-stream-task-head .tm-kanban-toggle {
+            margin-left: auto;
         }
 
         .tm-whiteboard-stream-task-head .tm-task-checkbox-wrap,
@@ -2892,21 +2899,45 @@
         .tm-whiteboard-stream-task-title {
             min-width: 0;
             flex: 1 1 auto;
-            display: block;
+            display: -webkit-box;
             line-height: 1.35;
             color: var(--tm-text-color);
             cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+            word-break: break-word;
             overflow-wrap: anywhere;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: var(--tm-task-content-wrap-lines, 3);
+            line-clamp: var(--tm-task-content-wrap-lines, 3);
         }
 
         .tm-whiteboard-stream-task-title:hover {
             color: var(--tm-primary-color);
         }
 
-        .tm-whiteboard-stream-subtasks {
+        .tm-whiteboard-stream-children {
+            position: relative;
             margin-left: 14px;
             padding-left: 8px;
-            border-left: 2px solid var(--tm-border-color);
+        }
+
+        .tm-whiteboard-stream-children::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 2px;
+            bottom: 6px;
+            width: 1px;
+            border-radius: 999px;
+            background: var(--tm-whiteboard-stream-tree-line-color, var(--tm-border-color));
+        }
+
+        .tm-whiteboard-stream-subtasks {
+            margin-left: 0;
+            padding-left: 0;
+            border-left: none;
             display: flex;
             flex-direction: column;
             gap: 6px;
@@ -3590,6 +3621,15 @@
             margin-top: 2px;
         }
 
+        .tm-kanban--compact .tm-kanban-card.tm-kanban-card--has-remark .tm-kanban-card-top {
+            margin-bottom: 2px;
+        }
+
+        .tm-kanban--compact .tm-kanban-card.tm-kanban-card--has-remark .tm-task-card-remark {
+            margin-top: 0;
+            margin-bottom: 4px;
+        }
+
         .tm-kanban-col-body {
             padding: 10px;
             display: flex;
@@ -3710,6 +3750,10 @@
             margin-bottom: 6px;
         }
 
+        .tm-kanban-card.tm-kanban-card--has-remark .tm-kanban-card-top {
+            margin-bottom: 2px;
+        }
+
         .tm-kanban-card-head {
             display: flex;
             align-items: flex-start;
@@ -3801,6 +3845,11 @@
             font-size: 12px;
             color: var(--tm-secondary-text);
             margin-bottom: 6px;
+        }
+
+        .tm-kanban-card.tm-kanban-card--has-remark .tm-task-card-remark {
+            margin-top: 0;
+            margin-bottom: 4px;
         }
 
         .tm-kanban-card-meta .tm-status-tag,
@@ -4993,11 +5042,27 @@
             padding: 0;
         }
 
+        .tm-checklist-sheet .tm-checklist-detail-card {
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+        }
+
         .tm-checklist-side .tm-checklist-detail-head {
             margin-bottom: 10px;
         }
 
+        .tm-checklist-sheet .tm-checklist-detail-head {
+            margin-bottom: 10px;
+        }
+
         .tm-checklist-side .tm-task-detail-row:first-of-type {
+            border-top: 1px solid var(--tm-border-color);
+        }
+
+        .tm-checklist-sheet .tm-task-detail-row:first-of-type {
             border-top: 1px solid var(--tm-border-color);
         }
 
@@ -7349,12 +7414,12 @@
             docColorMap: {},
             docColorSeed: 1,
             // 外观配色（支持亮/暗）
-            topbarGradientLightStart: '#667eea',
-            topbarGradientLightEnd: '#764ba2',
-            topbarGradientDarkStart: '#3b49b7',
-            topbarGradientDarkEnd: '#5b2d7a',
-            topbarTextColorLight: '#ffffff',
-            topbarTextColorDark: '#ffffff',
+            topbarGradientLightStart: '#E3ECF2',
+            topbarGradientLightEnd: '#E3ECF2',
+            topbarGradientDarkStart: '#2D2D2D',
+            topbarGradientDarkEnd: '#2D2D2D',
+            topbarTextColorLight: '#003252',
+            topbarTextColorDark: '#FFFFFF',
             topbarControlBgLight: '',
             topbarControlBgDark: '',
             topbarControlTextLight: '',
@@ -7472,6 +7537,34 @@
         saveDirty: false,
         savePromise: null,
         savePromiseResolve: null,
+
+        migrateLegacyTopbarDefaults() {
+            const legacyDefaults = {
+                topbarGradientLightStart: '#667eea',
+                topbarGradientLightEnd: '#764ba2',
+                topbarGradientDarkStart: '#3b49b7',
+                topbarGradientDarkEnd: '#5b2d7a',
+                topbarTextColorLight: '#ffffff',
+                topbarTextColorDark: '#ffffff',
+            };
+            const currentDefaults = {
+                topbarGradientLightStart: '#E3ECF2',
+                topbarGradientLightEnd: '#E3ECF2',
+                topbarGradientDarkStart: '#2D2D2D',
+                topbarGradientDarkEnd: '#2D2D2D',
+                topbarTextColorLight: '#003252',
+                topbarTextColorDark: '#FFFFFF',
+            };
+            let changed = false;
+            Object.keys(legacyDefaults).forEach((key) => {
+                const current = String(this.data?.[key] || '').trim().toLowerCase();
+                const legacy = String(legacyDefaults[key] || '').trim().toLowerCase();
+                if (!current || current !== legacy) return;
+                this.data[key] = currentDefaults[key];
+                changed = true;
+            });
+            return changed;
+        },
 
         async load() {
             if (this.loaded) return;
@@ -7744,10 +7837,14 @@
                                     // 因为用户可能选择了"不分组"或其他分组模式
                                 }
 
+                                const migratedLegacyTopbarDefaults = this.migrateLegacyTopbarDefaults();
                                 // 同步到本地缓存
                                 this.normalizeColumns();
                                 this.syncToLocal();
                                 this.loaded = true;
+                                if (migratedLegacyTopbarDefaults) {
+                                    try { await this.save(); } catch (e) {}
+                                }
                                 return;
                             }
                         } catch (parseError) {
@@ -7756,7 +7853,11 @@
                 }
             } catch (e) {
             }
+            const migratedLegacyTopbarDefaults = this.migrateLegacyTopbarDefaults();
             this.loaded = true;
+            if (migratedLegacyTopbarDefaults) {
+                try { await this.save(); } catch (e) {}
+            }
         },
 
         // 从本地缓存加载
@@ -14534,9 +14635,9 @@ async function __tmRefreshAfterWake(reason) {
     function __tmGetTopbarControlAppearance(isDark) {
         const d = SettingsStore.data || {};
         const topbarText = isDark
-            ? __tmNormalizeHexColor(d.topbarTextColorDark, '#ffffff')
-            : __tmNormalizeHexColor(d.topbarTextColorLight, '#ffffff');
-        const controlTextFallback = topbarText || '#ffffff';
+            ? __tmNormalizeHexColor(d.topbarTextColorDark, '#FFFFFF')
+            : __tmNormalizeHexColor(d.topbarTextColorLight, '#003252');
+        const controlTextFallback = topbarText || (isDark ? '#FFFFFF' : '#003252');
         const controlBgFallback = __tmWithAlpha('#ffffff', 0.12);
         const controlHoverFallback = __tmWithAlpha('#000000', 0.12);
         const segBgFallback = __tmWithAlpha('#ffffff', 0.18);
@@ -14602,11 +14703,11 @@ async function __tmRefreshAfterWake(reason) {
         const root = document.documentElement;
 
         const start = isDark
-            ? __tmNormalizeHexColor(SettingsStore.data.topbarGradientDarkStart, '#3b49b7')
-            : __tmNormalizeHexColor(SettingsStore.data.topbarGradientLightStart, '#667eea');
+            ? __tmNormalizeHexColor(SettingsStore.data.topbarGradientDarkStart, '#2D2D2D')
+            : __tmNormalizeHexColor(SettingsStore.data.topbarGradientLightStart, '#E3ECF2');
         const end = isDark
-            ? __tmNormalizeHexColor(SettingsStore.data.topbarGradientDarkEnd, '#5b2d7a')
-            : __tmNormalizeHexColor(SettingsStore.data.topbarGradientLightEnd, '#764ba2');
+            ? __tmNormalizeHexColor(SettingsStore.data.topbarGradientDarkEnd, '#2D2D2D')
+            : __tmNormalizeHexColor(SettingsStore.data.topbarGradientLightEnd, '#E3ECF2');
         const topbarAppearance = __tmGetTopbarControlAppearance(isDark);
         const topbarText = topbarAppearance.topbarText;
         const taskColor = isDark
@@ -21169,7 +21270,7 @@ async function __tmRefreshAfterWake(reason) {
                 const remarkHtml = kanbanCardFields.has('remark') ? __tmRenderTaskCardRemark(task) : '';
 
                 return `
-                    <div class="tm-kanban-card${isSub ? ' tm-kanban-card--sub' : ''}${isChildRoot ? ' tm-kanban-card--childroot' : ''}${isParent ? ' tm-kanban-card--parent' : ''}${task?.done ? ' tm-kanban-card--done' : ''}" data-id="${id}" draggable="true" ondragstart="tmKanbanDragStart(event, '${id}')" ondragend="tmKanbanDragEnd(event, '${id}')" ondblclick="tmKanbanCardDblClick('${id}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${id}')" style="${isSub ? '' : ''}">
+                    <div class="tm-kanban-card${isSub ? ' tm-kanban-card--sub' : ''}${isChildRoot ? ' tm-kanban-card--childroot' : ''}${isParent ? ' tm-kanban-card--parent' : ''}${task?.done ? ' tm-kanban-card--done' : ''}${remarkHtml ? ' tm-kanban-card--has-remark' : ''}" data-id="${id}" draggable="true" ondragstart="tmKanbanDragStart(event, '${id}')" ondragend="tmKanbanDragEnd(event, '${id}')" ondblclick="tmKanbanCardDblClick('${id}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${id}')" style="${isSub ? '' : ''}">
                         <div class="tm-kanban-card-top">
                             <div class="tm-kanban-card-head">
                                 ${toggleHtml || ''}
@@ -21823,6 +21924,7 @@ async function __tmRefreshAfterWake(reason) {
             // 仅使用当前分组已加载文档，避免把其他分组/历史快照文档混入“全部页签”白板
             const docsInOrder = docsInOrder0;
             const detachedMap = __tmGetDetachedChildrenMap();
+            const enableDocH2Subgroup = SettingsStore.data.docH2SubgroupEnabled !== false;
             const headingLevel = String(SettingsStore.data.taskHeadingLevel || 'h2').trim() || 'h2';
             const headingLabelMap = { h1: '一级标题', h2: '二级标题', h3: '三级标题', h4: '四级标题', h5: '五级标题', h6: '六级标题' };
             const noHeadingLabel = `无${headingLabelMap[headingLevel] || '标题'}`;
@@ -21939,7 +22041,6 @@ async function __tmRefreshAfterWake(reason) {
                     const docId = String(task?.root_id || task?.docId || '').trim();
                     const id = String(task?.id || '').trim();
                     if (!docId || !id || !docIdSet.has(docId)) return;
-                    if (!showDoneTasks && !!task?.done) return;
                     if (!streamByDoc.has(docId)) streamByDoc.set(docId, []);
                     const list = streamByDoc.get(docId);
                     if (list.some((item) => String(item?.id || '').trim() === id)) return;
@@ -21988,22 +22089,24 @@ async function __tmRefreshAfterWake(reason) {
                             const parentId = String(taskById.get(tid)?.parentTaskId || '').trim();
                             return !parentId || !taskById.has(parentId);
                         });
-                    const headingBuckets = __tmBuildDocHeadingBuckets(docTasks, noHeadingLabel);
+                    const headingBuckets = enableDocH2Subgroup ? __tmBuildDocHeadingBuckets(docTasks, noHeadingLabel) : [];
                     const rootIdsByHeading = new Map();
                     const headingCountMap = new Map();
-                    docTasks.forEach((task) => {
-                        const bucket = __tmGetDocHeadingBucket(task, noHeadingLabel);
-                        const key = String(bucket?.key || '').trim();
-                        if (!key) return;
-                        headingCountMap.set(key, (headingCountMap.get(key) || 0) + 1);
-                    });
-                    rootIds.forEach((tid) => {
-                        const task = taskById.get(tid);
-                        const bucket = __tmGetDocHeadingBucket(task, noHeadingLabel);
-                        const key = String(bucket?.key || '').trim() || `label:${noHeadingLabel}`;
-                        if (!rootIdsByHeading.has(key)) rootIdsByHeading.set(key, []);
-                        rootIdsByHeading.get(key).push(tid);
-                    });
+                    if (enableDocH2Subgroup) {
+                        docTasks.forEach((task) => {
+                            const bucket = __tmGetDocHeadingBucket(task, noHeadingLabel);
+                            const key = String(bucket?.key || '').trim();
+                            if (!key) return;
+                            headingCountMap.set(key, (headingCountMap.get(key) || 0) + 1);
+                        });
+                        rootIds.forEach((tid) => {
+                            const task = taskById.get(tid);
+                            const bucket = __tmGetDocHeadingBucket(task, noHeadingLabel);
+                            const key = String(bucket?.key || '').trim() || `label:${noHeadingLabel}`;
+                            if (!rootIdsByHeading.has(key)) rootIdsByHeading.set(key, []);
+                            rootIdsByHeading.get(key).push(tid);
+                        });
+                    }
                     const renderTaskTree = (taskId) => {
                         const task = taskById.get(String(taskId || '').trim());
                         if (!task) return '';
@@ -22015,39 +22118,41 @@ async function __tmRefreshAfterWake(reason) {
                             ? `<button class="tm-kanban-toggle" onclick="tmWhiteboardToggleTaskCollapse('${escSq(tid)}', event)" title="${collapsed ? '展开子任务' : '折叠子任务'}"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="10" height="10" style="transform:translate(-50%, -50%) rotate(${collapsed ? '0deg' : '90deg'});"><path d="M4.75 3.25l6.5 4.75-6.5 4.75" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
                             : `<span class="tm-whiteboard-stream-task-toggle-slot"></span>`;
                         const childrenHtml = childIds.length && !collapsed
-                            ? `<div class="tm-whiteboard-stream-subtasks">${childIds.map((id) => renderTaskTree(id)).join('')}</div>`
+                            ? `<div class="tm-whiteboard-stream-children"><div class="tm-whiteboard-stream-subtasks">${childIds.map((id) => renderTaskTree(id)).join('')}</div></div>`
                             : '';
                         return `
                             <div class="tm-whiteboard-stream-task-node" data-task-id="${esc(tid)}" data-id="${esc(tid)}">
                                 <div class="tm-whiteboard-stream-task">
                                     <div class="tm-whiteboard-stream-task-head" data-task-id="${esc(tid)}" data-id="${esc(tid)}" draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(tid)}')" ondragend="tmDragTaskEnd(event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(tid)}')">
-                                        ${toggleHtml}
                                         ${__tmRenderTaskCheckboxWrap(tid, task, { checked: task?.done, stopMouseDown: true, stopClick: true, title: '完成状态' })}
                                         <span class="tm-whiteboard-stream-task-title ${task?.done ? 'tm-task-done' : ''}" onclick="tmJumpToTask('${escSq(tid)}', event)" title="${esc(content)}">${API.renderTaskContentHtml(task?.markdown, content)}</span>
+                                        ${toggleHtml}
                                     </div>
                                 </div>
                                 ${childrenHtml}
                             </div>
                         `;
                     };
-                    const headingSectionsHtml = headingBuckets.map((bucket, bucketIndex) => {
-                        const key = String(bucket?.key || '').trim();
-                        const rootIdsInBucket = (rootIdsByHeading.get(key) || []).slice().sort((a, b) => (orderById.get(a) ?? 999999) - (orderById.get(b) ?? 999999));
-                        if (!rootIdsInBucket.length) return '';
-                        const groupKey = `wb_stream_h2_${docId}_${key}`;
-                        const groupCollapsed = state.collapsedGroups?.has(groupKey);
-                        const headingCount = Number(headingCountMap.get(key) || rootIdsInBucket.length);
-                        return `
-                            <div class="tm-whiteboard-stream-heading" onclick="tmToggleGroupCollapse('${escSq(groupKey)}', event)">
-                                <div class="tm-whiteboard-stream-heading-main">
-                                    <span class="tm-group-toggle" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${groupCollapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                                    <span class="tm-whiteboard-stream-heading-label">${esc(String(bucket?.label || noHeadingLabel).trim() || noHeadingLabel)}</span>
+                    const headingSectionsHtml = enableDocH2Subgroup
+                        ? headingBuckets.map((bucket) => {
+                            const key = String(bucket?.key || '').trim();
+                            const rootIdsInBucket = (rootIdsByHeading.get(key) || []).slice().sort((a, b) => (orderById.get(a) ?? 999999) - (orderById.get(b) ?? 999999));
+                            if (!rootIdsInBucket.length) return '';
+                            const groupKey = `wb_stream_h2_${docId}_${key}`;
+                            const groupCollapsed = state.collapsedGroups?.has(groupKey);
+                            const headingCount = Number(headingCountMap.get(key) || rootIdsInBucket.length);
+                            return `
+                                <div class="tm-whiteboard-stream-heading" onclick="tmToggleGroupCollapse('${escSq(groupKey)}', event)">
+                                    <div class="tm-whiteboard-stream-heading-main">
+                                        <span class="tm-group-toggle" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${groupCollapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                                        <span class="tm-whiteboard-stream-heading-label">${esc(String(bucket?.label || noHeadingLabel).trim() || noHeadingLabel)}</span>
+                                    </div>
+                                    <span class="tm-badge tm-badge--count">${headingCount}</span>
                                 </div>
-                                <span class="tm-badge tm-badge--count">${headingCount}</span>
-                            </div>
-                            ${groupCollapsed ? '' : rootIdsInBucket.map((id) => renderTaskTree(id)).join('')}
-                        `;
-                    }).join('');
+                                ${groupCollapsed ? '' : rootIdsInBucket.map((id) => renderTaskTree(id)).join('')}
+                            `;
+                        }).join('')
+                        : rootIds.map((id) => renderTaskTree(id)).join('');
                     const docHtml = `
                         <section class="tm-whiteboard-stream-doc" data-doc-id="${esc(docId)}" data-doc-order="${idx}" ondragover="tmWhiteboardAllTabsDocDragOver(event, '${escSq(docId)}')" ondrop="tmWhiteboardAllTabsDocDrop(event, '${escSq(docId)}')">
                             <header class="tm-whiteboard-stream-doc-head">
@@ -22062,7 +22167,7 @@ async function __tmRefreshAfterWake(reason) {
                             </div>
                         </section>
                     `;
-                    const estHeight = 86 + docTasks.length * 38 + headingBuckets.length * 26;
+                    const estHeight = 86 + docTasks.length * 38 + (enableDocH2Subgroup ? headingBuckets.length * 26 : 0);
                     let colIndex = 0;
                     for (let i = 1; i < cols.length; i++) {
                         if (cols[i].score < cols[colIndex].score) colIndex = i;
@@ -22930,7 +23035,9 @@ async function __tmRefreshAfterWake(reason) {
                                     </div>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px;">
-                                     <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="showSettings()" style="flex:1; padding: 6px;">⚙️ 设置</button>
+                                     <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="showSettings()" style="flex:1; padding: 6px;">
+                                        <span style="display:inline-flex;align-items:center;gap:6px;">${__tmRenderLucideIcon('settings')}<span>设置</span></span>
+                                     </button>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px;">
                                      <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCollapseAllTasks()" style="flex:1; padding: 6px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(0deg);margin-right:4px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>折叠</button>
@@ -37166,9 +37273,9 @@ async function __tmRefreshAfterWake(reason) {
         window.tmQuickAddRenderMeta?.();
     };
 
-    window.tmQuickAddOpenForDoc = function(docId) {
+    window.tmQuickAddOpenForDoc = async function(docId) {
         const id = String(docId || '').trim();
-        window.tmQuickAddOpen?.();
+        await window.tmQuickAddOpen?.();
         if (!id) return;
         if (!state.quickAdd) return;
         state.quickAdd.docMode = 'doc';
@@ -39307,7 +39414,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         ${renderSingleSwitchSetting(
                             '文档分组下按二级标题子分组',
-                            '用于时间轴、表格和日历侧边栏。',
+                            '用于时间轴、表格、文档流和日历侧边栏。',
                             `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.docH2SubgroupEnabled !== false ? 'checked' : ''} onchange="updateDocH2SubgroupEnabled(this.checked)">`,
                             { style: 'margin-bottom:10px;' }
                         )}
@@ -39720,12 +39827,12 @@ async function __tmRefreshAfterWake(reason) {
             {
                 title: '插件顶栏渐变',
                 rows: [
-                    { label: '亮色 起始', key: 'topbarGradientLightStart', value: d.topbarGradientLightStart || '#667eea' },
-                    { label: '亮色 结束', key: 'topbarGradientLightEnd', value: d.topbarGradientLightEnd || '#764ba2' },
-                    { label: '夜间 起始', key: 'topbarGradientDarkStart', value: d.topbarGradientDarkStart || '#3b49b7' },
-                    { label: '夜间 结束', key: 'topbarGradientDarkEnd', value: d.topbarGradientDarkEnd || '#5b2d7a' },
-                    { label: '顶栏文字 亮色', key: 'topbarTextColorLight', value: d.topbarTextColorLight || '#ffffff' },
-                    { label: '顶栏文字 夜间', key: 'topbarTextColorDark', value: d.topbarTextColorDark || '#ffffff' }
+                    { label: '亮色 起始', key: 'topbarGradientLightStart', value: d.topbarGradientLightStart || '#E3ECF2' },
+                    { label: '亮色 结束', key: 'topbarGradientLightEnd', value: d.topbarGradientLightEnd || '#E3ECF2' },
+                    { label: '夜间 起始', key: 'topbarGradientDarkStart', value: d.topbarGradientDarkStart || '#2D2D2D' },
+                    { label: '夜间 结束', key: 'topbarGradientDarkEnd', value: d.topbarGradientDarkEnd || '#2D2D2D' },
+                    { label: '顶栏文字 亮色', key: 'topbarTextColorLight', value: d.topbarTextColorLight || '#003252' },
+                    { label: '顶栏文字 夜间', key: 'topbarTextColorDark', value: d.topbarTextColorDark || '#FFFFFF' }
                 ]
             },
             {
@@ -39849,8 +39956,8 @@ async function __tmRefreshAfterWake(reason) {
             </div>
         `).join('');
 
-        const previewLight = `linear-gradient(135deg, ${esc(__tmNormalizeHexColor(d.topbarGradientLightStart, '#667eea') || '#667eea')} 0%, ${esc(__tmNormalizeHexColor(d.topbarGradientLightEnd, '#764ba2') || '#764ba2')} 100%)`;
-        const previewDark = `linear-gradient(135deg, ${esc(__tmNormalizeHexColor(d.topbarGradientDarkStart, '#3b49b7') || '#3b49b7')} 0%, ${esc(__tmNormalizeHexColor(d.topbarGradientDarkEnd, '#5b2d7a') || '#5b2d7a')} 100%)`;
+        const previewLight = `linear-gradient(135deg, ${esc(__tmNormalizeHexColor(d.topbarGradientLightStart, '#E3ECF2') || '#E3ECF2')} 0%, ${esc(__tmNormalizeHexColor(d.topbarGradientLightEnd, '#E3ECF2') || '#E3ECF2')} 100%)`;
+        const previewDark = `linear-gradient(135deg, ${esc(__tmNormalizeHexColor(d.topbarGradientDarkStart, '#2D2D2D') || '#2D2D2D')} 0%, ${esc(__tmNormalizeHexColor(d.topbarGradientDarkEnd, '#2D2D2D') || '#2D2D2D')} 100%)`;
 
         return `
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
@@ -39894,12 +40001,12 @@ async function __tmRefreshAfterWake(reason) {
         const topbarLight = __tmGetTopbarControlAppearance(false);
         const topbarDark = __tmGetTopbarControlAppearance(true);
         const defaults = {
-            topbarGradientLightStart: '#667eea',
-            topbarGradientLightEnd: '#764ba2',
-            topbarGradientDarkStart: '#3b49b7',
-            topbarGradientDarkEnd: '#5b2d7a',
-            topbarTextColorLight: '#ffffff',
-            topbarTextColorDark: '#ffffff',
+            topbarGradientLightStart: '#E3ECF2',
+            topbarGradientLightEnd: '#E3ECF2',
+            topbarGradientDarkStart: '#2D2D2D',
+            topbarGradientDarkEnd: '#2D2D2D',
+            topbarTextColorLight: '#003252',
+            topbarTextColorDark: '#FFFFFF',
             topbarControlBgLight: topbarLight.controlBg,
             topbarControlBgDark: topbarDark.controlBg,
             topbarControlTextLight: topbarLight.controlText,
@@ -39977,8 +40084,8 @@ async function __tmRefreshAfterWake(reason) {
             const d = SettingsStore.data || {};
             const p1 = document.getElementById('tmAppearancePreviewLight');
             const p2 = document.getElementById('tmAppearancePreviewDark');
-            const previewLight = `linear-gradient(135deg, ${__tmNormalizeHexColor(d.topbarGradientLightStart, '#667eea') || '#667eea'} 0%, ${__tmNormalizeHexColor(d.topbarGradientLightEnd, '#764ba2') || '#764ba2'} 100%)`;
-            const previewDark = `linear-gradient(135deg, ${__tmNormalizeHexColor(d.topbarGradientDarkStart, '#3b49b7') || '#3b49b7'} 0%, ${__tmNormalizeHexColor(d.topbarGradientDarkEnd, '#5b2d7a') || '#5b2d7a'} 100%)`;
+            const previewLight = `linear-gradient(135deg, ${__tmNormalizeHexColor(d.topbarGradientLightStart, '#E3ECF2') || '#E3ECF2'} 0%, ${__tmNormalizeHexColor(d.topbarGradientLightEnd, '#E3ECF2') || '#E3ECF2'} 100%)`;
+            const previewDark = `linear-gradient(135deg, ${__tmNormalizeHexColor(d.topbarGradientDarkStart, '#2D2D2D') || '#2D2D2D'} 0%, ${__tmNormalizeHexColor(d.topbarGradientDarkEnd, '#2D2D2D') || '#2D2D2D'} 100%)`;
             if (p1) p1.style.background = previewLight;
             if (p2) p2.style.background = previewDark;
         } catch (e) {}
@@ -40034,12 +40141,12 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmResetAppearanceColors = async function() {
-        SettingsStore.data.topbarGradientLightStart = '#667eea';
-        SettingsStore.data.topbarGradientLightEnd = '#764ba2';
-        SettingsStore.data.topbarGradientDarkStart = '#3b49b7';
-        SettingsStore.data.topbarGradientDarkEnd = '#5b2d7a';
-        SettingsStore.data.topbarTextColorLight = '#ffffff';
-        SettingsStore.data.topbarTextColorDark = '#ffffff';
+        SettingsStore.data.topbarGradientLightStart = '#E3ECF2';
+        SettingsStore.data.topbarGradientLightEnd = '#E3ECF2';
+        SettingsStore.data.topbarGradientDarkStart = '#2D2D2D';
+        SettingsStore.data.topbarGradientDarkEnd = '#2D2D2D';
+        SettingsStore.data.topbarTextColorLight = '#003252';
+        SettingsStore.data.topbarTextColorDark = '#FFFFFF';
         SettingsStore.data.topbarControlBgLight = '';
         SettingsStore.data.topbarControlBgDark = '';
         SettingsStore.data.topbarControlTextLight = '';
