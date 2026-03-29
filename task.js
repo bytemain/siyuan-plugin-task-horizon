@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.9.8
+// @version      1.9.9
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -4611,7 +4611,7 @@
 
         .tm-checklist-pane--compact .tm-checklist-group-card {
             --tm-checklist-card-accent: color-mix(in srgb, var(--tm-primary-color) 78%, var(--tm-text-color) 22%);
-            --tm-checklist-card-accent-width: 4px;
+            --tm-checklist-card-accent-width: 3px;
             --tm-checklist-card-accent-gap: 10px;
             --tm-checklist-card-divider-start: calc(var(--tm-checklist-card-accent-width) + var(--tm-checklist-card-accent-gap));
             --tm-checklist-card-divider-right: 12px;
@@ -4733,10 +4733,10 @@
         .tm-checklist-pane--compact .tm-checklist-item::before {
             content: '';
             position: absolute;
-            left: -3px;
+            left: -2px;
             top: -1px;
             bottom: -1px;
-            width: 3px;
+            width: 2px;
             border-radius: 0;
             background: var(--tm-checklist-accent-color, transparent);
         }
@@ -20424,6 +20424,7 @@ async function __tmRefreshAfterWake(reason) {
                 else if (row.kind === 'task') labelColor = String(row.labelColor || 'var(--tm-primary-color)');
                 else if (row.kind === 'time') labelColor = String(row.labelColor || 'var(--tm-text-color)');
                 else if (row.kind === 'pinned') labelColor = 'var(--tm-warning-color)';
+                else if (row.kind === 'normal') labelColor = 'var(--tm-text-color)';
                 else if (row.kind === 'quadrant') {
                     const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
                     labelColor = colorMap[String(row.color || '')] || 'var(--tm-text-color)';
@@ -20436,6 +20437,9 @@ async function __tmRefreshAfterWake(reason) {
                 } else if (row.kind === 'pinned') {
                     currentGroupBg = '';
                     currentGroupAccent = 'var(--tm-danger-color)';
+                } else if (row.kind === 'normal') {
+                    currentGroupBg = '';
+                    currentGroupAccent = 'transparent';
                 } else if (row.kind === 'h2' && state.groupByDocName) {
                     // 文档分组下的标题子分组沿用文档组背景，不要被标题标签颜色覆盖。
                 } else {
@@ -20463,9 +20467,7 @@ async function __tmRefreshAfterWake(reason) {
                 if ((state.groupByTaskName || (!state.groupByDocName && !state.groupByTime && !state.quadrantEnabled)) && task.root_id) {
                     const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
                     currentGroupBg = (enableGroupBg && taskDocColor) ? (__tmGroupBgFromLabelColor(taskDocColor, isDark) || '') : '';
-                    currentGroupAccent = state.groupByTaskName
-                        ? (taskDocColor || currentGroupAccent || '')
-                        : ((enableGroupBg && taskDocColor) ? taskDocColor : '');
+                    currentGroupAccent = taskDocColor || '';
                 }
                 const depth = Math.max(0, Number(row?.depth) || 0);
                 const hasChildren = !!row?.hasChildren;
@@ -33302,6 +33304,23 @@ async function __tmRefreshAfterWake(reason) {
             }
         }
 
+        if (isUngroupForRowModel && pinnedRoots.length > 0 && normalRoots.length > 0) {
+            const normalGroupKey = 'normal_root_tasks';
+            const normalCollapsed = state.collapsedGroups?.has(normalGroupKey);
+            rows.push({
+                type: 'group',
+                kind: 'normal',
+                key: normalGroupKey,
+                label: '普通',
+                count: normalRoots.length,
+                collapsed: !!normalCollapsed,
+            });
+            if (!normalCollapsed) {
+                normalRoots.slice().sort(compareRootByFilteredOrderUngroup).forEach(task => walkTaskTree(task, 0));
+            }
+            return rows;
+        }
+
         if (state.quadrantEnabled && normalRoots.length > 0) {
             const quadrantRules = (SettingsStore.data.quadrantConfig && SettingsStore.data.quadrantConfig.rules) || [];
             const getImportanceLevel = (task) => {
@@ -34586,6 +34605,22 @@ async function __tmRefreshAfterWake(reason) {
                 });
             }
         }
+
+        if (isUngroupForRender && pinnedRoots.length > 0 && normalRoots.length > 0) {
+            const normalGroupKey = 'normal_root_tasks';
+            const normalCollapsed = state.collapsedGroups?.has(normalGroupKey);
+            const normalToggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${normalGroupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+            allRows.push(`<tr class="tm-group-row" data-group-key="${normalGroupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${normalGroupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${normalToggle}<span class="tm-group-label">普通</span><span class="tm-badge tm-badge--count">${normalRoots.length}</span></div></td></tr>`);
+            if (!normalCollapsed) {
+                currentGroupBg = '';
+                normalRoots.slice().sort(compareRootByFilteredOrderUngroup).forEach(task => {
+                    if (!hasTaskRowBudget()) return;
+                    const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
+                    currentGroupBg = (enableGroupBg && taskDocColor) ? __tmGroupBgFromLabelColor(taskDocColor, isDark) : '';
+                    allRows.push(...renderTaskTree(task, 0));
+                });
+            }
+        } else
 
         // 处理普通任务
         if (state.quadrantEnabled && normalRoots.length > 0) {
@@ -37771,6 +37806,7 @@ async function __tmRefreshAfterWake(reason) {
             content,
         };
         window.tmQuickAddClose?.();
+        state.quickAddSubmitting = false;
         (async () => {
             try {
                 let targetDocId = payload.docId;
@@ -37801,8 +37837,6 @@ async function __tmRefreshAfterWake(reason) {
                 }
             } catch (e) {
                 hint(`❌ 创建失败: ${e.message}`, 'error');
-            } finally {
-                state.quickAddSubmitting = false;
             }
         })();
     };
@@ -38590,6 +38624,7 @@ async function __tmRefreshAfterWake(reason) {
                 else if (row.kind === 'task') labelColor = String(row.labelColor || 'var(--tm-primary-color)');
                 else if (row.kind === 'time') labelColor = String(row.labelColor || 'var(--tm-text-color)');
                 else if (row.kind === 'pinned') labelColor = 'var(--tm-warning-color)';
+                else if (row.kind === 'normal') labelColor = 'var(--tm-text-color)';
                 else if (row.kind === 'quadrant') {
                     const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
                     labelColor = colorMap[String(row.color || '')] || 'var(--tm-text-color)';
@@ -38602,6 +38637,9 @@ async function __tmRefreshAfterWake(reason) {
                 } else if (row.kind === 'pinned') {
                     currentGroupBg = '';
                     currentGroupAccent = 'var(--tm-danger-color)';
+                } else if (row.kind === 'normal') {
+                    currentGroupBg = '';
+                    currentGroupAccent = 'transparent';
                 } else if (row.kind === 'h2' && state.groupByDocName) {
                     // 文档分组下的标题子分组沿用文档组背景，不要被标题标签颜色覆盖。
                 } else {
@@ -38630,9 +38668,7 @@ async function __tmRefreshAfterWake(reason) {
                 if ((state.groupByTaskName || (!state.groupByDocName && !state.groupByTime && !state.quadrantEnabled)) && task.root_id) {
                     const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
                     currentGroupBg = (enableGroupBg && taskDocColor) ? (__tmGroupBgFromLabelColor(taskDocColor, isDark) || '') : '';
-                    currentGroupAccent = state.groupByTaskName
-                        ? (taskDocColor || currentGroupAccent || '')
-                        : ((enableGroupBg && taskDocColor) ? taskDocColor : '');
+                    currentGroupAccent = taskDocColor || '';
                 }
                 const depth = Math.max(0, Number(row?.depth) || 0);
                 const hasChildren = !!row?.hasChildren;
