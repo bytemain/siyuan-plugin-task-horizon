@@ -81,6 +81,7 @@
         deviceScheduleModalEl: null,
         deviceScheduleAbort: null,
         isMobileDevice: false,
+        isDockHost: false,
         sidebarOpen: false,
         mobileDragCloseTimer: null,
         sidebarColorMenuCloseHandler: null,
@@ -739,13 +740,14 @@
         const visibleRange = getCalendarVisibleSlotRange(settings || getSettings());
         return {
             slotDuration: '00:30:00',
-            slotLabelInterval: '01:00',
+            slotLabelInterval: '00:30:00',
             slotMinTime: visibleRange.slotMinTime,
             slotMaxTime: visibleRange.slotMaxTime,
             slotLabelContent: (arg) => {
                 const d = arg?.date;
                 if (!(d instanceof Date) || Number.isNaN(d.getTime())) return '';
-                return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+                if (d.getMinutes() !== 0) return '';
+                return `${d.getHours()}`;
             },
         };
     }
@@ -763,12 +765,58 @@
 
     function applyCalendarSlotHeightStyle(rootEl, settings) {
         if (!(rootEl instanceof HTMLElement)) return false;
-        const slotHeight = getCalendarHalfHourSlotHeight(settings);
+        const nextSettings = settings || getSettings();
+        const slotHeight = getCalendarHalfHourSlotHeight(nextSettings);
+        const contentHeight = getCalendarTimeGridContentHeight(nextSettings);
         try { rootEl.style.setProperty('--tm-calendar-half-hour-slot-height', `${slotHeight}px`); } catch (e) {}
+        try { rootEl.style.setProperty('--tm-calendar-timegrid-content-height', `${contentHeight}px`); } catch (e) {}
         return true;
     }
 
-    function getSideDayContentHeight(settings) {
+    function applyMainCalendarSlotHeightLayout(rootEl, settings) {
+        if (!(rootEl instanceof HTMLElement)) return false;
+        const nextSettings = settings || getSettings();
+        const slotHeight = getCalendarHalfHourSlotHeight(nextSettings);
+        const contentHeight = getCalendarTimeGridContentHeight(nextSettings);
+        try { applyCalendarSlotHeightStyle(rootEl, nextSettings); } catch (e) {}
+        const slotSelectors = [
+            '.fc-timegrid-slots tr',
+            '.fc-timegrid-slots td',
+            '.fc-timegrid-slot',
+            '.fc-timegrid-slot-lane',
+            '.fc-timegrid-slot-label',
+            '.fc-timegrid-slot-frame',
+        ];
+        for (const selector of slotSelectors) {
+            const nodes = rootEl.querySelectorAll(selector);
+            for (const node of nodes) {
+                if (!(node instanceof HTMLElement)) continue;
+                try { node.style.setProperty('height', `${slotHeight}px`, 'important'); } catch (e) {}
+                try { node.style.setProperty('min-height', `${slotHeight}px`, 'important'); } catch (e) {}
+                try { node.style.setProperty('max-height', `${slotHeight}px`, 'important'); } catch (e) {}
+                try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
+            }
+        }
+        const contentSelectors = [
+            '.fc-timegrid-body',
+            '.fc-timegrid-cols',
+            '.fc-timegrid-cols table',
+            '.fc-timegrid-slots',
+            '.fc-timegrid-slots table',
+        ];
+        for (const selector of contentSelectors) {
+            const nodes = rootEl.querySelectorAll(selector);
+            for (const node of nodes) {
+                if (!(node instanceof HTMLElement)) continue;
+                try { node.style.setProperty('height', `${contentHeight}px`, 'important'); } catch (e) {}
+                try { node.style.setProperty('min-height', `${contentHeight}px`, 'important'); } catch (e) {}
+                try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
+            }
+        }
+        return true;
+    }
+
+    function getCalendarTimeGridContentHeight(settings) {
         const range = getCalendarVisibleSlotRange(settings || getSettings());
         const toMinutes = (value) => {
             const raw = String(value || '').trim();
@@ -783,6 +831,10 @@
             : 24 * 60;
         const slotCount = Math.max(1, Math.round(totalMinutes / 30));
         return slotCount * getCalendarHalfHourSlotHeight(settings);
+    }
+
+    function getSideDayContentHeight(settings) {
+        return getCalendarTimeGridContentHeight(settings);
     }
 
     function getTimeGridSlotHeight(rootEl, fallback) {
@@ -815,7 +867,7 @@
         if (!(rootEl instanceof HTMLElement)) return false;
         const nextSettings = settings || getSettings();
         const slotHeight = getCalendarHalfHourSlotHeight(nextSettings);
-        const contentHeight = getSideDayContentHeight(nextSettings);
+        const contentHeight = getCalendarTimeGridContentHeight(nextSettings);
         try { applyCalendarSlotHeightStyle(rootEl, nextSettings); } catch (e) {}
         const slotSelectors = [
             '.fc-timegrid-slots tr',
@@ -829,26 +881,118 @@
             const nodes = rootEl.querySelectorAll(selector);
             for (const node of nodes) {
                 if (!(node instanceof HTMLElement)) continue;
-                try { node.style.height = `${slotHeight}px`; } catch (e) {}
-                try { node.style.minHeight = `${slotHeight}px`; } catch (e) {}
-                try { node.style.maxHeight = `${slotHeight}px`; } catch (e) {}
-                try { node.style.boxSizing = 'border-box'; } catch (e) {}
+                try { node.style.setProperty('height', `${slotHeight}px`, 'important'); } catch (e) {}
+                try { node.style.setProperty('min-height', `${slotHeight}px`, 'important'); } catch (e) {}
+                try { node.style.setProperty('max-height', `${slotHeight}px`, 'important'); } catch (e) {}
+                try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
             }
         }
-        const slotsTable = rootEl.querySelector('.fc-timegrid-slots table');
-        if (slotsTable instanceof HTMLElement) {
-            try { slotsTable.style.height = `${contentHeight}px`; } catch (e) {}
-            try { slotsTable.style.minHeight = `${contentHeight}px`; } catch (e) {}
+        const contentSelectors = [
+            '.fc-timegrid-body',
+            '.fc-timegrid-cols',
+            '.fc-timegrid-cols table',
+            '.fc-timegrid-slots',
+            '.fc-timegrid-slots table',
+        ];
+        for (const selector of contentSelectors) {
+            const nodes = rootEl.querySelectorAll(selector);
+            for (const node of nodes) {
+                if (!(node instanceof HTMLElement)) continue;
+                try { node.style.setProperty('height', `${contentHeight}px`, 'important'); } catch (e) {}
+                try { node.style.setProperty('min-height', `${contentHeight}px`, 'important'); } catch (e) {}
+                try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
+            }
         }
-        const body = rootEl.querySelector('.fc-timegrid-body');
-        if (body instanceof HTMLElement) {
-            try { body.style.height = `${contentHeight}px`; } catch (e) {}
-            try { body.style.minHeight = `${contentHeight}px`; } catch (e) {}
+        return true;
+    }
+
+    function applyTimeAxisColumnLayout(rootEl, axisWidthPx = 40) {
+        if (!(rootEl instanceof HTMLElement)) return false;
+        const width = `${Math.max(34, Math.round(Number(axisWidthPx) || 40))}px`;
+        const isSideDockRoot = rootEl.id === 'tmCalendarSideDockTimeline' || !!rootEl.closest?.('#tmCalendarSideDockTimeline');
+        const hourFontSize = '14px';
+        const allDayFontSize = '14px';
+        const hourOpacity = '0.82';
+        const allDayOpacity = '0.74';
+        const labelColor = 'color-mix(in srgb, var(--tm-text-color) 72%, var(--tm-secondary-text) 28%)';
+        const hourTranslateY = isSideDockRoot ? '-46%' : '12%';
+        try { rootEl.style.setProperty('--tm-calendar-hour-translate-y', hourTranslateY); } catch (e) {}
+        const widthSelectors = [
+            '.fc-scrollgrid col:first-child',
+            '.fc-scrollgrid-section > td:first-child',
+            '.fc-scrollgrid-section > th:first-child',
+            'td.fc-timegrid-slot-label',
+            '.fc-timegrid-axis',
+            '.fc-timegrid-axis-frame',
+            '.fc-timegrid-slot-label-frame',
+            '.fc-timegrid-axis-cushion',
+            '.fc-timegrid-slot-label-cushion',
+        ];
+        for (const selector of widthSelectors) {
+            const nodes = rootEl.querySelectorAll(selector);
+            for (const node of nodes) {
+                if (!(node instanceof Element)) continue;
+                try { node.style.setProperty('width', width, 'important'); } catch (e) {}
+                try { node.style.setProperty('min-width', width, 'important'); } catch (e) {}
+                try { node.style.setProperty('max-width', width, 'important'); } catch (e) {}
+                try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
+            }
         }
-        const cols = rootEl.querySelector('.fc-timegrid-cols');
-        if (cols instanceof HTMLElement) {
-            try { cols.style.height = `${contentHeight}px`; } catch (e) {}
-            try { cols.style.minHeight = `${contentHeight}px`; } catch (e) {}
+        const centerSelectors = [
+            '.fc-timegrid-axis',
+            'td.fc-timegrid-slot-label',
+            '.fc-timegrid-axis-frame',
+            '.fc-timegrid-slot-label-frame',
+            '.fc-timegrid-axis-cushion',
+            '.fc-timegrid-slot-label-cushion',
+        ];
+        for (const selector of centerSelectors) {
+            const nodes = rootEl.querySelectorAll(selector);
+            for (const node of nodes) {
+                if (!(node instanceof HTMLElement)) continue;
+                try { node.style.setProperty('text-align', 'center', 'important'); } catch (e) {}
+                try { node.style.setProperty('justify-content', 'center', 'important'); } catch (e) {}
+                try { node.style.setProperty('color', labelColor, 'important'); } catch (e) {}
+            }
+        }
+        const flexSelectors = [
+            '.fc-timegrid-axis-frame',
+            '.fc-timegrid-slot-label-frame',
+            '.fc-timegrid-axis-cushion',
+            '.fc-timegrid-slot-label-cushion',
+        ];
+        for (const selector of flexSelectors) {
+            const nodes = rootEl.querySelectorAll(selector);
+            for (const node of nodes) {
+                if (!(node instanceof HTMLElement)) continue;
+                try { node.style.setProperty('display', 'flex', 'important'); } catch (e) {}
+                try { node.style.setProperty('margin', '0 auto', 'important'); } catch (e) {}
+                try { node.style.setProperty('padding-left', '0', 'important'); } catch (e) {}
+                try { node.style.setProperty('padding-right', '0', 'important'); } catch (e) {}
+            }
+        }
+        const hourNodes = rootEl.querySelectorAll('.fc-timegrid-slots .fc-timegrid-axis-cushion, .fc-timegrid-slot-label-cushion');
+        for (const node of hourNodes) {
+            if (!(node instanceof HTMLElement)) continue;
+            try { node.style.setProperty('font-size', hourFontSize, 'important'); } catch (e) {}
+            try { node.style.setProperty('line-height', '1', 'important'); } catch (e) {}
+            try { node.style.setProperty('opacity', hourOpacity, 'important'); } catch (e) {}
+            try { node.style.setProperty('font-weight', '400', 'important'); } catch (e) {}
+            try { node.style.setProperty('color', labelColor, 'important'); } catch (e) {}
+            try { node.style.setProperty('align-items', 'flex-start', 'important'); } catch (e) {}
+            try { node.style.setProperty('padding-top', '0', 'important'); } catch (e) {}
+            try { node.style.setProperty('transform', `translateY(var(--tm-calendar-hour-translate-y, ${hourTranslateY}))`, 'important'); } catch (e) {}
+        }
+        const allDayAxis = rootEl.querySelectorAll('.fc-timegrid-all-day .fc-timegrid-axis-cushion');
+        for (const node of allDayAxis) {
+            if (!(node instanceof HTMLElement)) continue;
+            try { node.style.setProperty('font-size', allDayFontSize, 'important'); } catch (e) {}
+            try { node.style.setProperty('line-height', '1', 'important'); } catch (e) {}
+            try { node.style.setProperty('opacity', allDayOpacity, 'important'); } catch (e) {}
+            try { node.style.setProperty('font-weight', '600', 'important'); } catch (e) {}
+            try { node.style.setProperty('color', labelColor, 'important'); } catch (e) {}
+            try { node.style.setProperty('align-items', 'center', 'important'); } catch (e) {}
+            try { node.style.setProperty('transform', 'none', 'important'); } catch (e) {}
         }
         return true;
     }
@@ -856,14 +1000,16 @@
     function syncSideDayLayout(rootEl, calendar, settings) {
         if (!(rootEl instanceof HTMLElement)) return false;
         const nextSettings = settings || getSettings();
-        const contentHeight = getSideDayContentHeight(nextSettings);
+        const contentHeight = getCalendarTimeGridContentHeight(nextSettings);
         try { calendar?.setOption?.('height', 'auto'); } catch (e) {}
         try { calendar?.setOption?.('contentHeight', contentHeight); } catch (e) {}
+        try { applyTimeAxisColumnLayout(rootEl, 40); } catch (e) {}
         try { forceSideDaySlotHeight(rootEl, nextSettings); } catch (e) {}
         try { calendar?.updateSize?.(); } catch (e) {}
         try { enhanceNowIndicator(rootEl); } catch (e) {}
         try {
             requestAnimationFrame(() => {
+                try { applyTimeAxisColumnLayout(rootEl, 40); } catch (e2) {}
                 try { forceSideDaySlotHeight(rootEl, nextSettings); } catch (e2) {}
                 try { calendar?.updateSize?.(); } catch (e2) {}
                 try { enhanceNowIndicator(rootEl); } catch (e2) {}
@@ -919,11 +1065,13 @@
     function refreshCalendarSlotHeight(settings) {
         const nextSettings = settings || getSettings();
         try { applyCalendarSlotHeightStyle(state.wrapEl, nextSettings); } catch (e) {}
+        try { applyMainCalendarSlotHeightLayout(state.wrapEl, nextSettings); } catch (e) {}
         try { state.calendar?.updateSize?.(); } catch (e) {}
         try { syncSideDayLayout(state.sideDay?.rootEl, state.sideDay?.calendar, nextSettings); } catch (e) {}
         try {
             requestAnimationFrame(() => {
                 try { applyCalendarSlotHeightStyle(state.wrapEl, nextSettings); } catch (e2) {}
+                try { applyMainCalendarSlotHeightLayout(state.wrapEl, nextSettings); } catch (e2) {}
                 try { state.calendar?.updateSize?.(); } catch (e2) {}
                 try { syncSideDayLayout(state.sideDay?.rootEl, state.sideDay?.calendar, nextSettings); } catch (e2) {}
             });
@@ -1403,7 +1551,7 @@
                 }
             }, { signal: abort.signal });
 
-            if (state.isMobileDevice) {
+            if (shouldAutoHideSidebarOnTaskDrag()) {
                 const clearDragCloseTimer = () => {
                     if (state.mobileDragCloseTimer) {
                         try { clearTimeout(state.mobileDragCloseTimer); } catch (e2) {}
@@ -1423,10 +1571,12 @@
                         } catch (e2) {}
                     }, 180);
                 };
-                host.addEventListener('touchstart', scheduleDragClose, { passive: true, signal: abort.signal });
-                host.addEventListener('touchmove', clearDragCloseTimer, { passive: true, signal: abort.signal });
-                host.addEventListener('touchend', clearDragCloseTimer, { passive: true, signal: abort.signal });
-                host.addEventListener('touchcancel', clearDragCloseTimer, { passive: true, signal: abort.signal });
+                if (state.isMobileDevice) {
+                    host.addEventListener('touchstart', scheduleDragClose, { passive: true, signal: abort.signal });
+                    host.addEventListener('touchmove', clearDragCloseTimer, { passive: true, signal: abort.signal });
+                    host.addEventListener('touchend', clearDragCloseTimer, { passive: true, signal: abort.signal });
+                    host.addEventListener('touchcancel', clearDragCloseTimer, { passive: true, signal: abort.signal });
+                }
                 host.addEventListener('dragstart', (ev) => {
                     const target = ev?.target;
                     if (!(target instanceof Element)) return;
@@ -1509,6 +1659,10 @@
             : !wrap.classList.contains('tm-calendar-wrap--sidebar-collapsed');
         const next = (open === undefined) ? !isOpen : !!open;
         return setCalendarSidebarOpen(wrap, next, page);
+    }
+
+    function shouldAutoHideSidebarOnTaskDrag() {
+        return !!(state.isMobileDevice || state.isDockHost);
     }
 
     function miniMonthKeyFromDate(d) {
@@ -5168,35 +5322,13 @@
                     return;
                 }
                 if (source === 'taskdate') {
-                    const taskId = String(ext.__tmTaskId || '').trim();
-                    const start = arg?.event?.start;
-                    const end0 = arg?.event?.end;
-                    const calendarId = String(ext.calendarId || 'default').trim() || pickDefaultCalendarId(getSettings());
-                    if (!taskId || !(start instanceof Date) || Number.isNaN(start.getTime())) {
-                        try { arg.revert(); } catch (e) {}
-                        return;
-                    }
-                    const isAllDay = arg?.event?.allDay === true;
-                    const safeEnd = (end0 instanceof Date && !Number.isNaN(end0.getTime()) && end0.getTime() > start.getTime())
-                        ? end0
-                        : new Date(start.getTime() + (isAllDay ? 24 * 60 : 60) * 60000);
                     try {
-                        const list = await loadScheduleAll();
-                        list.push({
-                            id: uuid(),
-                            title: String(arg?.event?.title || '').trim() || '任务',
-                            start: safeISO(start),
-                            end: safeISO(safeEnd),
-                            allDay: isAllDayRange(start, safeEnd),
-                            color: '',
-                            calendarId,
-                            taskId,
-                        });
-                        await saveScheduleAll(list);
-                        toast('✅ 已加入日程', 'success');
-                    } catch (e) {}
-                    try { arg.revert(); } catch (e) {}
-                    refetchAllCalendars();
+                        await persistTaskDateEventChange(arg);
+                        toast('✅ 已更新任务日期', 'success');
+                    } catch (e) {
+                        try { arg.revert(); } catch (e2) {}
+                        toast(`❌ 更新任务日期失败：${String(e?.message || e || '')}`, 'error');
+                    }
                     return;
                 }
                 try { arg.revert(); } catch (e) {}
@@ -5204,6 +5336,16 @@
             eventResize: async (arg) => {
                 const ext = arg?.event?.extendedProps || {};
                 const source = String(ext.__tmSource || '').trim();
+                if (source === 'taskdate') {
+                    try {
+                        await persistTaskDateEventChange(arg);
+                        toast('✅ 已更新任务日期', 'success');
+                    } catch (e) {
+                        try { arg.revert(); } catch (e2) {}
+                        toast(`❌ 更新任务日期失败：${String(e?.message || e || '')}`, 'error');
+                    }
+                    return;
+                }
                 if (source !== 'schedule') {
                     try { arg.revert(); } catch (e) {}
                     return;
@@ -5578,6 +5720,9 @@
             const title = String(it?.title || '').trim() || '任务';
             const startKey = String(it?.start || '').trim();
             const endExKey = String(it?.endExclusive || '').trim();
+            const sourceStartKey = String(it?.sourceStart || '').trim();
+            const sourceCompletionKey = String(it?.sourceCompletion || '').trim();
+            const isMilestone = it?.milestone === true;
             const calendarId = String(it?.calendarId || 'default').trim() || 'default';
             if (!taskId || !startKey || !endExKey) return null;
             if (!isCalendarEnabled(calendarId, settings)) return null;
@@ -5600,10 +5745,99 @@
                     __tmRank: 2,
                     __tmTaskDateStartKey: startKey,
                     __tmTaskDateEndExclusiveKey: endExKey,
+                    __tmTaskDateSourceStartKey: sourceStartKey,
+                    __tmTaskDateSourceCompletionKey: sourceCompletionKey,
+                    __tmTaskDateMilestone: isMilestone,
                     calendarId,
                 },
             };
         }).filter(Boolean);
+    }
+
+    function toLocalDateKey(value) {
+        if (!(value instanceof Date) || Number.isNaN(value.getTime())) return '';
+        return formatDateKey(new Date(value.getFullYear(), value.getMonth(), value.getDate(), 12, 0, 0, 0));
+    }
+
+    function shiftDateKey(dateKey, deltaDays) {
+        const base = parseDateOnly(dateKey);
+        if (!(base instanceof Date) || Number.isNaN(base.getTime())) return '';
+        const delta = Number.isFinite(Number(deltaDays)) ? Math.trunc(Number(deltaDays)) : 0;
+        base.setDate(base.getDate() + delta);
+        return formatDateKey(base);
+    }
+
+    function buildTaskDatePatchFromEvent(eventApi) {
+        const ext = eventApi?.extendedProps || {};
+        const taskId = String(ext.__tmTaskId || '').trim();
+        const start = eventApi?.start instanceof Date ? eventApi.start : null;
+        if (!taskId || !(start instanceof Date) || Number.isNaN(start.getTime())) return null;
+        if (eventApi?.allDay !== true) throw new Error('任务日期事件仅支持按天调整');
+        const startKey = toLocalDateKey(start);
+        if (!startKey) return null;
+        const end0 = eventApi?.end instanceof Date ? eventApi.end : null;
+        let endExclusiveKey = '';
+        if (end0 instanceof Date && !Number.isNaN(end0.getTime()) && end0.getTime() > start.getTime()) {
+            endExclusiveKey = toLocalDateKey(end0);
+        }
+        if (!endExclusiveKey || endExclusiveKey <= startKey) {
+            endExclusiveKey = shiftDateKey(startKey, 1);
+        }
+        const endKey = shiftDateKey(endExclusiveKey, -1) || startKey;
+        const sourceStartKey = String(ext.__tmTaskDateSourceStartKey || '').trim();
+        const sourceCompletionKey = String(ext.__tmTaskDateSourceCompletionKey || '').trim();
+        const hasSourceStart = !!sourceStartKey;
+        const hasSourceCompletion = !!sourceCompletionKey;
+        const isMilestone = ext.__tmTaskDateMilestone === true;
+
+        let nextStart = '';
+        let nextEnd = '';
+        if (isMilestone && hasSourceCompletion) {
+            nextStart = hasSourceStart ? sourceStartKey : '';
+            nextEnd = endKey || startKey;
+            if (nextStart && nextEnd && nextStart > nextEnd) nextStart = nextEnd;
+        } else if (hasSourceStart && hasSourceCompletion) {
+            nextStart = startKey;
+            nextEnd = endKey;
+        } else if (hasSourceStart) {
+            nextStart = startKey;
+            nextEnd = startKey !== endKey ? endKey : '';
+        } else if (hasSourceCompletion) {
+            nextStart = startKey !== endKey ? startKey : '';
+            nextEnd = endKey;
+        } else {
+            nextStart = startKey;
+            nextEnd = endKey;
+        }
+
+        return {
+            taskId,
+            startDate: nextStart,
+            completionTime: nextEnd,
+            startKey,
+            endExclusiveKey,
+        };
+    }
+
+    function syncTaskDateEventExtendedProps(eventApi, patch) {
+        if (!eventApi || typeof eventApi.setExtendedProp !== 'function' || !patch || typeof patch !== 'object') return;
+        try { eventApi.setExtendedProp('__tmTaskDateStartKey', String(patch.startKey || '').trim()); } catch (e) {}
+        try { eventApi.setExtendedProp('__tmTaskDateEndExclusiveKey', String(patch.endExclusiveKey || '').trim()); } catch (e) {}
+        try { eventApi.setExtendedProp('__tmTaskDateSourceStartKey', String(patch.startDate || '').trim()); } catch (e) {}
+        try { eventApi.setExtendedProp('__tmTaskDateSourceCompletionKey', String(patch.completionTime || '').trim()); } catch (e) {}
+    }
+
+    async function persistTaskDateEventChange(arg) {
+        const patch = buildTaskDatePatchFromEvent(arg?.event);
+        if (!patch) throw new Error('无效的任务日期事件');
+        if (typeof window.tmUpdateTaskDates !== 'function') throw new Error('未检测到任务日期更新接口');
+        await window.tmUpdateTaskDates(patch.taskId, {
+            startDate: patch.startDate,
+            completionTime: patch.completionTime,
+        }, { refresh: false });
+        syncTaskDateEventExtendedProps(arg?.event, patch);
+        try { refetchAllCalendars(); } catch (e) {}
+        return patch;
     }
 
     function reminderOccurrenceKey(dateKey, timeKey) {
@@ -7231,6 +7465,7 @@
         const hard = !!opt?.hard;
         const run = () => {
             try { cal.updateSize(); } catch (e3) {}
+            try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e3) {}
             try { applyCnHolidayDots(wrap); } catch (e3) {}
             try { applyCnLunarLabels(wrap); } catch (e3) {}
             try {
@@ -7261,6 +7496,7 @@
             try { cal.refetchEvents(); } catch (e2) {}
         }
         try { applyCalendarSlotHeightStyle(wrap, getSettings()); } catch (e) {}
+        try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e) {}
         stabilizeCalendarLayout(cal, wrap, opt);
         return true;
     }
@@ -7333,6 +7569,7 @@
             }
         })();
         state.isMobileDevice = !!isMobileDevice;
+        state.isDockHost = !!isDockHost;
         try {
             Promise.resolve().then(() => globalThis.tmCalendarWarmDocsToGroupCache?.()).catch(() => null);
         } catch (e) {}
@@ -7921,35 +8158,13 @@
                     return;
                 }
                 if (source === 'taskdate') {
-                    const taskId = String(ext.__tmTaskId || '').trim();
-                    const start = arg?.event?.start;
-                    const end0 = arg?.event?.end;
-                    const calendarId = String(ext.calendarId || 'default').trim() || pickDefaultCalendarId(getSettings());
-                    if (!taskId || !(start instanceof Date) || Number.isNaN(start.getTime())) {
-                        try { arg.revert(); } catch (e) {}
-                        return;
-                    }
-                    const isAllDay = arg?.event?.allDay === true;
-                    const safeEnd = (end0 instanceof Date && !Number.isNaN(end0.getTime()) && end0.getTime() > start.getTime())
-                        ? end0
-                        : new Date(start.getTime() + (isAllDay ? 24 * 60 : 60) * 60000);
                     try {
-                        const list = await loadScheduleAll();
-                        list.push({
-                            id: uuid(),
-                            title: String(arg?.event?.title || '').trim() || '任务',
-                            start: safeISO(start),
-                            end: safeISO(safeEnd),
-                            allDay: isAllDayRange(start, safeEnd),
-                            color: '',
-                            calendarId,
-                            taskId,
-                        });
-                        await saveScheduleAll(list);
-                        toast('✅ 已加入日程', 'success');
-                    } catch (e) {}
-                    try { arg.revert(); } catch (e) {}
-                    try { state.calendar?.refetchEvents?.(); } catch (e) {}
+                        await persistTaskDateEventChange(arg);
+                        toast('✅ 已更新任务日期', 'success');
+                    } catch (e) {
+                        try { arg.revert(); } catch (e2) {}
+                        toast(`❌ 更新任务日期失败：${String(e?.message || e || '')}`, 'error');
+                    }
                     return;
                 }
                 const recordKey = ext.__tmRecordKey || null;
@@ -8007,7 +8222,13 @@
                     return;
                 }
                 if (source === 'taskdate') {
-                    try { arg.revert(); } catch (e) {}
+                    try {
+                        await persistTaskDateEventChange(arg);
+                        toast('✅ 已更新任务日期', 'success');
+                    } catch (e) {
+                        try { arg.revert(); } catch (e2) {}
+                        toast(`❌ 更新任务日期失败：${String(e?.message || e || '')}`, 'error');
+                    }
                     return;
                 }
                 const recordKey = ext.__tmRecordKey || null;
@@ -8065,11 +8286,15 @@
                 } catch (e) {}
                 try {
                     requestAnimationFrame(() => {
+                        try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e2) {}
+                        try { applyTimeAxisColumnLayout(host, 40); } catch (e2) {}
                         try { enhanceNowIndicator(host); } catch (e2) {}
                         try { applyCnHolidayDots(wrap); } catch (e2) {}
                         try { applyCnLunarLabels(wrap); } catch (e2) {}
                     });
                     setTimeout(() => {
+                        try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e2) {}
+                        try { applyTimeAxisColumnLayout(host, 40); } catch (e2) {}
                         try { enhanceNowIndicator(host); } catch (e2) {}
                         try { applyCnHolidayDots(wrap); } catch (e2) {}
                         try { applyCnLunarLabels(wrap); } catch (e2) {}
@@ -8080,6 +8305,8 @@
                 try {
                     if (!isLoading) {
                         requestAnimationFrame(() => {
+                            try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e2) {}
+                            try { applyTimeAxisColumnLayout(host, 40); } catch (e2) {}
                             try { calendar.updateSize(); } catch (e2) {}
                             try { enhanceNowIndicator(host); } catch (e2) {}
                         });
@@ -8090,6 +8317,8 @@
         state.calendar = calendar;
 
         try { calendar.render(); } catch (e) {}
+        try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e) {}
+        try { applyTimeAxisColumnLayout(host, 40); } catch (e) {}
         try { syncMainCalendarViewSelect(wrap, calendar, { compact: !!(isMobileDevice || isDockHost) }); } catch (e) {}
         try {
             state.filteredTasksListener = () => {
@@ -8106,6 +8335,8 @@
                         else calendar.gotoDate(preferredInitialDate);
                     }
                 } catch (e2) {}
+                try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e2) {}
+                try { applyTimeAxisColumnLayout(host, 40); } catch (e2) {}
                 try { calendar.updateSize(); } catch (e2) {}
                 try { enhanceNowIndicator(host); } catch (e2) {}
             });
@@ -8786,6 +9017,7 @@
         state.settingsStore = null;
         state.opts = null;
         state.isMobileDevice = false;
+        state.isDockHost = false;
         state.sidebarOpen = false;
     }
 
