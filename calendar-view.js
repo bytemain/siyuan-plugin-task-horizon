@@ -1662,7 +1662,7 @@
     }
 
     function shouldAutoHideSidebarOnTaskDrag() {
-        return !!(state.isMobileDevice || state.isDockHost);
+        return !!state.isMobileDevice;
     }
 
     function miniMonthKeyFromDate(d) {
@@ -2092,6 +2092,16 @@
         return src.map((it) => ((it && typeof it === 'object') ? { ...it } : {}));
     }
 
+    function getScheduleLinkedBlockId(item) {
+        return String(
+            item?.blockId
+            || item?.block_id
+            || item?.linkedBlockId
+            || item?.linked_block_id
+            || ''
+        ).trim();
+    }
+
     function normalizeScheduleList(arr) {
         const list0 = Array.isArray(arr) ? arr : [];
         let changed = false;
@@ -2099,9 +2109,11 @@
             const base = (it && typeof it === 'object') ? it : {};
             const id0 = String(base.id || '').trim();
             const taskId0 = String(base.taskId || base.task_id || base.linkedTaskId || base.linked_task_id || '').trim();
+            const blockId0 = getScheduleLinkedBlockId(base);
             const id = id0 || uuid();
             if (id !== id0) changed = true;
             if (taskId0 && taskId0 !== String(base.taskId || '').trim()) changed = true;
+            if (blockId0 && blockId0 !== String(base.blockId || '').trim()) changed = true;
             const reminderMode0 = String(base.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
             const allowed = new Set([0, 5, 10, 15, 30, 60]);
             const reminderEnabled0 = reminderMode0 === 'custom' ? (base.reminderEnabled === true) : null;
@@ -2147,6 +2159,7 @@
                 ...base,
                 id,
                 taskId: taskId0,
+                blockId: blockId0,
                 reminderMode: reminderMode0,
                 reminderEnabled: reminderEnabled0,
                 reminderOffsetMin: reminderOffsetMin0,
@@ -4996,8 +5009,8 @@
                 const ext = arg?.event?.extendedProps || {};
                 const source = String(ext.__tmSource || '').trim();
                 const hideRangeText = String(arg?.view?.type || '').trim() === 'dayGridMonth';
-                if (source === 'taskdate' || (source === 'schedule' && String(ext.__tmTaskId || '').trim())) {
-                    const tid = String(ext.__tmTaskId || '').trim();
+                if (source === 'taskdate' || (source === 'schedule' && (String(ext.__tmTaskId || '').trim() || String(ext.__tmBlockId || '').trim()))) {
+                    const tid = String(ext.__tmTaskId || ext.__tmBlockId || '').trim();
                     const done = (() => {
                         if (!tid) return false;
                         if (typeof window.tmIsTaskDone !== 'function') return false;
@@ -5646,6 +5659,8 @@
             const start = new Date(rs);
             const end = new Date(re);
             const taskId = String(it?.taskId || it?.task_id || it?.linkedTaskId || it?.linked_task_id || '').trim();
+            const blockId = getScheduleLinkedBlockId(it);
+            const taskLikeId = taskId || blockId;
             const linkedTitle = (linkedTaskTitleMap instanceof Map && taskId) ? String(linkedTaskTitleMap.get(taskId) || '').trim() : '';
             const titleBase = linkedTitle || (String(it?.title || '').trim() || '日程');
             const calendarId = String(it?.calendarId || 'default');
@@ -5690,7 +5705,8 @@
                     extendedProps: {
                         __tmSource: 'schedule',
                         __tmScheduleId: String(it?.id || ''),
-                        __tmTaskId: taskId,
+                        __tmTaskId: taskLikeId,
+                        __tmBlockId: blockId,
                         __tmRank: 1,
                         __tmReminderMode: reminderMode,
                         __tmReminderEnabled: reminderEnabled,
@@ -6883,6 +6899,7 @@
             }
             const prevItem = list[idx] || {};
             const taskIdKeep = String(taskId0 || prevItem?.taskId || prevItem?.task_id || prevItem?.linkedTaskId || prevItem?.linked_task_id || '').trim();
+            const blockIdKeep = String(blockId0 || getScheduleLinkedBlockId(prevItem) || '').trim();
             return {
                 ...prevItem,
                 id: scheduleId,
@@ -6893,6 +6910,7 @@
                 color,
                 calendarId,
                 taskId: taskIdKeep,
+                blockId: blockIdKeep,
                 reminderMode,
                 reminderEnabled,
                 reminderOffsetMin: allDay ? null : reminderOffsetMin,
@@ -7003,6 +7021,7 @@
         const calDefs = getCalendarDefs(settings);
         const scheduleId = String(init.id || '');
         const taskId0 = String(init.taskId || '').trim();
+        const blockId0 = getScheduleLinkedBlockId(init);
         const isEdit = !!scheduleId;
         const initAllDay = init.allDay === true;
         const reminderMode0 = String(init?.reminderMode || '').trim() === 'custom' ? 'custom' : 'inherit';
@@ -7276,6 +7295,7 @@
                     color,
                     calendarId,
                     taskId: String(taskId0 || init?.taskId || '').trim(),
+                    blockId: String(blockId0 || getScheduleLinkedBlockId(init) || '').trim(),
                     repeatType: repeatDraft.repeatType,
                     repeatEvery: repeatDraft.repeatEvery,
                     repeatUntil: repeatDraft.repeatUntil,
@@ -7321,6 +7341,7 @@
                             if (idx < 0) return null;
                             const prevItem = nextList[idx] || {};
                             const taskIdKeep = String(taskId0 || prevItem?.taskId || prevItem?.task_id || prevItem?.linkedTaskId || prevItem?.linked_task_id || '').trim();
+                            const blockIdKeep = String(blockId0 || getScheduleLinkedBlockId(prevItem) || '').trim();
                             const draftItem = {
                                 ...prevItem,
                                 id: scheduleId,
@@ -7331,6 +7352,7 @@
                                 color: colorNow,
                                 calendarId: calendarIdNow,
                                 taskId: taskIdKeep,
+                                blockId: blockIdKeep,
                                 reminderMode: reminderModeNow,
                                 reminderEnabled: reminderEnabledNow,
                                 reminderOffsetMin: (isAllDayRange(nextStart2, nextEnd2) || (initAllDay && isAllDayRange(nextStart2, nextEnd2))) ? null : reminderOffsetMinNow,
@@ -7406,6 +7428,7 @@
                 const idx = list.findIndex((x) => String(x?.id || '') === id);
                 const prevItem = idx >= 0 ? list[idx] : null;
                 const taskIdKeep = String(taskId0 || prevItem?.taskId || prevItem?.task_id || prevItem?.linkedTaskId || prevItem?.linked_task_id || '').trim();
+                const blockIdKeep = String(blockId0 || getScheduleLinkedBlockId(prevItem) || '').trim();
                 const base = (prevItem && typeof prevItem === 'object') ? prevItem : {};
                 const item = {
                     ...base,
@@ -7417,6 +7440,7 @@
                     color,
                     calendarId,
                     taskId: taskIdKeep,
+                    blockId: blockIdKeep,
                     reminderMode,
                     reminderEnabled,
                     reminderOffsetMin: allDay ? null : reminderOffsetMin,
@@ -7436,6 +7460,14 @@
                         await store.save();
                     }
                 } catch (e2) {}
+                if (blockIdKeep && !taskIdKeep && typeof window.tmAutoAddOtherBlocksToCurrentGroup === 'function') {
+                    try {
+                        const addResult = await window.tmAutoAddOtherBlocksToCurrentGroup([blockIdKeep], { silent: true, forceRefresh: true });
+                        if (addResult?.reason === 'no-group') {
+                            toast('⚠ 已保存日程，但未加入其他块页签，请先创建或选择文档分组', 'warning');
+                        }
+                    } catch (e2) {}
+                }
                 closeModal();
                 refetchAllCalendars();
                 try {
@@ -7703,8 +7735,8 @@
                 const ext = arg?.event?.extendedProps || {};
                 const source = String(ext.__tmSource || '').trim();
                 const hideRangeText = String(arg?.view?.type || '').trim() === 'dayGridMonth';
-                if (source === 'taskdate' || (source === 'schedule' && String(ext.__tmTaskId || '').trim())) {
-                    const tid = String(ext.__tmTaskId || '').trim();
+                if (source === 'taskdate' || (source === 'schedule' && (String(ext.__tmTaskId || '').trim() || String(ext.__tmBlockId || '').trim()))) {
+                    const tid = String(ext.__tmTaskId || ext.__tmBlockId || '').trim();
                     const done = (() => {
                         if (!tid) return false;
                         if (typeof window.tmIsTaskDone !== 'function') return false;
@@ -9281,6 +9313,7 @@
                 color: String(item.color || '#0078d4'),
                 calendarId: String(item.calendarId || 'default'),
                 taskId: String(item.taskId || item.task_id || item.linkedTaskId || item.linked_task_id || '').trim(),
+                blockId: getScheduleLinkedBlockId(item),
                 reminderMode: String(item.reminderMode || ''),
                 reminderEnabled: item.reminderEnabled,
                 reminderOffsetMin: item.reminderOffsetMin,
@@ -9290,6 +9323,128 @@
                 repeatMonthlyMode: getScheduleRepeatMonthlyMode(item),
                 notificationSchedules: buildScheduleNotificationSchedulesView(item),
             });
+            return true;
+        } catch (e) {
+            try { toast('❌ 打开失败', 'error'); } catch (e2) {}
+            return false;
+        }
+    }
+
+    function buildScheduleEditorInitFromInput(input) {
+        const extra = (input && typeof input === 'object') ? input : {};
+        const settings = getSettings();
+        const taskId = String(extra.taskId || '').trim();
+        const blockId = getScheduleLinkedBlockId(extra);
+        const title0 = String(extra.title || '').trim();
+        const calendarId0 = String(extra.calendarId || '').trim() || pickDefaultCalendarId(settings);
+        const reminderMode0 = String(extra.reminderMode || '').trim() || 'inherit';
+        const startKey = String(extra.taskDateStartKey || extra.startKey || '').trim();
+        const endExKey = String(extra.taskDateEndExclusiveKey || extra.endExclusiveKey || '').trim();
+        const color0 = String(extra.color || '').trim();
+
+        if (startKey && endExKey) {
+            const startDate = parseDateOnly(startKey);
+            const endDate = parseDateOnly(endExKey);
+            if (startDate && endDate) {
+                const s = new Date(startDate.getTime());
+                s.setHours(0, 0, 0, 0);
+                const e = new Date(endDate.getTime());
+                e.setHours(0, 0, 0, 0);
+                if (e.getTime() > s.getTime()) {
+                    return {
+                        title: title0 || (taskId ? '任务' : '日程'),
+                        start: s,
+                        end: e,
+                        allDay: true,
+                        color: color0,
+                        calendarId: calendarId0,
+                        taskId,
+                        blockId,
+                        reminderMode: reminderMode0,
+                        reminderEnabled: extra.reminderEnabled,
+                        reminderOffsetMin: extra.reminderOffsetMin,
+                    };
+                }
+            }
+        }
+
+        let start = extra.start instanceof Date ? new Date(extra.start.getTime()) : null;
+        if (!(start instanceof Date) || Number.isNaN(start.getTime())) {
+            const startMs = toMs(extra.start);
+            if (Number.isFinite(startMs) && startMs > 0) start = new Date(startMs);
+        }
+        const allDay = extra.allDay === true;
+        if (!(start instanceof Date) || Number.isNaN(start.getTime())) {
+            start = new Date();
+            start.setSeconds(0, 0);
+        }
+        if (allDay) start.setHours(0, 0, 0, 0);
+
+        let end = extra.end instanceof Date ? new Date(extra.end.getTime()) : null;
+        if (!(end instanceof Date) || Number.isNaN(end.getTime())) {
+            const endMs = toMs(extra.end);
+            if (Number.isFinite(endMs) && endMs > 0) end = new Date(endMs);
+        }
+        if (!(end instanceof Date) || Number.isNaN(end.getTime()) || end.getTime() <= start.getTime()) {
+            end = new Date(start.getTime() + (allDay ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000));
+        }
+        if (allDay) {
+            end.setHours(0, 0, 0, 0);
+            if (end.getTime() <= start.getTime()) end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+        }
+
+        return {
+            title: title0 || (taskId ? '任务' : '日程'),
+            start,
+            end,
+            allDay,
+            color: color0,
+            calendarId: calendarId0,
+            taskId,
+            blockId,
+            reminderMode: reminderMode0,
+            reminderEnabled: extra.reminderEnabled,
+            reminderOffsetMin: extra.reminderOffsetMin,
+        };
+    }
+
+    async function openScheduleEditor(input) {
+        const extra = (input && typeof input === 'object') ? input : {};
+        const sid = String(extra.id || extra.scheduleId || '').trim();
+        if (sid) return await openScheduleEditorById(sid);
+        const tid = String(extra.taskId || '').trim();
+        const blockId = getScheduleLinkedBlockId(extra);
+        try {
+            if (tid) {
+                const list = await loadScheduleAll();
+                const items = (Array.isArray(list) ? list : []).filter((x) => {
+                    const t = String(x?.taskId || x?.task_id || x?.linkedTaskId || x?.linked_task_id || '').trim();
+                    return t === tid;
+                }).sort((a, b) => toMs(a?.start) - toMs(b?.start));
+                if (items.length > 0) {
+                    const now = Date.now();
+                    const next = items.find((x) => {
+                        const s = toMs(x?.start);
+                        return Number.isFinite(s) && s >= now;
+                    }) || items[items.length - 1];
+                    const nextId = String(next?.id || '').trim();
+                    if (nextId) return await openScheduleEditorById(nextId);
+                }
+            }
+            if (blockId) {
+                const list = await loadScheduleAll();
+                const items = (Array.isArray(list) ? list : []).filter((x) => getScheduleLinkedBlockId(x) === blockId).sort((a, b) => toMs(a?.start) - toMs(b?.start));
+                if (items.length > 0) {
+                    const now = Date.now();
+                    const next = items.find((x) => {
+                        const s = toMs(x?.start);
+                        return Number.isFinite(s) && s >= now;
+                    }) || items[items.length - 1];
+                    const nextId = String(next?.id || '').trim();
+                    if (nextId) return await openScheduleEditorById(nextId);
+                }
+            }
+            openScheduleModal(buildScheduleEditorInitFromInput(extra));
             return true;
         } catch (e) {
             try { toast('❌ 打开失败', 'error'); } catch (e2) {}
@@ -9509,6 +9664,7 @@
         relayoutSideDayDate,
         addTaskSchedule,
         listTaskSchedulesByDay,
+        openScheduleEditor,
         openScheduleEditorById,
         openScheduleEditorByTaskId,
         deleteScheduleById,

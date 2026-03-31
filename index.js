@@ -4,6 +4,7 @@ const PLUGIN_ID = "siyuan-plugin-task-horizon";
 const TASK_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/task.js`;
 const AI_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/ai.js`;
 const QUICKBAR_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/quickbar.js`;
+const XLSX_VENDOR_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/src/vendor/xlsx.full.min.js`;
 const FULLCALENDAR_MIN_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/src/fullcalendar/index.global.min.js`;
 const FULLCALENDAR_ZH_LOCALE_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/src/fullcalendar/locales/zh-cn.global.min.js`;
 const BASECOAT_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/src/basecoat/basecoat.js`;
@@ -433,7 +434,7 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         this.initTaskDock();
         this.suppressTaskDockOnMobile();
         try {
-            document.querySelectorAll('style[data-tm-style-source="calendar-view.css"]').forEach((el) => { try { el.remove(); } catch (e) {} });
+            document.querySelectorAll('style[data-tm-style-source]').forEach((el) => { try { el.remove(); } catch (e) {} });
         } catch (e) {}
         try {
             globalThis.__tmCalendar?.cleanup?.();
@@ -445,6 +446,7 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         await loadScriptText(TASK_SCRIPT_PATH, "task.js");
         await loadScriptText(AI_SCRIPT_PATH, "ai.js");
         await loadScriptText(QUICKBAR_SCRIPT_PATH, "quickbar.js");
+        await loadScriptText(XLSX_VENDOR_SCRIPT_PATH, "vendor/xlsx.full.min.js");
         await loadStyleText(BASECOAT_CSS_PATH, "basecoat/basecoat.css");
         await loadScriptText(FULLCALENDAR_MIN_SCRIPT_PATH, "fullcalendar/index.global.min.js");
         await loadScriptText(FULLCALENDAR_ZH_LOCALE_SCRIPT_PATH, "fullcalendar/locales/zh-cn.global.min.js");
@@ -944,6 +946,7 @@ button,input,select,textarea{font:inherit;}
         await loadScriptTextIntoDocument(doc, BASECOAT_SCRIPT_PATH, "basecoat/basecoat.js");
         await loadScriptTextIntoDocument(doc, TASK_SCRIPT_PATH, "task.js");
         await loadScriptTextIntoDocument(doc, AI_SCRIPT_PATH, "ai.js");
+        await loadScriptTextIntoDocument(doc, XLSX_VENDOR_SCRIPT_PATH, "vendor/xlsx.full.min.js");
         await loadStyleTextIntoDocument(doc, BASECOAT_CSS_PATH, "basecoat/basecoat.css");
         await loadScriptTextIntoDocument(doc, FULLCALENDAR_MIN_SCRIPT_PATH, "fullcalendar/index.global.min.js");
         await loadScriptTextIntoDocument(doc, FULLCALENDAR_ZH_LOCALE_SCRIPT_PATH, "fullcalendar/locales/zh-cn.global.min.js");
@@ -1031,10 +1034,7 @@ button,input,select,textarea{font:inherit;}
         try {
             const styles = Array.from(document.querySelectorAll('style[data-tm-style-source]'));
             styles.forEach((el) => {
-                const s = String(el?.dataset?.tmStyleSource || '');
-                if (s === 'calendar-view.css') {
-                    try { el.remove(); } catch (e) {}
-                }
+                try { el.remove(); } catch (e) {}
             });
         } catch (e) {}
 
@@ -1073,6 +1073,11 @@ button,input,select,textarea{font:inherit;}
             const paths = [
                 "/data/storage/petal/siyuan-plugin-task-horizon/task-settings.json",
                 "/data/storage/petal/siyuan-plugin-task-horizon/task-meta.json",
+                "/data/storage/petal/siyuan-plugin-task-horizon/whiteboard-data.json",
+                "/data/storage/petal/siyuan-plugin-task-horizon/calendar-events.json",
+                "/data/storage/petal/siyuan-plugin-task-horizon/ai-conversations.json",
+                "/data/storage/petal/siyuan-plugin-task-horizon/ai-debug.json",
+                "/data/storage/petal/siyuan-plugin-task-horizon/ai-prompt-templates.json",
             ];
             await Promise.all(paths.map((path) => fetch("/api/file/removeFile", {
                 method: "POST",

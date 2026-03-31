@@ -8,11 +8,18 @@
 
 PR贡献名单：[bytemain](https://github.com/bytemain)
 
-赞助者名单：[bigyelloworange](https://ld246.com/member/bigyelloworange) / [Floria233](https://ld246.com/member/Floria233) / [nj90hou](https://ld246.com/member/nj90hou) / [sky90038528](https://ld246.com/member/sky90038528) / [Lu9693](https://ld246.com/member/Lu9693) / [ggltxj](https://ld246.com/member/ggltxj) / [mozhu](https://ld246.com/member/mozhu) / [ppt68298100](https://ld246.com/member/ppt68298100) / [NorthCJ](https://ld246.com/member/NorthCJ) / [601063672](https://ld246.com/member/601063672) 
+赞助者名单：[bigyelloworange](https://ld246.com/member/bigyelloworange) / [Floria233](https://ld246.com/member/Floria233) / [nj90hou](https://ld246.com/member/nj90hou) / [sky90038528](https://ld246.com/member/sky90038528) / [Lu9693](https://ld246.com/member/Lu9693) / [ggltxj](https://ld246.com/member/ggltxj) / [mozhu](https://ld246.com/member/mozhu) / [ppt68298100](https://ld246.com/member/ppt68298100) / [NorthCJ](https://ld246.com/member/NorthCJ) / [601063672](https://ld246.com/member/601063672) / [mcz007](https://ld246.com/member/mcz007) 
 
 插件交流Q群：[758666272](https://qm.qq.com/q/MRkXe3Z00U) 
 
 # 更新记录
+
+## 2.0.0更新内容
+- **新增：表格视图的数据导出成Excel表格文件，在表格视图下的顶栏菜单中点击导出即可生成当前视图筛选下的Excel文件**
+- **新增：块菜单->插件->编辑日程，在文档中可直接对任务块或其他块操作加入日历日程**
+- 优化：二级标题分组识别标题的Markdown加粗**标识并过滤
+- 优化：新建任务按钮样式与其他按钮一致，降低视觉干扰
+- 修复：顶栏宽度缩小后文档、规则、分组下拉菜单找不到的问题
 
 ## 1.9.11更新内容
 - **新增：文档页签支持设置文档开始日期和截止日期，并在页签顶部显示时间进度条**
@@ -49,6 +56,9 @@ PR贡献名单：[bytemain](https://github.com/bytemain)
 - 优化：移动端横屏后隐藏底部视图切换条
 - 修复：文档内输入任务文字引起的常驻标签遮挡问题 PR贡献:bytemain
 
+<details>
+<summary>历史版本更新（点击展开）</summary>
+
 ## 1.9.5更新内容
 - **新增：视图选择器页面底部切换栏，移动端、桌面侧边栏中视图切换更快捷**
 - 优化：日历打开视图默认要包含今天所在的范围
@@ -61,9 +71,6 @@ PR贡献名单：[bytemain](https://github.com/bytemain)
 - 修复：设置里默认新建文档选择今天日记后，设置选项变成了未知文档的问题
 - 修复：月视图不显示任务名称后的时间范围
 - 修复：按钮Tooltip样式不一致
-
-<details>
-<summary>历史版本更新（点击展开）</summary>
 
 ## 1.9.4更新内容  
 - **新增：日历视图新增日历3日、工作日视图**
@@ -579,3 +586,4 @@ PR贡献名单：[bytemain](https://github.com/bytemain)
 - FullCalendar：日历视图开发
 - holiday.ailcc.com：日历节假日api
 - Basecoatui：交互控件开发
+- sheetjs：Excel导出功能开发

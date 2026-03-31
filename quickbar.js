@@ -127,6 +127,8 @@
     let inlineMetaWsHandler = null;
     let inlineMetaWsTimer = null;
     let inlineMetaIsComposing = false;
+    let inlineMetaCompositionStartHandler = null;
+    let inlineMetaCompositionEndHandler = null;
     let inlineMetaScopeDocIds = null;
     let inlineMetaScopeDocIdsTs = 0;
     let inlineMetaScopeDocIdsPromise = null;
@@ -2544,8 +2546,20 @@
             try { document.addEventListener('scroll', inlineMetaScrollHandler, { capture: true, passive: true }); } catch (e) {}
             try { window.addEventListener('resize', inlineMetaScrollHandler, true); } catch (e) {}
             try {
-                document.addEventListener('compositionstart', () => { console.log('[comp] START'); inlineMetaIsComposing = true; requestInlineMetaRender(false); }, true);
-                document.addEventListener('compositionend', () => { console.log('[comp] END'); inlineMetaIsComposing = false; requestInlineMetaRender(false); }, true);
+                if (!inlineMetaCompositionStartHandler) {
+                    inlineMetaCompositionStartHandler = () => {
+                        inlineMetaIsComposing = true;
+                        requestInlineMetaRender(false);
+                    };
+                }
+                if (!inlineMetaCompositionEndHandler) {
+                    inlineMetaCompositionEndHandler = () => {
+                        inlineMetaIsComposing = false;
+                        requestInlineMetaRender(false);
+                    };
+                }
+                document.addEventListener('compositionstart', inlineMetaCompositionStartHandler, true);
+                document.addEventListener('compositionend', inlineMetaCompositionEndHandler, true);
             } catch (e) {}
             try {
                 const eb = globalThis.__taskHorizonPluginInstance?.eventBus || window.siyuan?.eventBus;
@@ -2596,6 +2610,8 @@
             try { if (inlineMetaScrollHandler) document.removeEventListener('scroll', inlineMetaScrollHandler, true); } catch (e) {}
             try { if (inlineMetaScrollHandler) window.removeEventListener('resize', inlineMetaScrollHandler, true); } catch (e) {}
             inlineMetaScrollHandler = null;
+            try { if (inlineMetaCompositionStartHandler) document.removeEventListener('compositionstart', inlineMetaCompositionStartHandler, true); } catch (e) {}
+            try { if (inlineMetaCompositionEndHandler) document.removeEventListener('compositionend', inlineMetaCompositionEndHandler, true); } catch (e) {}
             try {
                 const eb = globalThis.__taskHorizonPluginInstance?.eventBus || window.siyuan?.eventBus;
                 if (eb && typeof eb.off === 'function' && inlineMetaWsHandler) {
@@ -2605,6 +2621,7 @@
             inlineMetaWsHandler = null;
             if (inlineMetaWsTimer) clearTimeout(inlineMetaWsTimer);
             inlineMetaWsTimer = null;
+            inlineMetaIsComposing = false;
             setInlineMetaScrolling(false);
             removeInlineMetaNodes();
         }

@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      1.9.11
+// @version      2.0.0
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -1001,11 +1001,45 @@
             --radius: var(--tm-topbar-control-radius);
         }
 
+        #tmDesktopMenu.tm-desktop-menu--with-selects {
+            width: min(320px, calc(100vw - 16px));
+            max-width: calc(100vw - 16px);
+        }
+
         #tmDesktopMenu .tm-desktop-menu-row {
             display: flex;
             gap: 10px;
             align-items: center;
             min-width: 0;
+        }
+
+        #tmDesktopMenu .tm-desktop-menu-row--select {
+            align-items: center;
+        }
+
+        #tmDesktopMenu .tm-desktop-menu-label {
+            flex: 0 0 40px;
+            font-size: 12px;
+            color: var(--tm-secondary-text);
+            white-space: nowrap;
+            text-align: right;
+        }
+
+        #tmDesktopMenu .tm-desktop-menu-row--select .tm-desktop-menu-item__main {
+            flex: 1 1 auto;
+            width: 0;
+            min-width: 0;
+            justify-content: stretch;
+        }
+
+        #tmDesktopMenu .tm-desktop-menu-row--select .tm-topbar-select {
+            width: 100%;
+            min-width: 0;
+        }
+
+        #tmDesktopMenu .tm-desktop-menu-row--select .tm-topbar-select .bc-select-trigger {
+            width: 100%;
+            justify-content: space-between;
         }
 
         #tmDesktopMenu .tm-desktop-menu-row .bc-btn {
@@ -1826,13 +1860,15 @@
         .tm-filter-rule-bar .tm-topbar-add-btn:hover,
         .tm-filter-rule-bar .tm-topbar-add-btn:focus,
         .tm-filter-rule-bar .tm-topbar-add-btn:active {
-            background: var(--tm-success-color) !important;
-            color: #ffffff !important;
-            border-color: var(--tm-success-color) !important;
+            background: var(--tm-topbar-control-bg) !important;
+            color: var(--tm-topbar-control-text) !important;
+            border-color: var(--tm-topbar-control-border) !important;
+            box-shadow: var(--tm-topbar-control-shadow) !important;
         }
 
         .tm-filter-rule-bar .tm-topbar-add-btn:hover {
-            opacity: 0.9;
+            background: var(--tm-topbar-control-hover) !important;
+            opacity: 1;
         }
 
         .tm-filter-rule-bar .tm-view-segmented .tm-view-seg-item {
@@ -1843,6 +1879,8 @@
             min-height: 42px;
             box-sizing: border-box;
             overflow: visible;
+            position: relative;
+            z-index: 8;
         }
 
         .tm-modal.tm-modal--dock .tm-filter-rule-bar {
@@ -7096,7 +7134,21 @@
         },
         clear() {
             try {
-                localStorage.clear();
+                const extraKeys = new Set([
+                    '__tmQuickbarModifiedTasks',
+                    'tm-ai-ui-prefs',
+                    'tm-calendar-events',
+                    'tm-calendar-mobile-notification-registry',
+                ]);
+                const keys = [];
+                for (let i = 0; i < localStorage.length; i += 1) {
+                    const key = String(localStorage.key(i) || '');
+                    if (!key) continue;
+                    if (key.startsWith('tm_') || extraKeys.has(key)) keys.push(key);
+                }
+                keys.forEach((key) => {
+                    try { localStorage.removeItem(key); } catch (e2) {}
+                });
             } catch (e) {}
         }
     };
@@ -7581,6 +7633,18 @@
             return changed;
         },
 
+        buildCloudPayload() {
+            let payload = {};
+            try {
+                payload = JSON.parse(JSON.stringify(this.data || {}));
+            } catch (e) {
+                payload = { ...(this.data || {}) };
+            }
+            try { delete payload.aiMiniMaxApiKey; } catch (e) {}
+            try { delete payload.aiDeepSeekApiKey; } catch (e) {}
+            return payload;
+        },
+
         async load() {
             if (this.loaded) return;
 
@@ -7795,10 +7859,8 @@
                                 if (typeof cloudData.docTabSortMode === 'string') this.data.docTabSortMode = cloudData.docTabSortMode;
                                 if (typeof cloudData.aiEnabled === 'boolean') this.data.aiEnabled = cloudData.aiEnabled;
                                 if (typeof cloudData.aiProvider === 'string') this.data.aiProvider = cloudData.aiProvider;
-                                if (typeof cloudData.aiMiniMaxApiKey === 'string') this.data.aiMiniMaxApiKey = cloudData.aiMiniMaxApiKey;
                                 if (typeof cloudData.aiMiniMaxBaseUrl === 'string') this.data.aiMiniMaxBaseUrl = cloudData.aiMiniMaxBaseUrl;
                                 if (typeof cloudData.aiMiniMaxModel === 'string') this.data.aiMiniMaxModel = cloudData.aiMiniMaxModel;
-                                if (typeof cloudData.aiDeepSeekApiKey === 'string') this.data.aiDeepSeekApiKey = cloudData.aiDeepSeekApiKey;
                                 if (typeof cloudData.aiDeepSeekBaseUrl === 'string') this.data.aiDeepSeekBaseUrl = cloudData.aiDeepSeekBaseUrl;
                                 if (typeof cloudData.aiDeepSeekModel === 'string') this.data.aiDeepSeekModel = cloudData.aiDeepSeekModel;
                                 if (typeof cloudData.aiMiniMaxTemperature === 'number') this.data.aiMiniMaxTemperature = cloudData.aiMiniMaxTemperature;
@@ -8525,10 +8587,11 @@
             try {
                 // 本地缓存延后到 flush，避免每次 save() 都全量写 localStorage
                 this.syncToLocal();
+                const payload = this.buildCloudPayload();
                 const formData = new FormData();
                 formData.append('path', SETTINGS_FILE_PATH);
                 formData.append('isDir', 'false');
-                formData.append('file', new Blob([JSON.stringify(this.data, null, 2)], { type: 'application/json' }));
+                formData.append('file', new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
 
                 await fetch('/api/file/putFile', { method: 'POST', body: formData }).catch(() => null);
             } catch (e) {
@@ -9865,9 +9928,7 @@
                     return out;
                 };
                 const stripHeadingText = (line) => {
-                    let s = String(line || '').replace(/^#{1,6}\s+/, '').trim();
-                    s = s.replace(/\s*\{\:\s*[^}]*\}\s*$/, '').trim();
-                    return s;
+                    return __tmNormalizeHeadingText(line);
                 };
                 const applyHeadingToStack = (stack, heading) => {
                     const level = Number(heading?.level);
@@ -10828,9 +10889,7 @@
                         return out;
                     };
                     const stripHeadingText = (line) => {
-                        let s = String(line || '').replace(/^#{1,6}\s+/, '').trim();
-                        s = s.replace(/\s*\{\:\s*[^}]*\}\s*$/, '').trim();
-                        return s;
+                        return __tmNormalizeHeadingText(line);
                     };
                     const applyHeadingToStack = (stack, heading) => {
                         const level = Number(heading?.level);
@@ -12178,6 +12237,9 @@
     let __tmDocMenuObserver = null;
     let __tmLastRightClickedTitleProtyle = null;
     let __tmLastRightClickedTitleAtMs = 0;
+    let __tmLastRightClickedBlockEl = null;
+    let __tmLastRightClickedBlockId = '';
+    let __tmLastRightClickedBlockAtMs = 0;
     let __tmNativeDocMenuCaptureHandler = null;
     let __tmDocMenuEventBus = null;
     const __TM_TIMELINE_TODAY_REFRESH_MS = 5 * 60 * 1000;
@@ -12638,6 +12700,22 @@ async function __tmRefreshAfterWake(reason) {
         return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     }
 
+    function __tmNormalizeHeadingText(value) {
+        let text = String(value || '').trim();
+        if (!text) return '';
+        text = text.replace(/^#{1,6}\s+/, '').trim();
+        text = text.replace(/\s*\{\:\s*[^}]*\}\s*$/, '').trim();
+        text = text.replace(/<span[^>]*>[\s\S]*?<\/span>/gi, '');
+        text = text.replace(/<[^>]+>/g, '');
+        text = text.replace(/\[\[([^\]]+)\]\]/g, '$1');
+        text = text.replace(/\[([^\]]+)\]\((?:[^)(]+|\([^)]*\))*\)/g, '$1');
+        text = text.replace(/(\*\*|__)(.*?)\1/g, '$2');
+        text = text.replace(/(~~)(.*?)\1/g, '$2');
+        text = text.replace(/`([^`]+)`/g, '$1');
+        text = text.replace(/\\([\\`*_{}\[\]()#+\-.!~>])/g, '$1');
+        return text.replace(/\s{2,}/g, ' ').trim();
+    }
+
     function __tmParseCreatedTs(value) {
         const raw = String(value || '').trim();
         if (!raw) return 0;
@@ -12685,7 +12763,7 @@ async function __tmRefreshAfterWake(reason) {
 
     function __tmGetDocHeadingBucket(task, noHeadingLabel) {
         const noneLabel = String(noHeadingLabel || '').trim() || '无标题';
-        const raw = String(task?.h2 || '').trim();
+        const raw = __tmNormalizeHeadingText(task?.h2);
         const label = raw || noneLabel;
         const hid = String(task?.h2Id || '').trim();
         if (hid) return { key: `id:${hid}`, label, id: hid };
@@ -13064,8 +13142,8 @@ async function __tmRefreshAfterWake(reason) {
         tooltipEl.style.top = `${Math.round(top)}px`;
     }
 
-    function __tmResolveFloatingTooltipZIndex(target, fallback = 2) {
-        let maxZ = Number(fallback) || 2;
+    function __tmResolveFloatingTooltipZIndex(target, fallback = 64) {
+        let maxZ = Number(fallback) || 64;
         let node = target instanceof Element ? target : null;
         while (node && node !== document.body && node !== document.documentElement) {
             try {
@@ -13170,6 +13248,10 @@ async function __tmRefreshAfterWake(reason) {
         });
     }
 
+    function __tmOnTopbarOverflowTooltipWindowResize() {
+        try { __tmSyncTopbarOverflowTooltips(state.modal); } catch (e) {}
+    }
+
     function __tmBindTopbarOverflowTooltips(modalEl) {
         try {
             if (state.topbarOverflowTooltipResizeObserver) {
@@ -13200,9 +13282,7 @@ async function __tmRefreshAfterWake(reason) {
 
     if (!window.__tmTopbarOverflowTooltipWindowBound) {
         window.__tmTopbarOverflowTooltipWindowBound = true;
-        window.addEventListener('resize', () => {
-            try { __tmSyncTopbarOverflowTooltips(state.modal); } catch (e) {}
-        }, { passive: true });
+        window.addEventListener('resize', __tmOnTopbarOverflowTooltipWindowResize, { passive: true });
     }
 
     function __tmBindResponsiveTableResize(modalEl) {
@@ -13256,14 +13336,18 @@ async function __tmRefreshAfterWake(reason) {
         }
     }
 
+    function __tmOnFloatingTooltipWindowResize() {
+        try { __tmHideFloatingTooltip(); } catch (e) {}
+    }
+
+    function __tmOnFloatingTooltipWindowScroll() {
+        try { __tmHideFloatingTooltip(); } catch (e) {}
+    }
+
     if (!window.__tmFloatingTooltipWindowBound) {
         window.__tmFloatingTooltipWindowBound = true;
-        window.addEventListener('resize', () => {
-            try { __tmHideFloatingTooltip(); } catch (e) {}
-        }, { passive: true });
-        window.addEventListener('scroll', () => {
-            try { __tmHideFloatingTooltip(); } catch (e) {}
-        }, { passive: true, capture: true });
+        window.addEventListener('resize', __tmOnFloatingTooltipWindowResize, { passive: true });
+        window.addEventListener('scroll', __tmOnFloatingTooltipWindowScroll, { passive: true, capture: true });
     }
 
     function __tmComputeMobileBottomViewbarLayoutSig() {
@@ -16261,11 +16345,45 @@ async function __tmRefreshAfterWake(reason) {
         }
     }
 
+    function __tmResolveAnyBlockIdFromElement(element) {
+        try {
+            const el = (element instanceof Element) ? element : null;
+            const owner = el?.closest?.('[data-node-id], [data-id]') || el;
+            if (!owner) return '';
+            return String(
+                owner.getAttribute?.('data-node-id')
+                || owner.getAttribute?.('data-id')
+                || owner.dataset?.nodeId
+                || owner.dataset?.id
+                || ''
+            ).trim();
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function __tmCollectBlockIdsFromElements(elements) {
+        const out = [];
+        const seen = new Set();
+        try {
+            const list = elements instanceof Element
+                ? [elements]
+                : Array.from(elements || []);
+            list.forEach((item) => {
+                const id = __tmResolveAnyBlockIdFromElement(item);
+                if (!id || seen.has(id)) return;
+                seen.add(id);
+                out.push(id);
+            });
+        } catch (e) {}
+        return out;
+    }
+
     function __tmResolveCollectableOtherBlockIdFromElement(element) {
         try {
             const el = element?.closest?.('[data-node-id]') || element;
             if (!el) return '';
-            const nodeId = String(el?.dataset?.nodeId || el?.getAttribute?.('data-node-id') || '').trim();
+            const nodeId = __tmResolveAnyBlockIdFromElement(el);
             if (!nodeId) return '';
             const dataType = String(el?.dataset?.type || '').trim();
             const subtype = String(
@@ -16316,9 +16434,201 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
     }
 
-    function __tmCreateNativeMenuItem(label, onClick) {
+    function __tmFindContextBlockElement(target) {
+        try {
+            const node = (target instanceof Element) ? target : target?.parentElement || null;
+            if (!node || !node.closest) return null;
+            if (node.closest('#commonMenu') || node.closest('.b3-menu')) return null;
+            if (node.closest('.protyle-title, .protyle-title__input, .protyle-icon, .protyle-background')) return null;
+            const blockEl = node.closest('[data-node-id], [data-id]');
+            if (!(blockEl instanceof Element)) return null;
+            if (!blockEl.closest('.protyle')) return null;
+            if (!blockEl.closest('.protyle-wysiwyg, .protyle-content, .protyle-gutters')) return null;
+            const blockId = __tmResolveAnyBlockIdFromElement(blockEl);
+            if (!blockId) return null;
+            return blockEl;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function __tmRememberBlockMenuContext(target, event0) {
+        try {
+            const type = String(event0?.type || '').trim();
+            const button = Number(event0?.button);
+            if (type !== 'contextmenu' && button !== 2) return;
+            const blockEl = __tmFindContextBlockElement(target);
+            if (!blockEl) return;
+            const blockId = __tmResolveAnyBlockIdFromElement(blockEl);
+            if (!blockId) return;
+            __tmLastRightClickedBlockEl = blockEl;
+            __tmLastRightClickedBlockId = blockId;
+            __tmLastRightClickedBlockAtMs = Date.now();
+        } catch (e) {}
+    }
+
+    function __tmGetRecentBlockMenuContext() {
+        const blockId = String(__tmLastRightClickedBlockId || '').trim();
+        const atMs = Number(__tmLastRightClickedBlockAtMs) || 0;
+        if (!blockId || !atMs || (Date.now() - atMs) > 3000) return null;
+        const blockElement = (__tmLastRightClickedBlockEl && __tmLastRightClickedBlockEl.isConnected)
+            ? __tmLastRightClickedBlockEl
+            : null;
+        return { blockId, blockElement };
+    }
+
+    function __tmShiftDateKeyByDays(value, deltaDays = 1) {
+        const key = __tmNormalizeDateOnly(value);
+        if (!key) return '';
+        const m = key.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!m) return '';
+        const dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0, 0);
+        if (Number.isNaN(dt.getTime())) return '';
+        dt.setDate(dt.getDate() + Math.round(Number(deltaDays) || 0));
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+    }
+
+    function __tmNormalizeScheduleDraftTitle(value, fallback = '') {
+        let text = String(value || fallback || '').trim();
+        if (!text) return '';
+        try {
+            const firstLine = (typeof API?.extractTaskContentLine === 'function')
+                ? API.extractTaskContentLine(text)
+                : text.split(/\r?\n/)[0];
+            text = String(firstLine || text).trim();
+        } catch (e) {}
+        try { text = __tmNormalizeHeadingText(text); } catch (e) {}
+        try {
+            if (typeof API?.normalizeTaskContent === 'function') {
+                text = String(API.normalizeTaskContent(text) || text).trim();
+            }
+        } catch (e) {}
+        text = text.replace(/\r?\n+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+        if (text.length > 80) text = `${text.slice(0, 77).trim()}...`;
+        return text;
+    }
+
+    function __tmBuildTaskDateDraftFromTaskLike(taskLike) {
+        const s0 = __tmNormalizeDateOnly(taskLike?.startDate || '');
+        const e0 = __tmNormalizeDateOnly(taskLike?.completionTime || '');
+        if (!s0 && !e0) {
+            return {
+                taskDateStartKey: '',
+                taskDateEndExclusiveKey: '',
+            };
+        }
+        const milestoneRaw = taskLike?.milestone;
+        const isMilestone = typeof milestoneRaw === 'boolean'
+            ? milestoneRaw
+            : ['1', 'true'].includes(String(milestoneRaw || '').trim().toLowerCase());
+        const hasBothDates = !!s0 && !!e0;
+        const startKey = (isMilestone && hasBothDates) ? e0 : (s0 || e0);
+        const endKey = e0 || s0 || startKey;
+        return {
+            taskDateStartKey: startKey,
+            taskDateEndExclusiveKey: __tmShiftDateKeyByDays(endKey, 1),
+        };
+    }
+
+    async function __tmResolveScheduleDraftForBlock(blockId, blockElement, extra = {}) {
+        const rawId = String(blockId || '').trim();
+        if (!rawId) return null;
+        const ext = (extra && typeof extra === 'object') ? extra : {};
+        let taskId = '';
+        try { taskId = await __tmResolveTaskIdFromAnyBlockId(rawId); } catch (e) {}
+
+        let task = null;
+        if (taskId) {
+            task = state.flatTasks?.[taskId] || null;
+            if (!task) {
+                try { task = await __tmEnsureTaskInStateById(taskId); } catch (e) { task = null; }
+            }
+            if (!task) {
+                try { task = await __tmBuildTaskLikeFromBlockId(taskId); } catch (e) { task = null; }
+            }
+        }
+
+        let blockLike = null;
+        try { blockLike = await __tmBuildTaskLikeFromBlockId(rawId); } catch (e) { blockLike = null; }
+
+        let blockRow = null;
+        try {
+            const rows = await API.getOtherBlocksByIds([rawId]);
+            blockRow = Array.isArray(rows) && rows.length ? rows[0] : null;
+        } catch (e) {
+            blockRow = null;
+        }
+
+        const explicitTitle = __tmNormalizeScheduleDraftTitle(ext.title || '');
+        const taskTitle = __tmNormalizeScheduleDraftTitle(task?.content || task?.raw_content || task?.markdown || '');
+        const blockTitle = __tmNormalizeScheduleDraftTitle(
+            blockRow?.content
+            || blockLike?.content
+            || blockElement?.textContent
+            || ''
+        );
+        const dateDraft = (() => {
+            const explicitStartKey = __tmNormalizeDateOnly(ext.taskDateStartKey || ext.startKey || '');
+            const explicitEndExKey = __tmNormalizeDateOnly(ext.taskDateEndExclusiveKey || ext.endExclusiveKey || '');
+            if (explicitStartKey && explicitEndExKey) {
+                return {
+                    taskDateStartKey: explicitStartKey,
+                    taskDateEndExclusiveKey: explicitEndExKey,
+                };
+            }
+            if (taskId) return __tmBuildTaskDateDraftFromTaskLike(task || blockLike || {});
+            return __tmBuildTaskDateDraftFromTaskLike(blockLike || {});
+        })();
+
+        return {
+            id: String(ext.id || ext.scheduleId || '').trim(),
+            blockId: rawId,
+            taskId: String(taskId || '').trim(),
+            title: explicitTitle || taskTitle || blockTitle || '日程',
+            taskDateStartKey: String(dateDraft.taskDateStartKey || '').trim(),
+            taskDateEndExclusiveKey: String(dateDraft.taskDateEndExclusiveKey || '').trim(),
+            calendarId: String(ext.calendarId || '').trim(),
+            start: ext.start || null,
+            end: ext.end || null,
+            allDay: ext.allDay === true,
+        };
+    }
+
+    async function __tmOpenScheduleEditorForBlock(blockId, blockElement, extra = {}) {
+        const calendarApi = globalThis.__tmCalendar;
+        if (!calendarApi) {
+            hint('⚠ 日历模块尚未加载完成', 'warning');
+            return false;
+        }
+        const draft = await __tmResolveScheduleDraftForBlock(blockId, blockElement, extra);
+        if (!draft) {
+            hint('⚠ 未找到可编辑的块', 'warning');
+            return false;
+        }
+        if (typeof calendarApi.openScheduleEditor === 'function') {
+            try {
+                return !!(await calendarApi.openScheduleEditor(draft));
+            } catch (e) {
+                hint(`❌ ${String(e?.message || e || '打开日程编辑器失败')}`, 'error');
+                return false;
+            }
+        }
+        if (draft.taskId && typeof calendarApi.openScheduleEditorByTaskId === 'function') {
+            try {
+                return !!(await calendarApi.openScheduleEditorByTaskId(draft.taskId, draft));
+            } catch (e) {
+                hint(`❌ ${String(e?.message || e || '打开日程编辑器失败')}`, 'error');
+                return false;
+            }
+        }
+        hint('⚠ 当前日历模块不支持从块打开日程编辑', 'warning');
+        return false;
+    }
+
+    function __tmCreateNativeMenuItem(label, onClick, extraClass = '') {
         const btn = document.createElement('button');
-        btn.className = 'b3-menu__item tm-doc-group-menu-item';
+        btn.className = ['b3-menu__item', 'tm-doc-group-menu-item', String(extraClass || '').trim()].filter(Boolean).join(' ');
         btn.type = 'button';
         btn.innerHTML = `
             <svg class="b3-menu__icon"><use xlink:href="#iconTaskHorizon"></use></svg>
@@ -19301,7 +19611,7 @@ async function __tmRefreshAfterWake(reason) {
             menu.appendChild(item('➕ 新建任务', () => {
                 try { window.tmQuickAddOpenForDoc?.(id); } catch (e) {}
             }));
-            menu.appendChild(item(`🗓 设置开始日期…${startDateLabel}`, async () => {
+            menu.appendChild(item(`🗓 设置开始日期${startDateLabel}`, async () => {
                 const next = await showDatePrompt('设置文档开始日期', expectedMeta.startDate || '');
                 if (next === null) return;
                 try {
@@ -19316,7 +19626,7 @@ async function __tmRefreshAfterWake(reason) {
                     hint(`❌ 更新失败: ${e.message}`, 'error');
                 }
             }));
-            menu.appendChild(item(`⏳ 设置截止日期…${deadlineLabel}`, async () => {
+            menu.appendChild(item(`⏳ 设置截止日期${deadlineLabel}`, async () => {
                 const next = await showDatePrompt('设置文档截止日期', expectedMeta.deadline || '');
                 if (next === null) return;
                 try {
@@ -19891,7 +20201,7 @@ async function __tmRefreshAfterWake(reason) {
                 }
                 const headings = state.kanbanDocHeadingsByDocId?.[did];
                 const h = Array.isArray(headings) ? headings.find((x) => String(x?.id || '').trim() === hid) : null;
-                t.h2 = String(h?.content || '').trim();
+                t.h2 = __tmNormalizeHeadingText(h?.content);
                 t.h2Id = hid;
                 t.h2Rank = Number(h?.rank);
                 t.h2Path = '';
@@ -19917,11 +20227,11 @@ async function __tmRefreshAfterWake(reason) {
                         }
                     });
                 };
-                updateChildTasks(t, hid, String(h?.content || '').trim(), Number(h?.rank));
+                updateChildTasks(t, hid, __tmNormalizeHeadingText(h?.content), Number(h?.rank));
                 if (state.pendingInsertedTasks?.[id]) {
                     state.pendingInsertedTasks[id].root_id = did;
                     state.pendingInsertedTasks[id].docId = did;
-                    state.pendingInsertedTasks[id].h2 = String(h?.content || '').trim();
+                    state.pendingInsertedTasks[id].h2 = __tmNormalizeHeadingText(h?.content);
                     state.pendingInsertedTasks[id].h2Id = hid;
                     state.pendingInsertedTasks[id].h2Rank = Number(h?.rank);
                 }
@@ -19974,7 +20284,6 @@ async function __tmRefreshAfterWake(reason) {
         const id = String(taskId || '').trim();
         if (!id) return;
         state.draggingTaskId = id;
-        try { __tmSetCalendarSideDockDragHidden(true); } catch (e) {}
         let meta = null;
         try {
             if (typeof window.tmCalendarGetTaskDragMeta === 'function') {
@@ -20006,7 +20315,6 @@ async function __tmRefreshAfterWake(reason) {
     window.tmDragTaskEnd = function() {
         state.draggingTaskId = '';
         try { __tmClearDocTabDropTarget(); } catch (e) {}
-        try { __tmSetCalendarSideDockDragHidden(false); } catch (e) {}
     };
 
     window.tmRowClick = function(ev, taskId) {
@@ -20184,6 +20492,7 @@ async function __tmRefreshAfterWake(reason) {
                 case 'plus': return '<path d="M12 5v14"></path><path d="M5 12h14"></path>';
                 case 'x': return '<path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>';
                 case 'search': return '<circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>';
+                case 'download': return '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path>';
                 case 'puzzle': return '<path d="M19.43 12.98V17a2 2 0 0 1-2 2h-4.02a2 2 0 0 1-3.84 0H5.55a2 2 0 0 1-2-2v-4.02a2 2 0 0 1 0-3.84V5.12a2 2 0 0 1 2-2h4.02a2 2 0 0 1 3.84 0h4.02a2 2 0 0 1 2 2v4.02a2 2 0 0 1 0 3.84Z"></path>';
                 case 'pin': return '<path d="M12 17v5"></path><path d="M7 3h10l-2 6 3 3H6l3-3Z"></path>';
                 case 'file-text': return '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path>';
@@ -20814,7 +21123,7 @@ async function __tmRefreshAfterWake(reason) {
                 const meta = [];
                 const priorityIcon = __tmRenderPriorityJira(task.priority, false);
                 if (task.docName) meta.push(`<span class="tm-checklist-meta-chip">📄 ${esc(String(task.docName || ''))}</span>`);
-                if (task.h2) meta.push(`<span class="tm-checklist-meta-chip">🧩 ${esc(String(task.h2 || ''))}</span>`);
+                if (task.h2) meta.push(`<span class="tm-checklist-meta-chip">🧩 ${esc(__tmNormalizeHeadingText(task.h2))}</span>`);
                 if (String(task.priority || '').trim() && String(task.priority || '').trim() !== 'none') meta.push(`<span class="tm-checklist-meta-chip">${priorityIcon}</span>`);
                 if (task.completionTime) meta.push(`<span class="tm-checklist-meta-chip">${esc(__tmFormatTaskTime(task.completionTime))}</span>`);
                 if (task.duration) meta.push(`<span class="tm-checklist-meta-chip">⏱ ${esc(String(task.duration || ''))}</span>`);
@@ -23158,7 +23467,7 @@ async function __tmRefreshAfterWake(reason) {
                                 <span onclick="tmHandleManagerIconClick(event)" style="cursor:${isMobile ? 'default' : 'pointer'};display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;line-height:0;">${__tmRenderTaskHorizonTopbarIcon(16)}</span>
                                 <span onclick="tmHandleManagerTitleClick(event)" style="cursor:pointer;">任务管理器</span>
                             </div>
-                            <button class="tm-btn tm-btn-success tm-topbar-add-btn bc-btn bc-btn--sm bc-btn--primary" onclick="tmAdd()" aria-label="新建任务" data-tm-floating-tooltip-label="新建任务" data-tm-tooltip-side="bottom" data-tm-tooltip-align="center" style="padding: 0; width: 30px; height: 30px; min-width: 30px; min-height: 30px; display: inline-flex; align-items: center; justify-content: center;">${__tmRenderLucideIcon('plus')}</button>
+                            <button class="tm-btn tm-btn-info tm-topbar-add-btn bc-btn bc-btn--sm" onclick="tmAdd()" aria-label="新建任务" data-tm-floating-tooltip-label="新建任务" data-tm-tooltip-side="bottom" data-tm-tooltip-align="center" style="padding: 0; width: 30px; height: 30px; min-width: 30px; min-height: 30px; display: inline-flex; align-items: center; justify-content: center;">${__tmRenderLucideIcon('plus')}</button>
                             ${showInlineDocGroupQuickSelect ? __tmRenderTopbarSelect({
                                 id: 'tmTopbarDocQuickSelect',
                                 label: '文档',
@@ -23318,6 +23627,13 @@ async function __tmRefreshAfterWake(reason) {
                                         <span style="display:inline-flex;align-items:center;gap:6px;">${__tmRenderLucideIcon('file-text')}<span>摘要</span></span>
                                     </button>
                                 </div>
+                                ${state.viewMode === 'list' ? `
+                                <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
+                                    <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmExportCurrentTableExcel(); tmHideMobileMenu();" style="flex:1; padding: 6px;">
+                                        <span style="display:inline-flex;align-items:center;gap:6px;">${__tmRenderLucideIcon('chart-column')}<span>导出 Excel</span></span>
+                                    </button>
+                                </div>
+                                ` : ''}
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
                                     <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="window.tmAiSemanticCompletionPreview?.(); tmHideMobileMenu();" style="flex:1; padding: 6px;">
                                         <span style="display:inline-flex;align-items:center;gap:6px;">${__tmRenderLucideIcon('calendar-days')}<span>语义日期</span></span>
@@ -29057,9 +29373,7 @@ async function __tmRefreshAfterWake(reason) {
             return out;
         };
         const stripHeadingText = (line) => {
-            let s = String(line || '').replace(/^#{1,6}\s+/, '').trim();
-            s = s.replace(/\s*\{\:\s*[^}]*\}\s*$/, '').trim();
-            return s;
+            return __tmNormalizeHeadingText(line);
         };
         let pendingHeading = null;
         for (let ln = 0; ln < lines.length; ln += 1) {
@@ -29174,7 +29488,7 @@ async function __tmRefreshAfterWake(reason) {
                 const rankByDocText = headingOrderMap.get(`${did}::${hid}`);
                 out[did].push({
                     id: hid,
-                    content: String(r?.content || '').trim(),
+                    content: __tmNormalizeHeadingText(r?.content),
                     sort: Number(r?.sort),
                     created: String(r?.created || '').trim(),
                     rank: Number.isFinite(Number(rankByDocText)) ? Number(rankByDocText) : Number.NaN,
@@ -29852,6 +30166,102 @@ async function __tmRefreshAfterWake(reason) {
         __tmTimelineTodayIndicatorTimer = setTimeout(tick, __tmGetTimelineTodayIndicatorDelayMs());
     }
 
+    function __tmShouldShowTopbarSelectorsInDesktopMenu() {
+        const modal = state.modal instanceof HTMLElement ? state.modal : null;
+        if (!(modal instanceof HTMLElement)) return false;
+        const toolbar = modal.querySelector('.tm-header-selectors');
+        if (!(toolbar instanceof HTMLElement)) return false;
+        try {
+            const computed = window.getComputedStyle(toolbar);
+            if (!computed) return false;
+            if (computed.display === 'none' || computed.visibility === 'hidden') return true;
+        } catch (e) {}
+        try {
+            if (toolbar.getClientRects().length === 0) return true;
+        } catch (e) {}
+        return (Number(toolbar.offsetWidth) || 0) <= 0 || (Number(toolbar.offsetHeight) || 0) <= 0;
+    }
+
+    function __tmBuildDocGroupMenuOptions() {
+        const currentGroupId = String(SettingsStore.data.currentGroupId || 'all').trim() || 'all';
+        const docGroups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
+        return [
+            {
+                value: 'all',
+                label: '全部文档',
+                selected: currentGroupId === 'all',
+                action: `tmSwitchDocGroup('all')`
+            },
+            ...docGroups.map((group) => {
+                const groupId = String(group?.id || '').trim();
+                return {
+                    value: groupId,
+                    label: __tmResolveDocGroupName(group),
+                    selected: currentGroupId === groupId,
+                    action: `tmSwitchDocGroup('${escSq(groupId)}')`
+                };
+            })
+        ];
+    }
+
+    function __tmBuildRuleMenuOptions() {
+        return [
+            {
+                value: '',
+                label: '全部',
+                selected: !state.currentRule,
+                action: `applyFilterRule('')`
+            },
+            ...state.filterRules
+                .filter((rule) => rule.enabled)
+                .map((rule) => {
+                    const ruleId = String(rule?.id || '').trim();
+                    return {
+                        value: ruleId,
+                        label: String(rule?.name || '').trim() || '未命名规则',
+                        selected: state.currentRule === rule.id,
+                        action: `applyFilterRule('${escSq(ruleId)}')`
+                    };
+                })
+        ];
+    }
+
+    function __tmBuildGroupModeMenuOptions() {
+        const hasTaskModeOption = !!(SettingsStore.data.groupByTaskName || state.groupByTaskName);
+        return [
+            {
+                value: 'none',
+                label: '不分组',
+                selected: (!state.groupByDocName && !state.groupByTaskName && !state.groupByTime && !state.quadrantEnabled),
+                action: `tmSwitchGroupMode('none')`
+            },
+            {
+                value: 'doc',
+                label: '按文档',
+                selected: state.groupByDocName,
+                action: `tmSwitchGroupMode('doc')`
+            },
+            {
+                value: 'time',
+                label: '按时间',
+                selected: state.groupByTime,
+                action: `tmSwitchGroupMode('time')`
+            },
+            {
+                value: 'quadrant',
+                label: '四象限',
+                selected: state.quadrantEnabled,
+                action: `tmSwitchGroupMode('quadrant')`
+            },
+            ...(hasTaskModeOption ? [{
+                value: 'task',
+                label: '按任务名',
+                selected: state.groupByTaskName,
+                action: `tmSwitchGroupMode('task')`
+            }] : [])
+        ];
+    }
+
     window.tmToggleDesktopMenu = function(e) {
         if (e) { e.stopPropagation(); e.preventDefault(); }
         
@@ -29901,10 +30311,25 @@ async function __tmRefreshAfterWake(reason) {
                 </label>
             </div>
         `;
+        const renderDesktopMenuSelect = (labelText, selectHtml, extraClass = '') => `
+            <div class="tm-desktop-menu-row tm-desktop-menu-row--select ${extraClass}">
+                <span class="tm-desktop-menu-label">${esc(String(labelText || '').trim())}:</span>
+                <div class="tm-desktop-menu-item__main">${selectHtml}</div>
+            </div>
+        `;
+        const showTopbarSelectorsInMenu = __tmShouldShowTopbarSelectorsInDesktopMenu();
+        const docGroupMenuOptions = showTopbarSelectorsInMenu ? __tmBuildDocGroupMenuOptions() : [];
+        const ruleMenuOptions = showTopbarSelectorsInMenu ? __tmBuildRuleMenuOptions() : [];
+        const groupModeMenuOptions = showTopbarSelectorsInMenu ? __tmBuildGroupModeMenuOptions() : [];
+        if (showTopbarSelectorsInMenu) menu.classList.add('tm-desktop-menu--with-selects');
         
         menu.innerHTML = `
+            ${showTopbarSelectorsInMenu ? renderDesktopMenuSelect('文档', __tmRenderTopbarSelect({ id: 'tmDesktopDocSelect', label: '文档', options: docGroupMenuOptions, style: 'flex:1;' })) : ''}
+            ${showTopbarSelectorsInMenu ? renderDesktopMenuSelect('规则', __tmRenderTopbarSelect({ id: 'tmDesktopRuleSelect', label: '规则', options: ruleMenuOptions, style: 'flex:1;' })) : ''}
+            ${showTopbarSelectorsInMenu ? renderDesktopMenuSelect('分组', __tmRenderTopbarSelect({ id: 'tmDesktopGroupModeSelect', label: '分组', options: groupModeMenuOptions, style: 'flex:1;' })) : ''}
             ${renderDesktopMenuButton(`${__tmRenderLucideIcon('search')}<span>搜索${state.searchKeyword ? ` (${esc(String(state.searchKeyword || '').trim())})` : ''}</span>`, `tmShowSearchModal(); tmCloseDesktopMenu()`)}
             ${renderDesktopMenuButton(`${__tmRenderLucideIcon('file-text')}<span>摘要</span>`, `tmShowSummaryModal(); tmCloseDesktopMenu()`)}
+            ${String(state.viewMode || '').trim() === 'list' ? renderDesktopMenuButton(`${__tmRenderLucideIcon('chart-column')}<span>导出 Excel</span>`, `tmExportCurrentTableExcel(); tmCloseDesktopMenu()`) : ''}
             ${renderDesktopMenuButton(`${__tmRenderLucideIcon('calendar-days')}<span>语义日期</span>`, `window.tmAiSemanticCompletionPreview?.(); tmCloseDesktopMenu()`)}
             ${__tmIsAiFeatureEnabled() ? renderDesktopMenuToggle('AI 对话', !!SettingsStore.data.aiSideDockEnabled, `tmToggleAiSideDock(this.checked); tmCloseDesktopMenu()`) : ''}
             ${renderDesktopMenuToggle('日历侧边栏', !!SettingsStore.data.calendarSideDockEnabled, `tmToggleCalendarSideDock(this.checked); tmCloseDesktopMenu()`)}
@@ -30284,6 +30709,7 @@ async function __tmRefreshAfterWake(reason) {
                 menu.className = 'bc-select-menu';
                 menu.style.display = 'flex';
                 menu.style.position = 'fixed';
+                menu.style.zIndex = String(__tmResolveFloatingTooltipZIndex(trigger));
                 menu.style.left = `${Math.max(8, Math.round(rect.left))}px`;
                 menu.style.top = `${Math.round(rect.bottom + 8)}px`;
                 menu.style.minWidth = `${Math.max(Math.round(rect.width), 160)}px`;
@@ -30300,15 +30726,19 @@ async function __tmRefreshAfterWake(reason) {
         }
     };
 
+    function __tmOnTopbarSelectOutsideClick(event) {
+        if (event?.target instanceof Element && event.target.closest('.tm-topbar-select')) return;
+        __tmCloseTopbarSelects();
+    }
+
+    function __tmOnTopbarSelectOutsideKeydown(event) {
+        if (String(event?.key || '') === 'Escape') __tmCloseTopbarSelects();
+    }
+
     if (!window.__tmTopbarSelectOutsideBound) {
         window.__tmTopbarSelectOutsideBound = true;
-        document.addEventListener('click', (event) => {
-            if (event?.target instanceof Element && event.target.closest('.tm-topbar-select')) return;
-            __tmCloseTopbarSelects();
-        }, true);
-        document.addEventListener('keydown', (event) => {
-            if (String(event?.key || '') === 'Escape') __tmCloseTopbarSelects();
-        }, true);
+        document.addEventListener('click', __tmOnTopbarSelectOutsideClick, true);
+        document.addEventListener('keydown', __tmOnTopbarSelectOutsideKeydown, true);
     }
 
     window.tmClose = function(event) {
@@ -30854,6 +31284,15 @@ async function __tmRefreshAfterWake(reason) {
         return __tmNormalizeOtherBlockRefs(group?.otherBlockRefs);
     }
 
+    function __tmResolveAutoOtherBlockTargetGroupId(groupId) {
+        const preferred = __tmResolveOtherBlockGroupId(groupId);
+        if (preferred && __tmGetDocGroupById(preferred)) return preferred;
+        const current = __tmResolveOtherBlockGroupId();
+        if (current && __tmGetDocGroupById(current)) return current;
+        const groups = Array.isArray(SettingsStore?.data?.docGroups) ? SettingsStore.data.docGroups : [];
+        return String(groups[0]?.id || '').trim();
+    }
+
     function __tmSetOtherBlockRefsByGroup(groupId, refs) {
         const gid = __tmResolveOtherBlockGroupId(groupId);
         if (!gid) return null;
@@ -31036,15 +31475,16 @@ async function __tmRefreshAfterWake(reason) {
     async function __tmAddOtherBlocksToCollection(blockIdsInput, groupIdInput, options = {}) {
         const ids = __tmNormalizeOtherBlockRefs(Array.isArray(blockIdsInput) ? blockIdsInput : [blockIdsInput]).map((item) => item.id);
         const targetGroupId = __tmResolveOtherBlockGroupId(groupIdInput);
+        const silent = options?.silent === true;
         if (!ids.length) return { added: 0, existed: 0, invalid: 0, group: null };
         if (!targetGroupId) {
-            hint('⚠ 请先选择目标文档分组', 'warning');
-            return { added: 0, existed: 0, invalid: 0, group: null };
+            if (!silent) hint('⚠ 请先选择目标文档分组', 'warning');
+            return { added: 0, existed: 0, invalid: 0, group: null, reason: 'no-group' };
         }
         const group = __tmGetDocGroupById(targetGroupId);
         if (!group) {
-            hint('⚠ 目标分组不存在', 'warning');
-            return { added: 0, existed: 0, invalid: 0, group: null };
+            if (!silent) hint('⚠ 目标分组不存在', 'warning');
+            return { added: 0, existed: 0, invalid: 0, group: null, reason: 'group-missing' };
         }
 
         let rows = [];
@@ -31080,13 +31520,15 @@ async function __tmRefreshAfterWake(reason) {
         if (!added) {
             const groupName = __tmResolveDocGroupName(group);
             if (existed > 0) {
-                hint(ids.length > 1
-                    ? `⚠ 所选块已都在“${groupName}”中`
-                    : `⚠ 该块已在“${groupName}”中`, 'warning');
+                if (!silent) {
+                    hint(ids.length > 1
+                        ? `⚠ 所选块已都在“${groupName}”中`
+                        : `⚠ 该块已在“${groupName}”中`, 'warning');
+                }
             } else if (invalid > 0) {
-                hint('⚠ 当前仅支持文档块、标题块、内容块和有序/无序列表块', 'warning');
+                if (!silent) hint('⚠ 当前仅支持文档块、标题块、内容块和有序/无序列表块', 'warning');
             }
-            return { added, existed, invalid, group };
+            return { added, existed, invalid, group, reason: existed > 0 ? 'exists' : (invalid > 0 ? 'invalid' : 'unchanged') };
         }
 
         __tmSetOtherBlockRefsByGroup(targetGroupId, nextRefs);
@@ -31099,7 +31541,7 @@ async function __tmRefreshAfterWake(reason) {
             try { applyFilters(); } catch (e) {}
             try { if (state.modal) render(); } catch (e) {}
         }
-        return { added, existed, invalid, group: __tmGetDocGroupById(targetGroupId) };
+        return { added, existed, invalid, group: __tmGetDocGroupById(targetGroupId), reason: 'added' };
     }
 
     async function __tmRemoveOtherBlocksFromCollection(blockIdsInput, groupIdInput, options = {}) {
@@ -31327,6 +31769,11 @@ async function __tmRefreshAfterWake(reason) {
         if (tomatoEnabled) {
             menu.appendChild(createItem('⏰ 提醒', async () => {
                 await tmReminder(tid);
+            }));
+        }
+        if (globalThis.__tmCalendar && (typeof globalThis.__tmCalendar.openScheduleEditor === 'function' || typeof globalThis.__tmCalendar.openScheduleEditorById === 'function' || typeof globalThis.__tmCalendar.openScheduleEditorByTaskId === 'function')) {
+            menu.appendChild(createItem('📅 编辑日程', async () => {
+                await __tmOpenScheduleEditorForBlock(tid, null, { blockId: tid });
             }));
         }
         menu.appendChild(createItem('📍 跳转到原块', async () => {
@@ -34180,7 +34627,7 @@ async function __tmRefreshAfterWake(reason) {
         const curPriority = String(task?.priority || '').trim().toLowerCase();
         const curPinned = !!task?.pinned;
         const docName = String(task?.docName || '').trim();
-        const headingName = String(task?.h2 || task?.h2Name || '').trim();
+        const headingName = __tmNormalizeHeadingText(task?.h2 || task?.h2Name);
         const priorityOptions = [
             { value: '', label: '无' },
             { value: 'low', label: '低' },
@@ -35022,7 +35469,7 @@ async function __tmRefreshAfterWake(reason) {
                 doc: () => `
                     <td class="tm-cell-editable tm-task-meta-cell" style="${tableLayout.cellStyle('doc')}" title="点击移动到当前分组其他文档" onclick="tmPickTaskDocInline('${task.id}', this, event)">${esc(docName || '')}</td>`,
                 h2: () => `
-                    <td class="tm-cell-editable tm-task-meta-cell" style="${tableLayout.cellStyle('h2')}" title="点击切换标题" onclick="tmPickHeadingInline('${task.id}', this, event)">${esc(task.h2 || '无')}</td>`,
+                    <td class="tm-cell-editable tm-task-meta-cell" style="${tableLayout.cellStyle('h2')}" title="点击切换标题" onclick="tmPickHeadingInline('${task.id}', this, event)">${esc(__tmNormalizeHeadingText(task.h2) || '无')}</td>`,
                 score: () => {
                     const v = Number.isFinite(Number(task.priorityScore)) ? Math.round(Number(task.priorityScore)) : 0;
                     return `<td class="tm-task-meta-cell" style="${tableLayout.cellStyle('score', 'text-align: center; font-variant-numeric: inherit;')}">${v}</td>`;
@@ -37208,15 +37655,18 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         menu.appendChild(createItem('➕ 新建子任务', () => tmCreateSubtask(taskId)));
-        if (globalThis.__tmCalendar && (typeof globalThis.__tmCalendar.openScheduleEditorById === 'function' || typeof globalThis.__tmCalendar.openScheduleEditorByTaskId === 'function')) {
+        if (globalThis.__tmCalendar && (typeof globalThis.__tmCalendar.openScheduleEditor === 'function' || typeof globalThis.__tmCalendar.openScheduleEditorById === 'function' || typeof globalThis.__tmCalendar.openScheduleEditorByTaskId === 'function')) {
             menu.appendChild(createItem('📅 编辑日程', () => {
-                if (scheduleId0 && typeof globalThis.__tmCalendar.openScheduleEditorById === 'function') {
-                    try { globalThis.__tmCalendar.openScheduleEditorById(scheduleId0); } catch (e) {}
-                    return;
-                }
-                if (typeof globalThis.__tmCalendar.openScheduleEditorByTaskId === 'function') {
-                    try { globalThis.__tmCalendar.openScheduleEditorByTaskId(taskId, extra0); } catch (e) {}
-                }
+                void __tmOpenScheduleEditorForBlock(taskId, null, {
+                    id: scheduleId0,
+                    title: scheduleTitle0 || taskName || task?.content || '',
+                    taskDateStartKey: String(extra0.taskDateStartKey || '').trim(),
+                    taskDateEndExclusiveKey: String(extra0.taskDateEndExclusiveKey || '').trim(),
+                    calendarId: String(extra0.calendarId || '').trim(),
+                    start: extra0.start || null,
+                    end: extra0.end || null,
+                    allDay: extra0.allDay === true,
+                });
             }));
             if (scheduleId0 && typeof globalThis.__tmCalendar.deleteScheduleById === 'function') {
                 menu.appendChild(createItem('🗑️ 删除日程', async () => {
@@ -37535,7 +37985,7 @@ async function __tmRefreshAfterWake(reason) {
                     createdAtSectionEnd = true;
                     const task = state.pendingInsertedTasks?.[String(taskId || '').trim()];
                     if (task) {
-                        task.h2 = String(placement.heading?.content || '').trim();
+                        task.h2 = __tmNormalizeHeadingText(placement.heading?.content);
                         task.h2Id = hid;
                         task.h2Rank = Number(placement.heading?.rank);
                         task.h2Path = '';
@@ -39453,7 +39903,7 @@ async function __tmRefreshAfterWake(reason) {
                 const indent = checklistCompact ? depth * 14 : depth * 22;
                 const meta = [];
                 if (task.docName) meta.push(`<span class="tm-checklist-meta-chip">📄 ${esc(String(task.docName || ''))}</span>`);
-                if (task.h2) meta.push(`<span class="tm-checklist-meta-chip">🧩 ${esc(String(task.h2 || ''))}</span>`);
+                if (task.h2) meta.push(`<span class="tm-checklist-meta-chip">🧩 ${esc(__tmNormalizeHeadingText(task.h2))}</span>`);
                 if (task.completionTime) meta.push(`<span class="tm-checklist-meta-chip">${esc(__tmFormatTaskTime(task.completionTime))}</span>`);
                 if (task.duration) meta.push(`<span class="tm-checklist-meta-chip">⏱ ${esc(String(task.duration || ''))}</span>`);
                 if (totalChildren > 0) meta.push(`<span class="tm-checklist-meta-chip">子任务 ${completedChildren}/${totalChildren}</span>`);
@@ -42162,6 +42612,367 @@ async function __tmRefreshAfterWake(reason) {
         });
     };
 
+    function __tmExcelSanitizeFileName(name) {
+        const raw = String(name || '').trim();
+        const safe = raw.replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, ' ').trim();
+        return safe || '任务管理器_表格导出';
+    }
+
+    function __tmExcelDateStamp() {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    }
+
+    function __tmExcelGetNoHeadingLabel() {
+        const headingLevel = String(SettingsStore.data.taskHeadingLevel || 'h2').trim() || 'h2';
+        const headingLabelMap = { h1: '一级标题', h2: '二级标题', h3: '三级标题', h4: '四级标题', h5: '五级标题', h6: '六级标题' };
+        return `无${headingLabelMap[headingLevel] || '标题'}`;
+    }
+
+    function __tmResolveXlsxRuntime() {
+        const candidates = [
+            globalThis.XLSX,
+            (typeof window !== 'undefined' ? window.XLSX : null),
+            globalThis.exports,
+            globalThis.module?.exports,
+            (typeof window !== 'undefined' ? window.exports : null),
+            (typeof window !== 'undefined' ? window.module?.exports : null),
+        ];
+        for (const candidate of candidates) {
+            if (candidate && candidate.utils && (typeof candidate.writeFile === 'function' || typeof candidate.writeFileXLSX === 'function')) {
+                try {
+                    if (!globalThis.XLSX) globalThis.XLSX = candidate;
+                    if (typeof window !== 'undefined' && !window.XLSX) window.XLSX = candidate;
+                } catch (e) {}
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    function __tmExcelResolveStatusName(task) {
+        const currentStatus = String(task?.customStatus || task?.status || 'todo').trim() || 'todo';
+        const statusOptions = Array.isArray(SettingsStore.data.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
+        const statusOption = statusOptions.find((item) => String(item?.id || '').trim() === currentStatus);
+        return String(statusOption?.name || currentStatus || '').trim();
+    }
+
+    function __tmExcelParseDateCell(value) {
+        const normalized = __tmFormatTaskTime(value);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return null;
+        const parts = normalized.split('-').map((item) => Number(item));
+        const year = Number(parts[0]);
+        const month = Number(parts[1]);
+        const day = Number(parts[2]);
+        if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+        const parsed = new Date(year, month - 1, day, 12, 0, 0, 0);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function __tmExcelGetVisibleRootTask(task, taskMap) {
+        let current = task;
+        const seen = new Set();
+        while (current) {
+            const currentId = String(current?.id || '').trim();
+            const parentId = String(current?.parentTaskId || '').trim();
+            if (!parentId || seen.has(parentId)) return current;
+            seen.add(parentId);
+            const parent = taskMap.get(parentId);
+            if (!parent) return current;
+            current = parent;
+            if (!currentId) return current;
+        }
+        return task;
+    }
+
+    function __tmExcelGetTimeGroupLabel(task) {
+        const info = __tmGetTaskTimePriorityInfo(task);
+        const diffDays = Number(info?.diffDays);
+        if (!Number.isFinite(diffDays)) return '待定';
+        if (diffDays < 0) return '已过期';
+        if (diffDays === 0) return '今天';
+        if (diffDays === 1) return '明天';
+        if (diffDays === 2) return '后天';
+        return `余${diffDays}天`;
+    }
+
+    function __tmExcelGetQuadrantGroupLabel(task) {
+        const quadrantRules = (SettingsStore.data.quadrantConfig && SettingsStore.data.quadrantConfig.rules) || [];
+        const priority = String(task?.priority || '').toLowerCase();
+        const importance = (priority === 'a' || priority === '高' || priority === 'high')
+            ? 'high'
+            : ((priority === 'b' || priority === '中' || priority === 'medium')
+                ? 'medium'
+                : ((priority === 'c' || priority === '低' || priority === 'low') ? 'low' : 'none'));
+        const diffDays = Number(__tmGetTaskTimePriorityInfo(task)?.diffDays);
+        const timeRange = !Number.isFinite(diffDays)
+            ? 'nodate'
+            : (diffDays < 0 ? 'overdue' : (diffDays <= 7 ? 'within7days' : (diffDays <= 15 ? 'within15days' : (diffDays <= 30 ? 'within30days' : 'beyond30days'))));
+        for (const rule of quadrantRules) {
+            const importanceMatch = Array.isArray(rule?.importance) && rule.importance.includes(importance);
+            let timeRangeMatch = Array.isArray(rule?.timeRanges) && rule.timeRanges.includes(timeRange);
+            if (!timeRangeMatch && Array.isArray(rule?.timeRanges)) {
+                for (const range of rule.timeRanges) {
+                    if (!String(range || '').startsWith('beyond') || range === 'beyond30days') continue;
+                    const days = parseInt(String(range).replace('beyond', '').replace('days', ''), 10);
+                    if (!Number.isNaN(days) && diffDays > days) {
+                        timeRangeMatch = true;
+                        break;
+                    }
+                }
+            }
+            if (importanceMatch && timeRangeMatch) return String(rule?.name || '').trim();
+        }
+        return '';
+    }
+
+    function __tmExcelGetGroupLabel(task, rootTask) {
+        const root = rootTask || task;
+        if (!root) return '';
+        if (state.groupByDocName) {
+            const labels = [String(root.docName || root.rawDocName || '').trim() || '未命名文档'];
+            if (SettingsStore.data.docH2SubgroupEnabled !== false) {
+                const bucket = __tmGetDocHeadingBucket(root, __tmExcelGetNoHeadingLabel());
+                const headingLabel = String(bucket?.label || '').trim();
+                if (headingLabel) labels.push(headingLabel);
+            }
+            return labels.filter(Boolean).join(' / ');
+        }
+        if (state.groupByTime) return __tmExcelGetTimeGroupLabel(root);
+        if (state.quadrantEnabled) return __tmExcelGetQuadrantGroupLabel(root);
+        if (state.groupByTaskName) return String(root.content || '').trim();
+        return root?.pinned ? '置顶' : '';
+    }
+
+    function __tmExcelGetExportColumnDefs() {
+        const headingLevel = String(SettingsStore.data.taskHeadingLevel || 'h2').trim() || 'h2';
+        const headingLabels = { h1: '一级标题', h2: '二级标题', h3: '三级标题', h4: '四级标题', h5: '五级标题', h6: '六级标题' };
+        const columnOrder = Array.isArray(SettingsStore.data.columnOrder) ? SettingsStore.data.columnOrder : ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark'];
+        const widthMap = (SettingsStore.data.columnWidths && typeof SettingsStore.data.columnWidths === 'object') ? SettingsStore.data.columnWidths : {};
+        const pxToWch = (px, fallback) => {
+            const n = Number(px);
+            if (!Number.isFinite(n) || n <= 0) return fallback;
+            return Math.max(8, Math.min(80, Math.round(n / 8)));
+        };
+        const defs = {
+            pinned: {
+                key: 'pinned',
+                label: '置顶',
+                wch: 6,
+                value: (task) => task?.pinned ? '是' : ''
+            },
+            content: {
+                key: 'content',
+                label: '任务内容',
+                wch: pxToWch(widthMap.content, 36),
+                value: (task) => String(task?.content || '').trim()
+            },
+            status: {
+                key: 'status',
+                label: '状态',
+                wch: pxToWch(widthMap.status, 12),
+                value: (task) => __tmExcelResolveStatusName(task)
+            },
+            score: {
+                key: 'score',
+                label: '优先级分',
+                wch: pxToWch(widthMap.score, 12),
+                value: (task) => {
+                    const raw = Number(task?.priorityScore);
+                    if (Number.isFinite(raw)) return Math.round(raw);
+                    try {
+                        const computed = Number(__tmComputePriorityScore(task));
+                        return Number.isFinite(computed) ? Math.round(computed) : '';
+                    } catch (e) {
+                        return '';
+                    }
+                }
+            },
+            doc: {
+                key: 'doc',
+                label: '文档',
+                wch: pxToWch(widthMap.doc, 22),
+                value: (task) => String(task?.docName || task?.rawDocName || '').trim()
+            },
+            h2: {
+                key: 'h2',
+                label: headingLabels[headingLevel] || '标题',
+                wch: pxToWch(widthMap.h2, 22),
+                value: (task) => __tmNormalizeHeadingText(task?.h2)
+            },
+            priority: {
+                key: 'priority',
+                label: '重要性',
+                wch: pxToWch(widthMap.priority, 10),
+                value: (task) => String(__tmGetPriorityJiraInfo(task?.priority)?.label || '').trim()
+            },
+            startDate: {
+                key: 'startDate',
+                label: '开始日期',
+                kind: 'date',
+                wch: pxToWch(widthMap.startDate, 14),
+                value: (task) => String(task?.startDate || '').trim()
+            },
+            completionTime: {
+                key: 'completionTime',
+                label: '完成日期',
+                kind: 'date',
+                wch: pxToWch(widthMap.completionTime, 14),
+                value: (task) => String(task?.completionTime || '').trim()
+            },
+            duration: {
+                key: 'duration',
+                label: '时长',
+                wch: pxToWch(widthMap.duration, 12),
+                value: (task) => String(task?.duration || '').trim()
+            },
+            spent: {
+                key: 'spent',
+                label: '耗时',
+                wch: pxToWch(widthMap.spent, 12),
+                value: (task) => {
+                    const mode = String(SettingsStore.data.tomatoSpentAttrMode || 'minutes').trim() || 'minutes';
+                    return (SettingsStore.data.enableTomatoIntegration && mode === 'hours')
+                        ? String(__tmFormatSpentHours(__tmParseNumber(task?.tomatoHours)) || '').trim()
+                        : String(__tmFormatSpentMinutes(__tmGetTaskSpentMinutes(task)) || '').trim();
+                }
+            },
+            remark: {
+                key: 'remark',
+                label: '备注',
+                wch: pxToWch(widthMap.remark, 30),
+                value: (task) => String(task?.remark || '').trim()
+            }
+        };
+        return columnOrder.map((key) => defs[key]).filter(Boolean);
+    }
+
+    function __tmBuildCurrentTableExcelExportModel() {
+        const filtered = Array.isArray(state.filteredTasks) ? state.filteredTasks.slice() : [];
+        if (filtered.length === 0) return { columns: [], rows: [] };
+        const taskMap = new Map(filtered.map((task) => [String(task?.id || '').trim(), task]).filter(([id]) => !!id));
+        const depthMemo = new Map();
+        const getDepth = (task) => {
+            const id = String(task?.id || '').trim();
+            if (!id) return 0;
+            if (depthMemo.has(id)) return depthMemo.get(id);
+            const parentId = String(task?.parentTaskId || '').trim();
+            if (!parentId || !taskMap.has(parentId)) {
+                depthMemo.set(id, 0);
+                return 0;
+            }
+            const depth = Math.max(0, Math.min(32, getDepth(taskMap.get(parentId)) + 1));
+            depthMemo.set(id, depth);
+            return depth;
+        };
+        const prevCollapsedTaskIds = state.collapsedTaskIds instanceof Set ? new Set(state.collapsedTaskIds) : new Set();
+        const prevCollapsedGroups = state.collapsedGroups instanceof Set ? new Set(state.collapsedGroups) : new Set();
+        let orderedTaskRows = [];
+        try {
+            state.collapsedTaskIds = new Set();
+            state.collapsedGroups = new Set();
+            orderedTaskRows = (__tmBuildTaskRowModel() || []).filter((row) => row && row.type === 'task' && row.id);
+        } catch (e) {
+            orderedTaskRows = filtered.map((task) => ({
+                type: 'task',
+                id: String(task?.id || '').trim(),
+                depth: getDepth(task),
+            }));
+        } finally {
+            state.collapsedTaskIds = prevCollapsedTaskIds;
+            state.collapsedGroups = prevCollapsedGroups;
+        }
+        const exportedTaskIdSet = new Set();
+        orderedTaskRows = orderedTaskRows.filter((row) => {
+            const id = String(row?.id || '').trim();
+            if (!id || exportedTaskIdSet.has(id)) return false;
+            exportedTaskIdSet.add(id);
+            return true;
+        });
+        const fixedColumns = [
+            { key: '__group', label: '当前分组', wch: 10, value: (_, ctx) => ctx.groupLabel || '' },
+            { key: '__depth', label: '层级', wch: 6, value: (_, ctx) => ctx.depth },
+            { key: '__done', label: '完成状态', wch: 10, value: (task) => task?.done ? '已完成' : '未完成' },
+        ];
+        const visibleColumns = __tmExcelGetExportColumnDefs();
+        const rows = orderedTaskRows.map((row) => {
+            const id = String(row?.id || '').trim();
+            const task = taskMap.get(id) || state.flatTasks?.[id] || null;
+            if (!task) return null;
+            const parentTaskId = String(task?.parentTaskId || '').trim();
+            const rootTask = __tmExcelGetVisibleRootTask(task, taskMap) || task;
+            return {
+                id,
+                task,
+                depth: Math.max(0, Number(row?.depth) || getDepth(task)),
+                groupLabel: __tmExcelGetGroupLabel(task, rootTask),
+                parentTaskId,
+            };
+        }).filter(Boolean);
+        return {
+            columns: fixedColumns.concat(visibleColumns),
+            rows,
+        };
+    }
+
+    window.tmExportCurrentTableExcel = function() {
+        if (String(state.viewMode || '').trim() !== 'list') {
+            hint('⚠️ 仅表格视图支持导出 Excel', 'warning');
+            return;
+        }
+        const XLSX = __tmResolveXlsxRuntime();
+        if (!XLSX || !XLSX.utils) {
+            hint('❌ Excel 导出组件未加载', 'error');
+            return;
+        }
+        const model = __tmBuildCurrentTableExcelExportModel();
+        if (!Array.isArray(model.rows) || model.rows.length === 0) {
+            hint('⚠️ 当前没有可导出的任务', 'warning');
+            return;
+        }
+        const columns = Array.isArray(model.columns) ? model.columns : [];
+        if (!columns.length) {
+            hint('❌ 导出列配置为空', 'error');
+            return;
+        }
+        const aoa = [columns.map((col) => String(col?.label || '').trim())];
+        model.rows.forEach((row) => {
+            aoa.push(columns.map((col) => {
+                const raw = typeof col?.value === 'function' ? col.value(row.task, row) : '';
+                if (col?.kind === 'date') {
+                    const dt = __tmExcelParseDateCell(raw);
+                    return dt || (raw ? String(raw) : '');
+                }
+                return raw == null ? '' : raw;
+            }));
+        });
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        ws['!cols'] = columns.map((col) => ({ wch: Math.max(8, Number(col?.wch) || 12) }));
+        ws['!rows'] = aoa.map((_, idx) => {
+            if (idx === 0) return { level: 0 };
+            const depth = Number(model.rows[idx - 1]?.depth) || 0;
+            return { level: Math.max(0, Math.min(7, depth)) };
+        });
+        ws['!outline'] = { above: true };
+        if (ws['!ref']) ws['!autofilter'] = { ref: ws['!ref'] };
+        columns.forEach((col, colIndex) => {
+            if (col?.kind !== 'date') return;
+            for (let rowIndex = 1; rowIndex < aoa.length; rowIndex += 1) {
+                const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
+                const cell = ws[cellRef];
+                if (!cell || (cell.t !== 'd' && cell.t !== 'n')) continue;
+                cell.z = 'yyyy-mm-dd';
+            }
+        });
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '任务导出');
+        const filename = __tmExcelSanitizeFileName(`任务管理器_表格导出_${__tmExcelDateStamp()}.xlsx`);
+        if (typeof XLSX.writeFileXLSX === 'function') XLSX.writeFileXLSX(wb, filename, { compression: true, cellStyles: true });
+        else XLSX.writeFile(wb, filename, { bookType: 'xlsx', compression: true, cellStyles: true });
+        hint(`✅ 已导出 Excel（${model.rows.length} 条任务）`, 'success');
+    };
+
     // 新增：导出当前分组任务
     window.exportCurrentGroup = async function() {
         // 从当前DOM中获取当前选中的分组ID
@@ -42830,6 +43641,20 @@ async function __tmRefreshAfterWake(reason) {
             return;
         }
         hint(blockIds.length > 1 ? `✅ 已将 ${result.added} 个块添加到“${groupName}”` : `✅ 已添加到“${groupName}”`, 'success');
+    };
+
+    window.tmAutoAddOtherBlocksToCurrentGroup = async function(blockIdsInput, options = {}) {
+        const blockIds = __tmNormalizeOtherBlockRefs(Array.isArray(blockIdsInput) ? blockIdsInput : [blockIdsInput]).map((item) => item.id);
+        if (!blockIds.length) return { added: 0, existed: 0, invalid: 0, group: null, reason: 'empty' };
+        const targetGroupId = __tmResolveAutoOtherBlockTargetGroupId(options?.groupId);
+        if (!targetGroupId) {
+            return { added: 0, existed: 0, invalid: 0, group: null, reason: 'no-group' };
+        }
+        return await __tmAddOtherBlocksToCollection(blockIds, targetGroupId, {
+            ...options,
+            silent: options?.silent !== false,
+            forceRefresh: options?.forceRefresh !== false,
+        });
     };
 
     // 根据ID获取文档名称
@@ -44403,6 +45228,24 @@ async function __tmRefreshAfterWake(reason) {
             if (detail?.blockElement) rawBlockElements.push(detail.blockElement);
             if (detail?.element) rawBlockElements.push(detail.element);
             try { rawBlockElements.push(...Array.from(detail?.blockElements || [])); } catch (e) {}
+            const scheduleBlockIds = __tmCollectBlockIdsFromElements(rawBlockElements);
+            if (
+                scheduleBlockIds.length === 1
+                && globalThis.__tmCalendar
+                && (typeof globalThis.__tmCalendar.openScheduleEditor === 'function' || typeof globalThis.__tmCalendar.openScheduleEditorByTaskId === 'function')
+            ) {
+                const scheduleBlockId = String(scheduleBlockIds[0] || '').trim();
+                const scheduleBlockElement = rawBlockElements.find((item) => __tmResolveAnyBlockIdFromElement(item) === scheduleBlockId) || rawBlockElements[0] || null;
+                if (scheduleBlockId) {
+                    menu.addItem({
+                        icon: 'iconTaskHorizon',
+                        label: '编辑日程',
+                        click: async () => {
+                            await __tmOpenScheduleEditorForBlock(scheduleBlockId, scheduleBlockElement);
+                        }
+                    });
+                }
+            }
             const blockIds = __tmCollectOtherBlockIdsFromElements(rawBlockElements);
             if (!blockIds.length) return;
             menu.addItem({
@@ -44432,6 +45275,7 @@ async function __tmRefreshAfterWake(reason) {
 
         __tmNativeDocMenuCaptureHandler = (e) => {
             try { __tmRememberTitleMenuContext(e?.target); } catch (e2) {}
+            try { __tmRememberBlockMenuContext(e?.target, e); } catch (e2) {}
         };
         try { document.addEventListener('contextmenu', __tmNativeDocMenuCaptureHandler, true); } catch (e) {}
         try { document.addEventListener('mousedown', __tmNativeDocMenuCaptureHandler, true); } catch (e) {}
@@ -44443,31 +45287,41 @@ async function __tmRefreshAfterWake(reason) {
                 const menuItems = document.querySelector('#commonMenu .b3-menu__items');
                 if (!menuItems) return;
                 const titleMenu = menuItems.closest?.('[data-name="titleMenu"]') || document.querySelector('#commonMenu [data-name="titleMenu"]');
-                if (!titleMenu) return;
-                if (menuItems.querySelector('.tm-doc-group-menu-item')) return;
-                const now = Date.now();
-                const isRecent = __tmLastRightClickedTitleProtyle && __tmLastRightClickedTitleProtyle.isConnected && (now - (Number(__tmLastRightClickedTitleAtMs) || 0) < 3000);
-                const targetProtyle = (isRecent ? __tmLastRightClickedTitleProtyle : null) || __tmFindActiveProtyle?.() || null;
-                const docId = __tmGetDocIdFromProtyle(targetProtyle);
-                if (!docId) return;
-                const menuItem = __tmCreateNativeMenuItem('添加到任务管理器分组', async () => {
-                    await window.tmOpenAddDocToGroupDialog?.(docId);
-                });
-                __tmInsertMenuItem(menuItems, menuItem);
-                if (__tmIsAiFeatureEnabled()) {
-                    const smartItem = __tmCreateNativeMenuItem('AI SMART 分析', async () => {
-                        await window.tmAiAnalyzeDocumentSmart?.(docId);
+                if (titleMenu) {
+                    if (menuItems.querySelector('.tm-doc-group-menu-item')) return;
+                    const now = Date.now();
+                    const isRecent = __tmLastRightClickedTitleProtyle && __tmLastRightClickedTitleProtyle.isConnected && (now - (Number(__tmLastRightClickedTitleAtMs) || 0) < 3000);
+                    const targetProtyle = (isRecent ? __tmLastRightClickedTitleProtyle : null) || __tmFindActiveProtyle?.() || null;
+                    const docId = __tmGetDocIdFromProtyle(targetProtyle);
+                    if (!docId) return;
+                    const menuItem = __tmCreateNativeMenuItem('添加到任务管理器分组', async () => {
+                        await window.tmOpenAddDocToGroupDialog?.(docId);
                     });
-                    __tmInsertMenuItem(menuItems, smartItem);
-                    const scheduleItem = __tmCreateNativeMenuItem('AI 日程排期', async () => {
-                        await window.tmAiPlanDocumentSchedule?.(docId);
+                    __tmInsertMenuItem(menuItems, menuItem);
+                    if (__tmIsAiFeatureEnabled()) {
+                        const smartItem = __tmCreateNativeMenuItem('AI SMART 分析', async () => {
+                            await window.tmAiAnalyzeDocumentSmart?.(docId);
+                        });
+                        __tmInsertMenuItem(menuItems, smartItem);
+                        const scheduleItem = __tmCreateNativeMenuItem('AI 日程排期', async () => {
+                            await window.tmAiPlanDocumentSchedule?.(docId);
+                        });
+                        __tmInsertMenuItem(menuItems, scheduleItem);
+                    }
+                    const semanticItem = __tmCreateNativeMenuItem('语义识别完成日期', async () => {
+                        await window.tmAiSemanticCompletionPreview?.(docId);
                     });
-                    __tmInsertMenuItem(menuItems, scheduleItem);
+                    __tmInsertMenuItem(menuItems, semanticItem);
+                    return;
                 }
-                const semanticItem = __tmCreateNativeMenuItem('语义识别完成日期', async () => {
-                    await window.tmAiSemanticCompletionPreview?.(docId);
-                });
-                __tmInsertMenuItem(menuItems, semanticItem);
+                if (menuItems.querySelector('.tm-block-schedule-menu-item')) return;
+                const blockCtx = __tmGetRecentBlockMenuContext();
+                if (!blockCtx?.blockId) return;
+                const scheduleItem = __tmCreateNativeMenuItem('编辑日程', async () => {
+                    await __tmOpenScheduleEditorForBlock(blockCtx.blockId, blockCtx.blockElement);
+                }, 'tm-block-schedule-menu-item');
+                __tmInsertMenuItem(menuItems, scheduleItem);
+                __tmLastRightClickedBlockAtMs = 0;
             } catch (e) {}
         });
         try {
@@ -45098,6 +45952,20 @@ async function __tmRefreshAfterWake(reason) {
             }
         } catch (e) {}
         try {
+            window.removeEventListener('resize', __tmOnTopbarOverflowTooltipWindowResize);
+            try { delete window.__tmTopbarOverflowTooltipWindowBound; } catch (e2) { window.__tmTopbarOverflowTooltipWindowBound = false; }
+        } catch (e) {}
+        try {
+            window.removeEventListener('resize', __tmOnFloatingTooltipWindowResize);
+            window.removeEventListener('scroll', __tmOnFloatingTooltipWindowScroll, true);
+            try { delete window.__tmFloatingTooltipWindowBound; } catch (e2) { window.__tmFloatingTooltipWindowBound = false; }
+        } catch (e) {}
+        try {
+            document.removeEventListener('click', __tmOnTopbarSelectOutsideClick, true);
+            document.removeEventListener('keydown', __tmOnTopbarSelectOutsideKeydown, true);
+            try { delete window.__tmTopbarSelectOutsideBound; } catch (e2) { window.__tmTopbarSelectOutsideBound = false; }
+        } catch (e) {}
+        try {
             const eb = __tmDocMenuEventBus || globalThis.__taskHorizonPluginInstance?.eventBus || window.siyuan?.eventBus;
             if (eb && typeof eb.off === 'function') {
                 if (__tmEditorTitleIconMenuHandler) {
@@ -45124,6 +45992,9 @@ async function __tmRefreshAfterWake(reason) {
             }
             __tmLastRightClickedTitleProtyle = null;
             __tmLastRightClickedTitleAtMs = 0;
+            __tmLastRightClickedBlockEl = null;
+            __tmLastRightClickedBlockId = '';
+            __tmLastRightClickedBlockAtMs = 0;
         } catch (e) {}
         try {
             if (__tmDocMenuObserver) {
@@ -46007,28 +46878,36 @@ async function __tmRefreshAfterWake(reason) {
     } catch (e) {}
 
     __tmNs.uninstallCleanup = async function() {
+        const removePluginFile = async (path) => {
+            if (!path) return;
+            try {
+                await fetch('/api/file/removeFile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path }),
+                }).catch(() => null);
+            } catch (e) {}
+        };
+
         try {
-            await fetch('/api/file/removeFile', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ path: SETTINGS_FILE_PATH }),
-            }).catch(() => null);
+            await removePluginFile(SETTINGS_FILE_PATH);
         } catch (e) {}
 
         try {
-            await fetch('/api/file/removeFile', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ path: META_FILE_PATH }),
-            }).catch(() => null);
+            await removePluginFile(META_FILE_PATH);
         } catch (e) {}
 
         try {
-            await fetch('/api/file/removeFile', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ path: WHITEBOARD_DATA_FILE_PATH }),
-            }).catch(() => null);
+            await removePluginFile(WHITEBOARD_DATA_FILE_PATH);
+        } catch (e) {}
+
+        try {
+            await Promise.all([
+                removePluginFile(`${PLUGIN_STORAGE_DIR}/calendar-events.json`),
+                removePluginFile(`${PLUGIN_STORAGE_DIR}/ai-conversations.json`),
+                removePluginFile(`${PLUGIN_STORAGE_DIR}/ai-debug.json`),
+                removePluginFile(`${PLUGIN_STORAGE_DIR}/ai-prompt-templates.json`),
+            ]);
         } catch (e) {}
 
         try {
@@ -46087,9 +46966,38 @@ async function __tmRefreshAfterWake(reason) {
                 'tm_whiteboard_all_tabs_layout_mode',
                 'tm_whiteboard_all_tabs_doc_order_by_group',
                 'tm_whiteboard_all_tabs_card_min_width',
+                'tm_ai_enabled',
+                'tm_ai_side_dock_enabled',
+                'tm_ai_provider',
+                'tm_ai_minimax_api_key',
+                'tm_ai_minimax_base_url',
+                'tm_ai_minimax_model',
+                'tm_ai_deepseek_api_key',
+                'tm_ai_deepseek_base_url',
+                'tm_ai_deepseek_model',
+                'tm_ai_minimax_temperature',
+                'tm_ai_minimax_max_tokens',
+                'tm_ai_minimax_timeout_ms',
+                'tm_ai_default_context_mode',
+                'tm_ai_schedule_windows',
+                'tm-ai-ui-prefs',
+                'tm-calendar-events',
+                'tm-calendar-mobile-notification-registry',
+                '__tmQuickbarModifiedTasks',
             ].forEach((k) => {
                 try { Storage.remove(k); } catch (e) {}
             });
+            try {
+                const extraPrefixKeys = [];
+                for (let i = 0; i < localStorage.length; i += 1) {
+                    const key = String(localStorage.key(i) || '');
+                    if (!key) continue;
+                    if (key.startsWith('tm_ai_') || key.startsWith('tm_calendar_')) extraPrefixKeys.push(key);
+                }
+                extraPrefixKeys.forEach((k) => {
+                    try { Storage.remove(k); } catch (e) {}
+                });
+            } catch (e) {}
         } catch (e) {}
     };
 
