@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.0.1
+// @version      2.0.2
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -1262,7 +1262,7 @@
             width: 100%;
             height: 100%;
             background: transparent;
-            z-index: 1;
+            z-index: 0;
             align-items: stretch;
             justify-content: stretch;
             overflow: hidden;
@@ -4316,6 +4316,636 @@
             margin-top: 12px;
         }
 
+        .tm-task-detail-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .tm-task-detail-header {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .tm-task-detail-header-main {
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: nowrap;
+            gap: 12px;
+        }
+
+        .tm-task-detail-header-actions {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .tm-task-detail-icon-btn {
+            flex: 0 0 auto;
+            width: 30px;
+            min-width: 30px;
+            height: 30px;
+            min-height: 30px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: calc(var(--radius) - 2px);
+            box-sizing: border-box;
+        }
+
+        .tm-task-detail-location {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tm-task-detail-location-chip {
+            border: none;
+            cursor: pointer;
+        }
+
+        .tm-task-detail-title-input {
+            flex: 1 1 auto;
+            width: 100%;
+            min-width: 0;
+            min-height: 36px;
+            padding: 6px 8px;
+            border: 1px solid transparent;
+            border-radius: 14px;
+            background: transparent;
+            color: var(--tm-text-color);
+            font-size: calc(var(--tm-font-size) * 1.12);
+            font-weight: 700;
+            line-height: 1.4;
+            resize: none;
+            overflow: hidden;
+            outline: none;
+            box-sizing: border-box;
+            box-shadow: none;
+            transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+        }
+
+        .tm-task-detail-title-input:hover {
+            background: color-mix(in srgb, var(--tm-bg-color) 92%, var(--tm-input-bg));
+        }
+
+        .tm-task-detail-title-input:focus {
+            border-color: color-mix(in srgb, var(--tm-primary-color) 48%, var(--tm-input-border));
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--tm-primary-color) 12%, transparent);
+            background: color-mix(in srgb, var(--tm-bg-color) 96%, var(--tm-input-bg));
+        }
+
+        .tm-task-detail-core {
+            --tm-task-detail-core-control-height: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding: 0;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        .tm-task-detail-core .tm-task-detail-status-select {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            max-width: 100%;
+            flex: 0 0 auto;
+        }
+
+        .tm-task-detail-core .tm-task-detail-status-trigger {
+            width: fit-content;
+            min-width: 0;
+            max-width: 220px;
+            min-height: var(--tm-task-detail-core-control-height);
+            height: var(--tm-task-detail-core-control-height);
+            padding: 0 8px;
+            justify-content: flex-start;
+            gap: 0;
+            border-radius: calc(var(--radius) - 2px);
+            box-sizing: border-box;
+            align-self: center;
+            color: var(--tm-status-fg, var(--foreground));
+            border-color: var(--tm-status-border, var(--border));
+            background: var(--tm-status-bg, var(--input));
+        }
+
+        .tm-task-detail-core .tm-task-detail-status-trigger__value {
+            padding-right: 0;
+            display: inline-flex;
+            align-items: center;
+            min-height: 0;
+            line-height: 1;
+            flex: 0 0 auto;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .tm-task-detail-core .tm-task-detail-status-menu {
+            left: 0;
+            right: auto;
+            min-width: 132px;
+            width: max-content;
+            max-width: min(280px, calc(100vw - 32px));
+        }
+
+        .tm-task-detail-core-meta {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tm-task-detail-core-chip {
+            min-width: 30px;
+            min-height: var(--tm-task-detail-core-control-height);
+            height: var(--tm-task-detail-core-control-height);
+            padding: 0 10px;
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid var(--border);
+            background: var(--input);
+            color: var(--foreground);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+            box-sizing: border-box;
+        }
+
+        .tm-task-detail-core-chip:hover,
+        .tm-task-detail-core-chip:focus-visible {
+            border-color: color-mix(in srgb, var(--primary) 42%, var(--border) 58%);
+            background: color-mix(in srgb, var(--input) 78%, var(--background) 22%);
+            outline: none;
+            box-shadow: 0 0 0 2px var(--ring);
+        }
+
+        .tm-task-detail-core-chip.has-value {
+            color: var(--foreground);
+        }
+
+        .tm-task-detail-core-chip--static {
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .tm-task-detail-core-chip--static:hover,
+        .tm-task-detail-core-chip--static:focus-visible {
+            border-color: var(--border);
+            background: var(--input);
+            box-shadow: none;
+            outline: none;
+        }
+
+        .tm-task-detail-core-chip--icon {
+            width: 30px;
+            min-width: 30px;
+            padding: 0;
+        }
+
+        .tm-task-detail-core-chip--icon.is-active {
+            color: var(--primary);
+            border-color: color-mix(in srgb, var(--primary) 48%, var(--border) 52%);
+            background: color-mix(in srgb, var(--accent) 80%, var(--input) 20%);
+        }
+
+        .tm-task-detail-core-chip__face {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .tm-task-detail-core-chip__icon {
+            color: currentColor;
+            line-height: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tm-task-detail-core-chip__text {
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .tm-task-detail-priority-select {
+            position: relative;
+            flex: 0 0 auto;
+        }
+
+        .tm-task-detail-priority-trigger {
+            color: var(--tm-priority-fg, var(--tm-text-color));
+            border-color: var(--tm-priority-border, var(--border));
+            background: var(--tm-priority-bg, var(--input));
+        }
+
+        .tm-task-detail-core .tm-task-detail-priority-select {
+            display: inline-flex;
+            align-items: center;
+            align-self: center;
+        }
+
+        .tm-task-detail-core .tm-task-detail-priority-trigger {
+            width: 30px;
+            min-width: 30px;
+            height: var(--tm-task-detail-core-control-height);
+            min-height: var(--tm-task-detail-core-control-height);
+            padding: 0;
+            box-sizing: border-box;
+            align-self: center;
+        }
+
+        .tm-task-detail-priority-trigger__value {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            line-height: 0;
+        }
+
+        .tm-task-detail-priority-trigger .tm-priority-jira__label {
+            display: none;
+        }
+
+        .tm-task-detail-priority-trigger .tm-priority-jira {
+            color: inherit;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .tm-task-detail-priority-trigger:hover,
+        .tm-task-detail-priority-trigger:focus-visible {
+            color: var(--tm-priority-fg, var(--tm-text-color));
+            border-color: var(--tm-priority-border, var(--border));
+            background: var(--tm-priority-bg, color-mix(in srgb, var(--input) 78%, var(--background) 22%));
+            filter: saturate(1.05);
+            box-shadow: 0 0 0 2px var(--ring);
+        }
+
+        .tm-task-detail-priority-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: auto;
+            z-index: 42;
+            min-width: 116px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid var(--tm-border-color);
+            background: var(--tm-bg-color);
+            box-shadow: var(--tm-shadow);
+        }
+
+        .tm-task-detail-priority-menu[hidden] {
+            display: none;
+        }
+
+        .tm-task-detail-priority-menu-option {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .tm-task-detail-priority-menu-option__face {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            border-radius: 10px;
+            border: 1px solid var(--tm-priority-border, rgba(117,117,117,0.35));
+            background: var(--tm-priority-bg, rgba(117,117,117,0.16));
+            color: var(--tm-priority-fg, #5f6368);
+            box-sizing: border-box;
+        }
+
+        .tm-task-detail-priority-menu-option__face .tm-priority-jira {
+            color: inherit;
+        }
+
+        .tm-task-detail-priority-menu-option:hover .tm-task-detail-priority-menu-option__face,
+        .tm-task-detail-priority-menu-option.is-selected .tm-task-detail-priority-menu-option__face {
+            filter: saturate(1.08);
+        }
+
+        .tm-task-detail-priority-menu-option.is-selected .tm-task-detail-priority-menu-option__face {
+            box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 16%, transparent);
+        }
+
+        .tm-task-detail-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 14px;
+            border: 1px solid var(--tm-border-color);
+            border-radius: 18px;
+            background: color-mix(in srgb, var(--tm-section-bg) 90%, var(--tm-bg-color));
+        }
+
+        .tm-task-detail-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .tm-task-detail-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--tm-text-color);
+        }
+
+        .tm-task-detail-section-tools {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tm-task-detail-section-count {
+            display: inline-flex;
+            align-items: center;
+            min-height: 24px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: var(--tm-doc-count-bg);
+            color: var(--tm-secondary-text);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tm-task-detail-subtask-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0;
+            padding-left: 0;
+        }
+
+        .tm-task-detail-subtask-add-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 30px;
+            padding: 0 10px;
+            border-radius: calc(var(--radius) - 2px);
+        }
+
+        .tm-task-detail-subtasks {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tm-task-detail-subtasks:empty {
+            display: none;
+        }
+
+        .tm-task-detail-subtask {
+            padding-left: calc(var(--tm-task-detail-depth, 0) * 18px);
+        }
+
+        .tm-task-detail-subtask-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .tm-task-detail-subtask-main {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .tm-task-detail-subtask-main .tm-task-checkbox {
+            margin-top: 5px;
+            flex: 0 0 auto;
+            align-self: flex-start;
+        }
+
+        .tm-task-detail-subtask-title {
+            flex: 1 1 auto;
+            min-width: 0;
+            min-height: 28px;
+            padding: 3px 8px 3px 4px;
+            border: 1px solid transparent;
+            border-radius: calc(var(--radius) - 2px);
+            background: transparent;
+            color: var(--tm-text-color);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.3;
+            text-align: left;
+            resize: none;
+            overflow: hidden;
+            outline: none;
+            box-sizing: border-box;
+            word-break: break-word;
+        }
+
+        .tm-task-detail-subtask-title:hover {
+            background: color-mix(in srgb, var(--tm-bg-color) 92%, var(--tm-input-bg));
+        }
+
+        .tm-task-detail-subtask-title:focus {
+            border-color: color-mix(in srgb, var(--primary) 42%, var(--border) 58%);
+            background: color-mix(in srgb, var(--input) 78%, var(--background) 22%);
+            box-shadow: 0 0 0 2px var(--ring);
+        }
+
+        .tm-task-detail-subtask-title.is-done {
+            color: var(--tm-secondary-text);
+            text-decoration: line-through;
+        }
+
+        .tm-task-detail-subtask-trailing {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+            justify-content: flex-end;
+            white-space: nowrap;
+        }
+
+        .tm-task-detail-subtask-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex: 0 0 auto;
+            flex-wrap: nowrap;
+        }
+
+        .tm-task-detail-subtask-action {
+            flex: 0 0 auto;
+            width: 30px;
+            min-width: 30px;
+            height: 30px;
+            padding: 0;
+            border-radius: calc(var(--radius) - 2px);
+        }
+
+        .tm-task-detail-subtask-count {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            min-height: 22px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: var(--tm-doc-count-bg);
+            color: var(--tm-secondary-text);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .tm-task-detail-subtask-children {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 2px;
+            padding-left: 14px;
+            border-left: 1px solid color-mix(in srgb, var(--tm-border-color) 72%, transparent);
+        }
+
+        .tm-task-detail-subtask--draft .tm-task-detail-subtask-title {
+            border-color: color-mix(in srgb, var(--tm-primary-color) 28%, var(--tm-input-border));
+            background: color-mix(in srgb, var(--tm-primary-color) 8%, var(--tm-bg-color));
+        }
+
+        .tm-task-detail-subtask-draft-marker {
+            width: 18px;
+            height: 18px;
+            margin-top: 0;
+            border-radius: 6px;
+            border: 1px dashed color-mix(in srgb, var(--tm-primary-color) 42%, var(--tm-input-border));
+            flex: 0 0 auto;
+            align-self: center;
+        }
+
+        .tm-task-detail-remark,
+        .bc-textarea.tm-task-detail-remark {
+            width: 100%;
+            min-height: 30px;
+            height: 30px;
+            max-height: 30px;
+            padding: 4px 10px;
+            line-height: 1.25;
+            resize: none;
+            box-sizing: border-box;
+            overflow-y: hidden;
+        }
+
+        .tm-task-detail-core-chip.is-open {
+            border-color: color-mix(in srgb, var(--primary) 42%, var(--border) 58%);
+            background: color-mix(in srgb, var(--accent) 72%, var(--input) 28%);
+            color: var(--foreground);
+            box-shadow: 0 0 0 2px var(--ring);
+        }
+
+        .tm-task-detail-inline-popover {
+            position: fixed;
+            z-index: 200015;
+            width: min(280px, calc(100vw - 20px));
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px;
+            border: 1px solid var(--tm-border-color);
+            border-radius: 14px;
+            background: var(--tm-bg-color);
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.18);
+        }
+
+        .tm-task-detail-inline-popover__title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--tm-secondary-text);
+        }
+
+        .tm-task-detail-inline-popover__input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .tm-task-detail-inline-popover__actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .tm-task-detail-header .bc-btn,
+        .tm-task-detail-header .bc-select-trigger,
+        .tm-task-detail-core .bc-btn,
+        .tm-task-detail-core .bc-select-trigger,
+        .tm-task-detail-subtask-add-btn,
+        .tm-task-detail-subtask-action {
+            box-shadow: none;
+        }
+
+        @media (max-width: 640px) {
+            .tm-task-detail-header-main {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .tm-task-detail-header-actions {
+                width: auto;
+                justify-content: flex-end;
+                gap: 6px;
+            }
+
+            .tm-task-detail-icon-btn {
+                width: 28px;
+                min-width: 28px;
+                height: 28px;
+            }
+
+            .tm-task-detail-title-input {
+                min-height: 34px;
+                padding: 5px 6px;
+                font-size: calc(var(--tm-font-size) * 1.04);
+            }
+
+            .tm-task-detail-section-head {
+                align-items: center;
+                flex-direction: row;
+            }
+
+            .tm-task-detail-subtask-row {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+
+            .tm-task-detail-subtask-trailing {
+                justify-content: flex-end;
+            }
+        }
+
         .tm-task-detail-close-btn .tm-lucide-emoji__svg {
             width: 16px;
             height: 16px;
@@ -5143,7 +5773,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s ease;
-            z-index: 30;
+            z-index: 1;
         }
 
         .tm-checklist-sheet-backdrop.tm-checklist-sheet-backdrop--open {
@@ -5164,7 +5794,7 @@
             box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.22);
             transform: translateY(calc(100% + 16px));
             transition: transform 0.22s ease;
-            z-index: 31;
+            z-index: 2;
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -5203,7 +5833,7 @@
             flex: 1 1 auto;
             min-height: 0;
             overflow: auto;
-            padding: 0 12px 14px;
+            padding: 0 12px calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 72px);
         }
 
         .tm-checklist-sheet .tm-task-detail-actions {
@@ -11218,9 +11848,19 @@
             }
         },
 
-        async insertBlock(parentId, md, nextID) {
+        async insertBlock(parentId, md, placement) {
             const payload = { parentID: parentId, data: md, dataType: 'markdown' };
-            if (nextID) payload.nextID = nextID;
+            if (placement && typeof placement === 'object') {
+                const nextID = String(placement.nextID || '').trim();
+                const previousID = String(placement.previousID || '').trim();
+                const parentID = String(placement.parentID || parentId || '').trim();
+                if (nextID) payload.nextID = nextID;
+                if (previousID) payload.previousID = previousID;
+                if (!nextID && !previousID && parentID) payload.parentID = parentID;
+            } else {
+                const nextID = String(placement || '').trim();
+                if (nextID) payload.nextID = nextID;
+            }
             const res = await this.call('/api/block/insertBlock', payload);
             if (res.code !== 0) throw new Error(res.msg);
             const id = this._getInsertedId(res);
@@ -11464,6 +12104,7 @@
         summaryModal: null,
         rulesModal: null,
         priorityModal: null,
+        semanticDateConfirmModal: null,
         aiSidebarOpen: !!Storage.get('tm_ai_sidebar_open', false),
         aiSidebarWidth: Math.max(320, Math.min(720, Math.round(Number(Storage.get('tm_ai_sidebar_width', 380)) || 380))),
         aiMobilePanelOpen: false,
@@ -11511,6 +12152,7 @@
         lastQuickbarUpdateTime: 0,
         // 刚插入但 SQL 索引可能尚未返回的任务，短暂保活避免刷新后闪现消失
         pendingInsertedTasks: {},
+        semanticDateAutoApplying: false,
 
         // 设置（从 SettingsStore 读取）
         selectedDocIds: [],
@@ -11589,6 +12231,454 @@
         const d = new Date();
         const pad = (n) => String(n).padStart(2, '0');
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    const __TM_SEMANTIC_DATE_RECOGNIZED_KEY = 'tm_semantic_date_recognized';
+
+    function __tmSemanticPad2(n) {
+        return String(Math.max(0, Math.floor(Number(n) || 0))).padStart(2, '0');
+    }
+
+    function __tmSemanticFormatDateKey(dt) {
+        if (!(dt instanceof Date) || Number.isNaN(dt.getTime())) return '';
+        return `${dt.getFullYear()}-${__tmSemanticPad2(dt.getMonth() + 1)}-${__tmSemanticPad2(dt.getDate())}`;
+    }
+
+    function __tmSemanticFormatDateTime(dt) {
+        if (!(dt instanceof Date) || Number.isNaN(dt.getTime())) return '';
+        return `${__tmSemanticFormatDateKey(dt)} ${__tmSemanticPad2(dt.getHours())}:${__tmSemanticPad2(dt.getMinutes())}`;
+    }
+
+    function __tmSemanticStartOfDay(baseDate) {
+        const now = (baseDate instanceof Date && !Number.isNaN(baseDate.getTime()))
+            ? new Date(baseDate.getTime())
+            : new Date();
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    }
+
+    function __tmSemanticClampYmd(y, m1, d) {
+        const year = Number(y);
+        const month1 = Number(m1);
+        const day = Number(d);
+        if (!Number.isFinite(year) || !Number.isFinite(month1) || !Number.isFinite(day)) return null;
+        if (year < 1970 || year > 9999 || month1 < 1 || month1 > 12) return null;
+        const last = new Date(year, month1, 0).getDate();
+        const dt = new Date(year, month1 - 1, Math.max(1, Math.min(last, day)), 0, 0, 0, 0);
+        return Number.isNaN(dt.getTime()) ? null : dt;
+    }
+
+    function __tmSemanticDowFromToken(token) {
+        const t = String(token || '').trim();
+        if (!t) return null;
+        if (/^[1-7]$/.test(t)) {
+            const n = parseInt(t, 10);
+            if (n === 7) return 0;
+            return n;
+        }
+        const map = { '日': 0, '天': 0, '七': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6 };
+        return Object.prototype.hasOwnProperty.call(map, t) ? map[t] : null;
+    }
+
+    function __tmSemanticAdjustHourByPeriod(hour, period) {
+        let hh = Number(hour);
+        if (!Number.isFinite(hh) || hh < 0 || hh > 23) return null;
+        const p = String(period || '').trim();
+        if (!p) return hh;
+        if (p === '凌晨') {
+            if (hh === 12) hh = 0;
+        } else if (['上午', '早上', '早晨', '清晨', '今早', '今晨', '明早', '明晨', '早'].includes(p)) {
+            if (hh === 12) hh = 0;
+        } else if (p === '中午') {
+            if (hh >= 1 && hh <= 10) hh += 12;
+        } else if (['下午', '傍晚', '晚上', '今晚', '明晚', '晚'].includes(p)) {
+            if (hh < 12) hh += 12;
+        }
+        return (hh >= 0 && hh <= 23) ? hh : null;
+    }
+
+    function __tmSemanticExtractTimeInfo(rawText) {
+        const text = String(rawText || '')
+            .replace(/[，。；、]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        if (!text) return null;
+        const colon = /(?:^|[^\d])(?:(凌晨|上午|早上|早晨|清晨|今早|今晨|明早|明晨|中午|下午|傍晚|晚上|今晚|明晚|晚|早)\s*)?(\d{1,2})\s*[:：]\s*(\d{1,2})(?!\d)/.exec(text);
+        if (colon) {
+            const hour0 = Number(colon[2]);
+            const minute = Number(colon[3]);
+            const hour = __tmSemanticAdjustHourByPeriod(hour0, colon[1]);
+            if (Number.isFinite(hour) && Number.isFinite(minute) && minute >= 0 && minute <= 59) {
+                return {
+                    hour,
+                    minute,
+                    label: `${hour0}:${__tmSemanticPad2(minute)}${colon[1] ? `（${colon[1]}）` : ''}`,
+                };
+            }
+        }
+        const cn = /(?:^|[^\d])(?:(凌晨|上午|早上|早晨|清晨|今早|今晨|明早|明晨|中午|下午|傍晚|晚上|今晚|明晚|晚|早)\s*)?(\d{1,2})\s*点\s*(半|一刻|三刻|整|(\d{1,2})\s*分?)?/.exec(text);
+        if (!cn) return null;
+        const hour0 = Number(cn[2]);
+        let minute = 0;
+        const suffix = String(cn[3] || '').trim();
+        if (suffix === '半') minute = 30;
+        else if (suffix === '一刻') minute = 15;
+        else if (suffix === '三刻') minute = 45;
+        else if (cn[4] !== undefined && cn[4] !== null && String(cn[4]).trim() !== '') minute = Number(cn[4]);
+        const hour = __tmSemanticAdjustHourByPeriod(hour0, cn[1]);
+        if (!Number.isFinite(hour) || !Number.isFinite(minute) || minute < 0 || minute > 59) return null;
+        return {
+            hour,
+            minute,
+            label: `${hour0}点${suffix || ''}${cn[1] ? `（${cn[1]}）` : ''}`,
+        };
+    }
+
+    function __tmSemanticExtractDateInfo(rawText, baseDate) {
+        const text = String(rawText || '')
+            .replace(/[，。；、]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        if (!text) return null;
+        const today = __tmSemanticStartOfDay(baseDate);
+        const todayMs = today.getTime();
+        const ymd = /(\d{4})[./-](\d{1,2})[./-](\d{1,2})/.exec(text);
+        const mdCn = /(\d{1,2})\s*月\s*(\d{1,2})\s*(日|号)?/.exec(text);
+        const md = /(^|[^\d])(\d{1,2})[./-](\d{1,2})(?!\d)/.exec(text);
+        const rel = /(今天|今日|今早|今晨|今晚|明天|明早|明晨|明晚|后天|大后天)/.exec(text);
+        const dur = /(\d+)\s*(天|日|周|星期|礼拜)\s*后/.exec(text);
+        const weekday = /((本周|这周|下周|下下周)?\s*(周|星期|礼拜)\s*([一二三四五六日天1-7]))/.exec(text);
+        let dt = null;
+        let reason = '';
+        if (ymd) {
+            dt = __tmSemanticClampYmd(ymd[1], ymd[2], ymd[3]);
+            reason = '识别到明确日期';
+        } else if (mdCn) {
+            dt = __tmSemanticClampYmd(today.getFullYear(), mdCn[1], mdCn[2]);
+            if (dt && dt.getTime() < todayMs) dt.setFullYear(dt.getFullYear() + 1);
+            reason = '识别到月日表达';
+        } else if (md) {
+            dt = __tmSemanticClampYmd(today.getFullYear(), md[2], md[3]);
+            if (dt && dt.getTime() < todayMs) dt.setFullYear(dt.getFullYear() + 1);
+            reason = '识别到数字日期';
+        } else if (rel) {
+            dt = new Date(today.getTime());
+            const token = String(rel[1] || '').trim();
+            if (token.startsWith('明')) dt.setDate(dt.getDate() + 1);
+            else if (token === '后天') dt.setDate(dt.getDate() + 2);
+            else if (token === '大后天') dt.setDate(dt.getDate() + 3);
+            reason = `识别到${token}`;
+        } else if (dur) {
+            dt = new Date(today.getTime());
+            const n = parseInt(dur[1], 10) || 0;
+            if (dur[2] === '天' || dur[2] === '日') dt.setDate(dt.getDate() + n);
+            else dt.setDate(dt.getDate() + n * 7);
+            reason = `识别到“${dur[0]}”`;
+        } else if (weekday) {
+            const scope = String(weekday[2] || '').trim();
+            const targetDow = __tmSemanticDowFromToken(weekday[4]);
+            if (Number.isFinite(targetDow)) {
+                dt = new Date(today.getTime());
+                let forward = (targetDow - dt.getDay() + 7) % 7;
+                if (scope === '下周') forward += 7;
+                else if (scope === '下下周') forward += 14;
+                else if (!scope && forward === 0) forward += 7;
+                dt.setDate(dt.getDate() + forward);
+                reason = `识别到${weekday[1]}`;
+            }
+        }
+        if (!(dt instanceof Date) || Number.isNaN(dt.getTime())) return null;
+        return { date: dt, reason: reason || '识别到日期' };
+    }
+
+    function __tmBuildSemanticTaskSignature(task, completionValue, sourceKey) {
+        return [
+            String(task?.content || '').trim(),
+            String(task?.remark || '').trim(),
+            String(sourceKey || '').trim(),
+            String(completionValue || '').trim(),
+        ].join('||');
+    }
+
+    function __tmLoadSemanticDateRecognizedMap() {
+        const raw = Storage.get(__TM_SEMANTIC_DATE_RECOGNIZED_KEY, {});
+        return (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+    }
+
+    function __tmSaveSemanticDateRecognizedMap(map) {
+        Storage.set(__TM_SEMANTIC_DATE_RECOGNIZED_KEY, (map && typeof map === 'object' && !Array.isArray(map)) ? map : {});
+    }
+
+    function __tmMarkSemanticDateSuggestionsRecognized(items) {
+        const list = Array.isArray(items) ? items : [];
+        if (!list.length) return;
+        const now = Date.now();
+        const next = __tmLoadSemanticDateRecognizedMap();
+        list.forEach((item) => {
+            const taskId = String(item?.taskId || '').trim();
+            const signature = String(item?.signature || '').trim();
+            if (!taskId || !signature) return;
+            next[taskId] = {
+                signature,
+                recognizedAt: now,
+                completionValue: String(item?.completionValue || '').trim(),
+                hasTime: !!item?.hasTime,
+            };
+        });
+        __tmSaveSemanticDateRecognizedMap(next);
+    }
+
+    function __tmLoadCalendarScheduledTaskIds() {
+        const raw = Storage.get('tm-calendar-events', []);
+        const set = new Set();
+        (Array.isArray(raw) ? raw : []).forEach((item) => {
+            const taskId = String(item?.taskId || item?.task_id || item?.linkedTaskId || item?.linked_task_id || '').trim();
+            if (taskId) set.add(taskId);
+        });
+        return set;
+    }
+
+    function __tmExtractSemanticTaskDateSuggestion(task, baseDate) {
+        const target = (task && typeof task === 'object') ? task : null;
+        const sources = [
+            { key: 'content', label: '任务内容', text: String(target?.content || '').trim() },
+            { key: 'remark', label: '备注', text: String(target?.remark || '').trim() },
+        ].filter((item) => item.text);
+        for (const source of sources) {
+            const dateInfo = __tmSemanticExtractDateInfo(source.text, baseDate);
+            if (!dateInfo) continue;
+            const timeInfo = __tmSemanticExtractTimeInfo(source.text);
+            const resolved = new Date(dateInfo.date.getTime());
+            let completionValue = __tmSemanticFormatDateKey(resolved);
+            if (timeInfo) {
+                resolved.setHours(timeInfo.hour, timeInfo.minute, 0, 0);
+                completionValue = __tmSemanticFormatDateTime(resolved);
+            }
+            if (!completionValue) continue;
+            return {
+                taskId: String(target?.id || '').trim(),
+                docId: String(target?.root_id || target?.docId || '').trim(),
+                content: String(target?.content || '').trim() || '未命名任务',
+                remark: String(target?.remark || '').trim(),
+                currentCompletionTime: String(target?.completionTime || '').trim(),
+                completionValue,
+                hasTime: !!timeInfo,
+                start: timeInfo ? new Date(resolved.getTime()) : null,
+                reason: `${source.label}：${dateInfo.reason}${timeInfo ? `，识别到 ${timeInfo.label}` : ''}`,
+                signature: __tmBuildSemanticTaskSignature(target, completionValue, source.key),
+            };
+        }
+        return null;
+    }
+
+    function __tmCollectSemanticDateSuggestions(tasks) {
+        const list = Array.isArray(tasks) ? tasks : [];
+        const recognizedMap = __tmLoadSemanticDateRecognizedMap();
+        const scheduledTaskIds = __tmLoadCalendarScheduledTaskIds();
+        const hasCalendarModule = !!globalThis.__tmCalendar?.addTaskSchedule;
+        const out = [];
+        list.forEach((task) => {
+            const taskId = String(task?.id || '').trim();
+            if (!taskId || !task || task.done) return;
+            if (String(task?.completionTime || '').trim()) return;
+            const suggestion = __tmExtractSemanticTaskDateSuggestion(task, new Date());
+            if (!suggestion) return;
+            const recognized = recognizedMap[taskId];
+            const prevSignature = String(recognized?.signature || recognized || '').trim();
+            if (prevSignature && prevSignature === suggestion.signature) return;
+            const scheduleExists = scheduledTaskIds.has(taskId);
+            const calendarEligible = !!suggestion.hasTime && !scheduleExists && hasCalendarModule;
+            out.push({
+                ...suggestion,
+                scheduleExists,
+                calendarEligible,
+                actionLabel: suggestion.hasTime
+                    ? (calendarEligible
+                        ? '写入完成时间并添加到日历'
+                        : (scheduleExists ? '写入完成时间（该任务已有日历）' : '写入完成时间（日历模块未加载）'))
+                    : '写入完成时间',
+            });
+        });
+        return out;
+    }
+
+    function __tmCloseSemanticDateConfirmModal() {
+        if (!state.semanticDateConfirmModal) return;
+        try { state.semanticDateConfirmModal.remove(); } catch (e) {}
+        state.semanticDateConfirmModal = null;
+        state.semanticDateAutoApplying = false;
+    }
+
+    async function __tmApplySemanticDateSuggestions(items) {
+        const chosen = Array.isArray(items) ? items.filter(Boolean) : [];
+        if (!chosen.length) return { completionApplied: 0, calendarApplied: 0, failures: [] };
+        const failures = [];
+        const touchedDocIds = new Set();
+        let completionApplied = 0;
+        let calendarApplied = 0;
+        let calendarChanged = false;
+        for (const item of chosen) {
+            const taskId = String(item?.taskId || '').trim();
+            if (!taskId) continue;
+            const task = state.flatTasks?.[taskId] || null;
+            const taskTitle = String(item?.content || task?.content || taskId).trim() || taskId;
+            const completionValue = String(item?.completionValue || '').trim();
+            if (!completionValue) continue;
+            try {
+                await __tmPersistMetaAndAttrsAsync(taskId, { completionTime: completionValue });
+                if (task && typeof task === 'object') task.completionTime = completionValue;
+                touchedDocIds.add(String(item?.docId || task?.root_id || task?.docId || '').trim());
+                completionApplied += 1;
+            } catch (e) {
+                failures.push(`${taskTitle}：完成时间写入失败（${String(e?.message || e || '未知错误')}）`);
+                continue;
+            }
+            if (item?.calendarEligible && item?.start instanceof Date && !Number.isNaN(item.start.getTime())) {
+                try {
+                    const calendar = globalThis.__tmCalendar;
+                    if (!calendar?.addTaskSchedule) throw new Error('日历模块未加载');
+                    const durationMin = 60;
+                    const end = new Date(item.start.getTime() + durationMin * 60000);
+                    await calendar.addTaskSchedule({
+                        taskId,
+                        title: taskTitle,
+                        start: new Date(item.start.getTime()),
+                        end,
+                        calendarId: String(SettingsStore?.data?.calendarDefaultCalendarId || 'default').trim() || 'default',
+                        durationMin,
+                        allDay: false,
+                    });
+                    calendarApplied += 1;
+                    calendarChanged = true;
+                } catch (e) {
+                    failures.push(`${taskTitle}：日历写入失败（${String(e?.message || e || '未知错误')}）`);
+                }
+            }
+        }
+        touchedDocIds.forEach((docId) => {
+            if (!docId) return;
+            try { __tmInvalidateTasksQueryCacheByDocId(docId); } catch (e) {}
+        });
+        try { applyFilters(); } catch (e) {}
+        try {
+            if (state.modal && document.body.contains(state.modal)) render();
+        } catch (e) {}
+        if (calendarChanged) {
+            try { await globalThis.__tmCalendar?.refreshInPlace?.({ silent: false, hard: false }); } catch (e) {}
+        }
+        return { completionApplied, calendarApplied, failures };
+    }
+
+    function __tmShowSemanticDateConfirmModal(items) {
+        const list = Array.isArray(items) ? items.filter(Boolean) : [];
+        if (!list.length) return;
+        __tmCloseSemanticDateConfirmModal();
+        const dateOnlyCount = list.filter((item) => !item?.hasTime).length;
+        const dateTimeCount = list.filter((item) => !!item?.hasTime).length;
+        const modal = document.createElement('div');
+        modal.className = 'tm-modal';
+        modal.style.cssText = 'z-index: 200002;';
+        const box = document.createElement('div');
+        box.className = 'tm-box';
+        box.style.cssText = 'width:min(920px,94vw);height:min(82vh,760px);display:flex;flex-direction:column;';
+        box.innerHTML = `
+            <div class="tm-header" style="padding:12px 16px;border-bottom:1px solid var(--tm-border-color);">
+                <div style="font-size:16px;font-weight:600;">语义日期识别确认</div>
+                <button class="tm-btn tm-btn-gray" data-tm-semantic-action="close" style="padding:4px 8px;font-size:12px;">✕</button>
+            </div>
+            <div class="tm-body" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;overflow:auto;">
+                <div style="font-size:13px;color:var(--tm-secondary-text);line-height:1.6;">
+                    本次刷新自动识别到 <b>${list.length}</b> 条语义日期。
+                    其中仅日期 <b>${dateOnlyCount}</b> 条，带时分 <b>${dateTimeCount}</b> 条。
+                    已识别过的同一任务内容后续重载不会再次扫描；新建任务刷新后会继续识别。
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="tm-btn tm-btn-secondary" data-tm-semantic-action="select-all" style="padding:6px 12px;">全选</button>
+                    <button class="tm-btn tm-btn-secondary" data-tm-semantic-action="clear-all" style="padding:6px 12px;">全不选</button>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    ${list.map((item, index) => `
+                        <label style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-card-bg);cursor:pointer;">
+                            <input type="checkbox" data-tm-semantic-item="${index}" checked style="margin-top:2px;">
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:14px;font-weight:600;line-height:1.5;word-break:break-word;">${esc(item.content || '未命名任务')}</div>
+                                <div style="font-size:12px;color:var(--tm-secondary-text);line-height:1.6;">当前完成时间：${esc(item.currentCompletionTime || '未设置')}</div>
+                                <div style="font-size:12px;color:var(--tm-secondary-text);line-height:1.6;">识别结果：${esc(item.completionValue || '')}</div>
+                                <div style="font-size:12px;color:var(--tm-secondary-text);line-height:1.6;">将执行：${esc(item.actionLabel || '写入完成时间')}</div>
+                                <div style="font-size:12px;color:var(--tm-secondary-text);line-height:1.6;">依据：${esc(item.reason || '识别到日期表达')}</div>
+                            </div>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+            <div class="tm-header" style="padding:12px 16px;border-top:1px solid var(--tm-border-color);justify-content:flex-end;gap:10px;">
+                <button class="tm-btn tm-btn-secondary" data-tm-semantic-action="close" style="padding:8px 16px;">取消</button>
+                <button class="tm-btn tm-btn-primary" data-tm-semantic-action="apply" style="padding:8px 16px;">应用勾选项</button>
+            </div>
+        `;
+        modal.appendChild(box);
+        modal.addEventListener('click', async (e) => {
+            if (e.target === modal) {
+                __tmCloseSemanticDateConfirmModal();
+                return;
+            }
+            const target = e.target?.closest?.('[data-tm-semantic-action]');
+            if (!target) return;
+            const action = String(target.dataset.tmSemanticAction || '').trim();
+            if (action === 'close') {
+                __tmCloseSemanticDateConfirmModal();
+                return;
+            }
+            if (action === 'select-all' || action === 'clear-all') {
+                modal.querySelectorAll('input[data-tm-semantic-item]').forEach((input) => {
+                    input.checked = action === 'select-all';
+                });
+                return;
+            }
+            if (action !== 'apply' || state.semanticDateAutoApplying) return;
+            const chosen = list.filter((item, index) => {
+                const input = modal.querySelector(`input[data-tm-semantic-item="${index}"]`);
+                return !!input?.checked;
+            });
+            if (!chosen.length) {
+                hint('⚠️ 请至少勾选一条识别结果', 'warning');
+                return;
+            }
+            state.semanticDateAutoApplying = true;
+            const allButtons = Array.from(modal.querySelectorAll('[data-tm-semantic-action]'));
+            allButtons.forEach((btn) => { btn.disabled = true; });
+            const applyBtn = target instanceof HTMLButtonElement ? target : modal.querySelector('[data-tm-semantic-action="apply"]');
+            const prevText = applyBtn?.textContent || '应用勾选项';
+            if (applyBtn) applyBtn.textContent = '应用中...';
+            try {
+                const result = await __tmApplySemanticDateSuggestions(chosen);
+                if (result.completionApplied > 0 || result.calendarApplied > 0) {
+                    hint(`✅ 已写入 ${result.completionApplied} 条完成时间${result.calendarApplied > 0 ? `，新增 ${result.calendarApplied} 条日历` : ''}`, 'success');
+                }
+                if (result.failures.length > 0) {
+                    try { console.warn('[task-horizon] semantic date apply failures:', result.failures); } catch (e2) {}
+                    hint(`⚠️ ${result.failures.length} 条处理失败，请查看控制台`, 'warning');
+                }
+                __tmCloseSemanticDateConfirmModal();
+            } catch (err) {
+                allButtons.forEach((btn) => { btn.disabled = false; });
+                if (applyBtn) applyBtn.textContent = prevText;
+                state.semanticDateAutoApplying = false;
+                hint(`❌ ${String(err?.message || err || '应用失败')}`, 'error');
+            }
+        });
+        document.body.appendChild(modal);
+        state.semanticDateConfirmModal = modal;
+    }
+
+    function __tmMaybeAutoPromptSemanticDates(token) {
+        if (token !== undefined && token !== null && token !== (Number(state.openToken) || 0)) return;
+        if (state.semanticDateAutoApplying) return;
+        if (state.semanticDateConfirmModal && document.body.contains(state.semanticDateConfirmModal)) return;
+        const tasks = Object.values(state.flatTasks || {});
+        const suggestions = __tmCollectSemanticDateSuggestions(tasks);
+        if (!suggestions.length) return;
+        __tmMarkSemanticDateSuggestionsRecognized(suggestions);
+        __tmShowSemanticDateConfirmModal(suggestions);
     }
 
     function __tmHasTaskScheduledToday(taskId) {
@@ -14007,7 +15097,7 @@ async function __tmRefreshAfterWake(reason) {
         const fg = `rgb(${Math.round(rgba.r)}, ${Math.round(rgba.g)}, ${Math.round(rgba.b)})`;
         const bg = `rgba(${Math.round(rgba.r)}, ${Math.round(rgba.g)}, ${Math.round(rgba.b)}, ${bgA})`;
         const border = `rgba(${Math.round(rgba.r)}, ${Math.round(rgba.g)}, ${Math.round(rgba.b)}, ${borderA})`;
-        const out = `--tm-priority-bg:${bg};--tm-priority-fg:${fg};--tm-priority-border:${border};`;
+        const out = `--tm-priority-bg:${bg};--tm-priority-fg:${fg};--tm-priority-border:${border};background:${bg};color:${fg};border-color:${border};`;
         return __tmRememberSmallCache(__tmPriorityChipStyleCache, cacheKey, out, 32);
     }
 
@@ -15862,7 +16952,7 @@ async function __tmRefreshAfterWake(reason) {
         if (!(pane instanceof HTMLElement)) return;
         if (pane.__tmChecklistScrollFxBound) return;
         pane.__tmChecklistScrollFxBound = true;
-        if (__tmIsMobileDevice() && !pane.__tmChecklistTapGuardBound) {
+        if (__tmIsRuntimeMobileClient() && !pane.__tmChecklistTapGuardBound) {
             pane.__tmChecklistTapGuardBound = true;
             let touchStartX = 0;
             let touchStartY = 0;
@@ -15916,7 +17006,8 @@ async function __tmRefreshAfterWake(reason) {
         };
         pane.__tmChecklistScrollUpdateThumb = updateThumb;
         const show = () => {
-            if (__tmIsMobileDevice()) {
+            try { pane.__tmChecklistLastScrollAt = Date.now(); } catch (e) {}
+            if (__tmIsRuntimeMobileClient()) {
                 try { pane.__tmChecklistSuppressTapUntil = Date.now() + 260; } catch (e) {}
             }
             updateThumb();
@@ -17337,7 +18428,8 @@ async function __tmRefreshAfterWake(reason) {
                 { maxMinutes: 240, delta: -5 },
                 { maxMinutes: 999999, delta: -10 }
             ],
-            docDeltas: {}
+            docDeltas: {},
+            groupDeltas: {}
         };
     }
 
@@ -17358,6 +18450,7 @@ async function __tmRefreshAfterWake(reason) {
         merged.durationUnit = (merged.durationUnit === 'hours' || merged.durationUnit === 'minutes') ? merged.durationUnit : 'minutes';
         merged.durationBuckets = Array.isArray(merged.durationBuckets) ? merged.durationBuckets : base.durationBuckets;
         merged.docDeltas = (merged.docDeltas && typeof merged.docDeltas === 'object') ? merged.docDeltas : {};
+        merged.groupDeltas = (merged.groupDeltas && typeof merged.groupDeltas === 'object') ? merged.groupDeltas : {};
 
         const statuses = SettingsStore.data.customStatusOptions || [];
         statuses.forEach(s => {
@@ -17373,6 +18466,7 @@ async function __tmRefreshAfterWake(reason) {
         const cfg = state.priorityScoreDraft || __tmEnsurePriorityDraft();
         const statuses = SettingsStore.data.customStatusOptions || [];
         const docs = state.allDocuments || [];
+        const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
         const docRows = Object.entries(cfg.docDeltas || {}).map(([docId, delta]) => {
             const dName = docs.find(d => d.id === docId)?.name;
             return `
@@ -17383,6 +18477,19 @@ async function __tmRefreshAfterWake(reason) {
                     </button>
                     <input class="tm-input" style="width:120px;" type="number" value="${Number(delta) || 0}" data-tm-call="tmSetPriorityDocDelta" data-tm-args='["${esc(docId)}"]'>
                     <button class="tm-btn tm-btn-gray" data-tm-call="tmRemovePriorityDocDelta" data-tm-args='["${esc(docId)}"]'>删除</button>
+                </div>
+            `;
+        }).join('');
+        const groupRows = Object.entries(cfg.groupDeltas || {}).map(([groupId, delta]) => {
+            const group = groups.find((item) => String(item?.id || '').trim() === String(groupId || '').trim());
+            return `
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap;">
+                    <button class="tm-btn tm-btn-secondary" data-tm-call="tmPickPriorityGroupDelta" data-tm-args='["${esc(groupId)}"]' style="flex:1;min-width:180px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                        <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(group ? __tmResolveDocGroupName(group) : groupId)}</span>
+                        <span style="opacity:0.8;">▾</span>
+                    </button>
+                    <input class="tm-input" style="width:120px;" type="number" value="${Number(delta) || 0}" data-tm-call="tmSetPriorityGroupDelta" data-tm-args='["${esc(groupId)}"]'>
+                    <button class="tm-btn tm-btn-gray" data-tm-call="tmRemovePriorityGroupDelta" data-tm-args='["${esc(groupId)}"]'>删除</button>
                 </div>
             `;
         }).join('');
@@ -17493,6 +18600,15 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         ${docRows || '<div style="color: var(--tm-secondary-text);">暂无配置</div>'}
                     </div>
+
+                    <div class="tm-rule-section" style="margin-bottom:0;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">
+                            <div style="font-weight: 700;">文档分组加减分</div>
+                            <button class="tm-btn tm-btn-secondary" data-tm-call="tmAddPriorityGroupDelta">+ 添加</button>
+                        </div>
+                        <div style="font-size:12px;color:var(--tm-secondary-text);margin-bottom:8px;">给整个文档分组内的文档统一加减分，支持笔记本分组和包含子文档的分组。</div>
+                        ${groupRows || '<div style="color: var(--tm-secondary-text);">暂无配置</div>'}
+                    </div>
                 </div>
             `;
         }
@@ -17573,6 +18689,14 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         ${docRows || '<div style="color: var(--tm-secondary-text);">暂无配置</div>'}
                     </div>
+                    <div style="margin-bottom: 14px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+                            <div style="font-weight: 700;">文档分组加减分</div>
+                            <button class="tm-btn tm-btn-secondary" data-tm-call="tmAddPriorityGroupDelta">+ 添加</button>
+                        </div>
+                        <div style="font-size:12px;color:var(--tm-secondary-text);margin-bottom:8px;">给整个文档分组内的文档统一加减分，支持笔记本分组和包含子文档的分组。</div>
+                        ${groupRows || '<div style="color: var(--tm-secondary-text);">暂无配置</div>'}
+                    </div>
                 </div>
                 <div class="tm-settings-footer" style="padding: 12px 14px;">
                     <button class="tm-btn tm-btn-secondary" data-tm-action="closePriorityScoreSettings">取消</button>
@@ -17620,6 +18744,7 @@ async function __tmRefreshAfterWake(reason) {
         if (!state.priorityScoreDraft) return;
         SettingsStore.data.priorityScoreConfig = state.priorityScoreDraft;
         await SettingsStore.save();
+        try { await __tmWarmPriorityGroupDeltaDocsMap(); } catch (e) {}
         __tmScheduleRender({ withFilters: true });
         closePriorityScoreSettings();
         hint('✅ 优先级算法已保存', 'success');
@@ -17945,10 +19070,48 @@ async function __tmRefreshAfterWake(reason) {
         __tmRerenderPriorityScoreSettings();
     };
 
+    window.tmAddPriorityGroupDelta = function() {
+        if (!state.priorityScoreDraft) return;
+        state.priorityGroupDeltaMode = 'add';
+        state.priorityGroupDeltaFromGroupId = '';
+        window.tmPickPriorityGroupDelta?.('');
+    };
+    window.tmSetPriorityGroupDelta = function(groupId, value) {
+        if (!state.priorityScoreDraft) return;
+        if (!state.priorityScoreDraft.groupDeltas || typeof state.priorityScoreDraft.groupDeltas !== 'object') state.priorityScoreDraft.groupDeltas = {};
+        state.priorityScoreDraft.groupDeltas[groupId] = Number(value) || 0;
+    };
+    window.tmUpdatePriorityGroupDelta = function(oldGroupId, newGroupId) {
+        if (!state.priorityScoreDraft) return;
+        const map = (state.priorityScoreDraft.groupDeltas && typeof state.priorityScoreDraft.groupDeltas === 'object') ? state.priorityScoreDraft.groupDeltas : {};
+        const from = String(oldGroupId || '').trim();
+        const to = String(newGroupId || '').trim();
+        if (!from || !to || from === to) return;
+        const val = Number(map[from] ?? 0) || 0;
+        delete map[from];
+        if (map[to] === undefined) map[to] = val;
+        state.priorityScoreDraft.groupDeltas = map;
+        __tmRerenderPriorityScoreSettings();
+    };
+    window.tmRemovePriorityGroupDelta = function(groupId) {
+        if (!state.priorityScoreDraft) return;
+        const map = (state.priorityScoreDraft.groupDeltas && typeof state.priorityScoreDraft.groupDeltas === 'object') ? state.priorityScoreDraft.groupDeltas : {};
+        delete map[groupId];
+        state.priorityScoreDraft.groupDeltas = map;
+        __tmRerenderPriorityScoreSettings();
+    };
+
     window.tmClosePriorityDocDeltaPicker = function() {
         if (state.priorityDocDeltaPicker) {
             try { state.priorityDocDeltaPicker.remove(); } catch (e) {}
             state.priorityDocDeltaPicker = null;
+        }
+    };
+
+    window.tmClosePriorityGroupDeltaPicker = function() {
+        if (state.priorityGroupDeltaPicker) {
+            try { state.priorityGroupDeltaPicker.remove(); } catch (e) {}
+            state.priorityGroupDeltaPicker = null;
         }
     };
 
@@ -17969,6 +19132,25 @@ async function __tmRefreshAfterWake(reason) {
         state.priorityDocDeltaFromDocId = '';
         state.priorityDocDeltaMode = '';
         window.tmClosePriorityDocDeltaPicker?.();
+    };
+
+    window.tmPriorityGroupDeltaSelectGroup = function(groupId) {
+        const to = String(groupId || '').trim();
+        if (!to) return;
+        const mode = String(state.priorityGroupDeltaMode || 'replace');
+        if (mode === 'add') {
+            if (!state.priorityScoreDraft) return;
+            if (!state.priorityScoreDraft.groupDeltas || typeof state.priorityScoreDraft.groupDeltas !== 'object') state.priorityScoreDraft.groupDeltas = {};
+            if (state.priorityScoreDraft.groupDeltas[to] === undefined) state.priorityScoreDraft.groupDeltas[to] = 0;
+            __tmRerenderPriorityScoreSettings();
+        } else {
+            const from = String(state.priorityGroupDeltaFromGroupId || '').trim();
+            if (!from || from === to) return;
+            try { window.tmUpdatePriorityGroupDelta?.(from, to); } catch (e) {}
+        }
+        state.priorityGroupDeltaFromGroupId = '';
+        state.priorityGroupDeltaMode = '';
+        window.tmClosePriorityGroupDeltaPicker?.();
     };
 
     window.tmPickPriorityDocDelta = async function(oldDocId) {
@@ -18095,6 +19277,56 @@ async function __tmRefreshAfterWake(reason) {
             const ds = __tmGetGroupSourceEntries(g);
             if (ds.length === 0) return;
             listEl.appendChild(renderGroup(__tmResolveDocGroupName(g), ds, String(g?.id || '')));
+        });
+    };
+
+    window.tmPickPriorityGroupDelta = async function(oldGroupId) {
+        if (!state.priorityScoreDraft) return;
+        window.tmClosePriorityGroupDeltaPicker?.();
+
+        const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
+        const selected = String(oldGroupId || '').trim();
+        state.priorityGroupDeltaFromGroupId = selected;
+        state.priorityGroupDeltaMode = selected ? 'replace' : 'add';
+
+        const picker = document.createElement('div');
+        picker.className = 'tm-quick-add-modal';
+        picker.style.zIndex = '100011';
+        picker.innerHTML = `
+            <div class="tm-prompt-box" style="width:min(92vw,520px);max-height:70vh;overflow:auto;">
+                <div class="tm-prompt-title" style="margin:0 0 10px 0;">选择文档分组</div>
+                <div id="tmPriorityGroupDeltaList"></div>
+                <div style="display:flex;gap:8px;margin-top:10px;">
+                    <button class="tm-btn tm-btn-gray" onclick="tmClosePriorityGroupDeltaPicker()" style="padding: 6px 10px; font-size: 12px;">关闭</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(picker);
+        state.priorityGroupDeltaPicker = picker;
+
+        const listEl = picker.querySelector('#tmPriorityGroupDeltaList');
+        if (!listEl) return;
+        if (groups.length === 0) {
+            listEl.innerHTML = '<div style="color:var(--tm-secondary-text);padding:8px 0;font-size:13px;">暂无文档分组，请先到文档分组与管理中添加分组。</div>';
+            return;
+        }
+
+        groups.forEach((group) => {
+            const gid = String(group?.id || '').trim();
+            if (!gid) return;
+            const checked = gid === selected;
+            const entryCount = __tmGetGroupSourceEntries(group).length;
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;cursor:pointer;border-bottom:1px solid var(--tm-border-color);';
+            row.innerHTML = `
+                <div style="min-width:0;">
+                    <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(__tmResolveDocGroupName(group))}</div>
+                    <div style="font-size:12px;color:var(--tm-secondary-text);margin-top:2px;">${entryCount > 0 ? `来源项 ${entryCount} 个` : '空分组'}</div>
+                </div>
+                <div style="margin-left:10px;">${checked ? '✅' : '◻️'}</div>
+            `;
+            row.onclick = () => window.tmPriorityGroupDeltaSelectGroup?.(gid);
+            listEl.appendChild(row);
         });
     };
 
@@ -20345,7 +21577,17 @@ async function __tmRefreshAfterWake(reason) {
         if (!id) return;
         const target = ev?.target;
         if (target?.closest?.('input,button,select,textarea,a,.tm-tree-toggle')) return;
-        if (__tmIsMobileDevice()) {
+        if (Number(state.checklistDetailSuppressOpenUntil || 0) > Date.now()) {
+            try { ev?.preventDefault?.(); } catch (e) {}
+            try { ev?.stopPropagation?.(); } catch (e) {}
+            return;
+        }
+        if (__tmIsRuntimeMobileClient()) {
+            if (!ev?.__tmChecklistTapConfirmed) {
+                try { ev?.preventDefault?.(); } catch (e) {}
+                try { ev?.stopPropagation?.(); } catch (e) {}
+                return;
+            }
             const pane = state.modal?.querySelector?.('.tm-checklist-scroll');
             if (Number(pane?.__tmChecklistSuppressTapUntil || 0) > Date.now()) {
                 try { ev?.preventDefault?.(); } catch (e) {}
@@ -20357,6 +21599,75 @@ async function __tmRefreshAfterWake(reason) {
         state.checklistDetailDismissed = false;
         if (__tmChecklistUseSheetMode(state.modal)) state.checklistDetailSheetOpen = true;
         if (!__tmRefreshChecklistSelectionInPlace(state.modal)) render();
+    };
+
+    window.tmChecklistItemTouchStart = function(ev, taskId) {
+        if (!__tmIsRuntimeMobileClient()) return;
+        const item = ev?.currentTarget instanceof HTMLElement
+            ? ev.currentTarget
+            : ev?.target?.closest?.('.tm-checklist-item');
+        if (!(item instanceof HTMLElement)) return;
+        const pane = item.closest('.tm-checklist-scroll');
+        const point = ev?.touches?.[0] || ev?.changedTouches?.[0] || null;
+        item.__tmChecklistTouchTap = {
+            taskId: String(taskId || '').trim(),
+            x: Number(point?.clientX || 0),
+            y: Number(point?.clientY || 0),
+            paneTop: Number(pane?.scrollTop || 0),
+            paneLastScrollAt: Number(pane?.__tmChecklistLastScrollAt || 0),
+            moved: false,
+            ts: Date.now(),
+        };
+    };
+
+    window.tmChecklistItemTouchMove = function(ev) {
+        if (!__tmIsRuntimeMobileClient()) return;
+        const item = ev?.currentTarget instanceof HTMLElement
+            ? ev.currentTarget
+            : ev?.target?.closest?.('.tm-checklist-item');
+        const tap = item?.__tmChecklistTouchTap;
+        if (!(item instanceof HTMLElement) || !tap) return;
+        const point = ev?.touches?.[0] || ev?.changedTouches?.[0] || null;
+        const dx = Math.abs(Number(point?.clientX || 0) - Number(tap.x || 0));
+        const dy = Math.abs(Number(point?.clientY || 0) - Number(tap.y || 0));
+        if ((dx + dy) > 10) tap.moved = true;
+    };
+
+    window.tmChecklistItemTouchEnd = function(taskId, ev) {
+        if (!__tmIsRuntimeMobileClient()) return;
+        const item = ev?.currentTarget instanceof HTMLElement
+            ? ev.currentTarget
+            : ev?.target?.closest?.('.tm-checklist-item');
+        const tap = item?.__tmChecklistTouchTap;
+        const pane = item?.closest?.('.tm-checklist-scroll');
+        if (item instanceof HTMLElement) {
+            try { delete item.__tmChecklistTouchTap; } catch (e) { item.__tmChecklistTouchTap = null; }
+        }
+        if (!tap || tap.moved) return;
+        if ((Date.now() - Number(tap.ts || 0)) > 450) return;
+        if (pane instanceof HTMLElement) {
+            const scrolledDistance = Math.abs(Number(pane.scrollTop || 0) - Number(tap.paneTop || 0));
+            const recentScrollAt = Math.max(Number(tap.paneLastScrollAt || 0), Number(pane.__tmChecklistLastScrollAt || 0));
+            if (scrolledDistance > 2) return;
+            if ((Date.now() - recentScrollAt) < 260) return;
+        }
+        try { ev?.preventDefault?.(); } catch (e) {}
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        window.tmChecklistSelectTask(taskId, {
+            target: ev?.target || null,
+            preventDefault() {},
+            stopPropagation() {},
+            __tmChecklistTapConfirmed: true,
+        });
+    };
+
+    window.tmChecklistItemTouchCancel = function(ev) {
+        if (!__tmIsRuntimeMobileClient()) return;
+        const item = ev?.currentTarget instanceof HTMLElement
+            ? ev.currentTarget
+            : ev?.target?.closest?.('.tm-checklist-item');
+        if (!(item instanceof HTMLElement)) return;
+        try { delete item.__tmChecklistTouchTap; } catch (e) { item.__tmChecklistTouchTap = null; }
     };
 
     window.tmChecklistTitlePointerDown = function(ev) {
@@ -20381,11 +21692,32 @@ async function __tmRefreshAfterWake(reason) {
     window.tmChecklistCloseSheet = function(ev) {
         try { ev?.stopPropagation?.(); } catch (e) {}
         try { ev?.preventDefault?.(); } catch (e) {}
+        try { state.checklistDetailSuppressOpenUntil = Date.now() + 700; } catch (e) {}
+        try {
+            const pane = state.modal?.querySelector?.('.tm-checklist-scroll');
+            if (pane instanceof HTMLElement) {
+                pane.__tmChecklistSuppressTapUntil = Math.max(
+                    Number(pane.__tmChecklistSuppressTapUntil || 0),
+                    Date.now() + 520
+                );
+            }
+        } catch (e) {}
+        state.checklistDetailDismissed = true;
         state.checklistDetailSheetOpen = false;
         __tmRefreshChecklistSelectionInPlace(state.modal);
     };
 
-    window.tmChecklistSheetDragStart = function(ev) {
+    let __tmChecklistSheetLastTouchStartAt = 0;
+
+    function __tmGetClientYFromPointerOrTouchEvent(ev) {
+        const directY = Number(ev?.clientY);
+        if (Number.isFinite(directY)) return directY;
+        const touch = ev?.touches?.[0] || ev?.changedTouches?.[0] || null;
+        const touchY = Number(touch?.clientY);
+        return Number.isFinite(touchY) ? touchY : 0;
+    }
+
+    function __tmStartChecklistSheetDrag(ev, source = 'pointer') {
         if (!__tmChecklistUseSheetMode(state.modal)) return;
         if (!state.checklistDetailSheetOpen) return;
         const sheet = state.modal?.querySelector?.('#tmChecklistSheet');
@@ -20397,10 +21729,9 @@ async function __tmRefreshAfterWake(reason) {
         const fromHandle = !!target.closest('.tm-checklist-sheet-handle');
         const inBody = !!target.closest('.tm-checklist-sheet-body');
         const bodyScrollTop = Number(body?.scrollTop || 0);
-        const sheetTop = Number(sheet.getBoundingClientRect().top || 0);
-        const pointerY = Number(ev?.clientY || 0);
-        const nearTop = pointerY > 0 && (pointerY - sheetTop) <= 44;
-        if (!fromHandle && !(inBody && bodyScrollTop <= 0 && nearTop)) return;
+        const pointerY = __tmGetClientYFromPointerOrTouchEvent(ev);
+        if (__tmIsMobileDevice() && !fromHandle) return;
+        if (!fromHandle && inBody && bodyScrollTop > 0) return;
         try { ev.preventDefault?.(); } catch (e) {}
         const startY = pointerY;
         let lastY = startY;
@@ -20408,7 +21739,7 @@ async function __tmRefreshAfterWake(reason) {
         let velocity = 0;
         sheet.classList.add('tm-checklist-sheet--dragging');
         const onMove = (e2) => {
-            const y = Number(e2?.clientY || 0);
+            const y = __tmGetClientYFromPointerOrTouchEvent(e2);
             let dy = y - startY;
             if (!Number.isFinite(dy)) dy = 0;
             if (dy < 0) dy = dy * 0.18;
@@ -20421,25 +21752,52 @@ async function __tmRefreshAfterWake(reason) {
             try { e2.preventDefault?.(); } catch (e) {}
         };
         const onUp = (e2) => {
-            try { window.removeEventListener('pointermove', onMove, true); } catch (e) {}
-            try { window.removeEventListener('pointerup', onUp, true); } catch (e) {}
-            try { window.removeEventListener('pointercancel', onUp, true); } catch (e) {}
-            const endY = Number(e2?.clientY || lastY || startY);
+            if (source === 'touch') {
+                try { window.removeEventListener('touchmove', onMove, true); } catch (e) {}
+                try { window.removeEventListener('touchend', onUp, true); } catch (e) {}
+                try { window.removeEventListener('touchcancel', onUp, true); } catch (e) {}
+            } else {
+                try { window.removeEventListener('pointermove', onMove, true); } catch (e) {}
+                try { window.removeEventListener('pointerup', onUp, true); } catch (e) {}
+                try { window.removeEventListener('pointercancel', onUp, true); } catch (e) {}
+                try { sheet.releasePointerCapture?.(ev?.pointerId); } catch (e) {}
+            }
+            const endY = __tmGetClientYFromPointerOrTouchEvent(e2) || lastY || startY;
             const dy = Math.max(0, endY - startY);
             sheet.classList.remove('tm-checklist-sheet--dragging');
             sheet.style.transform = '';
             const closeByDistance = dy >= 88;
             const closeByVelocity = velocity > 0.55 && dy > 18;
             if (closeByDistance || closeByVelocity) {
+                try {
+                    const pane = state.modal?.querySelector?.('.tm-checklist-scroll');
+                    if (pane instanceof HTMLElement) {
+                        pane.__tmChecklistSuppressTapUntil = Math.max(
+                            Number(pane.__tmChecklistSuppressTapUntil || 0),
+                            Date.now() + 520
+                        );
+                    }
+                } catch (e) {}
                 window.tmChecklistCloseSheet(e2);
                 return;
             }
             __tmRefreshChecklistSelectionInPlace(state.modal);
         };
-        try { sheet.setPointerCapture?.(ev.pointerId); } catch (e) {}
-        try { window.addEventListener('pointermove', onMove, true); } catch (e) {}
-        try { window.addEventListener('pointerup', onUp, true); } catch (e) {}
-        try { window.addEventListener('pointercancel', onUp, true); } catch (e) {}
+        if (source === 'touch') {
+            try { window.addEventListener('touchmove', onMove, { capture: true, passive: false }); } catch (e) {}
+            try { window.addEventListener('touchend', onUp, true); } catch (e) {}
+            try { window.addEventListener('touchcancel', onUp, true); } catch (e) {}
+        } else {
+            try { sheet.setPointerCapture?.(ev.pointerId); } catch (e) {}
+            try { window.addEventListener('pointermove', onMove, true); } catch (e) {}
+            try { window.addEventListener('pointerup', onUp, true); } catch (e) {}
+            try { window.addEventListener('pointercancel', onUp, true); } catch (e) {}
+        }
+    }
+
+    window.tmChecklistSheetDragStart = function(ev) {
+        if ((Date.now() - __tmChecklistSheetLastTouchStartAt) < 700) return;
+        __tmStartChecklistSheetDrag(ev, 'pointer');
     };
 
     window.tmStartChecklistDetailResize = function(ev) {
@@ -20488,15 +21846,19 @@ async function __tmRefreshAfterWake(reason) {
             switch (String(iconName || '').trim()) {
                 case 'clipboard-list': return '<rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 5H7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path>';
                 case 'calendar-days': return '<path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path><path d="M16 18h.01"></path>';
+                case 'calendar-plus-2': return '<path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path><path d="M12 14v6"></path><path d="M9 17h6"></path>';
+                case 'calendar-clock': return '<path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h10"></path><circle cx="17" cy="17" r="4"></circle><path d="M17 15v2l1.5 1"></path>';
                 case 'refresh-cw': return '<path d="M21 12a9 9 0 0 0-15.5-6.4L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 15.5 6.4L21 16"></path><path d="M16 16h5v5"></path>';
                 case 'chevron-left': return '<path d="m15 18-6-6 6-6"></path>';
                 case 'chevron-right': return '<path d="m9 18 6-6-6-6"></path>';
                 case 'map': return '<polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line>';
                 case 'bot': return '<rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line>';
                 case 'settings': return '<path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.65.26 1.35.41 2.05.41H21a2 2 0 1 1 0 4h-.09c-.7 0-1.4.15-2.05.59Z"></path>';
+                case 'save': return '<path d="M5 3h11l5 5v13a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"></path><path d="M17 22v-8H7v8"></path><path d="M7 3v5h8"></path>';
                 case 'menu': return '<line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line>';
                 case 'plus': return '<path d="M12 5v14"></path><path d="M5 12h14"></path>';
                 case 'x': return '<path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>';
+                case 'trash-2': return '<path d="M3 6h18"></path><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"></path><path d="M19 6l-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path>';
                 case 'search': return '<circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>';
                 case 'download': return '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path>';
                 case 'puzzle': return '<path d="M19.43 12.98V17a2 2 0 0 1-2 2h-4.02a2 2 0 0 1-3.84 0H5.55a2 2 0 0 1-2-2v-4.02a2 2 0 0 1 0-3.84V5.12a2 2 0 0 1 2-2h4.02a2 2 0 0 1 3.84 0h4.02a2 2 0 0 1 2 2v4.02a2 2 0 0 1 0 3.84Z"></path>';
@@ -20596,6 +21958,7 @@ async function __tmRefreshAfterWake(reason) {
         let savedCalendarScrollLeft = 0;
         let savedKanbanScrollLeft = 0;
         let savedKanbanColScrollTopByStatus = {};
+        let savedKanbanDetailScrollSnapshot = null;
         let savedWhiteboardSidebarScrollTop = 0;
         let savedWhiteboardBodyScrollTop = 0;
         let savedWhiteboardBodyScrollLeft = 0;
@@ -20612,6 +21975,7 @@ async function __tmRefreshAfterWake(reason) {
             } else if (prevWasKanban) {
                 const kbBody = prevModalSnapshot.querySelector('.tm-body.tm-body--kanban');
                 if (kbBody) savedKanbanScrollLeft = Number(kbBody.scrollLeft) || 0;
+                savedKanbanDetailScrollSnapshot = __tmCaptureKanbanDetailScrollSnapshot(prevModalSnapshot);
                 const map = {};
                 try {
                     prevModalSnapshot.querySelectorAll('.tm-kanban-col').forEach((col) => {
@@ -21142,7 +22506,7 @@ async function __tmRefreshAfterWake(reason) {
                     : `margin-left:${indent}px;`;
                 renderedChecklistTaskCount += 1;
                 return `
-                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}" draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')">
+                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}" draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" ontouchstart="tmChecklistItemTouchStart(event, '${escSq(String(task.id || ''))}')" ontouchmove="tmChecklistItemTouchMove(event)" ontouchend="tmChecklistItemTouchEnd('${escSq(String(task.id || ''))}', event)" ontouchcancel="tmChecklistItemTouchCancel(event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')">
                         <div class="tm-checklist-leading${hasChildren ? ' tm-checklist-leading--branch' : ''}${hasChildren && collapsed ? ' tm-checklist-leading--collapsed' : ''}">
                             ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : '<span class="tm-tree-toggle tm-tree-toggle--placeholder" aria-hidden="true"></span>'}
                             ${hasChildren && collapsed ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>' : ''}
@@ -24780,10 +26144,10 @@ async function __tmRefreshAfterWake(reason) {
                         } catch (e) {}
                     };
                     apply();
-                    try { __tmRefreshKanbanDetailInPlace(state.modal); } catch (e) {}
+                    try { __tmRefreshKanbanDetailInPlace(state.modal, { scrollSnapshot: savedKanbanDetailScrollSnapshot }); } catch (e) {}
                     requestAnimationFrame(() => requestAnimationFrame(apply));
                     requestAnimationFrame(() => requestAnimationFrame(() => {
-                        try { __tmRefreshKanbanDetailInPlace(state.modal); } catch (e) {}
+                        try { __tmRefreshKanbanDetailInPlace(state.modal, { scrollSnapshot: savedKanbanDetailScrollSnapshot }); } catch (e) {}
                         try { __tmRunFlipAnimation(state.modal); } catch (e) {}
                         if (useSoftSwap) {
                             try { state.modal.style.opacity = '1'; } catch (e) {}
@@ -31994,6 +33358,17 @@ async function __tmRefreshAfterWake(reason) {
         return `${m}m`;
     }
 
+    function __tmGetTaskSpentDisplay(task) {
+        try {
+            if (!SettingsStore.data.enableTomatoIntegration) return '';
+            const useHours = String(SettingsStore.data.tomatoSpentAttrMode || 'minutes').trim() === 'hours';
+            if (useHours) return String(__tmFormatSpentHours(__tmParseNumber(task?.tomatoHours)) || '').trim();
+            return String(__tmFormatSpentMinutes(__tmGetTaskSpentMinutes(task)) || '').trim();
+        } catch (e) {
+            return '';
+        }
+    }
+
     function __tmNormalizeDateOnly(value) {
         const s = String(value || '').trim();
         if (!s) return '';
@@ -32051,9 +33426,6 @@ async function __tmRefreshAfterWake(reason) {
                 taskOrPriority.priority,
                 taskOrPriority.custom_priority,
                 taskOrPriority.customPriority,
-                taskOrPriority.prio,
-                taskOrPriority.custom_prio,
-                taskOrPriority.customPrio,
             ];
             for (const candidate of candidates) {
                 const s = String(candidate ?? '').trim();
@@ -32066,7 +33438,9 @@ async function __tmRefreshAfterWake(reason) {
 
     function __tmBuildTaskCheckboxStyle(taskOrPriority) {
         const accent = __tmGetPriorityAccentColor(__tmResolveTaskPriorityValue(taskOrPriority));
-        return accent ? ` style="--tm-checklist-checkbox-color:${accent};border-color:${accent};"` : '';
+        const neutral = '#a9afb8';
+        const color = accent || neutral;
+        return ` style="--tm-checklist-checkbox-color:${color};border-color:${color};"`;
     }
 
     function __tmRenderTaskCheckbox(taskId, task, options = {}) {
@@ -32872,6 +34246,126 @@ async function __tmRefreshAfterWake(reason) {
         }
     }
 
+    function __tmGetPriorityGroupDeltaMap(config = null) {
+        const cfg = (config && typeof config === 'object')
+            ? config
+            : ((SettingsStore.data.priorityScoreConfig && typeof SettingsStore.data.priorityScoreConfig === 'object')
+                ? SettingsStore.data.priorityScoreConfig
+                : {});
+        const raw = (cfg.groupDeltas && typeof cfg.groupDeltas === 'object') ? cfg.groupDeltas : {};
+        const out = {};
+        Object.entries(raw).forEach(([groupId, delta]) => {
+            const gid = String(groupId || '').trim();
+            if (!gid) return;
+            const n = Number(delta);
+            out[gid] = Number.isFinite(n) ? n : 0;
+        });
+        return out;
+    }
+
+    function __tmBuildPriorityGroupDeltaDocsMapCacheKey(config = null) {
+        const groupDeltaMap = __tmGetPriorityGroupDeltaMap(config);
+        const groupIds = Object.keys(groupDeltaMap).sort();
+        if (!groupIds.length) return '';
+        const groupMap = new Map(
+            (Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [])
+                .map((group) => [String(group?.id || '').trim(), group])
+                .filter(([gid]) => !!gid)
+        );
+        return groupIds.map((gid) => {
+            const group = groupMap.get(gid);
+            if (!group) return `${gid}:missing`;
+            const entries = __tmGetGroupSourceEntries(group).map((entry) => {
+                const entryId = String(entry?.id || '').trim();
+                if (!entryId) return '';
+                return `${entryId}${String(entry?.kind || 'doc').trim() === 'notebook' ? '#nb' : (entry?.recursive ? '*' : '')}`;
+            }).filter(Boolean);
+            return `${gid}:${entries.join(',')}`;
+        }).join('|');
+    }
+
+    async function __tmWarmPriorityGroupDeltaDocsMap(config = null) {
+        const key = __tmBuildPriorityGroupDeltaDocsMapCacheKey(config);
+        if (!key) {
+            window.__tmPriorityGroupDeltaDocsMapCache = { key: '', map: new Map() };
+            return window.__tmPriorityGroupDeltaDocsMapCache.map;
+        }
+        const cached = window.__tmPriorityGroupDeltaDocsMapCache;
+        if (cached && cached.key === key && cached.map instanceof Map) return cached.map;
+
+        const groupDeltaMap = __tmGetPriorityGroupDeltaMap(config);
+        const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
+        const groupsById = new Map(groups.map((group) => [String(group?.id || '').trim(), group]).filter(([gid]) => !!gid));
+        const map = new Map();
+        for (const gid of Object.keys(groupDeltaMap)) {
+            const group = groupsById.get(String(gid || '').trim());
+            if (!group) continue;
+            const entries = __tmGetGroupSourceEntries(group);
+            for (const entry of entries) {
+                await __tmExpandSourceEntryDocIds(entry, (docId0) => {
+                    const docId = String(docId0 || '').trim();
+                    if (!docId) return;
+                    const list = Array.isArray(map.get(docId)) ? map.get(docId) : [];
+                    if (!list.includes(gid)) list.push(gid);
+                    map.set(docId, list);
+                });
+            }
+        }
+        window.__tmPriorityGroupDeltaDocsMapCache = { key, map };
+        return map;
+    }
+
+    function __tmSchedulePriorityGroupDeltaDocsMapWarm() {
+        const key = __tmBuildPriorityGroupDeltaDocsMapCacheKey();
+        if (!key) {
+            window.__tmPriorityGroupDeltaDocsMapCache = { key: '', map: new Map() };
+            return;
+        }
+        const cached = window.__tmPriorityGroupDeltaDocsMapCache;
+        if (cached && cached.key === key && cached.map instanceof Map) return;
+        if (String(window.__tmPriorityGroupDeltaDocsMapLoadingKey || '') === key) return;
+        window.__tmPriorityGroupDeltaDocsMapLoadingKey = key;
+        Promise.resolve().then(async () => {
+            try {
+                await __tmWarmPriorityGroupDeltaDocsMap();
+            } catch (e) {
+                window.__tmPriorityGroupDeltaDocsMapCache = { key, map: new Map() };
+            } finally {
+                window.__tmPriorityGroupDeltaDocsMapLoadingKey = '';
+            }
+            __tmScheduleRender({ withFilters: true });
+        }).catch(() => {
+            window.__tmPriorityGroupDeltaDocsMapLoadingKey = '';
+        });
+    }
+
+    function __tmGetPriorityGroupDeltaForDoc(docId, config = null) {
+        const did = String(docId || '').trim();
+        if (!did) return 0;
+        const groupDeltaMap = __tmGetPriorityGroupDeltaMap(config);
+        const groupIds = Object.keys(groupDeltaMap);
+        if (!groupIds.length) return 0;
+
+        const key = __tmBuildPriorityGroupDeltaDocsMapCacheKey(config);
+        const cached = window.__tmPriorityGroupDeltaDocsMapCache;
+        if (!(cached && cached.key === key && cached.map instanceof Map)) {
+            __tmSchedulePriorityGroupDeltaDocsMapWarm();
+            let fallback = 0;
+            const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
+            const groupsById = new Map(groups.map((group) => [String(group?.id || '').trim(), group]).filter(([gid]) => !!gid));
+            groupIds.forEach((gid) => {
+                const group = groupsById.get(String(gid || '').trim());
+                if (!group) return;
+                const hit = __tmNormalizeGroupDocEntries(group).some((doc) => String(doc?.id || doc || '').trim() === did);
+                if (hit) fallback += Number(groupDeltaMap[gid] || 0);
+            });
+            return fallback;
+        }
+
+        const matchedGroupIds = Array.isArray(cached.map.get(did)) ? cached.map.get(did) : [];
+        return matchedGroupIds.reduce((sum, gid) => sum + (Number(groupDeltaMap[gid] || 0) || 0), 0);
+    }
+
     function __tmComputePriorityScore(task) {
         const cfg = (SettingsStore.data.priorityScoreConfig && typeof SettingsStore.data.priorityScoreConfig === 'object')
             ? SettingsStore.data.priorityScoreConfig
@@ -32930,7 +34424,9 @@ async function __tmRefreshAfterWake(reason) {
         const docId = String(task?.docId || task?.root_id || '').trim();
         if (docId) {
             const docDeltas = (cfg.docDeltas && typeof cfg.docDeltas === 'object') ? cfg.docDeltas : {};
-            const delta = Number(docDeltas[docId] ?? 0);
+            const docDelta = Number(docDeltas[docId] ?? 0);
+            const groupDelta = Number(__tmGetPriorityGroupDeltaForDoc(docId, cfg) || 0);
+            const delta = (Number.isFinite(docDelta) ? docDelta : 0) + (Number.isFinite(groupDelta) ? groupDelta : 0);
             if (Number.isFinite(delta)) score += w('doc') * delta;
         }
 
@@ -34627,13 +36123,7 @@ async function __tmRefreshAfterWake(reason) {
         return String(firstTask?.id || '').trim();
     }
 
-    function __tmBuildTaskDetailInnerHtml(task, options = {}) {
-        const opts = (options && typeof options === 'object') ? options : {};
-        const embedded = !!opts.embedded;
-        const floating = !!opts.floating;
-        const closeable = !!opts.closeable;
-        const title = embedded ? '任务详情' : '任务详情';
-        const isOtherBlock = __tmIsCollectedOtherBlockTask(task);
+    function __tmGetTaskDetailStatusOptions() {
         const statusOptionsRaw = Array.isArray(SettingsStore.data.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
         const statusOptions = statusOptionsRaw
             .map((o) => ({
@@ -34643,140 +36133,203 @@ async function __tmRefreshAfterWake(reason) {
             }))
             .filter((o) => o.id);
         if (!statusOptions.some((o) => o.id === 'todo')) statusOptions.unshift({ id: 'todo', name: '待办', color: '#757575' });
+        return statusOptions;
+    }
+
+    function __tmBuildTaskDetailCoreChipFace(kind, rawValue) {
+        const value = String(rawValue || '').trim();
+        if (kind === 'pinned') {
+            return __tmRenderLucideIcon('pin', 'tm-task-detail-core-chip__icon');
+        }
+        if (kind === 'spent') {
+            const icon = __tmRenderLucideIcon('alarm-clock', 'tm-task-detail-core-chip__icon');
+            return value ? `${icon}<span class="tm-task-detail-core-chip__text">${esc(value)}</span>` : icon;
+        }
+        if (kind === 'duration') {
+            const icon = __tmRenderLucideIcon('timer', 'tm-task-detail-core-chip__icon');
+            return value ? `${icon}<span class="tm-task-detail-core-chip__text">${esc(value)}</span>` : icon;
+        }
+        if (kind === 'completionTime') {
+            const icon = __tmRenderLucideIcon('calendar-clock', 'tm-task-detail-core-chip__icon');
+            const text = __tmFormatTaskTimeCompact(value);
+            return text ? `${icon}<span class="tm-task-detail-core-chip__text">${esc(text)}</span>` : icon;
+        }
+        const icon = __tmRenderLucideIcon('calendar-plus-2', 'tm-task-detail-core-chip__icon');
+        const text = __tmFormatTaskTimeCompact(value);
+        return text ? `${icon}<span class="tm-task-detail-core-chip__text">${esc(text)}</span>` : icon;
+    }
+
+    function __tmBuildTaskDetailSubtasksHtml(task) {
+        const children = Array.isArray(task?.children)
+            ? task.children.slice().sort(__tmCompareTasksByDocFlow)
+            : [];
+        if (!children.length) {
+            return '';
+        }
+        const renderNode = (item, depth = 0) => {
+            const tid = String(item?.id || '').trim();
+            if (!tid) return '';
+            const liveTask = state.flatTasks?.[tid];
+            const viewTask = liveTask && typeof liveTask === 'object'
+                ? { ...item, ...liveTask, children: Array.isArray(item?.children) ? item.children : liveTask.children }
+                : item;
+            const canonicalPriority = liveTask && typeof liveTask === 'object'
+                ? (liveTask.priority ?? liveTask.custom_priority ?? liveTask.customPriority ?? '')
+                : '';
+            const readOnly = __tmIsCollectedOtherBlockTask(viewTask);
+            const kids = Array.isArray(viewTask?.children)
+                ? viewTask.children.slice().sort(__tmCompareTasksByDocFlow)
+                : [];
+            const totalKids = kids.length;
+            const doneKids = kids.filter((child) => child?.done).length;
+            const childStatsHtml = totalKids > 0
+                ? `<span class="tm-task-detail-subtask-count">${doneKids}/${totalKids}</span>`
+                : '';
+            const childrenHtml = kids.map((child) => renderNode(child, depth + 1)).join('');
+            return `
+                <div class="tm-task-detail-subtask" style="--tm-task-detail-depth:${depth};">
+                    <div class="tm-task-detail-subtask-row" data-tm-detail-subtask-menu="${esc(tid)}">
+                        <div class="tm-task-detail-subtask-main">
+                            ${__tmRenderTaskCheckbox(tid, viewTask, { checked: viewTask?.done, disabled: GlobalLock.isLocked(), extraClass: GlobalLock.isLocked() ? 'tm-operating' : '', stopMouseDown: true, stopClick: true, priority: canonicalPriority })}
+                            <textarea class="tm-task-detail-subtask-title${viewTask?.done ? ' is-done' : ''}" data-tm-detail-subtask-content="${esc(tid)}" rows="1" ${readOnly ? 'readonly' : ''} title="${readOnly ? '其他块内容请回原文档编辑' : '直接编辑子任务内容'}">${esc(String(viewTask?.content || '').trim() || '')}</textarea>
+                        </div>
+                        <div class="tm-task-detail-subtask-trailing">
+                            ${childStatsHtml}
+                            <div class="tm-task-detail-subtask-actions">
+                                <button type="button" class="bc-btn bc-btn--sm tm-task-detail-subtask-action" data-tm-detail-open-child="${esc(tid)}" title="打开子任务详情">${__tmRenderLucideIcon('chevron-right')}</button>
+                            </div>
+                        </div>
+                    </div>
+                    ${childrenHtml ? `<div class="tm-task-detail-subtask-children">${childrenHtml}</div>` : ''}
+                </div>
+            `;
+        };
+        return children.map((child) => renderNode(child, 0)).join('');
+    }
+
+    function __tmBuildTaskDetailInnerHtml(task, options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const embedded = !!opts.embedded;
+        const floating = !!opts.floating;
+        const closeable = !!opts.closeable;
+        const isOtherBlock = __tmIsCollectedOtherBlockTask(task);
+        const statusOptions = __tmGetTaskDetailStatusOptions();
         const curStatus = String(task?.customStatus || '').trim() || 'todo';
         const curStatusOption = statusOptions.find((o) => o.id === curStatus) || statusOptions[0] || { id: 'todo', name: '待办', color: '#757575' };
         const curPriority = String(task?.priority || '').trim().toLowerCase();
         const curPinned = !!task?.pinned;
+        const startValue = __tmNormalizeDateOnly(String(task?.startDate || '').trim());
+        const endValue = __tmNormalizeDateOnly(String(task?.completionTime || '').trim());
+        const durationValue = String(task?.duration || '').trim();
+        const spentValue = __tmGetTaskSpentDisplay(task);
+        const remarkValue = String(task?.remark || '').trim();
         const docName = String(task?.docName || '').trim();
         const headingName = __tmNormalizeHeadingText(task?.h2 || task?.h2Name);
+        const children = Array.isArray(task?.children) ? task.children : [];
+        const completedChildren = children.filter((child) => child?.done).length;
         const priorityOptions = [
             { value: '', label: '无' },
             { value: 'low', label: '低' },
             { value: 'medium', label: '中' },
             { value: 'high', label: '高' },
         ];
-        const getPriorityButtonColor = (value) => {
-            const key = String(value || '').trim() || 'none';
-            if (key === 'high') return '#de350b';
-            if (key === 'medium') return '#ff991f';
-            if (key === 'low') return '#1d7afc';
-            return 'var(--tm-task-done-color)';
-        };
+        const locationHtml = (docName || headingName !== '')
+            ? `
+                <div class="tm-task-detail-location">
+                    ${docName ? (isOtherBlock
+                        ? `<span class="tm-checklist-meta-chip" title="来源文档">📄 ${esc(docName)}</span>`
+                        : `<button type="button" class="tm-checklist-meta-chip tm-task-detail-location-chip" data-tm-detail="location-doc" title="点击切换文档">📄 ${esc(docName)}</button>`) : ''}
+                    ${isOtherBlock
+                        ? `<span class="tm-checklist-meta-chip" title="来源位置">🧩 ${esc(String(headingName || task?.otherBlockTypeLabel || '无'))}</span>`
+                        : `<button type="button" class="tm-checklist-meta-chip tm-task-detail-location-chip" data-tm-detail="location-heading" title="点击切换标题">🧩 ${esc(String(headingName || '无'))}</button>`}
+                </div>
+            `
+            : '';
         return `
-            <div class="${embedded ? 'tm-checklist-detail-card' : 'tm-task-detail'}" role="dialog" aria-modal="${embedded ? 'false' : 'true'}">
-                <div class="${embedded ? 'tm-checklist-detail-head' : ''}" style="${embedded ? '' : 'display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;'}">
-                    <div class="${embedded ? 'tm-checklist-detail-title' : ''}" style="${embedded ? '' : 'font-size:16px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'}">${title}</div>
-                    ${embedded ? `
-                        <div style="display:flex;gap:8px;align-items:center;">
-                            <button class="tm-btn tm-btn-info" data-tm-detail="jump" style="padding:0 10px;height:30px;">跳转</button>
-                            ${(floating || closeable) ? `<button class="tm-btn tm-btn-gray tm-task-detail-close-btn" type="button" data-tm-detail="close" aria-label="关闭任务详情" title="关闭" style="padding:0;height:30px;width:30px;display:inline-flex;align-items:center;justify-content:center;">${__tmRenderLucideIcon('x')}</button>` : ''}
-                        </div>
-                    ` : `
-                        <button class="tm-btn tm-btn-gray tm-task-detail-close-btn" type="button" data-tm-detail="close" aria-label="关闭任务详情" title="关闭" style="padding:0;height:30px;width:30px;display:inline-flex;align-items:center;justify-content:center;">${__tmRenderLucideIcon('x')}</button>
-                    `}
-                </div>
-
-                ${(docName || headingName !== '') ? `
-                    <div class="tm-task-detail-row">
-                        <div class="tm-task-detail-label">位置</div>
-                        <div class="tm-task-detail-value" style="display:flex;flex-wrap:wrap;gap:6px;">
-                            ${docName ? (isOtherBlock
-                                ? `<span class="tm-checklist-meta-chip" title="来源文档">📄 ${esc(docName)}</span>`
-                                : `<button type="button" class="tm-checklist-meta-chip" data-tm-detail="location-doc" title="点击切换文档" style="border:none;cursor:pointer;">📄 ${esc(docName)}</button>`) : ''}
-                            ${isOtherBlock
-                                ? `<span class="tm-checklist-meta-chip" title="来源位置">🧩 ${esc(String(headingName || task?.otherBlockTypeLabel || '无'))}</span>`
-                                : `<button type="button" class="tm-checklist-meta-chip" data-tm-detail="location-heading" title="点击切换标题" style="border:none;cursor:pointer;">🧩 ${esc(String(headingName || '无'))}</button>`}
+            <div class="${embedded ? 'tm-checklist-detail-card' : 'tm-task-detail'} tm-task-detail-shell" role="dialog" aria-modal="${embedded ? 'false' : 'true'}">
+                <div class="tm-task-detail-header">
+                    <div class="tm-task-detail-header-main">
+                        <textarea class="tm-task-detail-title-input" data-tm-detail="content" ${isOtherBlock ? 'readonly' : ''} title="${isOtherBlock ? '其他块内容请回原文档编辑' : ''}" rows="1">${esc(isOtherBlock ? (task?.otherBlockRawContent || task?.content || '') : (task?.content || ''))}</textarea>
+                        <div class="tm-task-detail-header-actions">
+                            <button class="bc-btn bc-btn--sm tm-task-detail-icon-btn" type="button" data-tm-detail="save" aria-label="保存任务详情" title="保存">${__tmRenderLucideIcon('save')}</button>
+                            <button class="bc-btn bc-btn--sm tm-task-detail-icon-btn" type="button" data-tm-detail="jump" aria-label="跳转到任务" title="跳转">${__tmRenderLucideIcon('map-pin')}</button>
+                            ${(floating || closeable || !embedded) ? `<button class="bc-btn bc-btn--sm tm-task-detail-close-btn tm-task-detail-icon-btn" type="button" data-tm-detail="close" aria-label="关闭任务详情" title="关闭">${__tmRenderLucideIcon('x')}</button>` : ''}
                         </div>
                     </div>
-                ` : ''}
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">内容</div>
-                    <div class="tm-task-detail-value">
-                        <textarea class="tm-input tm-checklist-detail-textarea" data-tm-detail="content" ${isOtherBlock ? 'readonly' : ''} title="${isOtherBlock ? '其他块内容请回原文档编辑' : ''}">${esc(isOtherBlock ? (task?.otherBlockRawContent || task?.content || '') : (task?.content || ''))}</textarea>
-                    </div>
+                    ${locationHtml}
                 </div>
 
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">状态</div>
-                    <div class="tm-task-detail-value">
-                        <div class="tm-task-detail-status-select" data-tm-detail-status-select>
-                            <input type="hidden" data-tm-detail="status" value="${esc(curStatusOption.id)}">
-                            <button type="button" class="bc-select-trigger tm-task-detail-status-trigger" data-tm-detail-status-trigger aria-haspopup="listbox" aria-expanded="false">
-                                <span class="tm-task-detail-status-trigger__value"><span class="tm-status-tag" style="${__tmBuildStatusChipStyle(curStatusOption.color)}">${esc(curStatusOption.name || curStatusOption.id)}</span></span>
-                                <span class="bc-select-trigger__chevron" aria-hidden="true">
-                                    <svg viewBox="0 0 16 16" width="16" height="16">
-                                        <path d="M4.25 6.5 8 10.25 11.75 6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
-                                    </svg>
-                                </span>
-                            </button>
-                            <div class="bc-select-menu tm-task-detail-status-menu" data-tm-detail-status-menu role="listbox" aria-label="状态" hidden>
-                                ${statusOptions.map((o) => {
-                                    const selected = o.id === curStatusOption.id;
-                                    return `<button class="bc-select-option tm-task-detail-status-option ${selected ? 'is-selected' : ''}" type="button" role="option" aria-selected="${selected ? 'true' : 'false'}" data-tm-detail-status-option data-value="${esc(o.id)}"><span class="tm-status-tag" style="${__tmBuildStatusChipStyle(o.color)}">${esc(o.name || o.id)}</span><span class="bc-select-option__check" aria-hidden="true">✓</span></button>`;
-                                }).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">重要性</div>
-                    <div class="tm-task-detail-value">
-                        <input type="hidden" data-tm-detail="priority" value="${esc(curPriority)}">
-                        <div class="tm-task-detail-priority-group tm-view-segmented bc-tabs-list" role="tablist" aria-label="重要性">
+                <div class="tm-task-detail-core">
+                    <input type="hidden" data-tm-detail="priority" value="${esc(curPriority)}">
+                    <div class="tm-task-detail-priority-select" data-tm-detail-priority-select>
+                        <button type="button" class="bc-btn bc-btn--sm tm-task-detail-icon-btn tm-task-detail-priority-trigger" data-tm-detail-priority-trigger aria-haspopup="listbox" aria-expanded="false" title="重要性" style="${__tmBuildPriorityChipStyle(curPriority || 'none')}">
+                            <span class="tm-task-detail-priority-trigger__value">${__tmRenderPriorityJira(curPriority || 'none', false)}</span>
+                        </button>
+                        <div class="tm-task-detail-priority-menu" data-tm-detail-priority-menu role="listbox" aria-label="重要性" hidden>
                             ${priorityOptions.map((opt) => {
-                                const selected = String(curPriority || '') === String(opt.value || '');
-                                const priorityValue = String(opt.value || '').trim() || 'none';
-                                const priorityColor = getPriorityButtonColor(priorityValue);
-                                return `<button type="button" class="tm-task-detail-priority-option tm-view-seg-item bc-tabs-trigger ${selected ? 'tm-view-seg-item--active is-active' : ''}" data-state="${selected ? 'active' : 'inactive'}" role="tab" aria-selected="${selected ? 'true' : 'false'}" data-tm-detail-priority-option data-value="${esc(opt.value)}" style="--tm-task-detail-priority-color:${priorityColor};color:${priorityColor};"><span class="tm-task-detail-priority-option__icon">${__tmRenderPriorityJira(priorityValue, false)}</span><span class="tm-task-detail-priority-option__label">${esc(opt.label)}</span></button>`;
+                                const optValue = String(opt.value || '').trim();
+                                const selected = String(curPriority || '') === optValue;
+                                const chipValue = optValue || 'none';
+                                return `<button class="tm-task-detail-priority-menu-option ${selected ? 'is-selected' : ''}" type="button" role="option" aria-selected="${selected ? 'true' : 'false'}" data-tm-detail-priority-option data-value="${esc(opt.value)}"><span class="tm-task-detail-priority-menu-option__face" style="${__tmBuildPriorityChipStyle(chipValue)}">${__tmRenderPriorityJira(chipValue, true)}</span></button>`;
                             }).join('')}
                         </div>
                     </div>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">置顶</div>
-                    <div class="tm-task-detail-value">
-                        <label class="tm-task-detail-switch">
-                            <span class="tm-task-detail-switch__text">在列表/看板中置顶</span>
-                            <input class="b3-switch fn__flex-center" type="checkbox" data-tm-detail="pinned" ${curPinned ? 'checked' : ''}>
-                        </label>
+                    <div class="tm-task-detail-status-select" data-tm-detail-status-select>
+                        <input type="hidden" data-tm-detail="status" value="${esc(curStatusOption.id)}">
+                        <button type="button" class="bc-btn bc-btn--sm tm-task-detail-status-trigger" data-tm-detail-status-trigger aria-haspopup="listbox" aria-expanded="false" style="${__tmBuildStatusChipStyle(curStatusOption.color)}">
+                            <span class="tm-task-detail-status-trigger__value">${esc(curStatusOption.name || curStatusOption.id)}</span>
+                        </button>
+                        <div class="bc-select-menu tm-task-detail-status-menu" data-tm-detail-status-menu role="listbox" aria-label="状态" hidden>
+                            ${statusOptions.map((o) => {
+                                const selected = o.id === curStatusOption.id;
+                                return `<button class="bc-select-option tm-task-detail-status-option ${selected ? 'is-selected' : ''}" type="button" role="option" aria-selected="${selected ? 'true' : 'false'}" data-tm-detail-status-option data-value="${esc(o.id)}" data-label="${esc(o.name || o.id)}" data-color="${esc(o.color)}"><span class="tm-status-tag" style="${__tmBuildStatusChipStyle(o.color)}">${esc(o.name || o.id)}</span><span class="bc-select-option__check" aria-hidden="true">✓</span></button>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    <div class="tm-task-detail-core-meta">
+                        <input type="hidden" data-tm-detail="startDate" value="${esc(startValue)}">
+                        <button type="button" class="bc-btn bc-btn--sm tm-task-detail-core-chip ${startValue ? 'has-value' : ''}" data-tm-detail-date-trigger="startDate" title="开始日期">
+                            <span class="tm-task-detail-core-chip__face" data-tm-detail-chip-face="startDate">${__tmBuildTaskDetailCoreChipFace('startDate', startValue)}</span>
+                        </button>
+                        <input type="hidden" data-tm-detail="completionTime" value="${esc(endValue)}">
+                        <button type="button" class="bc-btn bc-btn--sm tm-task-detail-core-chip ${endValue ? 'has-value' : ''}" data-tm-detail-date-trigger="completionTime" title="截止日期">
+                            <span class="tm-task-detail-core-chip__face" data-tm-detail-chip-face="completionTime">${__tmBuildTaskDetailCoreChipFace('completionTime', endValue)}</span>
+                        </button>
+                        <input type="hidden" data-tm-detail="duration" value="${esc(durationValue)}">
+                        <button type="button" class="bc-btn bc-btn--sm tm-task-detail-core-chip ${durationValue ? 'has-value' : ''}" data-tm-detail-duration-trigger title="时长">
+                            <span class="tm-task-detail-core-chip__face" data-tm-detail-chip-face="duration">${__tmBuildTaskDetailCoreChipFace('duration', durationValue)}</span>
+                        </button>
+                        ${spentValue ? `<div class="bc-btn bc-btn--sm tm-task-detail-core-chip tm-task-detail-core-chip--static has-value" title="耗时">
+                            <span class="tm-task-detail-core-chip__face" data-tm-detail-chip-face="spent">${__tmBuildTaskDetailCoreChipFace('spent', spentValue)}</span>
+                        </div>` : ''}
+                        <input type="hidden" data-tm-detail="pinned" value="${curPinned ? '1' : ''}">
+                        <button type="button" class="bc-btn bc-btn--sm tm-task-detail-core-chip tm-task-detail-core-chip--icon ${curPinned ? 'is-active' : ''}" data-tm-detail-pinned-toggle title="${curPinned ? '取消置顶' : '置顶'}">
+                            <span class="tm-task-detail-core-chip__face" data-tm-detail-chip-face="pinned">${__tmBuildTaskDetailCoreChipFace('pinned', curPinned ? '1' : '')}</span>
+                        </button>
                     </div>
                 </div>
 
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">开始日期</div>
-                    <div class="tm-task-detail-value">
-                        <input class="tm-input" type="date" data-tm-detail="startDate" value="${esc(String(task?.startDate || '').trim().slice(0, 10))}">
+                <section class="tm-task-detail-section tm-task-detail-section--subtasks">
+                    <div class="tm-task-detail-section-head">
+                        <div class="tm-task-detail-section-title">子任务</div>
+                        <div class="tm-task-detail-section-tools">
+                            ${children.length ? `<span class="tm-task-detail-section-count">${completedChildren}/${children.length}</span>` : ''}
+                        </div>
                     </div>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">完成日期</div>
-                    <div class="tm-task-detail-value">
-                        <input class="tm-input" type="date" data-tm-detail="completionTime" value="${esc(String(task?.completionTime || '').trim().slice(0, 10))}">
+                    <div class="tm-task-detail-subtasks" data-tm-detail-subtasks>
+                        ${__tmBuildTaskDetailSubtasksHtml(task)}
                     </div>
-                </div>
-
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">时长</div>
-                    <div class="tm-task-detail-value">
-                        <input class="tm-input" data-tm-detail="duration" placeholder="如 1h / 30min" value="${esc(task?.duration || '')}">
+                    <div class="tm-task-detail-subtask-footer">
+                        <button type="button" class="bc-btn bc-btn--sm tm-task-detail-subtask-add-btn" data-tm-detail="create-subtask">${__tmRenderLucideIcon('plus')}<span>添加子任务</span></button>
                     </div>
-                </div>
+                </section>
 
-                <div class="tm-task-detail-row">
-                    <div class="tm-task-detail-label">备注</div>
-                    <div class="tm-task-detail-value">
-                        <textarea class="tm-input" data-tm-detail="remark" style="width:100%;min-height:88px;resize:vertical;">${esc(task?.remark || '')}</textarea>
+                <section class="tm-task-detail-section">
+                    <div class="tm-task-detail-section-head">
+                        <div class="tm-task-detail-section-title">备注</div>
                     </div>
-                </div>
-
-                <div class="tm-task-detail-actions">
-                    ${embedded ? '' : `<button class="tm-btn tm-btn-secondary" data-tm-detail="cancel" style="padding:0 12px;height:32px;">取消</button>`}
-                    <button class="tm-btn tm-btn-primary" data-tm-detail="save" style="padding:0 12px;height:32px;">保存</button>
-                </div>
+                    <textarea class="bc-textarea tm-task-detail-remark" data-tm-detail="remark" rows="1">${esc(remarkValue)}</textarea>
+                </section>
             </div>
         `;
     }
@@ -34785,11 +36338,60 @@ async function __tmRefreshAfterWake(reason) {
         if (!(root instanceof Element)) return;
         const opts = (options && typeof options === 'object') ? options : {};
         const embedded = !!opts.embedded;
+        try { root.__tmTaskDetailAbortController?.abort?.(); } catch (e) {}
+        const abortController = new AbortController();
+        try { root.__tmTaskDetailAbortController = abortController; } catch (e) {}
+        const on = (target, type, handler, listenerOptions) => {
+            if (!target?.addEventListener) return;
+            const nextOptions = listenerOptions ? { ...listenerOptions } : {};
+            try {
+                target.addEventListener(type, handler, { ...nextOptions, signal: abortController.signal });
+            } catch (e) {
+                try { target.addEventListener(type, handler, nextOptions); } catch (e2) {}
+            }
+        };
         const onClose = typeof opts.onClose === 'function' ? opts.onClose : null;
         const close = () => { if (onClose) onClose(); };
         let autoSaveTimer = null;
         let saving = false;
         let lastSerialized = '';
+        const readHiddenInputValue = (field) => {
+            const input = root.querySelector(`input[type="hidden"][data-tm-detail="${field}"]`);
+            return (input instanceof HTMLInputElement) ? String(input.value || '').trim() : '';
+        };
+        const setHiddenInputValue = (field, value) => {
+            const input = root.querySelector(`input[type="hidden"][data-tm-detail="${field}"]`);
+            if (input instanceof HTMLInputElement) input.value = String(value || '').trim();
+        };
+        const readPinnedValue = () => {
+            const input = root.querySelector('[data-tm-detail="pinned"]');
+            if (!(input instanceof HTMLInputElement)) return false;
+            return input.type === 'checkbox'
+                ? !!input.checked
+                : !!String(input.value || '').trim();
+        };
+        const refreshBoundDetail = (nextTaskId = taskId) => {
+            const nextId = String(nextTaskId || '').trim();
+            if (!nextId) return;
+            const nextTask = state.flatTasks?.[nextId];
+            if (!nextTask) return;
+            if (embedded && String(state.viewMode || '').trim() === 'checklist') {
+                if (Number(state.checklistDetailSuppressOpenUntil || 0) > Date.now()) return;
+                state.detailTaskId = nextId;
+                state.checklistDetailDismissed = false;
+                state.checklistDetailSheetOpen = true;
+                if (!__tmRefreshChecklistSelectionInPlace(state.modal)) render();
+                return;
+            }
+            if (embedded && String(state.viewMode || '').trim() === 'kanban') {
+                state.kanbanDetailTaskId = nextId;
+                state.kanbanDetailAnchorTaskId = nextId;
+                if (!__tmRefreshKanbanDetailInPlace(state.modal)) render();
+                return;
+            }
+            root.innerHTML = __tmBuildTaskDetailInnerHtml(nextTask, opts);
+            __tmBindTaskDetailEditor(root, nextId, options);
+        };
         const rerenderChecklistPreserveScroll = () => {
             const modal = state.modal instanceof Element ? state.modal : null;
             const scroller = modal?.querySelector?.('.tm-checklist-scroll');
@@ -34811,32 +36413,79 @@ async function __tmRefreshAfterWake(reason) {
             try { requestAnimationFrame(restore); } catch (e) {}
             try { setTimeout(restore, 30); } catch (e) {}
         };
-        const bindDatePickers = () => {
-            try {
-                const dateInputs = root.querySelectorAll('input[type="date"][data-tm-detail]');
-                dateInputs.forEach((inp) => {
-                    inp.addEventListener('click', () => { try { inp.showPicker?.(); } catch (e) {} });
-                });
-            } catch (e) {}
+        const captureEmbeddedDetailScroll = () => {
+            const modal = state.modal instanceof Element ? state.modal : null;
+            if (!(modal instanceof Element) || !embedded) return null;
+            if (String(state.viewMode || '').trim() !== 'checklist') return null;
+            const panel = modal.querySelector(__tmChecklistUseSheetMode(modal) ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+            if (!(panel instanceof HTMLElement)) return null;
+            return {
+                top: Number(panel.scrollTop || 0),
+                left: Number(panel.scrollLeft || 0),
+            };
         };
-        bindDatePickers();
-        root.querySelector('[data-tm-detail="close"]')?.addEventListener('click', close);
-        root.querySelector('[data-tm-detail="cancel"]')?.addEventListener('click', close);
-        root.querySelector('[data-tm-detail="jump"]')?.addEventListener('click', (ev) => {
+        const restoreEmbeddedDetailScroll = (snapshot) => {
+            if (!snapshot || !embedded) return;
+            const restore = () => {
+                const modal = state.modal instanceof Element ? state.modal : null;
+                if (!(modal instanceof Element)) return;
+                const panel = modal.querySelector(__tmChecklistUseSheetMode(modal) ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+                if (!(panel instanceof HTMLElement)) return;
+                try {
+                    panel.scrollTop = Number(snapshot.top || 0);
+                    panel.scrollLeft = Number(snapshot.left || 0);
+                } catch (e) {}
+            };
+            try { restore(); } catch (e) {}
+            try { requestAnimationFrame(restore); } catch (e) {}
+            try { setTimeout(restore, 30); } catch (e) {}
+        };
+        const syncMetaChipFaces = () => {
+            const startValue = readHiddenInputValue('startDate');
+            const endValue = readHiddenInputValue('completionTime');
+            const durationValue = readHiddenInputValue('duration');
+            const pinned = readPinnedValue();
+
+            const startFace = root.querySelector('[data-tm-detail-chip-face="startDate"]');
+            if (startFace instanceof HTMLElement) startFace.innerHTML = __tmBuildTaskDetailCoreChipFace('startDate', startValue);
+            const startBtn = root.querySelector('[data-tm-detail-date-trigger="startDate"]');
+            if (startBtn instanceof HTMLElement) startBtn.classList.toggle('has-value', !!startValue);
+
+            const endFace = root.querySelector('[data-tm-detail-chip-face="completionTime"]');
+            if (endFace instanceof HTMLElement) endFace.innerHTML = __tmBuildTaskDetailCoreChipFace('completionTime', endValue);
+            const endBtn = root.querySelector('[data-tm-detail-date-trigger="completionTime"]');
+            if (endBtn instanceof HTMLElement) endBtn.classList.toggle('has-value', !!endValue);
+
+            const durationFace = root.querySelector('[data-tm-detail-chip-face="duration"]');
+            if (durationFace instanceof HTMLElement) durationFace.innerHTML = __tmBuildTaskDetailCoreChipFace('duration', durationValue);
+            const durationBtn = root.querySelector('[data-tm-detail-duration-trigger]');
+            if (durationBtn instanceof HTMLElement) durationBtn.classList.toggle('has-value', !!durationValue);
+
+            const pinnedFace = root.querySelector('[data-tm-detail-chip-face="pinned"]');
+            if (pinnedFace instanceof HTMLElement) pinnedFace.innerHTML = __tmBuildTaskDetailCoreChipFace('pinned', pinned ? '1' : '');
+            const pinnedBtn = root.querySelector('[data-tm-detail-pinned-toggle]');
+            if (pinnedBtn instanceof HTMLElement) {
+                pinnedBtn.classList.toggle('is-active', pinned);
+                pinnedBtn.setAttribute('title', pinned ? '取消置顶' : '置顶');
+            }
+        };
+        on(root.querySelector('[data-tm-detail="close"]'), 'click', close);
+        on(root.querySelector('[data-tm-detail="cancel"]'), 'click', close);
+        on(root.querySelector('[data-tm-detail="jump"]'), 'click', (ev) => {
             try { ev.preventDefault(); } catch (e) {}
             try { tmJumpToTask(taskId, ev); } catch (e) {}
         });
-        root.querySelector('[data-tm-detail="location-doc"]')?.addEventListener('click', (ev) => {
+        on(root.querySelector('[data-tm-detail="location-doc"]'), 'click', (ev) => {
             try { ev.preventDefault(); } catch (e) {}
             try { ev.stopPropagation(); } catch (e) {}
             try { tmPickTaskDocInline(taskId, ev.currentTarget, ev); } catch (e) {}
         });
-        root.querySelector('[data-tm-detail="location-heading"]')?.addEventListener('click', (ev) => {
+        on(root.querySelector('[data-tm-detail="location-heading"]'), 'click', (ev) => {
             try { ev.preventDefault(); } catch (e) {}
             try { ev.stopPropagation(); } catch (e) {}
             try { tmPickHeadingInline(taskId, ev.currentTarget, ev); } catch (e) {}
         });
-        root.querySelector('[data-tm-detail="editPrompt"]')?.addEventListener('click', (ev) => {
+        on(root.querySelector('[data-tm-detail="editPrompt"]'), 'click', (ev) => {
             try { ev.preventDefault(); } catch (e) {}
             try { tmEdit(taskId); } catch (e) {}
         });
@@ -34851,7 +36500,10 @@ async function __tmRefreshAfterWake(reason) {
             const nextContent = String(root.querySelector('[data-tm-detail="content"]')?.value || '').trim();
             const nextStatus = String(root.querySelector('[data-tm-detail="status"]')?.value || '').trim() || 'todo';
             const nextPriority = String(root.querySelector('[data-tm-detail="priority"]')?.value || '').trim();
-            const nextPinned = !!root.querySelector('[data-tm-detail="pinned"]')?.checked;
+            const pinnedInput = root.querySelector('[data-tm-detail="pinned"]');
+            const nextPinned = (pinnedInput instanceof HTMLInputElement)
+                ? (pinnedInput.type === 'checkbox' ? !!pinnedInput.checked : !!String(pinnedInput.value || '').trim())
+                : false;
             const nextStart = normalize(root.querySelector('[data-tm-detail="startDate"]')?.value);
             const nextEnd = normalize(root.querySelector('[data-tm-detail="completionTime"]')?.value);
             const nextDuration = String(root.querySelector('[data-tm-detail="duration"]')?.value || '').trim();
@@ -34895,13 +36547,7 @@ async function __tmRefreshAfterWake(reason) {
 
             try {
                 if (!__tmIsCollectedOtherBlockTask(task) && nextContent !== String(task.content || '')) {
-                    const prefix = String(task.markdown || '').match(/^(\s*[\*\-]\s*\[[ xX]?\])\s*/)?.[1]
-                        || String(task.markdown || '').match(/^(\s*[\*\-]\s*\[[xX ]\])\s*/)?.[1]
-                        || '- [ ]';
-                    const newMarkdown = `${prefix} ${nextContent}`.trim();
-                    await API.updateBlock(task.id, newMarkdown);
-                    task.content = nextContent;
-                    task.markdown = newMarkdown;
+                    await __tmUpdateTaskContentBlock(task, nextContent);
                 }
                 const patch = {
                     customStatus: nextStatus,
@@ -34923,6 +36569,7 @@ async function __tmRefreshAfterWake(reason) {
                 try { __tmInvalidateTasksQueryCacheByDocId(task.root_id || task.docId); } catch (e) {}
                 lastSerialized = serialized;
                 try { applyFilters(); } catch (e) {}
+                try { root.__tmTaskDetailCloseInlinePopover?.(); } catch (e) {}
                 if (String(state.viewMode || '').trim() === 'checklist' && embedded) {
                     rerenderChecklistPreserveScroll();
                 } else {
@@ -34938,7 +36585,7 @@ async function __tmRefreshAfterWake(reason) {
                 saving = false;
             }
         };
-        root.querySelector('[data-tm-detail="save"]')?.addEventListener('click', async () => {
+        on(root.querySelector('[data-tm-detail="save"]'), 'click', async () => {
             if (autoSaveTimer) {
                 try { clearTimeout(autoSaveTimer); } catch (e) {}
                 autoSaveTimer = null;
@@ -34961,6 +36608,391 @@ async function __tmRefreshAfterWake(reason) {
                 autoSaveTimer = null;
                 doSave(false).catch(() => null);
             }, 600);
+        };
+        let activeInlinePopover = null;
+        let activeInlinePopoverTrigger = null;
+        const subtaskSaveTimers = new Map();
+        const syncAutoHeight = (textarea, minHeight = 34) => {
+            if (!(textarea instanceof HTMLTextAreaElement)) return;
+            const nextMinHeight = Math.max(0, Number(minHeight) || 0);
+            try {
+                textarea.style.height = 'auto';
+                const nextHeight = Math.max(nextMinHeight, Math.ceil(Number(textarea.scrollHeight) || 0));
+                textarea.style.height = `${nextHeight}px`;
+            } catch (e) {}
+        };
+        const closeInlinePopover = () => {
+            const popover = activeInlinePopover;
+            const trigger = activeInlinePopoverTrigger;
+            activeInlinePopover = null;
+            activeInlinePopoverTrigger = null;
+            try { trigger?.classList?.remove?.('is-open'); } catch (e) {}
+            if (popover instanceof HTMLElement) {
+                try { __tmAnimatePopupOutAndRemove(popover, { duration: 110 }); } catch (e) {
+                    try { popover.remove(); } catch (e2) {}
+                }
+            }
+        };
+        try { root.__tmTaskDetailCloseInlinePopover = closeInlinePopover; } catch (e) {}
+        try { abortController.signal.addEventListener('abort', closeInlinePopover, { once: true }); } catch (e) {}
+        const positionInlinePopover = () => {
+            if (!(activeInlinePopover instanceof HTMLElement) || !(activeInlinePopoverTrigger instanceof HTMLElement)) return;
+            const triggerRect = activeInlinePopoverTrigger.getBoundingClientRect();
+            const popRect = activeInlinePopover.getBoundingClientRect();
+            const viewportW = Math.max(320, window.innerWidth || 0);
+            const viewportH = Math.max(240, window.innerHeight || 0);
+            let left = Math.round(triggerRect.left);
+            let top = Math.round(triggerRect.bottom + 8);
+            if (left + popRect.width > viewportW - 8) left = Math.max(8, Math.round(viewportW - popRect.width - 8));
+            if (top + popRect.height > viewportH - 8) top = Math.max(8, Math.round(triggerRect.top - popRect.height - 8));
+            activeInlinePopover.style.left = `${left}px`;
+            activeInlinePopover.style.top = `${top}px`;
+        };
+        const openInlinePopover = (trigger, config = {}) => {
+            if (!(trigger instanceof HTMLElement)) return;
+            if (activeInlinePopover && activeInlinePopoverTrigger === trigger) {
+                closeInlinePopover();
+                return;
+            }
+            closeInlinePopover();
+            const mode = String(config.mode || 'text').trim() || 'text';
+            const title = String(config.title || '').trim();
+            const value = String(config.value || '').trim();
+            const placeholder = String(config.placeholder || '').trim();
+            const popover = document.createElement('div');
+            popover.className = 'tm-task-detail-inline-popover';
+            popover.innerHTML = `
+                ${title ? `<div class="tm-task-detail-inline-popover__title">${esc(title)}</div>` : ''}
+                <input class="tm-input tm-task-detail-inline-popover__input" data-tm-detail-inline-popover-input type="${mode === 'date' ? 'date' : 'text'}" value="${esc(value)}" ${placeholder ? `placeholder="${esc(placeholder)}"` : ''}>
+                <div class="tm-task-detail-inline-popover__actions">
+                    <button type="button" class="tm-btn tm-btn-secondary" data-tm-detail-inline-popover-clear>清空</button>
+                    <button type="button" class="tm-btn tm-btn-primary" data-tm-detail-inline-popover-apply>确定</button>
+                </div>
+            `;
+            document.body.appendChild(popover);
+            activeInlinePopover = popover;
+            activeInlinePopoverTrigger = trigger;
+            try { trigger.classList.add('is-open'); } catch (e) {}
+            positionInlinePopover();
+            try { __tmAnimatePopupIn(popover, { origin: 'top-left', duration: 150 }); } catch (e) {}
+
+            const input = popover.querySelector('[data-tm-detail-inline-popover-input]');
+            const clearBtn = popover.querySelector('[data-tm-detail-inline-popover-clear]');
+            const applyBtn = popover.querySelector('[data-tm-detail-inline-popover-apply]');
+            if (mode === 'date' && input instanceof HTMLInputElement) {
+                try {
+                    input.focus();
+                    if (typeof input.showPicker === 'function') input.showPicker();
+                } catch (e) {}
+            }
+            const commit = async (rawValue = null) => {
+                const inputValue = rawValue == null && input instanceof HTMLInputElement
+                    ? input.value
+                    : String(rawValue ?? '');
+                const nextValue = typeof config.normalize === 'function'
+                    ? config.normalize(inputValue)
+                    : String(inputValue || '').trim();
+                try {
+                    if (typeof config.onCommit === 'function') await config.onCommit(nextValue);
+                    closeInlinePopover();
+                    try { trigger.focus(); } catch (e) {}
+                } catch (e) {
+                    hint(`❌ 更新失败: ${e.message}`, 'error');
+                }
+            };
+            if (input instanceof HTMLInputElement) {
+                on(input, 'keydown', async (ev) => {
+                    if (ev.key === 'Escape') {
+                        try { ev.preventDefault(); } catch (e) {}
+                        closeInlinePopover();
+                        try { trigger.focus(); } catch (e) {}
+                        return;
+                    }
+                    if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) {
+                        try { ev.preventDefault(); } catch (e) {}
+                        await commit();
+                    }
+                });
+                try {
+                    requestAnimationFrame(() => {
+                        try { input.focus(); } catch (e) {}
+                        if (mode === 'date') {
+                            try {
+                                if (typeof input.showPicker === 'function') input.showPicker();
+                                else input.click();
+                            } catch (e) {
+                                try { input.click(); } catch (e2) {}
+                            }
+                        } else {
+                            try { input.select(); } catch (e) {}
+                        }
+                    });
+                } catch (e) {}
+            }
+            on(clearBtn, 'click', async (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                await commit('');
+            });
+            on(applyBtn, 'click', async (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                await commit();
+            });
+        };
+        on(document, 'pointerdown', (ev) => {
+            if (!(activeInlinePopover instanceof HTMLElement)) return;
+            const target = ev?.target;
+            if (target instanceof Node) {
+                if (activeInlinePopover.contains(target)) return;
+                if (activeInlinePopoverTrigger instanceof HTMLElement && activeInlinePopoverTrigger.contains(target)) return;
+            }
+            closeInlinePopover();
+        }, { capture: true });
+        on(document, 'keydown', (ev) => {
+            if (String(ev?.key || '') !== 'Escape') return;
+            if (!activeInlinePopover) return;
+            closeInlinePopover();
+        }, { capture: true });
+        on(window, 'resize', () => {
+            if (!activeInlinePopover) return;
+            positionInlinePopover();
+        });
+        on(window, 'scroll', () => {
+            if (!activeInlinePopover) return;
+            closeInlinePopover();
+        }, { capture: true, passive: true });
+        const clearSubtaskSaveTimer = (subtaskId) => {
+            const key = String(subtaskId || '').trim();
+            const timer = subtaskSaveTimers.get(key);
+            if (timer) {
+                try { clearTimeout(timer); } catch (e) {}
+                subtaskSaveTimers.delete(key);
+            }
+        };
+        const syncTaskContentInVisibleViews = (taskLike) => {
+            const tid = String(taskLike?.id || '').trim();
+            if (!tid) return;
+            const modal = state.modal instanceof Element ? state.modal : document;
+            const html = API.renderTaskContentHtml(taskLike?.markdown, String(taskLike?.content || '').trim() || '(无内容)');
+            const plainText = String(taskLike?.content || '').trim() || '(无内容)';
+            const updateTitleNode = (el) => {
+                if (!(el instanceof HTMLElement)) return;
+                try { el.innerHTML = html; } catch (e) {}
+                try { el.setAttribute('title', plainText); } catch (e) {}
+            };
+            const contentSelectors = [
+                `#tmTaskTable tbody tr[data-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
+                `#tmTimelineLeftTable tbody tr[data-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
+                `.tm-body--kanban .tm-kanban-card[data-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
+                `.tm-checklist-item[data-id="${CSS.escape(tid)}"] .tm-checklist-title-button > span[draggable="false"]`,
+                `.tm-whiteboard-node[data-task-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
+                `.tm-whiteboard-pool-item[data-task-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
+                `.tm-whiteboard-stream-task-head[data-task-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
+                `.tm-whiteboard-stream-task-node[data-task-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
+            ];
+            contentSelectors.forEach((selector) => {
+                try {
+                    modal.querySelectorAll(selector).forEach(updateTitleNode);
+                } catch (e) {}
+            });
+        };
+        try {
+            abortController.signal.addEventListener('abort', () => {
+                subtaskSaveTimers.forEach((timer) => {
+                    try { clearTimeout(timer); } catch (e) {}
+                });
+                subtaskSaveTimers.clear();
+            }, { once: true });
+        } catch (e) {}
+        const saveSubtaskContent = async (textarea, subtaskId, options = {}) => {
+            if (!(textarea instanceof HTMLTextAreaElement)) return false;
+            const tid = String(subtaskId || '').trim();
+            const task = state.flatTasks?.[tid];
+            if (!tid || !task) return false;
+            const savedValue = String(textarea.dataset.savedValue || task.content || '').trim();
+            const nextValue = String(textarea.value || '').trim();
+            if (!nextValue) {
+                textarea.value = savedValue;
+                syncAutoHeight(textarea, 34);
+                if (options.showHint !== false) hint('⚠️ 子任务内容不能为空', 'warning');
+                return false;
+            }
+            if (nextValue === savedValue) {
+                textarea.value = nextValue;
+                textarea.dataset.savedValue = nextValue;
+                syncAutoHeight(textarea, 34);
+                return true;
+            }
+            if (textarea.dataset.saving === 'true') return false;
+            textarea.dataset.saving = 'true';
+            try {
+                await __tmUpdateTaskContentBlock(task, nextValue);
+                try {
+                    if (state.pendingInsertedTasks?.[tid]) {
+                        state.pendingInsertedTasks[tid].content = nextValue;
+                        state.pendingInsertedTasks[tid].markdown = state.flatTasks?.[tid]?.markdown || state.pendingInsertedTasks[tid].markdown;
+                    }
+                } catch (e) {}
+                try { __tmInvalidateTasksQueryCacheByDocId(task.root_id || task.docId); } catch (e) {}
+                textarea.dataset.savedValue = nextValue;
+                textarea.value = nextValue;
+                syncAutoHeight(textarea, 34);
+                try { syncTaskContentInVisibleViews(task); } catch (e) {}
+                return true;
+            } catch (e) {
+                textarea.value = savedValue;
+                syncAutoHeight(textarea, 34);
+                if (options.showHint !== false) hint(`❌ 子任务更新失败: ${e.message}`, 'error');
+                return false;
+            } finally {
+                try { delete textarea.dataset.saving; } catch (e) {}
+            }
+        };
+        const scheduleSubtaskSave = (textarea, subtaskId) => {
+            const tid = String(subtaskId || '').trim();
+            if (!tid) return;
+            clearSubtaskSaveTimer(tid);
+            const timer = setTimeout(() => {
+                subtaskSaveTimers.delete(tid);
+                saveSubtaskContent(textarea, tid, { showHint: false }).catch(() => null);
+            }, 700);
+            subtaskSaveTimers.set(tid, timer);
+        };
+        const restoreSubtaskEmptyState = () => {
+            const list = root.querySelector('[data-tm-detail-subtasks]');
+            if (!(list instanceof HTMLElement)) return;
+            const hasRealRows = Array.from(list.children).some((el) => el instanceof HTMLElement && el.classList.contains('tm-task-detail-subtask'));
+            if (hasRealRows) return;
+            list.innerHTML = '';
+        };
+        const bindSubtaskDraftRow = (draftRow) => {
+            if (!(draftRow instanceof HTMLElement)) return;
+            const input = draftRow.querySelector('[data-tm-detail-subtask-draft-input]');
+            const cancelBtn = draftRow.querySelector('[data-tm-detail-subtask-draft-cancel]');
+            const saveBtn = draftRow.querySelector('[data-tm-detail-subtask-draft-save]');
+            if (!(input instanceof HTMLTextAreaElement)) return;
+            const removeDraft = () => {
+                try { draftRow.remove(); } catch (e) {}
+                restoreSubtaskEmptyState();
+            };
+            const submitDraft = async () => {
+                const nextText = String(input.value || '').trim();
+                if (!nextText) {
+                    hint('⚠️ 请输入子任务内容', 'warning');
+                    try { input.focus(); } catch (e) {}
+                    return;
+                }
+                if (draftRow.dataset.saving === 'true') return;
+                draftRow.dataset.saving = 'true';
+                try {
+                    const detailScrollSnapshot = captureEmbeddedDetailScroll();
+                    const subtaskId = await __tmCreateSubtaskForTask(taskId, nextText);
+                    try { state.collapsedTaskIds?.delete?.(taskId); } catch (e) {}
+                    __tmApplyOptimisticSubtask(taskId, subtaskId, nextText);
+                    if (embedded && String(state.viewMode || '').trim() === 'checklist') {
+                        rerenderChecklistPreserveScroll();
+                        restoreEmbeddedDetailScroll(detailScrollSnapshot);
+                    } else {
+                        __tmRefreshMainViewInPlace({ withFilters: true });
+                        __tmLoadSelectedDocumentsPreserveChecklistScroll().catch((err) => {
+                            try { console.error('[详情子任务] 刷新失败:', err); } catch (e) {}
+                        });
+                        refreshBoundDetail(taskId);
+                        restoreEmbeddedDetailScroll(detailScrollSnapshot);
+                    }
+                } catch (e) {
+                    hint(`❌ 新建子任务失败: ${e.message}`, 'error');
+                    try { delete draftRow.dataset.saving; } catch (e2) {}
+                }
+            };
+            syncAutoHeight(input, 34);
+            on(input, 'input', () => syncAutoHeight(input, 34));
+            on(input, 'keydown', async (ev) => {
+                if (ev.key === 'Escape') {
+                    try { ev.preventDefault(); } catch (e) {}
+                    removeDraft();
+                    return;
+                }
+                if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) {
+                    try { ev.preventDefault(); } catch (e) {}
+                    await submitDraft();
+                }
+            });
+            on(cancelBtn, 'click', (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                removeDraft();
+            });
+            on(saveBtn, 'click', async (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                await submitDraft();
+            });
+            try {
+                requestAnimationFrame(() => {
+                    try { input.focus(); } catch (e) {}
+                });
+            } catch (e) {}
+        };
+        const openInlineSubtaskDraft = () => {
+            const list = root.querySelector('[data-tm-detail-subtasks]');
+            if (!(list instanceof HTMLElement)) return;
+            const existing = list.querySelector('[data-tm-detail-subtask-draft]');
+            if (existing instanceof HTMLElement) {
+                try { existing.querySelector('[data-tm-detail-subtask-draft-input]')?.focus?.(); } catch (e) {}
+                return;
+            }
+            const empty = list.querySelector('.tm-task-detail-empty');
+            if (empty) {
+                try { empty.remove(); } catch (e) {}
+            }
+            const draftRow = document.createElement('div');
+            draftRow.className = 'tm-task-detail-subtask tm-task-detail-subtask--draft';
+            draftRow.setAttribute('data-tm-detail-subtask-draft', 'true');
+            draftRow.innerHTML = `
+                <div class="tm-task-detail-subtask-row">
+                    <div class="tm-task-detail-subtask-main">
+                        <span class="tm-task-detail-subtask-draft-marker" aria-hidden="true"></span>
+                        <textarea class="tm-task-detail-subtask-title" data-tm-detail-subtask-draft-input rows="1" placeholder="输入子任务内容"></textarea>
+                    </div>
+                    <div class="tm-task-detail-subtask-trailing">
+                        <div class="tm-task-detail-subtask-actions">
+                            <button type="button" class="bc-btn bc-btn--sm tm-task-detail-subtask-action" data-tm-detail-subtask-draft-save title="创建子任务">${__tmRenderLucideIcon('check-circle-2')}</button>
+                            <button type="button" class="bc-btn bc-btn--sm tm-task-detail-subtask-action" data-tm-detail-subtask-draft-cancel title="取消">${__tmRenderLucideIcon('x')}</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            list.appendChild(draftRow);
+            bindSubtaskDraftRow(draftRow);
+        };
+        const bindSubtaskEditors = () => {
+            root.querySelectorAll('[data-tm-detail-subtask-content]').forEach((el) => {
+                if (!(el instanceof HTMLTextAreaElement)) return;
+                const tid = String(el.getAttribute('data-tm-detail-subtask-content') || '').trim();
+                if (!tid) return;
+                if (!el.dataset.savedValue) el.dataset.savedValue = String(el.value || '').trim();
+                syncAutoHeight(el, 34);
+                on(el, 'input', () => {
+                    syncAutoHeight(el, 34);
+                    if (el.readOnly) return;
+                    scheduleSubtaskSave(el, tid);
+                });
+                on(el, 'blur', () => {
+                    clearSubtaskSaveTimer(tid);
+                    if (el.readOnly) return;
+                    saveSubtaskContent(el, tid, { showHint: false }).catch(() => null);
+                });
+                on(el, 'keydown', async (ev) => {
+                    if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) {
+                        try { ev.preventDefault(); } catch (e) {}
+                        clearSubtaskSaveTimer(tid);
+                        await saveSubtaskContent(el, tid, { showHint: true });
+                        try { el.blur(); } catch (e) {}
+                    }
+                });
+            });
         };
         const bindStatusSelect = () => {
             const selectRoot = root.querySelector('[data-tm-detail-status-select]');
@@ -34989,8 +37021,10 @@ async function __tmRefreshAfterWake(reason) {
                 if (!matched) return;
                 current = String(matched.getAttribute('data-value') || '').trim();
                 hiddenInput.value = current;
-                const chip = matched.querySelector('.tm-status-tag');
-                if (chip instanceof HTMLElement) valueWrap.innerHTML = chip.outerHTML;
+                const label = String(matched.getAttribute('data-label') || current).trim() || current;
+                const color = String(matched.getAttribute('data-color') || '').trim();
+                valueWrap.textContent = label;
+                try { trigger.setAttribute('style', __tmBuildStatusChipStyle(color)); } catch (e) {}
                 optionButtons.forEach((btn) => {
                     const selected = btn === matched;
                     btn.classList.toggle('is-selected', selected);
@@ -34998,31 +37032,31 @@ async function __tmRefreshAfterWake(reason) {
                 });
             };
 
-            trigger.addEventListener('click', (ev) => {
+            on(trigger, 'click', (ev) => {
                 try { ev.preventDefault(); } catch (e) {}
                 try { ev.stopPropagation(); } catch (e) {}
                 if (menu.hidden) openMenu();
                 else closeMenu();
             });
-            root.addEventListener('pointerdown', (ev) => {
+            on(root, 'pointerdown', (ev) => {
                 if (selectRoot.contains(ev.target)) return;
                 closeMenu();
             });
-            selectRoot.addEventListener('focusout', () => {
+            on(selectRoot, 'focusout', () => {
                 try {
                     requestAnimationFrame(() => {
                         if (!selectRoot.contains(document.activeElement)) closeMenu();
                     });
                 } catch (e) {}
             });
-            selectRoot.addEventListener('keydown', (ev) => {
+            on(selectRoot, 'keydown', (ev) => {
                 if (ev.key !== 'Escape') return;
                 try { ev.preventDefault(); } catch (e) {}
                 closeMenu();
                 try { trigger.focus(); } catch (e) {}
             });
             optionButtons.forEach((btn) => {
-                btn.addEventListener('click', (ev) => {
+                on(btn, 'click', (ev) => {
                     try { ev.preventDefault(); } catch (e) {}
                     try { ev.stopPropagation(); } catch (e) {}
                     hiddenInput.value = String(btn.getAttribute('data-value') || '').trim();
@@ -35035,45 +37069,172 @@ async function __tmRefreshAfterWake(reason) {
             syncStatusUi();
             closeMenu();
         };
-        const bindPrioritySegmented = () => {
-            const hiddenInput = root.querySelector('input[type="hidden"][data-tm-detail="priority"]');
-            const optionButtons = Array.from(root.querySelectorAll('[data-tm-detail-priority-option]')).filter((el) => el instanceof HTMLButtonElement);
-            if (!(hiddenInput instanceof HTMLInputElement) || !optionButtons.length) return;
+        const bindPrioritySelect = () => {
+            const selectRoot = root.querySelector('[data-tm-detail-priority-select]');
+            if (!(selectRoot instanceof HTMLElement)) return;
+            const hiddenInput = selectRoot.querySelector('input[type="hidden"][data-tm-detail="priority"]') || root.querySelector('input[type="hidden"][data-tm-detail="priority"]');
+            const trigger = selectRoot.querySelector('[data-tm-detail-priority-trigger]');
+            const menu = selectRoot.querySelector('[data-tm-detail-priority-menu]');
+            const valueWrap = trigger?.querySelector('.tm-task-detail-priority-trigger__value');
+            if (!(hiddenInput instanceof HTMLInputElement) || !(trigger instanceof HTMLElement) || !(menu instanceof HTMLElement) || !(valueWrap instanceof HTMLElement)) return;
+            const optionButtons = Array.from(menu.querySelectorAll('[data-tm-detail-priority-option]')).filter((el) => el instanceof HTMLButtonElement);
+            if (!optionButtons.length) return;
+
+            const closeMenu = () => {
+                menu.hidden = true;
+                menu.style.display = 'none';
+                trigger.setAttribute('aria-expanded', 'false');
+            };
+            const openMenu = () => {
+                menu.hidden = false;
+                menu.style.display = 'flex';
+                trigger.setAttribute('aria-expanded', 'true');
+            };
             const syncPriorityUi = () => {
-                const current = String(hiddenInput.value || '').trim();
+                let current = String(hiddenInput.value || '').trim();
+                let matched = optionButtons.find((btn) => String(btn.getAttribute('data-value') || '').trim() === current) || optionButtons[0];
+                if (!matched) return;
+                current = String(matched.getAttribute('data-value') || '').trim();
+                hiddenInput.value = current;
+                valueWrap.innerHTML = __tmRenderPriorityJira(current || 'none', false);
+                try { trigger.setAttribute('style', __tmBuildPriorityChipStyle(current || 'none')); } catch (e) {}
                 optionButtons.forEach((btn) => {
-                    const selected = String(btn.getAttribute('data-value') || '').trim() === current;
-                    btn.classList.toggle('tm-view-seg-item--active', selected);
-                    btn.classList.toggle('is-active', selected);
-                    btn.setAttribute('data-state', selected ? 'active' : 'inactive');
+                    const selected = btn === matched;
+                    btn.classList.toggle('is-selected', selected);
                     btn.setAttribute('aria-selected', selected ? 'true' : 'false');
                 });
             };
+
+            on(trigger, 'click', (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                if (menu.hidden) openMenu();
+                else closeMenu();
+            });
+            on(root, 'pointerdown', (ev) => {
+                if (selectRoot.contains(ev.target)) return;
+                closeMenu();
+            });
+            on(selectRoot, 'focusout', () => {
+                try {
+                    requestAnimationFrame(() => {
+                        if (!selectRoot.contains(document.activeElement)) closeMenu();
+                    });
+                } catch (e) {}
+            });
+            on(selectRoot, 'keydown', (ev) => {
+                if (ev.key !== 'Escape') return;
+                try { ev.preventDefault(); } catch (e) {}
+                closeMenu();
+                try { trigger.focus(); } catch (e) {}
+            });
             optionButtons.forEach((btn) => {
-                btn.addEventListener('click', (ev) => {
+                on(btn, 'click', (ev) => {
                     try { ev.preventDefault(); } catch (e) {}
                     try { ev.stopPropagation(); } catch (e) {}
                     hiddenInput.value = String(btn.getAttribute('data-value') || '').trim();
                     syncPriorityUi();
+                    closeMenu();
                     scheduleAutoSave();
                 });
             });
             syncPriorityUi();
+            closeMenu();
         };
+        const bindCoreMetaControls = () => {
+            root.querySelectorAll('[data-tm-detail-date-trigger]').forEach((btn) => {
+                if (!(btn instanceof HTMLButtonElement)) return;
+                on(btn, 'click', (ev) => {
+                    try { ev.preventDefault(); } catch (e) {}
+                    try { ev.stopPropagation(); } catch (e) {}
+                    const field = String(btn.getAttribute('data-tm-detail-date-trigger') || '').trim();
+                    if (!field) return;
+                    const title = field === 'startDate' ? '开始日期' : '截止日期';
+                    openInlinePopover(btn, {
+                        mode: 'date',
+                        title,
+                        value: readHiddenInputValue(field),
+                        normalize: (raw) => {
+                            const v = String(raw || '').trim();
+                            return v ? __tmNormalizeDateOnly(v) : '';
+                        },
+                        onCommit: async (nextValue) => {
+                            setHiddenInputValue(field, nextValue);
+                            syncMetaChipFaces();
+                            scheduleAutoSave();
+                        }
+                    });
+                });
+            });
+            on(root.querySelector('[data-tm-detail-duration-trigger]'), 'click', (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                openInlinePopover(ev.currentTarget, {
+                    mode: 'text',
+                    title: '时长',
+                    value: readHiddenInputValue('duration'),
+                    placeholder: '1h / 30min',
+                    normalize: (raw) => String(raw || '').trim(),
+                    onCommit: async (nextValue) => {
+                        setHiddenInputValue('duration', nextValue);
+                        syncMetaChipFaces();
+                        scheduleAutoSave();
+                    }
+                });
+            });
+            on(root.querySelector('[data-tm-detail-pinned-toggle]'), 'click', (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                setHiddenInputValue('pinned', readPinnedValue() ? '' : '1');
+                syncMetaChipFaces();
+                scheduleAutoSave();
+            });
+            root.querySelectorAll('[data-tm-detail-open-child]').forEach((btn) => {
+                if (!(btn instanceof HTMLButtonElement)) return;
+                on(btn, 'click', (ev) => {
+                    try { ev.preventDefault(); } catch (e) {}
+                    try { ev.stopPropagation(); } catch (e) {}
+                    const nextId = String(btn.getAttribute('data-tm-detail-open-child') || '').trim();
+                    if (!nextId) return;
+                    refreshBoundDetail(nextId);
+                });
+            });
+            root.querySelectorAll('[data-tm-detail-subtask-menu]').forEach((row) => {
+                if (!(row instanceof HTMLElement)) return;
+                on(row, 'contextmenu', (ev) => {
+                    const subtaskId = String(row.getAttribute('data-tm-detail-subtask-menu') || '').trim();
+                    if (!subtaskId) return;
+                    try { tmShowTaskContextMenu(ev, subtaskId); } catch (e) {}
+                });
+            });
+            on(root.querySelector('[data-tm-detail="create-subtask"]'), 'click', (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                openInlineSubtaskDraft();
+            });
+        };
+        syncMetaChipFaces();
+        const titleTextarea = root.querySelector('[data-tm-detail="content"]');
+        if (titleTextarea instanceof HTMLTextAreaElement) {
+            syncAutoHeight(titleTextarea, 36);
+            on(titleTextarea, 'input', () => syncAutoHeight(titleTextarea, 36));
+        }
         bindStatusSelect();
-        bindPrioritySegmented();
+        bindPrioritySelect();
+        bindCoreMetaControls();
+        bindSubtaskEditors();
         root.querySelectorAll('[data-tm-detail]').forEach((el) => {
             if (!(el instanceof HTMLElement)) return;
             const field = String(el.getAttribute('data-tm-detail') || '').trim();
             if (field === 'save') return;
             if (el.matches('textarea,input[type="text"],input[type="date"],select')) {
                 if (field !== 'content' && field !== 'remark') {
-                    el.addEventListener('input', scheduleAutoSave);
+                    on(el, 'input', scheduleAutoSave);
                 }
-                el.addEventListener('change', scheduleAutoSave);
-                el.addEventListener('blur', scheduleAutoSave);
+                on(el, 'change', scheduleAutoSave);
+                on(el, 'blur', scheduleAutoSave);
             } else if (el.matches('input[type="checkbox"]')) {
-                el.addEventListener('change', scheduleAutoSave);
+                on(el, 'change', scheduleAutoSave);
             }
         });
     }
@@ -35144,6 +37305,44 @@ async function __tmRefreshAfterWake(reason) {
         render();
     }
 
+    function __tmCaptureKanbanDetailScrollSnapshot(modalEl) {
+        try {
+            const modal = modalEl instanceof Element ? modalEl : state.modal;
+            if (!(modal instanceof Element)) return null;
+            if (String(state.viewMode || '').trim() !== 'kanban') return null;
+            const panel = modal.querySelector('#tmKanbanDetailPanel');
+            if (!(panel instanceof HTMLElement)) return null;
+            const selectedId = String(panel.dataset.tmDetailTaskId || state.kanbanDetailTaskId || '').trim();
+            if (!selectedId) return null;
+            return {
+                top: Number(panel.scrollTop || 0),
+                left: Number(panel.scrollLeft || 0),
+                selectedId,
+            };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function __tmRestoreKanbanDetailScrollSnapshot(snapshot, modalEl) {
+        if (!snapshot || !String(snapshot.selectedId || '').trim()) return;
+        const restore = () => {
+            try {
+                const modal = modalEl instanceof Element ? modalEl : state.modal;
+                if (!(modal instanceof Element)) return;
+                if (String(state.viewMode || '').trim() !== 'kanban') return;
+                if (String(state.kanbanDetailTaskId || '').trim() !== String(snapshot.selectedId || '').trim()) return;
+                const panel = modal.querySelector('#tmKanbanDetailPanel');
+                if (!(panel instanceof HTMLElement)) return;
+                panel.scrollTop = Number(snapshot.top || 0);
+                panel.scrollLeft = Number(snapshot.left || 0);
+            } catch (e) {}
+        };
+        try { restore(); } catch (e) {}
+        try { requestAnimationFrame(restore); } catch (e) {}
+        try { setTimeout(restore, 30); } catch (e) {}
+    }
+
     function __tmPositionKanbanDetailFloat(modalEl) {
         const modal = modalEl instanceof Element ? modalEl : state.modal;
         if (!(modal instanceof Element)) return false;
@@ -35189,18 +37388,21 @@ async function __tmRefreshAfterWake(reason) {
         return true;
     }
 
-    function __tmRefreshKanbanDetailInPlace(modalEl) {
+    function __tmRefreshKanbanDetailInPlace(modalEl, options = {}) {
         const modal = modalEl instanceof Element ? modalEl : state.modal;
         if (!(modal instanceof Element)) return false;
         if (String(state.viewMode || '').trim() !== 'kanban') return false;
         const panel = modal.querySelector('#tmKanbanDetailPanel');
         const selectedId = String(state.kanbanDetailTaskId || '').trim();
         const task = selectedId ? (state.flatTasks?.[selectedId] || null) : null;
+        const opts = (options && typeof options === 'object') ? options : {};
+        const detailScrollSnapshot = opts.scrollSnapshot || __tmCaptureKanbanDetailScrollSnapshot(modal);
         if (!(panel instanceof HTMLElement) || !task) {
             __tmClearKanbanDetailFloatingHandlers();
             return false;
         }
         panel.innerHTML = __tmBuildTaskDetailInnerHtml(task, { embedded: true, floating: true });
+        try { panel.dataset.tmDetailTaskId = selectedId; } catch (e) {}
         __tmBindTaskDetailEditor(panel, selectedId, {
             embedded: true,
             onClose: () => {
@@ -35226,6 +37428,9 @@ async function __tmRefreshAfterWake(reason) {
         window.addEventListener('resize', __tmKanbanDetailRepositionHandler, true);
         try { __tmPositionKanbanDetailFloat(modal); } catch (e) {}
         try { requestAnimationFrame(() => { try { __tmPositionKanbanDetailFloat(modal); } catch (e) {} }); } catch (e) {}
+        if (detailScrollSnapshot && String(detailScrollSnapshot.selectedId || '').trim() === selectedId) {
+            __tmRestoreKanbanDetailScrollSnapshot(detailScrollSnapshot, modal);
+        }
         return true;
     }
 
@@ -36465,6 +38670,7 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         const targetDone = !!done;
+        const detailScrollSnapshot = __tmCaptureChecklistDetailScrollSnapshot();
 
         // 检查全局锁
         if (GlobalLock.isLocked()) {
@@ -36711,6 +38917,7 @@ async function __tmRefreshAfterWake(reason) {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     render();
+                    __tmRestoreChecklistDetailScrollSnapshot(detailScrollSnapshot);
                 });
             });
 
@@ -36740,6 +38947,7 @@ async function __tmRefreshAfterWake(reason) {
 
             recalcStats();
             render();
+            __tmRestoreChecklistDetailScrollSnapshot(detailScrollSnapshot);
             hint(`❌ 操作失败: ${err.message}`, 'error');
         } finally {
             // render() 完成后手动解锁
@@ -37299,6 +39507,33 @@ async function __tmRefreshAfterWake(reason) {
 
     // Removed tmInsertChildTask
 
+    async function __tmUpdateTaskContentBlock(taskOrId, nextContent) {
+        const tid = typeof taskOrId === 'string'
+            ? String(taskOrId || '').trim()
+            : String(taskOrId?.id || '').trim();
+        const task = tid ? state.flatTasks?.[tid] : null;
+        if (!task) throw new Error('未找到任务');
+
+        const text = String(nextContent || '').trim();
+        if (!text) throw new Error('任务内容不能为空');
+
+        let nextMarkdown = String(task.markdown || '').trim();
+        const checked = !!task.done;
+        const normalizedFirstLine = `- [${checked ? 'x' : ' '}] ${text}`;
+        if (!nextMarkdown) {
+            nextMarkdown = normalizedFirstLine;
+        } else {
+            const lines = String(nextMarkdown).split(/\r?\n/);
+            lines[0] = normalizedFirstLine;
+            nextMarkdown = lines.join('\n');
+        }
+
+        await API.updateBlock(tid, nextMarkdown);
+        task.content = text;
+        task.markdown = nextMarkdown;
+        return task;
+    }
+
     // 编辑任务
     window.tmEdit = async function(id) {
         const task = state.flatTasks[id];
@@ -37308,21 +39543,52 @@ async function __tmRefreshAfterWake(reason) {
         const newContent = await showPrompt('编辑任务', '请输入新任务内容', task.content);
         if (newContent === null || newContent === task.content) return;
 
-        const markerMatch = String(task.markdown || '').match(/^(\s*[\*\-])\s*\[(?: |x|X)\]\s*/);
-        const bullet = markerMatch?.[1] || '-';
-        const checked = task.done ? 'x' : ' ';
-        const newMarkdown = `${bullet} [${checked}] ${newContent}`;
-
         try {
-            await API.updateBlock(id, newMarkdown);
-            task.content = newContent;
-            task.markdown = newMarkdown;
+            await __tmUpdateTaskContentBlock(task, newContent);
             __tmRefreshMainViewInPlace({ withFilters: true });
             hint('✅ 任务已更新', 'success');
         } catch (e) {
             hint(`❌ 更新失败: ${e.message}`, 'error');
         }
     };
+
+    function __tmCaptureChecklistDetailScrollSnapshot() {
+        try {
+            if (String(state.viewMode || '').trim() !== 'checklist') return null;
+            const modal = state.modal instanceof Element ? state.modal : null;
+            if (!(modal instanceof Element)) return null;
+            const selectedId = String(state.detailTaskId || '').trim();
+            if (!selectedId) return null;
+            const panel = modal.querySelector(__tmChecklistUseSheetMode(modal) ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+            if (!(panel instanceof HTMLElement)) return null;
+            return {
+                top: Number(panel.scrollTop || 0),
+                left: Number(panel.scrollLeft || 0),
+                selectedId,
+            };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function __tmRestoreChecklistDetailScrollSnapshot(snapshot) {
+        if (!snapshot || !String(snapshot.selectedId || '').trim()) return;
+        const restore = () => {
+            try {
+                const modal = state.modal instanceof Element ? state.modal : null;
+                if (!(modal instanceof Element)) return;
+                if (String(state.viewMode || '').trim() !== 'checklist') return;
+                if (String(state.detailTaskId || '').trim() !== String(snapshot.selectedId || '').trim()) return;
+                const panel = modal.querySelector(__tmChecklistUseSheetMode(modal) ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+                if (!(panel instanceof HTMLElement)) return;
+                panel.scrollTop = Number(snapshot.top || 0);
+                panel.scrollLeft = Number(snapshot.left || 0);
+            } catch (e) {}
+        };
+        try { restore(); } catch (e) {}
+        try { requestAnimationFrame(restore); } catch (e) {}
+        try { setTimeout(restore, 30); } catch (e) {}
+    }
 
     // 删除任务
     window.tmDelete = async function(id) {
@@ -37346,6 +39612,8 @@ async function __tmRefreshAfterWake(reason) {
         if (!ok) return;
 
         try {
+            const detailTaskIdBeforeDelete = String(state.detailTaskId || '').trim();
+            const detailScrollSnapshot = __tmCaptureChecklistDetailScrollSnapshot();
             await API.deleteBlock(id);
 
             // 从本地数据中移除
@@ -37368,9 +39636,16 @@ async function __tmRefreshAfterWake(reason) {
                 removeRecursive(doc.tasks);
             });
 
+            if (detailTaskIdBeforeDelete === String(id || '').trim()) {
+                state.detailTaskId = '';
+                state.checklistDetailDismissed = true;
+                state.checklistDetailSheetOpen = false;
+            }
             recalcStats();
-            applyFilters();
-            render();
+            __tmRefreshMainViewInPlace({ withFilters: true });
+            if (detailScrollSnapshot && detailScrollSnapshot.selectedId && detailScrollSnapshot.selectedId !== String(id || '').trim()) {
+                __tmRestoreChecklistDetailScrollSnapshot(detailScrollSnapshot);
+            }
             hint('✅ 任务已删除', 'success');
         } catch (e) {
             hint(`❌ 删除失败: ${e.message}`, 'error');
@@ -37483,7 +39758,7 @@ async function __tmRefreshAfterWake(reason) {
             border-radius: 4px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             padding: 4px 0;
-            z-index: 200000;
+            z-index: 200020;
             width: auto;
             max-width: calc(100vw - 16px);
             min-width: 0;
@@ -37491,6 +39766,7 @@ async function __tmRefreshAfterWake(reason) {
             user-select: none;
         `;
         try {
+            menu.style.setProperty('z-index', '200020', 'important');
             menu.style.setProperty('display', 'inline-flex', 'important');
             menu.style.setProperty('flex-direction', 'column', 'important');
             menu.style.setProperty('align-items', 'stretch', 'important');
@@ -37679,6 +39955,7 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         menu.appendChild(createItem('➕ 新建子任务', () => tmCreateSubtask(taskId)));
+        menu.appendChild(createItem('➕ 新建同级任务', () => tmCreateSiblingTask(taskId)));
         if (globalThis.__tmCalendar && (typeof globalThis.__tmCalendar.openScheduleEditor === 'function' || typeof globalThis.__tmCalendar.openScheduleEditorById === 'function' || typeof globalThis.__tmCalendar.openScheduleEditorByTaskId === 'function')) {
             menu.appendChild(createItem('📅 编辑日程', () => {
                 void __tmOpenScheduleEditorForBlock(taskId, null, {
@@ -38063,6 +40340,48 @@ async function __tmRefreshAfterWake(reason) {
         return taskId;
     }
 
+    async function __tmResolveTaskListBlockId(taskId) {
+        const tid = String(taskId || '').trim();
+        if (!tid) return '';
+        const cachedListId = String(state.flatTasks?.[tid]?.parent_id || '').trim();
+        if (cachedListId) {
+            try {
+                const rows = await API.getBlocksByIds([cachedListId]);
+                const row = Array.isArray(rows) ? rows[0] : null;
+                if (String(row?.id || '').trim() === cachedListId && String(row?.type || '').trim() === 'l') {
+                    return cachedListId;
+                }
+            } catch (e) {}
+        }
+        try {
+            const rows = await API.getBlocksByIds([tid]);
+            const row = Array.isArray(rows) ? rows[0] : null;
+            const parentId = String(row?.parent_id || '').trim();
+            if (parentId) return parentId;
+        } catch (e) {}
+        return '';
+    }
+
+    async function __tmCreateSiblingTaskForTask(taskId, content) {
+        const tid = String(taskId || '').trim();
+        const currentTask = state.flatTasks?.[tid];
+        if (!tid || !currentTask) throw new Error('未找到当前任务');
+        const text = String(content || '').trim();
+        if (!text) throw new Error('请输入任务内容');
+
+        const listId = await __tmResolveTaskListBlockId(tid);
+        if (!listId) throw new Error('未找到当前任务所在的任务列表');
+
+        const insertedId = await API.insertBlock(listId, `- [ ] ${text}`, { previousID: tid });
+        const nextTaskId = await __tmResolveInsertedTaskBlockId(insertedId);
+        try { await __tmPersistMetaAndAttrsAsync(nextTaskId, { pinned: false }); } catch (e) {}
+        try {
+            const docId = String(currentTask.docId || currentTask.root_id || '').trim();
+            if (docId) __tmInvalidateTasksQueryCacheByDocId(docId);
+        } catch (e) {}
+        return nextTaskId;
+    }
+
     function __tmApplyOptimisticSubtask(parentTaskId, subtaskId, content) {
         const pid = String(parentTaskId || '').trim();
         const tid = String(subtaskId || '').trim();
@@ -38108,6 +40427,75 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
     }
 
+    function __tmApplyOptimisticSiblingTask(sourceTaskId, siblingTaskId, content) {
+        const sid = String(sourceTaskId || '').trim();
+        const tid = String(siblingTaskId || '').trim();
+        const text = String(content || '').trim();
+        const sourceTask = state.flatTasks?.[sid];
+        if (!sid || !tid || !text || !sourceTask) return;
+
+        const parentTaskId = String(sourceTask.parentTaskId || '').trim();
+        const parentTask = parentTaskId ? state.flatTasks?.[parentTaskId] : null;
+        const nextTask = {
+            id: tid,
+            done: false,
+            pinned: false,
+            content: text,
+            markdown: `- [ ] ${text}`,
+            priority: '',
+            duration: '',
+            remark: '',
+            completionTime: '',
+            customTime: '',
+            customStatus: '',
+            docName: sourceTask.docName || '',
+            root_id: sourceTask.root_id || sourceTask.docId || '',
+            docId: sourceTask.docId || sourceTask.root_id || '',
+            parent_id: sourceTask.parent_id || '',
+            parentTaskId: parentTaskId || null,
+            created: new Date().toISOString(),
+            updated: new Date().toISOString(),
+            children: [],
+            level: Math.max(0, Number(sourceTask.level) || 0),
+            h2: sourceTask.h2 || '',
+            h2Id: sourceTask.h2Id || '',
+        };
+        try { normalizeTaskFields(nextTask, nextTask.docName || '未知文档'); } catch (e) {}
+        try {
+            const sourceDocSeq = Number(sourceTask?.docSeq);
+            if (Number.isFinite(sourceDocSeq)) nextTask.docSeq = sourceDocSeq + 0.5;
+        } catch (e) {}
+
+        state.flatTasks[tid] = nextTask;
+        if (parentTask) {
+            if (!Array.isArray(parentTask.children)) parentTask.children = [];
+            if (!parentTask.children.some((child) => String(child?.id || '').trim() === tid)) {
+                const sourceIndex = parentTask.children.findIndex((child) => String(child?.id || '').trim() === sid);
+                if (sourceIndex >= 0) parentTask.children.splice(sourceIndex + 1, 0, nextTask);
+                else parentTask.children.push(nextTask);
+            }
+        } else {
+            const docId = String(nextTask.docId || nextTask.root_id || '').trim();
+            const doc = state.taskTree.find((item) => String(item?.id || '').trim() === docId);
+            if (doc) {
+                if (!Array.isArray(doc.tasks)) doc.tasks = [];
+                if (!doc.tasks.some((item) => String(item?.id || '').trim() === tid)) {
+                    const sourceIndex = doc.tasks.findIndex((item) => String(item?.id || '').trim() === sid);
+                    if (sourceIndex >= 0) doc.tasks.splice(sourceIndex + 1, 0, nextTask);
+                    else doc.tasks.push(nextTask);
+                }
+            } else {
+                __tmUpsertLocalTask(nextTask);
+            }
+        }
+        try {
+            state.pendingInsertedTasks[tid] = {
+                ...nextTask,
+                expiresAt: Date.now() + 10000,
+            };
+        } catch (e) {}
+    }
+
     window.tmCreateSubtask = async function(parentTaskId, ev) {
         try {
             ev?.stopPropagation?.();
@@ -38141,6 +40529,41 @@ async function __tmRefreshAfterWake(reason) {
             hint('✅ 子任务已创建', 'success');
         } catch (e) {
             hint(`❌ 新建子任务失败: ${e.message}`, 'error');
+        }
+    };
+
+    window.tmCreateSiblingTask = async function(taskId, ev) {
+        try {
+            ev?.stopPropagation?.();
+            ev?.preventDefault?.();
+        } catch (e) {}
+
+        const tid = String(taskId || '').trim();
+        const currentTask = state.flatTasks?.[tid];
+        if (!tid || !currentTask) {
+            hint('❌ 未找到当前任务', 'error');
+            return;
+        }
+        if (!__tmEnsureEditableTaskLike(currentTask, '新建同级任务')) return;
+
+        const text = await showPrompt('新建同级任务', '请输入任务内容', '');
+        if (text == null) return;
+        const nextText = String(text || '').trim();
+        if (!nextText) {
+            hint('⚠ 请输入任务内容', 'warning');
+            return;
+        }
+
+        try {
+            const siblingTaskId = await __tmCreateSiblingTaskForTask(tid, nextText);
+            __tmApplyOptimisticSiblingTask(tid, siblingTaskId, nextText);
+            __tmRefreshMainViewInPlace({ withFilters: true });
+            __tmLoadSelectedDocumentsPreserveChecklistScroll().catch((err) => {
+                try { console.error('[同级任务] 刷新失败:', err); } catch (e) {}
+            });
+            hint('✅ 同级任务已创建', 'success');
+        } catch (e) {
+            hint(`❌ 新建同级任务失败: ${e.message}`, 'error');
         }
     };
 
@@ -39207,6 +41630,22 @@ async function __tmRefreshAfterWake(reason) {
                 const nowTs = Date.now();
                 const liveTasks = Array.isArray(res.tasks) ? res.tasks : [];
                 const liveIdSet = new Set(liveTasks.map((t) => String(t?.id || '').trim()).filter(Boolean));
+                const pendingIdsToValidate = Object.keys(pendingMap)
+                    .map((taskId) => String(taskId || '').trim())
+                    .filter((id) => id && !liveIdSet.has(id));
+                const existingPendingIdSet = new Set();
+                if (pendingIdsToValidate.length > 0) {
+                    try {
+                        const rows = await API.getBlocksByIds(pendingIdsToValidate);
+                        (Array.isArray(rows) ? rows : []).forEach((row) => {
+                            const id = String(row?.id || '').trim();
+                            if (!id) return;
+                            if (String(row?.type || '').trim() !== 'i') return;
+                            if (String(row?.subtype || '').trim() !== 't') return;
+                            existingPendingIdSet.add(id);
+                        });
+                    } catch (e) {}
+                }
                 Object.keys(pendingMap).forEach((taskId) => {
                     const id = String(taskId || '').trim();
                     const pending = pendingMap[id];
@@ -39215,6 +41654,10 @@ async function __tmRefreshAfterWake(reason) {
                         return;
                     }
                     if (liveIdSet.has(id)) {
+                        delete pendingMap[taskId];
+                        return;
+                    }
+                    if (pendingIdsToValidate.includes(id) && !existingPendingIdSet.has(id)) {
                         delete pendingMap[taskId];
                         return;
                     }
@@ -39277,7 +41720,6 @@ async function __tmRefreshAfterWake(reason) {
                     }
                 }
                 const semanticTaskBuckets = new Map();
-                const missingPriorityIds = [];
                 const resolveParentTaskLinksBatch = async (tasksMapByDoc) => {
                     const docTaskIdSets = new Map();
                     const globalTaskIdSet = new Set();
@@ -39414,8 +41856,6 @@ async function __tmRefreshAfterWake(reason) {
                         task.h2Created = '';
                         task.h2Rank = Number.NaN;
                     }
-                    if (!task.priority) missingPriorityIds.push(task.id);
-
                     const semanticContent = String(task.content || '').trim();
                     const semanticDocId = String(task.root_id || '').trim();
                     const semanticH2Id = String(task.h2Id || '').trim();
@@ -39473,23 +41913,6 @@ async function __tmRefreshAfterWake(reason) {
                     tasksByDoc.get(task.root_id).push(task);
                     nextFlatTasks[task.id] = task;
                 });
-
-                try {
-                    const ids = Array.from(new Set(missingPriorityIds)).filter(Boolean);
-                    if (ids.length > 0) {
-                        const map = await API.fetchNearestCustomPriority(ids, 10);
-                        if (map && map.size > 0) {
-                            ids.forEach(id => {
-                                const v = map.get(id);
-                                if (!v) return;
-                                const t = nextFlatTasks?.[id];
-                                if (!t) return;
-                                t.priority = v;
-                                try { normalizeTaskFields(t, t.docName || '未命名文档'); } catch (e) {}
-                            });
-                        }
-                    }
-                } catch (e) {}
                 let parentLinkStats = {
                     rounds: 0,
                     queryCalls: 0,
@@ -39594,6 +42017,15 @@ async function __tmRefreshAfterWake(reason) {
                         filteredCount: Array.isArray(state.filteredTasks) ? state.filteredTasks.length : 0,
                         fastBudget: loadBudget.enabled ? 1 : 0,
                     });
+                }
+                if (state.modal && token === (Number(state.openToken) || 0)) {
+                    try {
+                        requestAnimationFrame(() => {
+                            try { __tmMaybeAutoPromptSemanticDates(token); } catch (e) {}
+                        });
+                    } catch (e) {
+                        try { __tmMaybeAutoPromptSemanticDates(token); } catch (e2) {}
+                    }
                 }
                 scheduleDeferredPostLoadWork();
                 if ((deferH2Enhance || deferFlowEnhance) && taskIds0.length > 0) {
@@ -39938,7 +42370,7 @@ async function __tmRefreshAfterWake(reason) {
                     ? `--tm-checklist-compact-indent:${indent}px;`
                     : `margin-left:${indent}px;`;
                 return `
-                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}" style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')">
+                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}" style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" ontouchstart="tmChecklistItemTouchStart(event, '${escSq(String(task.id || ''))}')" ontouchmove="tmChecklistItemTouchMove(event)" ontouchend="tmChecklistItemTouchEnd('${escSq(String(task.id || ''))}', event)" ontouchcancel="tmChecklistItemTouchCancel(event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')">
                         <div class="tm-checklist-leading${hasChildren ? ' tm-checklist-leading--branch' : ''}${hasChildren && collapsed ? ' tm-checklist-leading--collapsed' : ''}">
                             ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:${collapsed ? 'rotate(0deg)' : 'rotate(90deg)'};"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : '<span class="tm-tree-toggle tm-tree-toggle--placeholder" aria-hidden="true"></span>'}
                             ${hasChildren && collapsed ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>' : ''}
@@ -46148,6 +48580,10 @@ async function __tmRefreshAfterWake(reason) {
             if (state.priorityModal) {
                 state.priorityModal.remove();
                 state.priorityModal = null;
+            }
+            if (state.semanticDateConfirmModal) {
+                state.semanticDateConfirmModal.remove();
+                state.semanticDateConfirmModal = null;
             }
         } catch (e) {}
 

@@ -45,6 +45,8 @@
         dateTo: '',
         maxTasks: 60,
     };
+    const AI_CHAT_SKILL_MAX_ROUNDS = 3;
+    const AI_CHAT_SKILL_MAX_CALLS_PER_ROUND = 4;
     const AI_ALLOWED_TYPES = new Set(['chat', 'smart', 'schedule', 'summary']);
     const AI_ALLOWED_SCOPES = new Set(['none', 'current_doc', 'current_task', 'current_group', 'current_view', 'manual']);
     const AI_ALLOWED_CONTEXT_MODES = new Set(['none', 'nearby', 'fulltext']);
@@ -1411,6 +1413,14 @@
             if (typeof value.answer === 'string') return value;
             if (value.result && typeof value.result.answer === 'string') return value.result;
         }
+        if (schema === 'chat_skill_plan') {
+            if (Array.isArray(value.skillCalls) || Array.isArray(value.plan) || typeof value.done === 'boolean') return value;
+            if (value.result && (Array.isArray(value.result.skillCalls) || Array.isArray(value.result.plan) || typeof value.result.done === 'boolean')) return value.result;
+        }
+        if (schema === 'chat_skill_final') {
+            if (typeof value.answer === 'string') return value;
+            if (value.result && typeof value.result.answer === 'string') return value.result;
+        }
         return value;
     }
 
@@ -1621,8 +1631,21 @@
  .tm-ai-sidebar__actions--left{justify-content:flex-start;}
  .tm-ai-sidebar__result-score{font-size:24px;font-weight:800;}
  .tm-ai-sidebar__result-body{white-space:pre-wrap;word-break:break-word;line-height:1.6;font-size:13px;}
+ .tm-ai-sidebar__result-block{margin-top:10px;padding-top:10px;border-top:1px dashed color-mix(in srgb, var(--b3-theme-surface-light) 80%, transparent);}
  .tm-ai-sidebar__result-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
  .tm-ai-sidebar__result-tags span{padding:4px 8px;border-radius:999px;background:rgba(127,127,127,.1);font-size:12px;}
+ .tm-ai-sidebar__plan-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+ .tm-ai-sidebar__plan-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.55;}
+ .tm-ai-sidebar__plan-index{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:999px;background:color-mix(in srgb, var(--b3-theme-primary) 14%, var(--b3-theme-surface));font-size:11px;font-weight:700;}
+ .tm-ai-sidebar__trace-round{margin-top:8px;padding:8px 10px;border:1px solid color-mix(in srgb, var(--b3-theme-surface-light) 84%, transparent);border-radius:10px;background:color-mix(in srgb, var(--b3-theme-background) 90%, var(--b3-theme-surface));}
+ .tm-ai-sidebar__trace-round-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;}
+ .tm-ai-sidebar__trace-round-meta{font-size:11px;opacity:.72;}
+ .tm-ai-sidebar__trace-call{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--b3-theme-surface);border:1px solid var(--b3-theme-surface-light);}
+ .tm-ai-sidebar__trace-call-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;}
+ .tm-ai-sidebar__trace-chip{display:inline-flex;align-items:center;justify-content:center;min-height:20px;padding:0 8px;border-radius:999px;background:rgba(127,127,127,.1);font-size:11px;font-weight:700;white-space:nowrap;}
+ .tm-ai-sidebar__trace-chip.is-success{background:color-mix(in srgb, #3cb371 18%, var(--b3-theme-surface));color:color-mix(in srgb, #177245 92%, var(--b3-theme-on-background));}
+ .tm-ai-sidebar__trace-chip.is-fail{background:color-mix(in srgb, #e05a47 16%, var(--b3-theme-surface));color:color-mix(in srgb, #b53d2b 92%, var(--b3-theme-on-background));}
+ .tm-ai-sidebar__trace-call-body{margin-top:6px;font-size:12px;line-height:1.55;opacity:.82;white-space:pre-wrap;word-break:break-word;}
  .tm-ai-sidebar__smart-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
  .tm-ai-sidebar__smart-item{border:1px solid var(--b3-theme-surface-light);border-radius:10px;padding:8px 10px;background:var(--b3-theme-background);}
  .tm-ai-sidebar__smart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;font-size:13px;font-weight:700;}
@@ -2134,6 +2157,739 @@
         }
         if (!successTask.length && !failedTask.length && !successCreate.length && !failedCreate.length && rawAnswer) lines.push(rawAnswer);
         return lines.filter(Boolean).join('\n');
+    }
+
+    function truncateForAi(value, max = 180) {
+        const text = String(value || '').trim();
+        if (!text) return '';
+        if (text.length <= max) return text;
+        return `${text.slice(0, Math.max(0, max - 1)).trim()}…`;
+    }
+
+    function normalizeChatSkillCall(item = {}, index = 0) {
+        const raw = (item && typeof item === 'object') ? item : {};
+        return {
+            id: String(raw.id || uid(`skill-${index + 1}`)).trim() || uid(`skill-${index + 1}`),
+            skill: String(raw.skill || raw.tool || raw.name || '').trim(),
+            input: (raw.input && typeof raw.input === 'object' && !Array.isArray(raw.input)) ? clone(raw.input) : {},
+            reason: String(raw.reason || raw.summary || '').trim(),
+        };
+    }
+
+    function normalizeChatSkillPlannerResult(raw = {}) {
+        const src = (raw && typeof raw === 'object') ? raw : {};
+        const legacyCalls = [];
+        (Array.isArray(src?.taskOperations) ? src.taskOperations : []).forEach((item, index) => {
+            const op = normalizeChatTaskOperation(item);
+            if (!op.taskId || !Object.keys(op.patch || {}).length) return;
+            legacyCalls.push({
+                id: uid(`legacy-update-${index + 1}`),
+                skill: 'update_task',
+                input: { taskId: op.taskId, patch: op.patch },
+                reason: op.reason,
+            });
+        });
+        (Array.isArray(src?.createOperations) ? src.createOperations : []).forEach((item, index) => {
+            const op = normalizeChatCreateOperation(item);
+            if (!op.content) return;
+            legacyCalls.push({
+                id: uid(`legacy-create-${index + 1}`),
+                skill: 'create_task',
+                input: {
+                    content: op.content,
+                    docId: op.docId,
+                    parentTaskId: op.parentTaskId,
+                    patch: op.patch,
+                },
+                reason: op.reason,
+            });
+        });
+        const normalizedCalls = ((Array.isArray(src.skillCalls) ? src.skillCalls : []).length
+            ? src.skillCalls
+            : legacyCalls
+        ).map(normalizeChatSkillCall).filter((item) => item.skill).slice(0, AI_CHAT_SKILL_MAX_CALLS_PER_ROUND);
+        const plan = (Array.isArray(src.plan) ? src.plan : [])
+            .map((item) => String(item || '').trim())
+            .filter(Boolean)
+            .slice(0, 6);
+        const warnings = (Array.isArray(src.warnings) ? src.warnings : [])
+            .map((item) => String(item || '').trim())
+            .filter(Boolean)
+            .slice(0, 6);
+        return {
+            plan,
+            warnings,
+            reason: String(src.reason || src.summary || '').trim(),
+            done: src.done === true || normalizedCalls.length === 0,
+            skillCalls: normalizedCalls,
+        };
+    }
+
+    function normalizeChatSkillFinalResult(raw = {}) {
+        const src = (raw && typeof raw === 'object') ? raw : {};
+        return {
+            answer: String(src.answer || '').trim(),
+            highlights: (Array.isArray(src.highlights) ? src.highlights : []).map((item) => String(item || '').trim()).filter(Boolean).slice(0, 8),
+            nextActions: (Array.isArray(src.nextActions) ? src.nextActions : []).map((item) => String(item || '').trim()).filter(Boolean).slice(0, 8),
+            warnings: (Array.isArray(src.warnings) ? src.warnings : []).map((item) => String(item || '').trim()).filter(Boolean).slice(0, 8),
+        };
+    }
+
+    function buildChatSkillPlannerPrompt() {
+        return `你是任务管理器里的 AI 执行规划器。请只输出 JSON：{"plan":[],"skillCalls":[{"id":"","skill":"","input":{},"reason":""}],"done":false,"warnings":[],"reason":""}。规则：1. 系统同时提供读取 skill 和写入 skill，若事实不足优先调用读取 skill；2. 当用户明确要求创建、修改、拆分、安排任务时，可以调用写入 skill，不要假设系统只有只读能力；3. 一轮最多调用 ${AI_CHAT_SKILL_MAX_CALLS_PER_ROUND} 个 skill，优先最少必要调用；4. 不要调用 availableReadSkills 和 availableWriteSkills 之外的 skill；5. 不要声称已经完成写入，真实执行由系统完成；6. 如果当前信息已经足够，返回 done=true 且 skillCalls=[]；7. input 必须是对象。`;
+    }
+
+    function buildChatSkillFinalPrompt() {
+        return '你是任务管理器助手。请只输出 JSON：{"answer":"","highlights":[],"nextActions":[],"warnings":[]}。必须严格基于用户指令、执行计划与真实 skill 结果来回答。不要编造未执行的修改；如果某个写操作失败，要明确说明失败原因。answer 控制在 220 字以内，先给结论，再给必要提醒。';
+    }
+
+    async function buildChatSkillTurnContext(session, instruction) {
+        const taskIds = await inferTaskIdsFromConversation(session);
+        const taskSnapshots = await getSelectedTaskSnapshots(taskIds.slice(0, 24));
+        const doc = await getPrimaryDocumentSnapshot(session, { taskId: taskIds[0] });
+        const excerpt = buildDocExcerpt(doc, taskIds[0], session.contextMode);
+        const docTasks = Array.isArray(doc?.tasks) ? doc.tasks.filter((item) => item && typeof item === 'object').slice(0, 80) : [];
+        let scopeTasks = mergeSummaryTasks(taskSnapshots, docTasks).filter((item) => item && typeof item === 'object');
+        if (!scopeTasks.length && session.contextScope === 'current_view') {
+            const list = await bridge()?.getCurrentFilteredTasks?.(Math.max(24, conversationTaskLimit(session))) || await bridge()?.getCurrentViewTasks?.(Math.max(24, conversationTaskLimit(session)));
+            scopeTasks = mergeSummaryTasks(Array.isArray(list) ? list : [], taskSnapshots, docTasks).filter((item) => item && typeof item === 'object');
+        }
+        if (!scopeTasks.length && session.contextScope === 'current_group') {
+            const list = await bridge()?.getCurrentGroupTasks?.(0);
+            scopeTasks = mergeSummaryTasks(Array.isArray(list) ? list : [], taskSnapshots, docTasks).filter((item) => item && typeof item === 'object');
+        }
+        const allowedTaskIds = new Set(scopeTasks.map((item) => String(item?.id || '').trim()).filter(Boolean));
+        const allowedDocIds = new Set((Array.isArray(session.selectedDocIds) ? session.selectedDocIds : []).map((item) => String(item || '').trim()).filter(Boolean));
+        if (doc?.id) allowedDocIds.add(String(doc.id).trim());
+        scopeTasks.forEach((item) => {
+            const docId = String(item?.docId || item?.root_id || '').trim();
+            if (docId) allowedDocIds.add(docId);
+        });
+        return {
+            session,
+            instruction: String(instruction || '').trim(),
+            taskIds,
+            taskSnapshots,
+            doc,
+            excerpt,
+            scopeTasks,
+            allowedTaskIds,
+            allowedDocIds,
+            history: conversationHistoryToPrompt(session.messages),
+        };
+    }
+
+    function buildChatSkillRegistry(turnContext) {
+        const ctx = turnContext && typeof turnContext === 'object' ? turnContext : {};
+        const b = bridge();
+        const scopeTasks = Array.isArray(ctx.scopeTasks) ? ctx.scopeTasks : [];
+        const allowedTaskIds = ctx.allowedTaskIds instanceof Set ? ctx.allowedTaskIds : new Set();
+        const allowedDocIds = ctx.allowedDocIds instanceof Set ? ctx.allowedDocIds : new Set();
+        const primaryDocId = String(ctx?.doc?.id || '').trim();
+        const assertScopedTask = async (taskId) => {
+            const rawId = String(taskId || '').trim();
+            if (!rawId) throw new Error('缺少 taskId');
+            let resolvedId = rawId;
+            try { resolvedId = String(await b?.resolveTaskId?.(rawId) || rawId).trim() || rawId; } catch (e) {}
+            if (allowedTaskIds.size && !allowedTaskIds.has(resolvedId)) throw new Error('任务不在当前 AI 对话上下文中');
+            const task = await b?.getTaskSnapshot?.(resolvedId, { forceFresh: true });
+            if (!task) throw new Error('未找到任务');
+            return task;
+        };
+        const assertScopedDocId = async (docId) => {
+            const resolved = String(docId || primaryDocId || '').trim();
+            if (!resolved) throw new Error('缺少 docId');
+            if (allowedDocIds.size && !allowedDocIds.has(resolved)) throw new Error('文档不在当前 AI 对话上下文中');
+            return resolved;
+        };
+        return {
+            read_current_view_tasks: {
+                name: 'read_current_view_tasks',
+                description: '读取当前视图内可见任务',
+                inputHint: '{ limit?: 1-50 }',
+                readOnly: true,
+                confirmPolicy: 'never',
+                async run(input = {}) {
+                    const limit = Math.max(1, Math.min(50, Math.round(Number(input?.limit || 12) || 12)));
+                    const list = await b?.getCurrentFilteredTasks?.(limit) || await b?.getCurrentViewTasks?.(limit) || [];
+                    return { total: Array.isArray(list) ? list.length : 0, tasks: (Array.isArray(list) ? list : []).slice(0, limit).map(taskLite) };
+                },
+                summarize(result = {}) {
+                    return `已读取当前视图任务 ${Number(result?.total || 0)} 条`;
+                },
+            },
+            read_current_group_tasks: {
+                name: 'read_current_group_tasks',
+                description: '读取当前分区内任务',
+                inputHint: '{ limit?: 1-80 }',
+                readOnly: true,
+                confirmPolicy: 'never',
+                async run(input = {}) {
+                    const limit = Math.max(1, Math.min(80, Math.round(Number(input?.limit || 20) || 20)));
+                    const list = await b?.getCurrentGroupTasks?.(0) || [];
+                    const tasks = (Array.isArray(list) ? list : []).slice(0, limit).map(taskLite);
+                    return { total: Array.isArray(list) ? list.length : 0, tasks };
+                },
+                summarize(result = {}) {
+                    return `已读取当前分区任务 ${Number(result?.total || 0)} 条`;
+                },
+            },
+            read_document_snapshot: {
+                name: 'read_document_snapshot',
+                description: '读取当前上下文文档摘要、正文节选与任务列表',
+                inputHint: '{ docId?: string, limit?: 1-40 }',
+                readOnly: true,
+                confirmPolicy: 'never',
+                async run(input = {}) {
+                    const docId = await assertScopedDocId(input?.docId);
+                    const limit = Math.max(1, Math.min(40, Math.round(Number(input?.limit || 20) || 20)));
+                    const doc = await b?.getDocumentSnapshot?.(docId, { limit: 1400 });
+                    if (!doc) throw new Error('未找到文档');
+                    const excerpt = buildDocExcerpt(doc, '', ctx?.session?.contextMode);
+                    return {
+                        document: {
+                            id: String(doc?.id || '').trim(),
+                            name: String(doc?.name || '').trim(),
+                            path: String(doc?.path || '').trim(),
+                            excerpt: {
+                                intro: truncateForAi(excerpt?.intro || '', 400),
+                                nearby: truncateForAi(excerpt?.nearby || '', 400),
+                                fulltext: truncateForAi(excerpt?.fulltext || '', 400),
+                            },
+                            tasks: (Array.isArray(doc?.tasks) ? doc.tasks : []).slice(0, limit).map(taskLite),
+                        },
+                    };
+                },
+                summarize(result = {}) {
+                    const doc = result?.document || {};
+                    return `已读取文档“${doc.name || doc.id || '未命名文档'}”及其任务摘要`;
+                },
+            },
+            read_task_snapshot: {
+                name: 'read_task_snapshot',
+                description: '读取单个任务详情',
+                inputHint: '{ taskId: string }',
+                readOnly: true,
+                confirmPolicy: 'never',
+                async run(input = {}) {
+                    const task = await assertScopedTask(input?.taskId);
+                    return { task: taskLite(task) };
+                },
+                summarize(result = {}) {
+                    return `已读取任务“${result?.task?.content || result?.task?.id || '任务'}”详情`;
+                },
+            },
+            search_tasks: {
+                name: 'search_tasks',
+                description: '在当前上下文任务池中按关键词搜索任务',
+                inputHint: '{ query: string, limit?: 1-20 }',
+                readOnly: true,
+                confirmPolicy: 'never',
+                async run(input = {}) {
+                    const query = String(input?.query || '').trim().toLowerCase();
+                    if (!query) throw new Error('缺少 query');
+                    const limit = Math.max(1, Math.min(20, Math.round(Number(input?.limit || 8) || 8)));
+                    const pool = mergeSummaryTasks(scopeTasks, ctx.taskSnapshots, Array.isArray(ctx?.doc?.tasks) ? ctx.doc.tasks : []);
+                    const score = (task) => {
+                        const bag = [
+                            String(task?.content || ''),
+                            String(task?.remark || ''),
+                            String(task?.docName || task?.doc_name || ''),
+                            String(task?.h2 || ''),
+                        ].join('\n').toLowerCase();
+                        if (!bag) return -1;
+                        if (bag.startsWith(query)) return 5;
+                        if (bag.includes(query)) return 3;
+                        const allTokens = query.split(/\s+/).filter(Boolean);
+                        const hit = allTokens.filter((token) => bag.includes(token)).length;
+                        return hit > 0 ? hit : -1;
+                    };
+                    const tasks = pool
+                        .map((task) => ({ task, score: score(task) }))
+                        .filter((item) => item.score > 0)
+                        .sort((a, b) => b.score - a.score)
+                        .slice(0, limit)
+                        .map((item) => taskLite(item.task));
+                    return { query, total: tasks.length, tasks };
+                },
+                summarize(result = {}) {
+                    return `已按“${result?.query || ''}”搜索到 ${Number(result?.total || 0)} 条任务`;
+                },
+            },
+            update_task: {
+                name: 'update_task',
+                description: '修改当前上下文内的单个任务字段',
+                inputHint: '{ taskId: string, patch: { title?, done?, priority?, customStatus?, startDate?, completionTime?, duration?, remark?, pinned?, milestone? } }',
+                readOnly: false,
+                confirmPolicy: 'ask',
+                async run(input = {}) {
+                    const taskId = String(input?.taskId || '').trim();
+                    const patch = normalizeTaskFieldPatch(input?.patch || {});
+                    const [result] = await applyChatTaskOperations([{ taskId, patch, reason: String(input?.reason || '').trim() }], scopeTasks);
+                    return { operation: result || null };
+                },
+                summarize(result = {}) {
+                    const op = result?.operation || {};
+                    return op?.ok
+                        ? `已修改任务“${op.title || op.taskId || '任务'}”`
+                        : `修改任务失败：${op?.error || '未知错误'}`;
+                },
+            },
+            create_task: {
+                name: 'create_task',
+                description: '在当前上下文文档或父任务下创建任务',
+                inputHint: '{ content: string, docId?: string, parentTaskId?: string, patch?: {...} }',
+                readOnly: false,
+                confirmPolicy: 'ask',
+                async run(input = {}) {
+                    const [result] = await applyChatCreateOperations([{
+                        content: String(input?.content || '').trim(),
+                        docId: String(input?.docId || '').trim(),
+                        parentTaskId: String(input?.parentTaskId || '').trim(),
+                        patch: normalizeTaskFieldPatch(input?.patch || {}),
+                        reason: String(input?.reason || '').trim(),
+                    }], { taskPool: scopeTasks, doc: ctx.doc });
+                    return { operation: result || null };
+                },
+                summarize(result = {}) {
+                    const op = result?.operation || {};
+                    return op?.ok
+                        ? `${describeChatCreateAction(op)}“${op.title || op.taskId || '任务'}”已完成`
+                        : `创建任务失败：${op?.error || '未知错误'}`;
+                },
+            },
+            create_subtask: {
+                name: 'create_subtask',
+                description: '在当前上下文任务下创建子任务',
+                inputHint: '{ parentTaskId: string, content: string, patch?: {...} }',
+                readOnly: false,
+                confirmPolicy: 'ask',
+                async run(input = {}) {
+                    const parentTaskId = String(input?.parentTaskId || '').trim();
+                    if (!parentTaskId) throw new Error('缺少 parentTaskId');
+                    const [result] = await applyChatCreateOperations([{
+                        content: String(input?.content || '').trim(),
+                        docId: '',
+                        parentTaskId,
+                        patch: normalizeTaskFieldPatch(input?.patch || {}),
+                        reason: String(input?.reason || '').trim(),
+                    }], { taskPool: scopeTasks, doc: ctx.doc });
+                    return { operation: result || null };
+                },
+                summarize(result = {}) {
+                    const op = result?.operation || {};
+                    return op?.ok
+                        ? `已在“${op.targetLabel || op.parentTaskId || '父任务'}”下创建子任务“${op.title || op.taskId || '任务'}”`
+                        : `创建子任务失败：${op?.error || '未知错误'}`;
+                },
+            },
+            create_task_suggestion: {
+                name: 'create_task_suggestion',
+                description: '将一条建议任务快速写入文档',
+                inputHint: '{ content: string, docId?: string }',
+                readOnly: false,
+                confirmPolicy: 'ask',
+                async run(input = {}) {
+                    const content = String(input?.content || '').trim();
+                    if (!content) throw new Error('缺少 content');
+                    const docId = await assertScopedDocId(input?.docId);
+                    if (typeof b?.createTaskSuggestion !== 'function') throw new Error('当前版本未开放建议任务创建能力');
+                    await b.createTaskSuggestion(docId, content);
+                    return {
+                        ok: true,
+                        docId,
+                        content,
+                        docName: await resolveDocLabel(docId),
+                    };
+                },
+                summarize(result = {}) {
+                    return `已将建议任务“${result?.content || '任务'}”写入文档“${result?.docName || result?.docId || '文档'}”`;
+                },
+            },
+            list_configured_docs: {
+                name: 'list_configured_docs',
+                description: '读取任务管理器已配置的文档列表',
+                inputHint: '{ limit?: 1-30 }',
+                readOnly: true,
+                confirmPolicy: 'never',
+                async run(input = {}) {
+                    const limit = Math.max(1, Math.min(30, Math.round(Number(input?.limit || 12) || 12)));
+                    const ids = await b?.getConfiguredDocIds?.({ forceRefresh: false }) || [];
+                    const docs = [];
+                    for (const docId of ids.slice(0, limit)) {
+                        let name = '';
+                        try { name = await resolveDocLabel(docId); } catch (e) {}
+                        docs.push({ id: String(docId || '').trim(), name: String(name || docId).trim() || String(docId || '').trim() });
+                    }
+                    return { total: Array.isArray(ids) ? ids.length : 0, docs };
+                },
+                summarize(result = {}) {
+                    return `已读取已配置文档 ${Number(result?.total || 0)} 个`;
+                },
+            },
+            read_summary_tasks_by_doc_ids: {
+                name: 'read_summary_tasks_by_doc_ids',
+                description: '按文档读取摘要候选任务',
+                inputHint: '{ docIds?: string[], limit?: 1-80 }',
+                readOnly: true,
+                confirmPolicy: 'never',
+                async run(input = {}) {
+                    const requested = Array.isArray(input?.docIds) ? input.docIds : [];
+                    const docIds = (requested.length ? requested : Array.from(allowedDocIds))
+                        .map((item) => String(item || '').trim())
+                        .filter(Boolean)
+                        .filter((item) => !allowedDocIds.size || allowedDocIds.has(item));
+                    if (!docIds.length) throw new Error('当前上下文没有可读取的文档');
+                    const limit = Math.max(1, Math.min(80, Math.round(Number(input?.limit || 24) || 24)));
+                    const list = await b?.getSummaryTasksByDocIds?.(docIds, { ignoreExcludeCompleted: true }) || [];
+                    return {
+                        docIds,
+                        total: Array.isArray(list) ? list.length : 0,
+                        tasks: (Array.isArray(list) ? list : []).slice(0, limit).map(taskLite),
+                    };
+                },
+                summarize(result = {}) {
+                    return `已读取 ${Array.isArray(result?.docIds) ? result.docIds.length : 0} 个文档的摘要任务，共 ${Number(result?.total || 0)} 条`;
+                },
+            },
+            read_existing_schedules: {
+                name: 'read_existing_schedules',
+                description: '读取某天或某个日期范围内已有日程',
+                inputHint: '{ date?: \"YYYY-MM-DD\", dateTo?: \"YYYY-MM-DD\" }',
+                readOnly: true,
+                confirmPolicy: 'never',
+                async run(input = {}) {
+                    const date = normalizeDateKey(String(input?.date || todayKey()).trim()) || todayKey();
+                    const dateTo = normalizeDateKey(String(input?.dateTo || date).trim()) || date;
+                    const schedules = await loadExistingSchedulesByRange(date, dateTo);
+                    return {
+                        date,
+                        dateTo,
+                        total: schedules.length,
+                        schedules: schedules.slice(0, 30).map((item) => ({
+                            id: String(item?.id || '').trim(),
+                            taskId: String(item?.taskId || '').trim(),
+                            title: String(item?.title || '').trim(),
+                            start: String(item?.start || '').trim(),
+                            end: String(item?.end || '').trim(),
+                            dayKey: String(item?.dayKey || '').trim(),
+                        })),
+                    };
+                },
+                summarize(result = {}) {
+                    const from = String(result?.date || '').trim();
+                    const to = String(result?.dateTo || from).trim();
+                    return `已读取 ${from === to ? from : `${from} ~ ${to}`} 的日程 ${Number(result?.total || 0)} 条`;
+                },
+            },
+            write_schedule_to_calendar: {
+                name: 'write_schedule_to_calendar',
+                description: '为任务直接写入一条日程到日历',
+                inputHint: '{ taskId: string, start: \"YYYY-MM-DD HH:mm\", end: \"YYYY-MM-DD HH:mm\", title?: string, allDay?: boolean }',
+                readOnly: false,
+                confirmPolicy: 'ask',
+                async run(input = {}) {
+                    const task = await assertScopedTask(input?.taskId);
+                    const start = parseDateTimeLoose(input?.start);
+                    const end = parseDateTimeLoose(input?.end);
+                    if (!(start instanceof Date) || Number.isNaN(start.getTime())) throw new Error('start 非法');
+                    if (!(end instanceof Date) || Number.isNaN(end.getTime()) || end.getTime() <= start.getTime()) throw new Error('end 非法');
+                    const cal = globalThis.__tmCalendar;
+                    if (!cal?.addTaskSchedule) throw new Error('日历模块未加载');
+                    const title = String(input?.title || task?.content || task?.id || '任务').trim();
+                    const item = await cal.addTaskSchedule({
+                        taskId: String(task?.id || '').trim(),
+                        title,
+                        start,
+                        end,
+                        calendarId: 'default',
+                        durationMin: Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000)),
+                        allDay: !!input?.allDay,
+                    });
+                    try { await cal.refreshInPlace?.({ silent: false }); } catch (e) {}
+                    return {
+                        scheduleId: String(item?.id || '').trim(),
+                        taskId: String(task?.id || '').trim(),
+                        title,
+                        start: `${dateToKey(start)} ${normalizeTimeHm(`${start.getHours()}:${String(start.getMinutes()).padStart(2, '0')}`)}`,
+                        end: `${dateToKey(end)} ${normalizeTimeHm(`${end.getHours()}:${String(end.getMinutes()).padStart(2, '0')}`)}`,
+                    };
+                },
+                summarize(result = {}) {
+                    return `已为任务“${result?.title || result?.taskId || '任务'}”写入日程 ${result?.start || ''} ~ ${result?.end || ''}`.trim();
+                },
+            },
+            delete_schedule: {
+                name: 'delete_schedule',
+                description: '按日程 ID 删除一条已有日程',
+                inputHint: '{ scheduleId: string }',
+                readOnly: false,
+                confirmPolicy: 'ask',
+                async run(input = {}) {
+                    const scheduleId = String(input?.scheduleId || '').trim();
+                    if (!scheduleId) throw new Error('缺少 scheduleId');
+                    const cal = globalThis.__tmCalendar;
+                    if (!cal?.deleteScheduleById) throw new Error('日历模块未加载');
+                    const ok = await cal.deleteScheduleById(scheduleId, { closeModal: false });
+                    if (!ok) throw new Error('删除日程失败');
+                    try { await cal.refreshInPlace?.({ silent: false }); } catch (e) {}
+                    return { scheduleId, ok: true };
+                },
+                summarize(result = {}) {
+                    return `已删除日程 ${result?.scheduleId || ''}`.trim();
+                },
+            },
+        };
+    }
+
+    function listAvailableChatSkills(registry) {
+        return Object.values(registry || {}).map((skill) => ({
+            name: String(skill?.name || '').trim(),
+            description: String(skill?.description || '').trim(),
+            readOnly: !!skill?.readOnly,
+            confirmPolicy: String(skill?.confirmPolicy || 'never').trim() || 'never',
+            inputHint: String(skill?.inputHint || '').trim(),
+        })).filter((item) => item.name);
+    }
+
+    function groupAvailableChatSkills(availableSkills) {
+        const list = Array.isArray(availableSkills) ? availableSkills : [];
+        return {
+            read: list.filter((item) => item?.readOnly),
+            write: list.filter((item) => !item?.readOnly),
+        };
+    }
+
+    function createChatSkillErrorResult(call, error) {
+        return {
+            id: String(call?.id || uid('skill-error')).trim(),
+            skill: String(call?.skill || '').trim(),
+            ok: false,
+            readOnly: false,
+            durationMs: 0,
+            summary: String(error || 'Skill 调用失败').trim(),
+            error: String(error || 'Skill 调用失败').trim(),
+            data: null,
+        };
+    }
+
+    function normalizeChatSkillResultForPlanner(result = {}) {
+        if (!result || typeof result !== 'object') return {};
+        if (!result.ok) {
+            return {
+                ok: false,
+                error: String(result.error || result.summary || '失败').trim(),
+            };
+        }
+        const data = result.data && typeof result.data === 'object' ? result.data : {};
+        if (Array.isArray(data.tasks)) {
+            return {
+                total: Number(data.total || data.tasks.length || 0),
+                tasks: data.tasks.slice(0, 12).map((task) => ({
+                    id: String(task?.id || '').trim(),
+                    content: truncateForAi(task?.content || '', 80),
+                    done: !!task?.done,
+                    docName: truncateForAi(task?.docName || '', 40),
+                    startDate: String(task?.startDate || '').trim(),
+                    completionTime: String(task?.completionTime || '').trim(),
+                })),
+            };
+        }
+        if (data.task) return { task: data.task };
+        if (data.document) {
+            return {
+                document: {
+                    id: String(data.document?.id || '').trim(),
+                    name: truncateForAi(data.document?.name || '', 80),
+                    path: truncateForAi(data.document?.path || '', 120),
+                    excerpt: data.document?.excerpt || {},
+                    tasks: Array.isArray(data.document?.tasks) ? data.document.tasks.slice(0, 12) : [],
+                },
+            };
+        }
+        if (Array.isArray(data.docs)) {
+            return {
+                total: Number(data.total || data.docs.length || 0),
+                docs: data.docs.slice(0, 12).map((doc) => ({
+                    id: String(doc?.id || '').trim(),
+                    name: truncateForAi(doc?.name || '', 80),
+                })),
+            };
+        }
+        if (Array.isArray(data.schedules)) {
+            return {
+                total: Number(data.total || data.schedules.length || 0),
+                schedules: data.schedules.slice(0, 12).map((item) => ({
+                    id: String(item?.id || '').trim(),
+                    taskId: String(item?.taskId || '').trim(),
+                    title: truncateForAi(item?.title || '', 80),
+                    start: String(item?.start || '').trim(),
+                    end: String(item?.end || '').trim(),
+                    dayKey: String(item?.dayKey || '').trim(),
+                })),
+            };
+        }
+        if (data.operation) return { operation: data.operation };
+        return clone(data);
+    }
+
+    async function executeChatSkillCalls(skillCalls, registry) {
+        const calls = Array.isArray(skillCalls) ? skillCalls : [];
+        const out = [];
+        for (const call of calls.slice(0, AI_CHAT_SKILL_MAX_CALLS_PER_ROUND)) {
+            const spec = registry?.[String(call?.skill || '').trim()];
+            if (!spec || typeof spec.run !== 'function') {
+                out.push(createChatSkillErrorResult(call, `未知 skill：${String(call?.skill || '').trim() || '空'}`));
+                continue;
+            }
+            const startedAt = Date.now();
+            try {
+                const data = await spec.run(call.input || {});
+                const durationMs = Math.max(0, Date.now() - startedAt);
+                out.push({
+                    id: String(call.id || uid('skill-call')).trim(),
+                    skill: spec.name,
+                    ok: true,
+                    readOnly: !!spec.readOnly,
+                    durationMs,
+                    summary: String(spec.summarize?.(data, call) || `${spec.name} 执行成功`).trim(),
+                    error: '',
+                    data: data && typeof data === 'object' ? clone(data) : data,
+                });
+            } catch (e) {
+                const durationMs = Math.max(0, Date.now() - startedAt);
+                out.push({
+                    id: String(call.id || uid('skill-call')).trim(),
+                    skill: spec.name,
+                    ok: false,
+                    readOnly: !!spec.readOnly,
+                    durationMs,
+                    summary: String(e?.message || e || `${spec.name} 执行失败`).trim(),
+                    error: String(e?.message || e || `${spec.name} 执行失败`).trim(),
+                    data: null,
+                });
+            }
+        }
+        return out;
+    }
+
+    async function runChatSkillLoop(turnContext) {
+        const registry = buildChatSkillRegistry(turnContext);
+        const availableSkills = listAvailableChatSkills(registry);
+        const availableSkillGroups = groupAvailableChatSkills(availableSkills);
+        const rounds = [];
+        let combinedPlan = [];
+        let combinedWarnings = [];
+        let stopReason = '';
+        let done = false;
+        for (let round = 1; round <= AI_CHAT_SKILL_MAX_ROUNDS; round += 1) {
+            const plannerRaw = await callMiniMaxJson(
+                buildChatSkillPlannerPrompt(),
+                {
+                    conversationType: turnContext?.session?.type,
+                    contextScope: turnContext?.session?.contextScope,
+                    contextScopeLabel: AI_CONTEXT_SCOPE_LABELS[turnContext?.session?.contextScope] || turnContext?.session?.contextScope || '',
+                    selectedDocIds: turnContext?.session?.selectedDocIds || [],
+                    selectedTaskIds: turnContext?.taskIds || [],
+                    availableSkills,
+                    availableReadSkills: availableSkillGroups.read,
+                    availableWriteSkills: availableSkillGroups.write,
+                    document: turnContext?.doc ? {
+                        id: turnContext.doc.id,
+                        name: turnContext.doc.name,
+                        path: turnContext.doc.path,
+                        ...turnContext.excerpt,
+                    } : null,
+                    contextTasks: (Array.isArray(turnContext?.scopeTasks) ? turnContext.scopeTasks : []).slice(0, 40).map(taskLite),
+                    priorRounds: rounds.map((item) => ({
+                        round: item.round,
+                        plan: item.plan,
+                        warnings: item.warnings,
+                        reason: item.reason,
+                        results: item.results.map((result) => ({
+                            id: result.id,
+                            skill: result.skill,
+                            ok: result.ok,
+                            summary: result.summary,
+                            data: normalizeChatSkillResultForPlanner(result),
+                        })),
+                    })),
+                    userInstruction: turnContext?.instruction || '',
+                },
+                {
+                    history: turnContext?.history || [],
+                    contextMode: turnContext?.session?.contextMode,
+                    expectedSchema: 'chat_skill_plan',
+                    maxTokens: Math.max(1400, getConfig().maxTokens),
+                }
+            );
+            const planner = normalizeChatSkillPlannerResult(plannerRaw);
+            if (planner.plan.length) combinedPlan = planner.plan;
+            if (planner.warnings.length) combinedWarnings = combinedWarnings.concat(planner.warnings).slice(-12);
+            const results = planner.skillCalls.length ? await executeChatSkillCalls(planner.skillCalls, registry) : [];
+            rounds.push({
+                round,
+                plan: planner.plan,
+                warnings: planner.warnings,
+                reason: planner.reason,
+                requestedCalls: planner.skillCalls.map((item) => ({ id: item.id, skill: item.skill, reason: item.reason, input: clone(item.input || {}) })),
+                results,
+            });
+            if (!planner.skillCalls.length || planner.done) {
+                done = true;
+                stopReason = planner.reason || (planner.done ? 'planner-done' : 'no-skill-calls');
+                break;
+            }
+        }
+        if (!done) stopReason = 'max-rounds-reached';
+        return {
+            plan: combinedPlan,
+            warnings: Array.from(new Set(combinedWarnings.filter(Boolean))).slice(0, 12),
+            rounds,
+            availableSkills,
+            done,
+            stopReason,
+        };
+    }
+
+    async function synthesizeChatSkillLoopResult(turnContext, loopResult) {
+        const result = await callMiniMaxJson(
+            buildChatSkillFinalPrompt(),
+            {
+                conversationType: turnContext?.session?.type,
+                contextScope: turnContext?.session?.contextScope,
+                document: turnContext?.doc ? {
+                    id: turnContext.doc.id,
+                    name: turnContext.doc.name,
+                    path: turnContext.doc.path,
+                } : null,
+                userInstruction: turnContext?.instruction || '',
+                plan: Array.isArray(loopResult?.plan) ? loopResult.plan : [],
+                loopWarnings: Array.isArray(loopResult?.warnings) ? loopResult.warnings : [],
+                stopReason: String(loopResult?.stopReason || '').trim(),
+                rounds: (Array.isArray(loopResult?.rounds) ? loopResult.rounds : []).map((item) => ({
+                    round: item.round,
+                    plan: item.plan,
+                    warnings: item.warnings,
+                    reason: item.reason,
+                    results: (Array.isArray(item.results) ? item.results : []).map((skillResult) => ({
+                        id: skillResult.id,
+                        skill: skillResult.skill,
+                        ok: skillResult.ok,
+                        summary: skillResult.summary,
+                        error: skillResult.error,
+                        data: normalizeChatSkillResultForPlanner(skillResult),
+                    })),
+                })),
+            },
+            {
+                history: turnContext?.history || [],
+                contextMode: turnContext?.session?.contextMode,
+                expectedSchema: 'chat_skill_final',
+                maxTokens: Math.max(1400, getConfig().maxTokens),
+            }
+        );
+        return normalizeChatSkillFinalResult(result);
     }
 
     function extractTasksFromKramdown(docSnapshot) {
@@ -3336,44 +4092,45 @@
         const instruction = String(draft.chat || '').trim();
         if (!instruction) throw new Error('请输入对话内容');
         let session = await ensureConversationDefaults(session0);
-        const taskIds = await inferTaskIdsFromConversation(session);
-        const taskSnapshots = await getSelectedTaskSnapshots(taskIds.slice(0, 18));
-        const doc = await getPrimaryDocumentSnapshot(session, { taskId: taskIds[0] });
-        const excerpt = buildDocExcerpt(doc, taskIds[0], session.contextMode);
-        const contextTasks = (taskSnapshots.length ? taskSnapshots : (Array.isArray(doc?.tasks) ? doc.tasks.slice(0, 40) : []))
-            .filter((it) => it && typeof it === 'object');
-        const result = await callMiniMaxJson(
-            buildChatSystemPrompt(),
-            {
-                conversationType: session.type,
-                contextScope: session.contextScope,
-                selectedDocIds: session.selectedDocIds,
-                selectedTaskIds: taskIds,
-                document: doc ? { id: doc.id, name: doc.name, path: doc.path, ...excerpt } : null,
-                tasks: contextTasks.slice(0, 40).map(taskLite),
-                userInstruction: instruction,
-            },
-            {
-                history: conversationHistoryToPrompt(session.messages),
-                contextMode: session.contextMode,
-                expectedSchema: 'doc_chat',
-                maxTokens: Math.max(1200, getConfig().maxTokens),
-            }
-        );
-        const createResults = await applyChatCreateOperations(result?.createOperations, { taskPool: contextTasks, doc });
-        const opResults = await applyChatTaskOperations(result?.taskOperations, contextTasks);
-        const answer = buildChatExecutionSummary(opResults, createResults, String(result?.answer || '').trim()) || 'AI 未返回正文';
-        const highlights = Array.isArray(result?.highlights) ? result.highlights.map((it) => String(it || '').trim()).filter(Boolean) : [];
-        const nextActions = Array.isArray(result?.nextActions) ? result.nextActions.map((it) => String(it || '').trim()).filter(Boolean) : [];
-        const warnings = Array.isArray(result?.warnings) ? result.warnings.map((it) => String(it || '').trim()).filter(Boolean) : [];
-        opResults.filter((it) => !it.ok && it.error).forEach((it) => warnings.push(`任务“${it.title || it.taskId}”：${it.error}`));
-        createResults.filter((it) => !it.ok && it.error).forEach((it) => warnings.push(`${describeChatCreateAction(it)}“${it.title || '任务'}”：${it.error}`));
+        const turnContext = await buildChatSkillTurnContext(session, instruction);
+        const loopResult = await runChatSkillLoop(turnContext);
+        const finalResult = await synthesizeChatSkillLoopResult(turnContext, loopResult);
+        const answer = String(finalResult?.answer || '').trim() || 'AI 未返回正文';
+        const highlights = Array.isArray(finalResult?.highlights) ? finalResult.highlights : [];
+        const nextActions = Array.isArray(finalResult?.nextActions) ? finalResult.nextActions : [];
+        const warnings = Array.isArray(finalResult?.warnings) ? finalResult.warnings.slice() : [];
+        (Array.isArray(loopResult?.warnings) ? loopResult.warnings : []).forEach((item) => warnings.push(String(item || '').trim()));
+        (Array.isArray(loopResult?.rounds) ? loopResult.rounds : []).forEach((round) => {
+            (Array.isArray(round?.results) ? round.results : []).forEach((skillResult) => {
+                if (!skillResult?.ok && skillResult?.error) warnings.push(`${skillResult.skill || 'skill'}：${skillResult.error}`);
+            });
+        });
+        const dedupWarnings = Array.from(new Set(warnings.map((item) => String(item || '').trim()).filter(Boolean))).slice(0, 10);
         session = await appendConversationMessage(session.id, 'user', instruction, { scene: 'chat' });
-        session = await appendConversationMessage(session.id, 'assistant', [answer, highlights.length ? `要点：${highlights.join('；')}` : '', nextActions.length ? `下一步：${nextActions.join('；')}` : '', warnings.length ? `提醒：${warnings.join('；')}` : ''].filter(Boolean).join('\n\n'), { scene: 'chat', answer, highlights, nextActions, warnings });
+        session = await appendConversationMessage(session.id, 'assistant', [
+            answer,
+            Array.isArray(loopResult?.plan) && loopResult.plan.length ? `执行计划：${loopResult.plan.join('；')}` : '',
+            highlights.length ? `要点：${highlights.join('；')}` : '',
+            nextActions.length ? `下一步：${nextActions.join('；')}` : '',
+            dedupWarnings.length ? `提醒：${dedupWarnings.join('；')}` : '',
+        ].filter(Boolean).join('\n\n'), { scene: 'chat', answer, highlights, nextActions, warnings: dedupWarnings });
         draft.chat = '';
         await updateConversation(session.id, {
-            title: String(session0.title || '').trim() || `${AI_SCENE_LABELS.chat} · ${doc?.name || '未命名文档'}`,
-            lastResult: { type: 'chat', answer, highlights, nextActions, warnings, conversationId: session.id, taskOperations: opResults, createOperations: createResults },
+            title: String(session0.title || '').trim() || `${AI_SCENE_LABELS.chat} · ${turnContext?.doc?.name || '未命名文档'}`,
+            lastResult: {
+                type: 'chat',
+                answer,
+                plan: Array.isArray(loopResult?.plan) ? loopResult.plan : [],
+                highlights,
+                nextActions,
+                warnings: dedupWarnings,
+                conversationId: session.id,
+                skillTrace: Array.isArray(loopResult?.rounds) ? loopResult.rounds : [],
+                availableReadSkills: groupAvailableChatSkills(loopResult?.availableSkills).read,
+                availableWriteSkills: groupAvailableChatSkills(loopResult?.availableSkills).write,
+                stopReason: String(loopResult?.stopReason || '').trim(),
+                done: !!loopResult?.done,
+            },
         });
         return await getConversation(session.id);
     }
@@ -3659,10 +4416,93 @@
         }).join('');
     }
 
+    function renderChatSkillPlan(result) {
+        const plan = Array.isArray(result?.plan) ? result.plan.map((item) => String(item || '').trim()).filter(Boolean) : [];
+        if (!plan.length) return '';
+        return `
+            <div class="tm-ai-sidebar__result-block">
+                <div class="tm-ai-sidebar__result-title">执行计划</div>
+                <div class="tm-ai-sidebar__plan-list">${plan.map((item, index) => `
+                    <div class="tm-ai-sidebar__plan-item">
+                        <span class="tm-ai-sidebar__plan-index">${index + 1}</span>
+                        <span>${esc(item)}</span>
+                    </div>
+                `).join('')}</div>
+            </div>
+        `;
+    }
+
+    function renderChatSkillTrace(result) {
+        const rounds = Array.isArray(result?.skillTrace) ? result.skillTrace : [];
+        if (!rounds.length) return '';
+        return `
+            <div class="tm-ai-sidebar__result-block">
+                <div class="tm-ai-sidebar__result-title">Skill 轨迹</div>
+                ${rounds.map((round) => {
+                    const calls = Array.isArray(round?.results) ? round.results : [];
+                    return `
+                        <div class="tm-ai-sidebar__trace-round">
+                            <div class="tm-ai-sidebar__trace-round-head">
+                                <div>第 ${Number(round?.round || 0) || 1} 轮</div>
+                                <div class="tm-ai-sidebar__trace-round-meta">${esc(String(round?.reason || '').trim() || (calls.length ? `调用 ${calls.length} 个 skill` : '无需调用'))}</div>
+                            </div>
+                            ${calls.length ? calls.map((call) => `
+                                <div class="tm-ai-sidebar__trace-call">
+                                    <div class="tm-ai-sidebar__trace-call-head">
+                                        <div>${esc(call?.skill || 'skill')}</div>
+                                        <span class="tm-ai-sidebar__trace-chip ${call?.ok ? 'is-success' : 'is-fail'}">${call?.ok ? '成功' : '失败'}</span>
+                                    </div>
+                                    ${call?.summary ? `<div class="tm-ai-sidebar__trace-call-body">${esc(call.summary)}</div>` : ''}
+                                    ${call?.error && !call?.ok ? `<div class="tm-ai-sidebar__meta">原因：${esc(call.error)}</div>` : ''}
+                                </div>
+                            `).join('') : `<div class="tm-ai-sidebar__meta" style="margin-top:6px;">本轮没有执行 skill。</div>`}
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    function renderChatSkillCatalog(result) {
+        const readSkills = Array.isArray(result?.availableReadSkills) ? result.availableReadSkills : [];
+        const writeSkills = Array.isArray(result?.availableWriteSkills) ? result.availableWriteSkills : [];
+        if (!readSkills.length && !writeSkills.length) return '';
+        const renderGroup = (title, list, cls) => {
+            if (!Array.isArray(list) || !list.length) return '';
+            return `
+                <div class="tm-ai-sidebar__result-block">
+                    <div class="tm-ai-sidebar__result-title">${esc(title)}</div>
+                    <div class="tm-ai-sidebar__result-tags">${list.map((item) => `<span class="${esc(cls)}">${esc(item.name || '')}</span>`).join('')}</div>
+                </div>
+            `;
+        };
+        return [
+            renderGroup(`读取技能 ${readSkills.length} 个`, readSkills, ''),
+            renderGroup(`写入技能 ${writeSkills.length} 个`, writeSkills, ''),
+        ].filter(Boolean).join('');
+    }
+
     function renderLastResult(conversation) {
         const result = conversation?.lastResult;
         if (!result || typeof result !== 'object') return '';
         if (conversation.type === 'chat') {
+            if (Array.isArray(result?.skillTrace)) {
+                const highlights = Array.isArray(result?.highlights) ? result.highlights : [];
+                const nextActions = Array.isArray(result?.nextActions) ? result.nextActions : [];
+                const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
+                return `
+                    <div class="tm-ai-sidebar__result">
+                        <div class="tm-ai-sidebar__result-title">本轮结果</div>
+                        <div class="tm-ai-sidebar__result-body">${esc(result.answer || '')}</div>
+                        ${renderChatSkillCatalog(result)}
+                        ${renderChatSkillPlan(result)}
+                        ${renderChatSkillTrace(result)}
+                        ${highlights.length ? `<div class="tm-ai-sidebar__result-tags">${highlights.map((it) => `<span>${esc(it)}</span>`).join('')}</div>` : ''}
+                        ${nextActions.length ? `<div class="tm-ai-sidebar__meta">下一步：${esc(nextActions.join('；'))}</div>` : ''}
+                        ${warnings.length ? `<div class="tm-ai-sidebar__meta">提醒：${esc(warnings.join('；'))}</div>` : ''}
+                    </div>
+                `;
+            }
             const highlights = Array.isArray(result?.highlights) ? result.highlights : [];
             const nextActions = Array.isArray(result?.nextActions) ? result.nextActions : [];
             const warnings = Array.isArray(result?.warnings) ? result.warnings : [];

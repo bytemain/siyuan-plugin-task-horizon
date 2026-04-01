@@ -66,6 +66,46 @@
     background: transparent;
 }
 
+.bc-input,
+.bc-textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 2px);
+    background: var(--input);
+    color: var(--foreground);
+    font: inherit;
+    box-sizing: border-box;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.bc-input {
+    min-height: 32px;
+    padding: 0 12px;
+}
+
+.bc-textarea {
+    min-height: 96px;
+    padding: 8px 12px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.bc-input:hover,
+.bc-textarea:hover {
+    background: color-mix(in srgb, var(--input) 78%, var(--background) 22%);
+}
+
+.bc-input:focus,
+.bc-input:focus-visible,
+.bc-textarea:focus,
+.bc-textarea:focus-visible {
+    border-color: color-mix(in srgb, var(--primary) 42%, var(--border) 58%);
+    box-shadow: 0 0 0 2px var(--ring);
+}
+
 .bc-select {
     height: 32px;
     min-width: 96px;
