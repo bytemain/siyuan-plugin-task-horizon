@@ -89,6 +89,7 @@
         sidebarResizeCleanup: null,
         onVisibilityChange: null,
         calendarResizeObserver: null,
+        allDayCollapsed: false,
         scheduleCache: {
             list: null,
             loadedAt: 0,
@@ -123,6 +124,7 @@
             rootEl: null,
             calendar: null,
             dateKey: '',
+            allDayCollapsed: false,
             settingsStore: null,
             resolveTask: null,
             dragHost: null,
@@ -135,8 +137,30 @@
     };
 
     const MAIN_CALENDAR_CUSTOM_VIEWS = {
-        timeGrid3Day: { type: 'timeGrid', duration: { days: 3 }, buttonText: '3日' },
-        timeGridWorkdays: { type: 'timeGridWeek', hiddenDays: [0, 6], buttonText: '工作日' },
+        timeGridDay: {
+            type: 'timeGridDay',
+            titleFormat: { month: 'numeric', day: 'numeric' },
+        },
+        timeGrid3Day: {
+            type: 'timeGrid',
+            duration: { days: 3 },
+            buttonText: '3日',
+            titleFormat: { month: 'numeric', day: 'numeric' },
+        },
+        timeGridWorkdays: {
+            type: 'timeGridWeek',
+            hiddenDays: [0, 6],
+            buttonText: '工作日',
+            titleFormat: { month: 'numeric', day: 'numeric' },
+        },
+        timeGridWeek: {
+            type: 'timeGridWeek',
+            titleFormat: { month: 'numeric', day: 'numeric' },
+        },
+        dayGridMonth: {
+            type: 'dayGridMonth',
+            titleFormat: { month: 'numeric' },
+        },
     };
 
     const MAIN_CALENDAR_ALLOWED_VIEWS = new Set([
@@ -278,6 +302,289 @@
         return fallback;
     }
 
+    function isSideDayTimelineRoot(rootEl) {
+        return !!(rootEl instanceof HTMLElement && (rootEl.id === 'tmCalendarSideDockTimeline' || !!rootEl.closest?.('#tmCalendarSideDockTimeline')));
+    }
+
+    function getAllDayCollapseScope(rootEl) {
+        return isSideDayTimelineRoot(rootEl) ? 'sideDay' : 'main';
+    }
+
+    function getAllDayCollapsed(rootEl) {
+        return getAllDayCollapseScope(rootEl) === 'sideDay'
+            ? state.sideDay.allDayCollapsed === true
+            : state.allDayCollapsed === true;
+    }
+
+    function setAllDayCollapsed(rootEl, next) {
+        const value = next === true;
+        if (getAllDayCollapseScope(rootEl) === 'sideDay') state.sideDay.allDayCollapsed = value;
+        else state.allDayCollapsed = value;
+        return value;
+    }
+
+    function isTimeGridAllDayCollapseSupported(calendar) {
+        const viewType = String(calendar?.view?.type || '').trim();
+        return !!viewType && viewType !== 'dayGridMonth' && viewType.startsWith('timeGrid');
+    }
+
+    function getAllDaySummaryCount(calendar) {
+        if (!calendar || typeof calendar.getEvents !== 'function') return 0;
+        const view = calendar?.view || null;
+        const rangeStart = view?.activeStart instanceof Date && !Number.isNaN(view.activeStart.getTime()) ? view.activeStart.getTime() : NaN;
+        const rangeEnd = view?.activeEnd instanceof Date && !Number.isNaN(view.activeEnd.getTime()) ? view.activeEnd.getTime() : NaN;
+        let total = 0;
+        for (const eventApi of (calendar.getEvents() || [])) {
+            if (eventApi?.allDay !== true) continue;
+            const ext = eventApi?.extendedProps || {};
+            if (String(ext.__tmSource || '').trim() === 'cnHoliday') continue;
+            const start = eventApi?.start instanceof Date && !Number.isNaN(eventApi.start.getTime()) ? eventApi.start.getTime() : NaN;
+            let end = eventApi?.end instanceof Date && !Number.isNaN(eventApi.end.getTime()) ? eventApi.end.getTime() : NaN;
+            if (!Number.isFinite(start)) continue;
+            if (!Number.isFinite(end) || end <= start) end = start + 86400000;
+            if (Number.isFinite(rangeStart) && Number.isFinite(rangeEnd) && !(start < rangeEnd && end > rangeStart)) continue;
+            total += 1;
+        }
+        return total;
+    }
+
+    function getAllDaySummaryText(count) {
+        const n = Math.max(0, Math.floor(Number(count) || 0));
+        return n > 0 ? `+${n} 个任务` : '0 个任务';
+    }
+
+    function getAllDayAxisCushions(rootEl) {
+        if (!(rootEl instanceof HTMLElement)) return [];
+        return Array.from(rootEl.querySelectorAll('.fc-timegrid-axis-cushion')).filter((node) => {
+            if (!(node instanceof HTMLElement)) return false;
+            const text = String(node.getAttribute('data-tm-cal-original-label') || node.textContent || '').replace(/\s+/g, '').trim();
+            return text === '全天';
+        });
+    }
+
+    function getAllDayRowContext(axisCushion) {
+        if (!(axisCushion instanceof HTMLElement)) return null;
+        const axisFrame = axisCushion.closest('.fc-timegrid-axis-frame') || axisCushion.parentElement || null;
+        const axisCell = axisFrame?.closest?.('th, td') || axisCushion.closest?.('th, td') || null;
+        const allDayRow = axisCell?.closest?.('tr') || axisFrame?.closest?.('tr') || null;
+        const contentCells = allDayRow
+            ? Array.from(allDayRow.children || []).filter((node) => node instanceof HTMLElement && node !== axisCell)
+            : [];
+        const summaryHost = contentCells.find((cell) => (
+            cell instanceof HTMLElement
+            && cell.querySelector('.fc-daygrid-body, .fc-scrollgrid-sync-table, .fc-timegrid-all-day, .fc-timegrid-allday, .fc-timegrid-all-day-events, [data-date], table')
+        )) || contentCells.find((cell) => cell instanceof HTMLElement && cell.children.length > 0) || contentCells[0] || null;
+        const contentTargets = [];
+        contentCells.forEach((cell) => {
+            if (!(cell instanceof HTMLElement)) return;
+            Array.from(cell.children || []).forEach((child) => {
+                if (!(child instanceof HTMLElement)) return;
+                if (child.classList.contains('tm-cal-allday-summary')) return;
+                contentTargets.push(child);
+            });
+        });
+        return {
+            axisFrame: axisFrame instanceof HTMLElement ? axisFrame : null,
+            axisCell: axisCell instanceof HTMLElement ? axisCell : null,
+            allDayRow: allDayRow instanceof HTMLElement ? allDayRow : null,
+            contentCells,
+            summaryHost: summaryHost instanceof HTMLElement ? summaryHost : null,
+            contentTargets,
+        };
+    }
+
+    function setInlineStyle(el, prop, value, important = false) {
+        if (!(el instanceof HTMLElement) || !prop) return;
+        try {
+            if (value == null || value === '') el.style.removeProperty(prop);
+            else el.style.setProperty(prop, String(value), important ? 'important' : '');
+        } catch (e) {}
+    }
+
+    function applyAllDayCollapsedLayout(rootEl, collapsed) {
+        const collapsedRowHeight = 34;
+        const collapsedRowHeightCss = `${collapsedRowHeight}px`;
+        const axisCushions = getAllDayAxisCushions(rootEl);
+        for (const axisCushion of axisCushions) {
+            if (!(axisCushion instanceof HTMLElement)) continue;
+            const rowContext = getAllDayRowContext(axisCushion);
+            const allDayRow = rowContext?.allDayRow || null;
+            const summaryHost = rowContext?.summaryHost || null;
+            const contentCells = Array.isArray(rowContext?.contentCells) ? rowContext.contentCells : [];
+            const contentTargets = Array.isArray(rowContext?.contentTargets) ? rowContext.contentTargets : [];
+            const rowCells = allDayRow?.querySelectorAll?.('th, td') || [];
+            for (const cell of rowCells) {
+                if (!(cell instanceof HTMLElement)) continue;
+                setInlineStyle(cell, 'height', collapsed ? collapsedRowHeightCss : '', true);
+                setInlineStyle(cell, 'min-height', collapsed ? collapsedRowHeightCss : '', true);
+                setInlineStyle(cell, 'max-height', collapsed ? collapsedRowHeightCss : '', true);
+                setInlineStyle(cell, 'overflow', collapsed ? 'visible' : '', true);
+                setInlineStyle(cell, 'padding-top', collapsed ? '0' : '', true);
+                setInlineStyle(cell, 'padding-bottom', collapsed ? '0' : '', true);
+                setInlineStyle(cell, 'vertical-align', collapsed ? 'middle' : '', true);
+            }
+            if (allDayRow instanceof HTMLElement) {
+                setInlineStyle(allDayRow, 'height', collapsed ? collapsedRowHeightCss : '', true);
+                setInlineStyle(allDayRow, 'min-height', collapsed ? collapsedRowHeightCss : '', true);
+                setInlineStyle(allDayRow, 'max-height', collapsed ? collapsedRowHeightCss : '', true);
+            }
+            for (const cell of contentCells) {
+                if (!(cell instanceof HTMLElement)) continue;
+                setInlineStyle(cell, 'position', 'relative', true);
+                setInlineStyle(cell, 'overflow', collapsed ? 'hidden' : '', true);
+                setInlineStyle(cell, 'height', collapsed ? collapsedRowHeightCss : '', true);
+                setInlineStyle(cell, 'min-height', collapsed ? collapsedRowHeightCss : '', true);
+                setInlineStyle(cell, 'max-height', collapsed ? collapsedRowHeightCss : '', true);
+                setInlineStyle(cell, 'border-left-color', collapsed ? 'transparent' : '', true);
+                setInlineStyle(cell, 'border-right-color', collapsed ? 'transparent' : '', true);
+                setInlineStyle(cell, 'box-shadow', collapsed ? 'none' : '', true);
+            }
+            if (summaryHost instanceof HTMLElement) {
+                setInlineStyle(summaryHost, 'position', 'relative', true);
+                setInlineStyle(summaryHost, 'height', collapsed ? collapsedRowHeightCss : '', true);
+                setInlineStyle(summaryHost, 'min-height', collapsed ? collapsedRowHeightCss : '', true);
+                setInlineStyle(summaryHost, 'max-height', collapsed ? collapsedRowHeightCss : '', true);
+                setInlineStyle(summaryHost, 'overflow', 'visible', true);
+            }
+            for (const node of contentTargets) {
+                if (!(node instanceof HTMLElement)) continue;
+                setInlineStyle(node, 'display', collapsed ? 'none' : '', true);
+                setInlineStyle(node, 'visibility', collapsed ? 'hidden' : '', true);
+                setInlineStyle(node, 'height', collapsed ? '0px' : '', true);
+                setInlineStyle(node, 'min-height', collapsed ? '0px' : '', true);
+                setInlineStyle(node, 'max-height', collapsed ? '0px' : '', true);
+                setInlineStyle(node, 'overflow', collapsed ? 'hidden' : '', true);
+                setInlineStyle(node, 'margin-top', collapsed ? '0px' : '', true);
+                setInlineStyle(node, 'margin-bottom', collapsed ? '0px' : '', true);
+                setInlineStyle(node, 'padding-top', collapsed ? '0px' : '', true);
+                setInlineStyle(node, 'padding-bottom', collapsed ? '0px' : '', true);
+                setInlineStyle(node, 'border-top-width', collapsed ? '0px' : '', true);
+                setInlineStyle(node, 'border-bottom-width', collapsed ? '0px' : '', true);
+            }
+        }
+    }
+
+    function syncTimeGridAllDaySummaryOverlay(rootEl, calendar, collapsed, count, axisCushions) {
+        if (!(rootEl instanceof HTMLElement)) return false;
+        const overlayClass = 'tm-cal-allday-summary-overlay';
+        rootEl.querySelectorAll(`.tm-cal-allday-summary:not(.${overlayClass})`).forEach((node) => {
+            try { node.remove(); } catch (e) {}
+        });
+        let summaryBtn = rootEl.querySelector(`.${overlayClass}`);
+        if (!(summaryBtn instanceof HTMLButtonElement)) {
+            summaryBtn = document.createElement('button');
+            summaryBtn.type = 'button';
+            summaryBtn.className = `tm-cal-allday-summary ${overlayClass}`;
+            try { rootEl.appendChild(summaryBtn); } catch (e) { summaryBtn = null; }
+        }
+        if (!(summaryBtn instanceof HTMLButtonElement)) return false;
+        const rowContext = (axisCushions || []).map((axisCushion) => getAllDayRowContext(axisCushion)).find((ctx) => ctx?.allDayRow instanceof HTMLElement) || null;
+        const allDayRow = rowContext?.allDayRow || null;
+        const axisCell = rowContext?.axisCell || rowContext?.axisFrame || null;
+        if (!(allDayRow instanceof HTMLElement)) {
+            summaryBtn.hidden = true;
+            return false;
+        }
+        const rootRect = rootEl.getBoundingClientRect();
+        const rowRect = allDayRow.getBoundingClientRect();
+        const axisRect = axisCell instanceof HTMLElement ? axisCell.getBoundingClientRect() : null;
+        const summaryHeight = Math.max(28, Math.round(rowRect.height));
+        const left = Math.max(0, Math.round((axisRect?.right || rowRect.left) - rootRect.left));
+        const right = Math.max(left + 60, Math.round(rowRect.right - rootRect.left));
+        const width = Math.max(60, right - left);
+        const top = Math.max(0, Math.round(rowRect.top - rootRect.top));
+        try { rootEl.style.setProperty('position', 'relative'); } catch (e) {}
+        try { summaryBtn.style.position = 'absolute'; } catch (e) {}
+        try { summaryBtn.style.left = `${left}px`; } catch (e) {}
+        try { summaryBtn.style.top = `${top}px`; } catch (e) {}
+        try { summaryBtn.style.width = `${width}px`; } catch (e) {}
+        try { summaryBtn.style.right = 'auto'; } catch (e) {}
+        try { summaryBtn.style.transform = 'none'; } catch (e) {}
+        try { summaryBtn.style.zIndex = '7'; } catch (e) {}
+        try { summaryBtn.style.height = `${summaryHeight}px`; } catch (e) {}
+        try { summaryBtn.style.borderRadius = '0'; } catch (e) {}
+        try { summaryBtn.style.border = '0'; } catch (e) {}
+        try { summaryBtn.style.background = 'var(--tm-cal-allday-summary-bg-current, var(--tm-cal-allday-summary-bg, color-mix(in srgb, #eef1f4 76%, var(--tm-bg-color, #fff) 24%)))'; } catch (e) {}
+        try { summaryBtn.style.color = 'color-mix(in srgb, var(--tm-text-color, #000) 82%, var(--tm-secondary-text, #666) 18%)'; } catch (e) {}
+        try { summaryBtn.style.cursor = 'pointer'; } catch (e) {}
+        try { summaryBtn.style.padding = '0 14px'; } catch (e) {}
+        try { summaryBtn.style.fontSize = '13px'; } catch (e) {}
+        try { summaryBtn.style.boxSizing = 'border-box'; } catch (e) {}
+        summaryBtn.textContent = getAllDaySummaryText(count);
+        summaryBtn.title = collapsed ? '展开全天任务' : '';
+        summaryBtn.setAttribute('aria-label', collapsed ? `展开全天任务，当前隐藏 ${Math.max(0, count)} 项` : '全天任务汇总');
+        summaryBtn.hidden = !collapsed;
+        bindAllDayCollapseActivator(summaryBtn, rootEl, calendar);
+        return true;
+    }
+
+    function bindAllDayCollapseActivator(el, rootEl, calendar) {
+        if (!(el instanceof HTMLElement) || el.__tmAllDayCollapseBound) return;
+        el.__tmAllDayCollapseBound = true;
+        const swallow = (ev) => {
+            try { ev?.stopPropagation?.(); } catch (e) {}
+        };
+        const activate = (ev) => {
+            try { ev?.preventDefault?.(); } catch (e) {}
+            try { ev?.stopPropagation?.(); } catch (e) {}
+            toggleTimeGridAllDayCollapsed(rootEl, calendar);
+        };
+        el.addEventListener('pointerdown', swallow);
+        el.addEventListener('mousedown', swallow);
+        el.addEventListener('touchstart', swallow, { passive: true });
+        el.addEventListener('click', activate);
+        el.addEventListener('keydown', (ev) => {
+            const key = String(ev?.key || '').trim();
+            if (key !== 'Enter' && key !== ' ') return;
+            activate(ev);
+        });
+    }
+
+    function syncTimeGridAllDayCollapseUi(rootEl, calendar) {
+        if (!(rootEl instanceof HTMLElement)) return false;
+        const supported = isTimeGridAllDayCollapseSupported(calendar);
+        const collapsed = supported && getAllDayCollapsed(rootEl);
+        rootEl.classList.toggle('tm-cal-allday-collapsible', supported);
+        rootEl.classList.toggle('tm-cal-allday-collapsed', collapsed);
+        try { ensureInlineAllDayAxisToggle(rootEl, calendar); } catch (e) {}
+        try { applyAllDayCollapsedLayout(rootEl, collapsed); } catch (e) {}
+        const count = supported ? getAllDaySummaryCount(calendar) : 0;
+        const axisCushions = getAllDayAxisCushions(rootEl);
+        const existingSummary = rootEl.querySelector('.tm-cal-allday-summary-overlay');
+        if (!axisCushions.length) {
+            if (existingSummary instanceof HTMLElement) existingSummary.hidden = true;
+            return false;
+        }
+        try { syncTimeGridAllDaySummaryOverlay(rootEl, calendar, collapsed, count, axisCushions); } catch (e) {}
+        return true;
+    }
+
+    function scheduleSyncTimeGridAllDayCollapseUi(rootEl, calendar) {
+        if (!(rootEl instanceof HTMLElement)) return false;
+        const run = () => {
+            rootEl.__tmAllDayCollapseSyncRaf = 0;
+            try { syncTimeGridAllDayCollapseUi(rootEl, calendar); } catch (e) {}
+        };
+        if (rootEl.__tmAllDayCollapseSyncRaf) {
+            try { cancelAnimationFrame(rootEl.__tmAllDayCollapseSyncRaf); } catch (e) {}
+        }
+        if (rootEl.__tmAllDayCollapseSyncTimer) {
+            try { clearTimeout(rootEl.__tmAllDayCollapseSyncTimer); } catch (e) {}
+        }
+        try {
+            rootEl.__tmAllDayCollapseSyncRaf = requestAnimationFrame(run);
+        } catch (e) {
+            run();
+        }
+        try {
+            rootEl.__tmAllDayCollapseSyncTimer = setTimeout(() => {
+                rootEl.__tmAllDayCollapseSyncTimer = 0;
+                try { syncTimeGridAllDayCollapseUi(rootEl, calendar); } catch (e2) {}
+            }, 80);
+        } catch (e) {}
+        return true;
+    }
+
     function ensureFcCompactAllDayStyle() {
         const id = 'tm-fc-compact-allday-style';
         const css = `
@@ -374,6 +681,46 @@
         return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
     }
 
+    function formatMonthDayZh(date, options = {}) {
+        const dt = date instanceof Date ? date : null;
+        if (!(dt instanceof Date) || Number.isNaN(dt.getTime())) return '';
+        const omitMonth = options?.omitMonth === true;
+        const month = `${dt.getMonth() + 1}月`;
+        const day = `${dt.getDate()}日`;
+        return omitMonth ? day : `${month}${day}`;
+    }
+
+    function formatMainCalendarTitle(calendar) {
+        const cal = calendar || state.calendar;
+        const view = cal?.view || null;
+        const viewType = String(view?.type || '').trim();
+        if (!viewType) return '';
+        const currentDate = cal?.getDate?.();
+        if (viewType === 'timeGridDay') return formatMonthDayZh(currentDate);
+        if (viewType === 'dayGridMonth') {
+            if (!(currentDate instanceof Date) || Number.isNaN(currentDate.getTime())) return '';
+            return `${currentDate.getMonth() + 1}月`;
+        }
+        const start = view?.currentStart instanceof Date ? view.currentStart : null;
+        const endExclusive = view?.currentEnd instanceof Date ? view.currentEnd : null;
+        if (!(start instanceof Date) || Number.isNaN(start.getTime()) || !(endExclusive instanceof Date) || Number.isNaN(endExclusive.getTime())) {
+            return formatMonthDayZh(currentDate);
+        }
+        const end = new Date(endExclusive.getTime() - 86400000);
+        if (Number.isNaN(end.getTime())) return formatMonthDayZh(start);
+        const sameMonth = start.getMonth() === end.getMonth();
+        return `${formatMonthDayZh(start)} - ${formatMonthDayZh(end, { omitMonth: sameMonth })}`;
+    }
+
+    function syncMainCalendarToolbarTitle(wrap, calendar) {
+        const titleEl = wrap?.querySelector?.('.fc-toolbar-title');
+        if (!(titleEl instanceof HTMLElement)) return false;
+        const nextTitle = formatMainCalendarTitle(calendar);
+        if (!nextTitle) return false;
+        try { titleEl.textContent = nextTitle; } catch (e) { return false; }
+        return true;
+    }
+
     function toMs(value) {
         if (!value) return NaN;
         if (value instanceof Date) return value.getTime();
@@ -438,11 +785,14 @@
         try { el.style.setProperty('--tm-cal-schedule-border', softBorder); } catch (e) {}
         try { el.style.setProperty('--tm-cal-schedule-hover-bg', hoverBg); } catch (e) {}
         try { el.classList.add('tm-cal-schedule-event'); } catch (e) {}
+        try { el.style.setProperty('--fc-event-border-color', 'transparent'); } catch (e) {}
         try { el.style.setProperty('background', softBg, 'important'); } catch (e) {}
         try { el.style.setProperty('background-color', softBg, 'important'); } catch (e) {}
-        try { el.style.setProperty('border', `1px solid ${softBorder}`, 'important'); } catch (e) {}
+        try { el.style.setProperty('border', '0', 'important'); } catch (e) {}
+        try { el.style.setProperty('border-color', 'transparent', 'important'); } catch (e) {}
         try { el.style.setProperty('border-left', `4px solid ${accent}`, 'important'); } catch (e) {}
-        try { el.style.setProperty('border-radius', '5px', 'important'); } catch (e) {}
+        try { el.style.setProperty('border-radius', '4px', 'important'); } catch (e) {}
+        try { el.style.setProperty('outline', 'none', 'important'); } catch (e) {}
         try { el.style.setProperty('box-shadow', 'none', 'important'); } catch (e) {}
         try { el.style.setProperty('color', textColor, 'important'); } catch (e) {}
         try {
@@ -467,11 +817,14 @@
         try { el.style.setProperty('--tm-cal-schedule-text', textColor); } catch (e) {}
         try { el.style.setProperty('--tm-cal-schedule-bg', softBg); } catch (e) {}
         try { el.style.setProperty('--tm-cal-schedule-border', softBorder); } catch (e) {}
+        try { el.style.setProperty('--fc-event-border-color', 'transparent'); } catch (e) {}
         try { el.style.setProperty('background', softBg, 'important'); } catch (e) {}
         try { el.style.setProperty('background-color', softBg, 'important'); } catch (e) {}
-        try { el.style.setProperty('border', `1px solid ${softBorder}`, 'important'); } catch (e) {}
-        try { el.style.setProperty('border-left', `1px solid ${softBorder}`, 'important'); } catch (e) {}
-        try { el.style.setProperty('border-radius', '5px', 'important'); } catch (e) {}
+        try { el.style.setProperty('border', '0', 'important'); } catch (e) {}
+        try { el.style.setProperty('border-color', 'transparent', 'important'); } catch (e) {}
+        try { el.style.setProperty('border-left', `3px solid ${accent}`, 'important'); } catch (e) {}
+        try { el.style.setProperty('border-radius', '4px', 'important'); } catch (e) {}
+        try { el.style.setProperty('outline', 'none', 'important'); } catch (e) {}
         try { el.style.setProperty('box-shadow', 'none', 'important'); } catch (e) {}
         try { el.style.setProperty('color', textColor, 'important'); } catch (e) {}
         try {
@@ -551,10 +904,8 @@
 
     function applyTaskEventCheckboxOffset(inputEl) {
         if (!(inputEl instanceof HTMLElement)) return;
-        try { inputEl.style.alignSelf = 'start'; } catch (e) {}
-        try { inputEl.style.margin = '0'; } catch (e) {}
         try { inputEl.style.position = 'relative'; } catch (e) {}
-        try { inputEl.style.top = '3px'; } catch (e) {}
+        try { inputEl.style.top = '0'; } catch (e) {}
         try { inputEl.style.transform = 'none'; } catch (e) {}
     }
 
@@ -909,13 +1260,14 @@
     function applyTimeAxisColumnLayout(rootEl, axisWidthPx = 40) {
         if (!(rootEl instanceof HTMLElement)) return false;
         const width = `${Math.max(34, Math.round(Number(axisWidthPx) || 40))}px`;
-        const isSideDockRoot = rootEl.id === 'tmCalendarSideDockTimeline' || !!rootEl.closest?.('#tmCalendarSideDockTimeline');
+        const isSideDockRoot = isSideDayTimelineRoot(rootEl);
         const hourFontSize = '14px';
         const allDayFontSize = '14px';
         const hourOpacity = '0.82';
         const allDayOpacity = '0.74';
         const labelColor = 'color-mix(in srgb, var(--tm-text-color) 72%, var(--tm-secondary-text) 28%)';
         const hourTranslateY = isSideDockRoot ? '-46%' : '12%';
+        try { rootEl.style.setProperty('--tm-calendar-axis-width', width); } catch (e) {}
         try { rootEl.style.setProperty('--tm-calendar-hour-translate-y', hourTranslateY); } catch (e) {}
         const widthSelectors = [
             '.fc-scrollgrid col:first-child',
@@ -983,7 +1335,7 @@
             try { node.style.setProperty('padding-top', '0', 'important'); } catch (e) {}
             try { node.style.setProperty('transform', `translateY(var(--tm-calendar-hour-translate-y, ${hourTranslateY}))`, 'important'); } catch (e) {}
         }
-        const allDayAxis = rootEl.querySelectorAll('.fc-timegrid-all-day .fc-timegrid-axis-cushion');
+        const allDayAxis = getAllDayAxisCushions(rootEl);
         for (const node of allDayAxis) {
             if (!(node instanceof HTMLElement)) continue;
             try { node.style.setProperty('font-size', allDayFontSize, 'important'); } catch (e) {}
@@ -994,6 +1346,7 @@
             try { node.style.setProperty('align-items', 'center', 'important'); } catch (e) {}
             try { node.style.setProperty('transform', 'none', 'important'); } catch (e) {}
         }
+        try { ensureInlineAllDayAxisToggle(rootEl); } catch (e) {}
         return true;
     }
 
@@ -1015,6 +1368,123 @@
                 try { enhanceNowIndicator(rootEl); } catch (e2) {}
             });
         } catch (e) {}
+        return true;
+    }
+
+    function refreshAllDayCollapseLayout(rootEl, calendar) {
+        if (!(rootEl instanceof HTMLElement) || !calendar) return false;
+        try { syncTimeGridAllDayCollapseUi(rootEl, calendar); } catch (e) {}
+        if (isSideDayTimelineRoot(rootEl)) {
+            try { syncSideDayLayout(rootEl, calendar, getSettings()); } catch (e) {}
+            try { scheduleSyncTimeGridAllDayCollapseUi(rootEl, calendar); } catch (e) {}
+            return true;
+        }
+        const wrap = state.wrapEl || rootEl.closest?.('.tm-calendar-wrap') || rootEl;
+        try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e) {}
+        try { applyTimeAxisColumnLayout(rootEl, 40); } catch (e) {}
+        try { calendar.updateSize?.(); } catch (e) {}
+        try { stabilizeCalendarLayout(calendar, wrap, { hard: false }); } catch (e) {}
+        try { scheduleSyncTimeGridAllDayCollapseUi(rootEl, calendar); } catch (e) {}
+        return true;
+    }
+
+    function toggleTimeGridAllDayCollapsed(rootEl, calendar, nextCollapsed) {
+        if (!(rootEl instanceof HTMLElement) || !calendar) return false;
+        if (!isTimeGridAllDayCollapseSupported(calendar)) return false;
+        const next = typeof nextCollapsed === 'boolean' ? nextCollapsed : !getAllDayCollapsed(rootEl);
+        setAllDayCollapsed(rootEl, next);
+        refreshAllDayCollapseLayout(rootEl, calendar);
+        return next;
+    }
+
+    function getCalendarForRoot(rootEl) {
+        return isSideDayTimelineRoot(rootEl) ? (state.sideDay?.calendar || null) : (state.calendar || null);
+    }
+
+    function ensureInlineAllDayAxisToggle(rootEl, calendar) {
+        if (!(rootEl instanceof HTMLElement)) return false;
+        const cal = calendar || getCalendarForRoot(rootEl);
+        if (!isTimeGridAllDayCollapseSupported(cal)) return false;
+        const axisNodes = getAllDayAxisCushions(rootEl);
+        if (!axisNodes.length) return false;
+        const labelColor = 'color-mix(in srgb, var(--tm-text-color) 72%, var(--tm-secondary-text) 28%)';
+        const collapsed = getAllDayCollapsed(rootEl);
+        for (const node of axisNodes) {
+            if (!(node instanceof HTMLElement)) continue;
+            node.setAttribute('data-tm-cal-original-label', '全天');
+            const legacyLabel = node.querySelector('.tm-cal-allday-inline-label');
+            if (legacyLabel instanceof HTMLElement) {
+                try { legacyLabel.remove(); } catch (e) {}
+            }
+            const toggleCandidates = Array.from(node.querySelectorAll('.tm-cal-allday-toggle')).filter((el) => el instanceof HTMLButtonElement);
+            let toggleBtn = toggleCandidates[0] instanceof HTMLButtonElement ? toggleCandidates[0] : null;
+            toggleCandidates.slice(1).forEach((el) => {
+                try { el.remove(); } catch (e) {}
+            });
+            if (!(toggleBtn instanceof HTMLButtonElement)) {
+                node.textContent = '';
+                toggleBtn = document.createElement('button');
+                toggleBtn.type = 'button';
+                toggleBtn.className = 'tm-cal-allday-toggle bc-btn bc-btn--sm';
+                toggleBtn.innerHTML = '<span class="tm-cal-allday-toggle-text">全天</span>';
+                node.appendChild(toggleBtn);
+            } else if (!(toggleBtn.querySelector('.tm-cal-allday-toggle-text') instanceof HTMLElement)) {
+                toggleBtn.innerHTML = '<span class="tm-cal-allday-toggle-text">全天</span>';
+            }
+            if (toggleBtn.parentElement !== node) {
+                try { node.appendChild(toggleBtn); } catch (e) {}
+            }
+            Array.from(node.childNodes || []).forEach((child) => {
+                if (child === toggleBtn) return;
+                try { child.parentNode?.removeChild(child); } catch (e) {}
+            });
+            try { toggleBtn.classList.add('bc-btn', 'bc-btn--sm'); } catch (e) {}
+            try { node.style.setProperty('display', 'flex', 'important'); } catch (e) {}
+            try { node.style.setProperty('flex-direction', 'row', 'important'); } catch (e) {}
+            try { node.style.setProperty('align-items', 'center', 'important'); } catch (e) {}
+            try { node.style.setProperty('justify-content', 'center', 'important'); } catch (e) {}
+            try { node.style.setProperty('gap', '0', 'important'); } catch (e) {}
+            try { node.style.setProperty('padding', '1px 0', 'important'); } catch (e) {}
+            try { node.style.setProperty('overflow', 'visible', 'important'); } catch (e) {}
+            try { toggleBtn.style.display = 'inline-flex'; } catch (e) {}
+            try { toggleBtn.style.alignItems = 'center'; } catch (e) {}
+            try { toggleBtn.style.justifyContent = 'center'; } catch (e) {}
+            try { toggleBtn.style.gap = '0'; } catch (e) {}
+            try { toggleBtn.style.width = 'auto'; } catch (e) {}
+            try { toggleBtn.style.minWidth = '0'; } catch (e) {}
+            try { toggleBtn.style.height = '16px'; } catch (e) {}
+            try { toggleBtn.style.padding = '0 6px'; } catch (e) {}
+            try { toggleBtn.style.cursor = 'pointer'; } catch (e) {}
+            try { toggleBtn.style.boxSizing = 'border-box'; } catch (e) {}
+            try { toggleBtn.style.removeProperty('border'); } catch (e) {}
+            try { toggleBtn.style.removeProperty('border-radius'); } catch (e) {}
+            try { toggleBtn.style.removeProperty('background'); } catch (e) {}
+            try { toggleBtn.style.removeProperty('color'); } catch (e) {}
+            try { toggleBtn.style.setProperty('--tm-ui-background', 'var(--tm-bg-color, #fff)'); } catch (e) {}
+            try { toggleBtn.style.setProperty('--tm-ui-foreground', labelColor); } catch (e) {}
+            try { toggleBtn.style.setProperty('--tm-ui-secondary', 'color-mix(in srgb, var(--tm-bg-color, #fff) 92%, var(--tm-text-color, #000) 8%)'); } catch (e) {}
+            try { toggleBtn.style.setProperty('--tm-ui-secondary-foreground', labelColor); } catch (e) {}
+            try { toggleBtn.style.setProperty('--tm-ui-border', 'color-mix(in srgb, var(--tm-text-color, #000) 12%, transparent)'); } catch (e) {}
+            try { toggleBtn.style.setProperty('--tm-ui-ring', 'color-mix(in srgb, var(--b3-theme-primary, #0078d4) 26%, transparent)'); } catch (e) {}
+            try { toggleBtn.style.setProperty('--tm-ui-radius', '999px'); } catch (e) {}
+            const textEl = toggleBtn.querySelector('.tm-cal-allday-toggle-text');
+            if (textEl instanceof HTMLElement) {
+                try { textEl.style.display = 'inline-block'; } catch (e) {}
+                try { textEl.style.lineHeight = '0.9'; } catch (e) {}
+                try { textEl.style.whiteSpace = 'nowrap'; } catch (e) {}
+                try { textEl.style.color = labelColor; } catch (e) {}
+                try { textEl.style.fontSize = '10px'; } catch (e) {}
+                try { textEl.style.fontWeight = '600'; } catch (e) {}
+            }
+            const iconEl = toggleBtn.querySelector('.tm-cal-allday-toggle-icon');
+            if (iconEl instanceof HTMLElement) {
+                try { iconEl.remove(); } catch (e) {}
+            }
+            toggleBtn.setAttribute('aria-label', collapsed ? '展开全天任务' : '折叠全天任务');
+            toggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            toggleBtn.title = collapsed ? '展开全天任务' : '折叠全天任务';
+            bindAllDayCollapseActivator(toggleBtn, rootEl, cal);
+        }
         return true;
     }
 
@@ -1067,13 +1537,17 @@
         try { applyCalendarSlotHeightStyle(state.wrapEl, nextSettings); } catch (e) {}
         try { applyMainCalendarSlotHeightLayout(state.wrapEl, nextSettings); } catch (e) {}
         try { state.calendar?.updateSize?.(); } catch (e) {}
+        try { scheduleSyncTimeGridAllDayCollapseUi(state.calendarEl, state.calendar); } catch (e) {}
         try { syncSideDayLayout(state.sideDay?.rootEl, state.sideDay?.calendar, nextSettings); } catch (e) {}
+        try { scheduleSyncTimeGridAllDayCollapseUi(state.sideDay?.rootEl, state.sideDay?.calendar); } catch (e) {}
         try {
             requestAnimationFrame(() => {
                 try { applyCalendarSlotHeightStyle(state.wrapEl, nextSettings); } catch (e2) {}
                 try { applyMainCalendarSlotHeightLayout(state.wrapEl, nextSettings); } catch (e2) {}
                 try { state.calendar?.updateSize?.(); } catch (e2) {}
+                try { scheduleSyncTimeGridAllDayCollapseUi(state.calendarEl, state.calendar); } catch (e2) {}
                 try { syncSideDayLayout(state.sideDay?.rootEl, state.sideDay?.calendar, nextSettings); } catch (e2) {}
+                try { scheduleSyncTimeGridAllDayCollapseUi(state.sideDay?.rootEl, state.sideDay?.calendar); } catch (e2) {}
             });
         } catch (e) {}
         return true;
@@ -4292,19 +4766,28 @@
     function applyTaskDoneVisual(wrapEl, titleEl, done) {
         const v = !!done;
         try { wrapEl?.classList?.toggle?.('tm-cal-task-event--done', v); } catch (e) {}
-        if (titleEl instanceof HTMLElement) {
+        const styleNodes = new Set();
+        if (titleEl instanceof HTMLElement) styleNodes.add(titleEl);
+        try {
+            const titleTextEl = wrapEl?.querySelector?.('.tm-cal-task-event-title-text');
+            const timeEl = wrapEl?.querySelector?.('.tm-cal-task-event-time');
+            if (titleTextEl instanceof HTMLElement) styleNodes.add(titleTextEl);
+            if (timeEl instanceof HTMLElement) styleNodes.add(timeEl);
+        } catch (e) {}
+        styleNodes.forEach((node) => {
             try {
+                const isTime = node.classList.contains('tm-cal-task-event-time');
                 if (v) {
-                    titleEl.style.textDecoration = 'line-through';
-                    titleEl.style.opacity = '0.9';
-                    titleEl.style.color = 'var(--tm-secondary-text, #8a8a8a)';
+                    node.style.textDecoration = isTime ? 'none' : 'line-through';
+                    node.style.opacity = isTime ? '0.72' : '0.9';
+                    node.style.color = 'var(--tm-secondary-text, #8a8a8a)';
                 } else {
-                    titleEl.style.removeProperty('text-decoration');
-                    titleEl.style.removeProperty('opacity');
-                    titleEl.style.removeProperty('color');
+                    node.style.removeProperty('text-decoration');
+                    node.style.removeProperty('opacity');
+                    node.style.removeProperty('color');
                 }
             } catch (e) {}
-        }
+        });
     }
 
     function isOtherBlockCalendarEvent(ext) {
@@ -4322,21 +4805,30 @@
     function applyTaskEventTitleClamp(wrapEl, titleEl, options = {}) {
         try {
             const stacked = !!titleEl?.classList?.contains?.('tm-cal-task-event-title--stack');
-            const scheduleTask = !!wrapEl?.classList?.contains?.('tm-cal-task-event--schedule');
-            const hasLeadingCheckbox = options?.hasLeadingCheckbox === true;
+            const hasLeadingCheckbox = options?.hasLeadingCheckbox === true
+                || !!wrapEl?.querySelector?.('.tm-cal-task-event-check');
+            const isTaskWrap = !!wrapEl?.classList?.contains?.('tm-cal-task-event');
+            const isScheduleStack = !!wrapEl?.classList?.contains?.('tm-cal-schedule-stack');
+            const isAllDayTask = !!wrapEl?.classList?.contains?.('tm-cal-task-event--allday');
             if (wrapEl instanceof HTMLElement) {
-                if (scheduleTask && stacked && hasLeadingCheckbox) {
+                if (stacked && hasLeadingCheckbox) {
                     wrapEl.style.display = 'grid';
-                    wrapEl.style.gridTemplateColumns = '12px minmax(0, 1fr)';
-                    wrapEl.style.columnGap = '6px';
+                    wrapEl.style.gridTemplateColumns = '13px minmax(0, 1fr)';
+                    wrapEl.style.columnGap = isAllDayTask ? '4px' : '2px';
                     wrapEl.style.rowGap = '0';
                     wrapEl.style.alignItems = 'start';
+                    if (isTaskWrap) wrapEl.style.padding = isAllDayTask ? '1px 4px 1px 1px' : '1px 4px 1px 1px';
                 } else {
                     wrapEl.style.display = 'flex';
                     wrapEl.style.removeProperty('grid-template-columns');
                     wrapEl.style.removeProperty('column-gap');
                     wrapEl.style.removeProperty('row-gap');
                     wrapEl.style.alignItems = stacked ? 'stretch' : 'center';
+                    if (isTaskWrap) {
+                        if (isAllDayTask) wrapEl.style.padding = '1px 4px 1px 1px';
+                        else wrapEl.style.padding = stacked ? '1px 4px 1px 6px' : '1px 4px 1px 4px';
+                    }
+                    if (isScheduleStack) wrapEl.style.padding = stacked ? '1px 4px 1px 7px' : '1px 4px 1px 5px';
                 }
                 wrapEl.style.width = '100%';
                 wrapEl.style.maxWidth = '100%';
@@ -4387,7 +4879,11 @@
             }
             const wraps = rootEl.querySelectorAll?.('.tm-cal-task-event, .tm-cal-schedule-stack');
             if (wraps && wraps.length) {
-                wraps.forEach((w) => applyTaskEventTitleClamp(w, w.querySelector?.('.tm-cal-task-event-title') || null));
+                wraps.forEach((w) => applyTaskEventTitleClamp(
+                    w,
+                    w.querySelector?.('.tm-cal-task-event-title') || null,
+                    { hasLeadingCheckbox: !!w.querySelector?.('.tm-cal-task-event-check') }
+                ));
             }
             const titleNodes = rootEl.querySelectorAll?.('.tm-cal-task-event-title, .fc-event-title');
             if (titleNodes && titleNodes.length) {
@@ -5049,24 +5545,35 @@
                         ? formatScheduleEventRangeText(arg?.event?.start, arg?.event?.end, arg?.event?.allDay === true)
                         : '';
                     const { title, titleText } = buildTaskEventTitleNode(String(arg?.event?.title || '').trim() || '任务', rangeText);
+                    if (arg?.event?.allDay === true) wrapEl.classList.add('tm-cal-task-event--allday');
+                    if (rangeText) wrapEl.classList.add('tm-cal-task-event--stacked');
                     let cb = null;
                     if (shouldShowCalendarEventCheckbox(ext)) {
                         cb = document.createElement('input');
                         cb.type = 'checkbox';
                         cb.className = 'tm-cal-task-event-check';
                         cb.checked = done;
+                        cb.onclick = (ev) => {
+                            try { ev.stopPropagation(); } catch (e) {}
+                        };
                         applyTaskEventCheckboxOffset(cb);
+                        if (rangeText) {
+                            try { cb.style.alignSelf = 'start'; } catch (e) {}
+                            try { cb.style.margin = arg?.event?.allDay === true ? '1px 0 0' : '2px 0 0'; } catch (e) {}
+                            try { cb.style.top = arg?.event?.allDay === true ? '0' : '1px'; } catch (e) {}
+                        }
                         cb.onchange = async (ev) => {
                             try { ev.stopPropagation(); } catch (e) {}
-                            try { ev.preventDefault(); } catch (e) {}
                             if (!tid || typeof window.tmSetDone !== 'function') return;
                             const nextDone = cb.checked === true;
                             applyTaskDoneVisual(wrapEl, titleText, nextDone);
                             try {
-                                const r = window.tmSetDone(tid, nextDone, ev);
+                                const r = window.tmSetDone(tid, nextDone, null);
                                 if (r && typeof r.then === 'function') await r;
-                            } catch (e) {}
-                            refetchAllCalendars();
+                            } catch (e) {
+                                cb.checked = !nextDone;
+                                applyTaskDoneVisual(wrapEl, titleText, !nextDone);
+                            }
                         };
                     }
                     applyTaskEventTitleClamp(wrapEl, title, { hasLeadingCheckbox: !!cb });
@@ -5087,7 +5594,7 @@
                         String(arg?.event?.title || '').trim() || '日程',
                         hideRangeText ? '' : formatScheduleEventRangeText(arg?.event?.start, arg?.event?.end, arg?.event?.allDay === true)
                     );
-                    applyTaskEventTitleClamp(wrapEl, title, { hasLeadingCheckbox: !!cb });
+                    applyTaskEventTitleClamp(wrapEl, title);
                     wrapEl.appendChild(title);
                     return { domNodes: [wrapEl] };
                 }
@@ -5197,6 +5704,9 @@
                         }
                     }
                 } catch (e) {}
+            },
+            eventsSet: () => {
+                try { scheduleSyncTimeGridAllDayCollapseUi(rootEl, cal); } catch (e) {}
             },
             drop: () => {},
             eventReceive: async (info) => {
@@ -5433,16 +5943,33 @@
                 try {
                     requestAnimationFrame(() => syncSideDayLayout(rootEl, cal, getSettings()));
                 } catch (e) {}
-                try { setTimeout(() => syncSideDayLayout(rootEl, cal, getSettings()), 0); } catch (e) {}
+                try { scheduleSyncTimeGridAllDayCollapseUi(rootEl, cal); } catch (e) {}
+                try {
+                    setTimeout(() => {
+                        try { syncSideDayLayout(rootEl, cal, getSettings()); } catch (e2) {}
+                        try { scheduleSyncTimeGridAllDayCollapseUi(rootEl, cal); } catch (e2) {}
+                    }, 0);
+                } catch (e) {}
             },
             viewDidMount: () => {
                 try {
                     requestAnimationFrame(() => syncSideDayLayout(rootEl, cal, getSettings()));
                 } catch (e) {}
+                try { scheduleSyncTimeGridAllDayCollapseUi(rootEl, cal); } catch (e) {}
+            },
+            loading: (isLoading) => {
+                if (isLoading) return;
+                try {
+                    requestAnimationFrame(() => {
+                        try { syncSideDayLayout(rootEl, cal, getSettings()); } catch (e2) {}
+                        try { scheduleSyncTimeGridAllDayCollapseUi(rootEl, cal); } catch (e2) {}
+                    });
+                } catch (e) {}
             },
         });
         cal.render();
         syncSideDayLayout(rootEl, cal, settings);
+        scheduleSyncTimeGridAllDayCollapseUi(rootEl, cal);
         state.sideDay.calendar = cal;
         scheduleClampSideDayPopover(rootEl);
 
@@ -7634,6 +8161,7 @@
         const run = () => {
             try { cal.updateSize(); } catch (e3) {}
             try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e3) {}
+            try { scheduleSyncTimeGridAllDayCollapseUi(state.calendarEl, cal); } catch (e3) {}
             try { applyCnHolidayDots(wrap); } catch (e3) {}
             try { applyCnLunarLabels(wrap); } catch (e3) {}
             try {
@@ -7665,6 +8193,7 @@
         }
         try { applyCalendarSlotHeightStyle(wrap, getSettings()); } catch (e) {}
         try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e) {}
+        try { scheduleSyncTimeGridAllDayCollapseUi(state.calendarEl, cal); } catch (e) {}
         stabilizeCalendarLayout(cal, wrap, opt);
         return true;
     }
@@ -7674,12 +8203,19 @@
         const cal = state.sideDay?.calendar;
         if (!(rootEl instanceof HTMLElement) || !cal) return false;
         try { syncSideDayLayout(rootEl, cal, getSettings()); } catch (e) {}
+        try { scheduleSyncTimeGridAllDayCollapseUi(rootEl, cal); } catch (e) {}
         try {
             requestAnimationFrame(() => {
                 try { syncSideDayLayout(rootEl, cal, getSettings()); } catch (e2) {}
+                try { scheduleSyncTimeGridAllDayCollapseUi(rootEl, cal); } catch (e2) {}
             });
         } catch (e) {}
-        try { setTimeout(() => { try { syncSideDayLayout(rootEl, cal, getSettings()); } catch (e2) {} }, 0); } catch (e) {}
+        try {
+            setTimeout(() => {
+                try { syncSideDayLayout(rootEl, cal, getSettings()); } catch (e2) {}
+                try { scheduleSyncTimeGridAllDayCollapseUi(rootEl, cal); } catch (e2) {}
+            }, 0);
+        } catch (e) {}
         return true;
     }
 
@@ -7897,27 +8433,38 @@
                         ? formatScheduleEventRangeText(arg?.event?.start, arg?.event?.end, arg?.event?.allDay === true)
                         : '';
                     const { title, titleText } = buildTaskEventTitleNode(String(arg?.event?.title || '').trim() || '任务', rangeText);
+                    if (arg?.event?.allDay === true) wrapEl.classList.add('tm-cal-task-event--allday');
+                    if (rangeText) wrapEl.classList.add('tm-cal-task-event--stacked');
                     let cb = null;
                     if (shouldShowCalendarEventCheckbox(ext)) {
                         cb = document.createElement('input');
                         cb.type = 'checkbox';
                         cb.className = 'tm-cal-task-event-check';
                         cb.checked = done;
+                        cb.onclick = (ev) => {
+                            try { ev.stopPropagation(); } catch (e) {}
+                        };
                         applyTaskEventCheckboxOffset(cb);
+                        if (rangeText) {
+                            try { cb.style.alignSelf = 'start'; } catch (e) {}
+                            try { cb.style.margin = arg?.event?.allDay === true ? '1px 0 0' : '2px 0 0'; } catch (e) {}
+                            try { cb.style.top = arg?.event?.allDay === true ? '0' : '1px'; } catch (e) {}
+                        }
                         cb.onchange = async (ev) => {
                             try { ev.stopPropagation(); } catch (e) {}
-                            try { ev.preventDefault(); } catch (e) {}
                             if (!tid || typeof window.tmSetDone !== 'function') return;
                             const nextDone = cb.checked === true;
                             applyTaskDoneVisual(wrapEl, titleText, nextDone);
                             try {
-                                const r = window.tmSetDone(tid, nextDone, ev);
+                                const r = window.tmSetDone(tid, nextDone, null);
                                 if (r && typeof r.then === 'function') await r;
-                            } catch (e) {}
-                            try { state.calendar?.refetchEvents?.(); } catch (e) {}
+                            } catch (e) {
+                                cb.checked = !nextDone;
+                                applyTaskDoneVisual(wrapEl, titleText, !nextDone);
+                            }
                         };
                     }
-                    applyTaskEventTitleClamp(wrapEl, title);
+                    applyTaskEventTitleClamp(wrapEl, title, { hasLeadingCheckbox: !!cb });
                     applyTaskDoneVisual(wrapEl, titleText, done);
                     titleText.onclick = (ev) => {
                         if (_tmClickTracker && _tmClickTracker.ts > 0) {
@@ -8079,6 +8626,9 @@
                     if (vt !== 'dayGridMonth') return;
                     if (arg?.el) arg.el.style.display = 'none';
                 } catch (e) {}
+            },
+            eventsSet: () => {
+                try { scheduleSyncTimeGridAllDayCollapseUi(host, calendar); } catch (e) {}
             },
             eventOrder: '__tmRank,title',
             eventOrderStrict: true,
@@ -8442,6 +8992,8 @@
             },
             datesSet: () => {
                 try { syncMainCalendarViewSelect(wrap, calendar, { compact: !!(isMobileDevice || isDockHost) }); } catch (e) {}
+                try { syncMainCalendarToolbarTitle(wrap, calendar); } catch (e) {}
+                try { scheduleSyncTimeGridAllDayCollapseUi(host, calendar); } catch (e) {}
                 try {
                     const d = calendar?.getDate?.();
                     if (d) state.miniMonthKey = miniMonthKeyFromDate(d);
@@ -8464,6 +9016,7 @@
                     requestAnimationFrame(() => {
                         try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e2) {}
                         try { applyTimeAxisColumnLayout(host, 40); } catch (e2) {}
+                        try { scheduleSyncTimeGridAllDayCollapseUi(host, calendar); } catch (e2) {}
                         try { enhanceNowIndicator(host); } catch (e2) {}
                         try { applyCnHolidayDots(wrap); } catch (e2) {}
                         try { applyCnLunarLabels(wrap); } catch (e2) {}
@@ -8471,6 +9024,7 @@
                     setTimeout(() => {
                         try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e2) {}
                         try { applyTimeAxisColumnLayout(host, 40); } catch (e2) {}
+                        try { scheduleSyncTimeGridAllDayCollapseUi(host, calendar); } catch (e2) {}
                         try { enhanceNowIndicator(host); } catch (e2) {}
                         try { applyCnHolidayDots(wrap); } catch (e2) {}
                         try { applyCnLunarLabels(wrap); } catch (e2) {}
@@ -8484,6 +9038,7 @@
                             try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e2) {}
                             try { applyTimeAxisColumnLayout(host, 40); } catch (e2) {}
                             try { calendar.updateSize(); } catch (e2) {}
+                            try { scheduleSyncTimeGridAllDayCollapseUi(host, calendar); } catch (e2) {}
                             try { enhanceNowIndicator(host); } catch (e2) {}
                         });
                     }
@@ -8495,6 +9050,7 @@
         try { calendar.render(); } catch (e) {}
         try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e) {}
         try { applyTimeAxisColumnLayout(host, 40); } catch (e) {}
+        try { scheduleSyncTimeGridAllDayCollapseUi(host, calendar); } catch (e) {}
         try { syncMainCalendarViewSelect(wrap, calendar, { compact: !!(isMobileDevice || isDockHost) }); } catch (e) {}
         try {
             state.filteredTasksListener = () => {
@@ -8514,6 +9070,7 @@
                 try { applyMainCalendarSlotHeightLayout(wrap, getSettings()); } catch (e2) {}
                 try { applyTimeAxisColumnLayout(host, 40); } catch (e2) {}
                 try { calendar.updateSize(); } catch (e2) {}
+                try { scheduleSyncTimeGridAllDayCollapseUi(host, calendar); } catch (e2) {}
                 try { enhanceNowIndicator(host); } catch (e2) {}
             });
         } catch (e) {}
@@ -8673,10 +9230,12 @@
                 }
                 const target = e?.target;
                 if (!(target instanceof Element)) return;
+                if (target.closest('.tm-cal-task-event-check')) return;
                 const hostEl = target.closest('.tm-calendar-host');
                 const inPopover = !!target.closest('.fc-popover');
                 if (!hostEl && !inPopover) return;
                 if (target.closest('.fc-header-toolbar')) return;
+                if (target.closest('.tm-cal-allday-summary, .tm-cal-allday-toggle')) return;
                 // 修复：点击"更多"链接时不拦截，让 FullCalendar 默认处理
                 // 检查多种可能的更多链接类名
                 if (target.closest('.fc-more')) return;
@@ -8778,15 +9337,10 @@
                         return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
                     };
                     if (hitRect(checkEl)) {
-                        try { e.preventDefault?.(); } catch (e2) {}
-                        try {
-                            const next = !(checkEl.checked === true);
-                            checkEl.checked = next;
-                            if (typeof window.tmSetDone === 'function') {
-                                try { window.tmSetDone(tid, next, e); } catch (e3) {}
-                            }
-                            try { state.calendar?.refetchEvents?.(); } catch (e3) {}
-                        } catch (e2) {}
+                        if (target !== checkEl && !target.closest('.tm-cal-task-event-check')) {
+                            try { e.preventDefault?.(); } catch (e2) {}
+                            try { checkEl.click?.(); } catch (e2) {}
+                        }
                         return;
                     }
                     if (hitRect(titleEl)) {

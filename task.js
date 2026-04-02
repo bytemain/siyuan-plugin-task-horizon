@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.0.3
+// @version      2.0.4
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -1046,7 +1046,7 @@
             width: 100%;
             min-width: 0;
             justify-content: center;
-            text-align: center;
+            text-align: left;
             border-width: var(--tm-topbar-control-border-width);
             box-shadow: var(--tm-topbar-control-shadow);
         }
@@ -1062,14 +1062,14 @@
 
         #tmDesktopMenu .tm-desktop-menu-btn-content {
             width: 100%;
-            justify-content: center;
-            text-align: center;
+            justify-content: flex-start;
+            text-align: left;
         }
 
         #tmDesktopMenu .tm-desktop-menu-toggle-content {
             flex: 1;
-            justify-content: center;
-            text-align: center;
+            justify-content: flex-start;
+            text-align: left;
         }
 
         #tmDesktopMenu .tm-desktop-menu-toggle {
@@ -4723,7 +4723,7 @@
         }
 
         .tm-task-detail-subtask {
-            padding-left: calc(var(--tm-task-detail-depth, 0) * 18px);
+            padding-left: 0;
         }
 
         .tm-task-detail-subtask-row {
@@ -4827,7 +4827,8 @@
             flex-direction: column;
             gap: 2px;
             margin-top: 2px;
-            padding-left: 14px;
+            margin-left: calc(var(--tm-checkbox-size, 14px) / 2 - 1px);
+            padding-left: calc(var(--tm-checkbox-size, 14px) / 2 + 1px);
             border-left: 1px solid color-mix(in srgb, var(--tm-border-color) 72%, transparent);
         }
 
@@ -5798,14 +5799,17 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            pointer-events: none;
         }
 
         .tm-checklist-sheet.tm-checklist-sheet--dragging {
             transition: none;
+            pointer-events: auto;
         }
 
         .tm-checklist-sheet.tm-checklist-sheet--open {
             transform: translateY(0);
+            pointer-events: auto;
         }
 
         .tm-checklist-sheet-handle {
@@ -8054,6 +8058,7 @@
             docTopbarButtonSwapPressActions: false,
             windowTopbarIconDesktop: true,
             windowTopbarIconMobile: true,
+            semanticDateAutoPromptEnabled: true,
             defaultDocId: '',
             defaultDocIdByGroup: {},
             // 默认状态选项
@@ -8401,6 +8406,7 @@
                                 if (typeof cloudData.docTopbarButtonSwapPressActions === 'boolean') this.data.docTopbarButtonSwapPressActions = cloudData.docTopbarButtonSwapPressActions;
                                 if (typeof cloudData.windowTopbarIconDesktop === 'boolean') this.data.windowTopbarIconDesktop = cloudData.windowTopbarIconDesktop;
                                 if (typeof cloudData.windowTopbarIconMobile === 'boolean') this.data.windowTopbarIconMobile = cloudData.windowTopbarIconMobile;
+                                if (typeof cloudData.semanticDateAutoPromptEnabled === 'boolean') this.data.semanticDateAutoPromptEnabled = cloudData.semanticDateAutoPromptEnabled;
                                 if (typeof cloudData.checklistDetailWidth === 'number') this.data.checklistDetailWidth = cloudData.checklistDetailWidth;
                                 if (typeof cloudData.defaultDocId === 'string') this.data.defaultDocId = cloudData.defaultDocId;
                                 if (cloudData.defaultDocIdByGroup && typeof cloudData.defaultDocIdByGroup === 'object') this.data.defaultDocIdByGroup = cloudData.defaultDocIdByGroup;
@@ -8705,6 +8711,7 @@
             this.data.docTopbarButtonSwapPressActions = !!Storage.get('tm_doc_topbar_button_swap_press_actions', this.data.docTopbarButtonSwapPressActions);
             this.data.windowTopbarIconDesktop = !!Storage.get('tm_window_topbar_icon_desktop', this.data.windowTopbarIconDesktop);
             this.data.windowTopbarIconMobile = !!Storage.get('tm_window_topbar_icon_mobile', this.data.windowTopbarIconMobile);
+            this.data.semanticDateAutoPromptEnabled = !!Storage.get('tm_semantic_date_auto_prompt_enabled', this.data.semanticDateAutoPromptEnabled);
             this.data.calendarColorFocus = Storage.get('tm_calendar_color_focus', this.data.calendarColorFocus);
             this.data.calendarColorBreak = Storage.get('tm_calendar_color_break', this.data.calendarColorBreak);
             this.data.calendarColorStopwatch = Storage.get('tm_calendar_color_stopwatch', this.data.calendarColorStopwatch);
@@ -8983,6 +8990,7 @@
             Storage.set('tm_doc_topbar_button_swap_press_actions', !!this.data.docTopbarButtonSwapPressActions);
             Storage.set('tm_window_topbar_icon_desktop', !!this.data.windowTopbarIconDesktop);
             Storage.set('tm_window_topbar_icon_mobile', !!this.data.windowTopbarIconMobile);
+            Storage.set('tm_semantic_date_auto_prompt_enabled', !!this.data.semanticDateAutoPromptEnabled);
             Storage.set('tm_calendar_color_focus', String(this.data.calendarColorFocus || '').trim());
             Storage.set('tm_calendar_color_break', String(this.data.calendarColorBreak || '').trim());
             Storage.set('tm_calendar_color_stopwatch', String(this.data.calendarColorStopwatch || '').trim());
@@ -9133,6 +9141,7 @@
             this.data.docTopbarButtonSwapPressActions = !!this.data.docTopbarButtonSwapPressActions;
             this.data.windowTopbarIconDesktop = this.data.windowTopbarIconDesktop !== false;
             this.data.windowTopbarIconMobile = this.data.windowTopbarIconMobile !== false;
+            this.data.semanticDateAutoPromptEnabled = !!this.data.semanticDateAutoPromptEnabled;
             this.data.timelineForceSortByCompletionNearToday = !!this.data.timelineForceSortByCompletionNearToday;
             this.data.groupSortByBestSubtaskTimeInTimeQuadrant = !!this.data.groupSortByBestSubtaskTimeInTimeQuadrant;
             this.data.whiteboardLinks = Array.isArray(this.data.whiteboardLinks) ? this.data.whiteboardLinks : [];
@@ -12228,6 +12237,47 @@
         __tmLoadedDocIdsForTasks: [],
     };
 
+    const __tmModalStack = [];
+
+    function __tmModalStackPush(entry) {
+        if (!entry || typeof entry.close !== 'function') return __tmModalStack.length;
+        __tmModalStack.push(entry);
+        return __tmModalStack.length;
+    }
+
+    function __tmModalStackRemove(entry) {
+        const idx = __tmModalStack.indexOf(entry);
+        if (idx !== -1) __tmModalStack.splice(idx, 1);
+        return __tmModalStack.length;
+    }
+
+    function __tmModalStackPop() {
+        if (__tmModalStack.length === 0) return 0;
+        const top = __tmModalStack[__tmModalStack.length - 1];
+        try { top.close(); } catch (e) {}
+        __tmModalStackRemove(top);
+        return __tmModalStack.length;
+    }
+
+    function __tmModalStackBind(closeFn) {
+        let entry = { close: closeFn };
+        __tmModalStackPush(entry);
+        return () => {
+            if (entry) { __tmModalStackRemove(entry); entry = null; }
+        };
+    }
+
+    (function __tmInitModalStackEscHandler() {
+        const handler = (e) => {
+            if (e.key !== 'Escape') return;
+            if (__tmModalStack.length === 0) return;
+            try { e.preventDefault(); } catch (e2) {}
+            try { e.stopPropagation(); } catch (e2) {}
+            __tmModalStackPop();
+        };
+        document.addEventListener('keydown', handler, true);
+    })();
+
     function __tmGetTodayDateKey() {
         const d = new Date();
         const pad = (n) => String(n).padStart(2, '0');
@@ -12235,6 +12285,14 @@
     }
 
     const __TM_SEMANTIC_DATE_RECOGNIZED_KEY = 'tm_semantic_date_recognized';
+    const __TM_SEMANTIC_DATE_AUTO_SCAN_BATCH_SIZE = 120;
+    const __TM_SEMANTIC_DATE_AUTO_PROMPT_BATCH_SIZE = 50;
+
+    function __tmYieldSemanticDateScan() {
+        return new Promise((resolve) => {
+            try { setTimeout(resolve, 0); } catch (e) { resolve(); }
+        });
+    }
 
     const SemanticDateRecognizedStore = {
         data: Storage.get(__TM_SEMANTIC_DATE_RECOGNIZED_KEY, {}) || {},
@@ -12631,47 +12689,93 @@
         return null;
     }
 
-    async function __tmCollectSemanticDateSuggestions(tasks) {
+    async function __tmCollectSemanticDateSuggestions(tasks, options = {}) {
         try { await SemanticDateRecognizedStore.load(); } catch (e) {}
+        const opts = (options && typeof options === 'object') ? options : {};
+        const maxSuggestions0 = Number(opts.maxSuggestions);
+        const maxSuggestions = Number.isFinite(maxSuggestions0) && maxSuggestions0 > 0
+            ? Math.max(1, Math.min(200, Math.floor(maxSuggestions0)))
+            : 0;
+        const batchSize0 = Number(opts.batchSize);
+        const batchSize = Number.isFinite(batchSize0) && batchSize0 > 0
+            ? Math.max(20, Math.min(500, Math.floor(batchSize0)))
+            : __TM_SEMANTIC_DATE_AUTO_SCAN_BATCH_SIZE;
+        const shouldStop = typeof opts.shouldStop === 'function' ? opts.shouldStop : null;
         const list = Array.isArray(tasks) ? tasks : [];
         const recognizedMap = __tmLoadSemanticDateRecognizedMap();
         const scheduledTaskIds = __tmLoadCalendarScheduledTaskIds();
         const hasCalendarModule = !!globalThis.__tmCalendar?.addTaskSchedule;
         const out = [];
-        list.forEach((task) => {
-            const taskId = String(task?.id || '').trim();
-            if (!taskId || !task || task.done) return;
-            if (String(task?.completionTime || '').trim()) return;
-            const suggestion = __tmExtractSemanticTaskDateSuggestion(task, new Date());
-            if (!suggestion) return;
-            const recognized = recognizedMap[taskId];
-            const prevSignature = String(recognized?.signature || recognized || '').trim();
-            if (prevSignature && prevSignature === suggestion.signature) return;
-            if (suggestion.isRelativeDate) {
-                const legacySignature = __tmBuildSemanticTaskLegacySignature(task, recognized?.completionValue, suggestion.sourceKey);
-                if (prevSignature && recognized?.completionValue && prevSignature === legacySignature) return;
+        let truncated = false;
+        const now = new Date();
+        for (let index = 0; index < list.length; index += 1) {
+            if (shouldStop && shouldStop()) {
+                return { items: out, truncated, interrupted: true };
             }
-            const scheduleExists = scheduledTaskIds.has(taskId);
-            const calendarEligible = !!suggestion.hasTime && !scheduleExists && hasCalendarModule;
-            out.push({
-                ...suggestion,
-                scheduleExists,
-                calendarEligible,
-                actionLabel: suggestion.hasTime
-                    ? (calendarEligible
-                        ? '写入完成时间并添加到日历'
-                        : (scheduleExists ? '写入完成时间（该任务已有日历）' : '写入完成时间（日历模块未加载）'))
-                    : '写入完成时间',
-            });
-        });
-        return out;
+            const task = list[index];
+            if (truncated) break;
+            const taskId = String(task?.id || '').trim();
+            if (taskId && task && !task.done && !String(task?.completionTime || '').trim()) {
+                const suggestion = __tmExtractSemanticTaskDateSuggestion(task, now);
+                if (suggestion) {
+                    const recognized = recognizedMap[taskId];
+                    const prevSignature = String(recognized?.signature || recognized || '').trim();
+                    let skipSuggestion = !!(prevSignature && prevSignature === suggestion.signature);
+                    if (!skipSuggestion && suggestion.isRelativeDate) {
+                        const legacySignature = __tmBuildSemanticTaskLegacySignature(task, recognized?.completionValue, suggestion.sourceKey);
+                        skipSuggestion = !!(prevSignature && recognized?.completionValue && prevSignature === legacySignature);
+                    }
+                    if (!skipSuggestion) {
+                        const scheduleExists = scheduledTaskIds.has(taskId);
+                        const calendarEligible = !!suggestion.hasTime && !scheduleExists && hasCalendarModule;
+                        out.push({
+                            ...suggestion,
+                            scheduleExists,
+                            calendarEligible,
+                            actionLabel: suggestion.hasTime
+                                ? (calendarEligible
+                                    ? '写入完成时间并添加到日历'
+                                    : (scheduleExists ? '写入完成时间（该任务已有日历）' : '写入完成时间（日历模块未加载）'))
+                                : '写入完成时间',
+                        });
+                        if (maxSuggestions > 0 && out.length >= maxSuggestions) {
+                            truncated = true;
+                        }
+                    }
+                }
+            }
+            if ((index + 1) % batchSize === 0) {
+                await __tmYieldSemanticDateScan();
+                if (shouldStop && shouldStop()) {
+                    return { items: out, truncated, interrupted: true };
+                }
+            }
+        }
+        return { items: out, truncated, interrupted: false };
     }
 
     function __tmCloseSemanticDateConfirmModal() {
+        state.__semanticDateConfirmUnstack?.();
+        state.__semanticDateConfirmUnstack = null;
         if (!state.semanticDateConfirmModal) return;
         try { state.semanticDateConfirmModal.remove(); } catch (e) {}
         state.semanticDateConfirmModal = null;
         state.semanticDateAutoApplying = false;
+    }
+
+    function __tmGetSemanticDateConfirmHost() {
+        try {
+            if (state.modal instanceof HTMLElement && document.body.contains(state.modal)) {
+                return state.modal;
+            }
+        } catch (e) {}
+        try {
+            const mountRoot = __tmGetMountRoot?.();
+            if (mountRoot instanceof HTMLElement && document.body.contains(mountRoot)) {
+                return mountRoot;
+            }
+        } catch (e) {}
+        return document.body;
     }
 
     async function __tmApplySemanticDateSuggestions(items) {
@@ -12734,15 +12838,27 @@
         return { completionApplied, calendarApplied, failures };
     }
 
-    function __tmShowSemanticDateConfirmModal(items) {
+    function __tmShowSemanticDateConfirmModal(items, options = {}) {
         const list = Array.isArray(items) ? items.filter(Boolean) : [];
         if (!list.length) return;
+        const opts = (options && typeof options === 'object') ? options : {};
+        const host = __tmGetSemanticDateConfirmHost();
+        const scopedToManager = host instanceof HTMLElement && host !== document.body;
+        const batchCount0 = Number(opts.batchCount);
+        const batchCount = Number.isFinite(batchCount0) && batchCount0 > 0 ? Math.max(1, Math.floor(batchCount0)) : 1;
+        const batchIndex0 = Number(opts.batchIndex);
+        const batchIndex = Number.isFinite(batchIndex0) && batchIndex0 > 0 ? Math.min(batchCount, Math.floor(batchIndex0)) : 1;
+        const totalCount0 = Number(opts.totalCount);
+        const totalCount = Number.isFinite(totalCount0) && totalCount0 > 0 ? Math.max(list.length, Math.floor(totalCount0)) : list.length;
+        const remainingItems = Array.isArray(opts.remainingItems) ? opts.remainingItems.filter(Boolean) : [];
         __tmCloseSemanticDateConfirmModal();
         const dateOnlyCount = list.filter((item) => !item?.hasTime).length;
         const dateTimeCount = list.filter((item) => !!item?.hasTime).length;
         const modal = document.createElement('div');
         modal.className = 'tm-modal';
-        modal.style.cssText = 'z-index: 200002;';
+        modal.style.cssText = scopedToManager
+            ? 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:200002;'
+            : 'z-index:200002;';
         const box = document.createElement('div');
         box.className = 'tm-box';
         box.style.cssText = 'width:min(920px,94vw);height:min(82vh,760px);display:flex;flex-direction:column;';
@@ -12753,10 +12869,17 @@
             </div>
             <div class="tm-body" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;overflow:auto;">
                 <div style="font-size:13px;color:var(--tm-secondary-text);line-height:1.6;">
-                    本次刷新自动识别到 <b>${list.length}</b> 条语义日期。
+                    本次刷新自动识别到 <b>${totalCount}</b> 条语义日期。
+                    ${batchCount > 1 ? `当前展示第 <b>${batchIndex}</b> / <b>${batchCount}</b> 批，本批 <b>${list.length}</b> 条。` : `本批共 <b>${list.length}</b> 条。`}
                     其中仅日期 <b>${dateOnlyCount}</b> 条，带时分 <b>${dateTimeCount}</b> 条。
                     已识别过的同一任务内容后续重载不会再次扫描；新建任务刷新后会继续识别。
                 </div>
+                ${batchCount > 1 ? `
+                    <div style="font-size:12px;color:var(--tm-secondary-text);line-height:1.6;padding:8px 10px;border:1px dashed var(--tm-border-color);border-radius:8px;background:var(--tm-card-bg);">
+                        自动识别会先分批扫描全量任务，再按批次展示确认列表。
+                        应用当前批次后会继续弹出下一批；取消则停止后续批次。
+                    </div>
+                ` : ''}
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
                     <button class="tm-btn tm-btn-secondary" data-tm-semantic-action="select-all" style="padding:6px 12px;">全选</button>
                     <button class="tm-btn tm-btn-secondary" data-tm-semantic-action="clear-all" style="padding:6px 12px;">全不选</button>
@@ -12825,6 +12948,33 @@
                     hint(`⚠️ ${result.failures.length} 条处理失败，请查看控制台`, 'warning');
                 }
                 __tmCloseSemanticDateConfirmModal();
+                if (remainingItems.length > 0) {
+                    const nextBatch = remainingItems.slice(0, __TM_SEMANTIC_DATE_AUTO_PROMPT_BATCH_SIZE);
+                    const nextRemaining = remainingItems.slice(__TM_SEMANTIC_DATE_AUTO_PROMPT_BATCH_SIZE);
+                    try {
+                        setTimeout(() => {
+                            try {
+                                if (typeof __tmIsPluginVisibleNow === 'function' && !__tmIsPluginVisibleNow()) return;
+                                __tmShowSemanticDateConfirmModal(nextBatch, {
+                                    totalCount,
+                                    batchCount,
+                                    batchIndex: batchIndex + 1,
+                                    remainingItems: nextRemaining,
+                                });
+                            } catch (e) {}
+                        }, 0);
+                    } catch (e) {
+                        try {
+                            if (typeof __tmIsPluginVisibleNow === 'function' && !__tmIsPluginVisibleNow()) return;
+                            __tmShowSemanticDateConfirmModal(nextBatch, {
+                                totalCount,
+                                batchCount,
+                                batchIndex: batchIndex + 1,
+                                remainingItems: nextRemaining,
+                            });
+                        } catch (e2) {}
+                    }
+                }
             } catch (err) {
                 allButtons.forEach((btn) => { btn.disabled = false; });
                 if (applyBtn) applyBtn.textContent = prevText;
@@ -12832,19 +12982,40 @@
                 hint(`❌ ${String(err?.message || err || '应用失败')}`, 'error');
             }
         });
-        document.body.appendChild(modal);
+        try { host.appendChild(modal); } catch (e) { document.body.appendChild(modal); }
         state.semanticDateConfirmModal = modal;
+        state.__semanticDateConfirmUnstack = __tmModalStackBind(() => __tmCloseSemanticDateConfirmModal());
     }
 
     async function __tmMaybeAutoPromptSemanticDates(token) {
         if (token !== undefined && token !== null && token !== (Number(state.openToken) || 0)) return;
+        if (!SettingsStore?.data?.semanticDateAutoPromptEnabled) return;
         if (state.semanticDateAutoApplying) return;
         if (state.semanticDateConfirmModal && document.body.contains(state.semanticDateConfirmModal)) return;
+        if (typeof __tmIsPluginVisibleNow === 'function' && !__tmIsPluginVisibleNow()) return;
         const tasks = Object.values(state.flatTasks || {});
-        const suggestions = await __tmCollectSemanticDateSuggestions(tasks);
+        const { items: suggestions, interrupted } = await __tmCollectSemanticDateSuggestions(tasks, {
+            batchSize: __TM_SEMANTIC_DATE_AUTO_SCAN_BATCH_SIZE,
+            shouldStop: () => {
+                if (token !== undefined && token !== null && token !== (Number(state.openToken) || 0)) return true;
+                if (typeof __tmIsPluginVisibleNow === 'function' && !__tmIsPluginVisibleNow()) return true;
+                return false;
+            },
+        });
+        if (interrupted) return;
+        if (token !== undefined && token !== null && token !== (Number(state.openToken) || 0)) return;
+        if (typeof __tmIsPluginVisibleNow === 'function' && !__tmIsPluginVisibleNow()) return;
         if (!suggestions.length) return;
         __tmMarkSemanticDateSuggestionsRecognized(suggestions);
-        __tmShowSemanticDateConfirmModal(suggestions);
+        const batchCount = Math.max(1, Math.ceil(suggestions.length / __TM_SEMANTIC_DATE_AUTO_PROMPT_BATCH_SIZE));
+        const firstBatch = suggestions.slice(0, __TM_SEMANTIC_DATE_AUTO_PROMPT_BATCH_SIZE);
+        const remainingItems = suggestions.slice(__TM_SEMANTIC_DATE_AUTO_PROMPT_BATCH_SIZE);
+        __tmShowSemanticDateConfirmModal(firstBatch, {
+            totalCount: suggestions.length,
+            batchCount,
+            batchIndex: 1,
+            remainingItems,
+        });
     }
 
     function __tmHasTaskScheduledToday(taskId) {
@@ -13470,7 +13641,6 @@
 
     // ===== 全局清理句柄 =====
     let __tmGlobalClickHandler = null;
-    let __tmSettingsEscHandler = null;
     let __tmDomReadyHandler = null;
     let __tmBreadcrumbObserver = null;
     let __tmThemeModeObserver = null;
@@ -13769,12 +13939,25 @@ async function __tmRefreshAfterWake(reason) {
             if (style.display === 'none' || style.opacity === '0' || style.visibility === 'hidden') return false;
         } catch (e) {}
         try {
+            const modalRect = state.modal.getBoundingClientRect?.();
+            if (modalRect && !(modalRect.width > 0 && modalRect.height > 0)) return false;
+        } catch (e) {}
+        try {
             const activeWindow = document.querySelector('.layout__wnd--active');
             if (activeWindow) {
                 const mountEl = __tmGetMountRoot();
                 if (mountEl && mountEl !== document.body && activeWindow.contains(mountEl)) return true;
                 if (activeWindow.contains(state.modal)) return true;
                 return false;
+            }
+        } catch (e) {}
+        try {
+            const mountEl = __tmGetMountRoot();
+            if (mountEl && mountEl !== document.body) {
+                const mountStyle = window.getComputedStyle(mountEl);
+                if (mountStyle.display === 'none' || mountStyle.visibility === 'hidden') return false;
+                const mountRect = mountEl.getBoundingClientRect?.();
+                if (mountRect && !(mountRect.width > 0 && mountRect.height > 0)) return false;
             }
         } catch (e) {}
         return true;
@@ -16215,7 +16398,10 @@ async function __tmRefreshAfterWake(reason) {
         okBtn.className = 'tm-btn tm-btn-primary';
         okBtn.textContent = '应用';
 
+        let __colorPickerUnstack = null;
         const close = () => {
+            __colorPickerUnstack?.();
+            __colorPickerUnstack = null;
             try { backdrop.remove(); } catch (e) {}
         };
 
@@ -16236,6 +16422,7 @@ async function __tmRefreshAfterWake(reason) {
 
         backdrop.appendChild(dialog);
         document.body.appendChild(backdrop);
+        __colorPickerUnstack = __tmModalStackBind(close);
     }
 
     function __tmNormalizeAppearanceMetric(input, fallback, min, max) {
@@ -17118,39 +17305,6 @@ async function __tmRefreshAfterWake(reason) {
         if (!(pane instanceof HTMLElement)) return;
         if (pane.__tmChecklistScrollFxBound) return;
         pane.__tmChecklistScrollFxBound = true;
-        if (__tmIsRuntimeMobileClient() && !pane.__tmChecklistTapGuardBound) {
-            pane.__tmChecklistTapGuardBound = true;
-            let touchStartX = 0;
-            let touchStartY = 0;
-            let touchActive = false;
-            const suppressTap = (ms = 280) => {
-                try {
-                    pane.__tmChecklistSuppressTapUntil = Math.max(
-                        Number(pane.__tmChecklistSuppressTapUntil || 0),
-                        Date.now() + ms
-                    );
-                } catch (e) {}
-            };
-            const readTouchPoint = (ev) => ev?.touches?.[0] || ev?.changedTouches?.[0] || null;
-            pane.addEventListener('touchstart', (ev) => {
-                const point = readTouchPoint(ev);
-                touchActive = true;
-                touchStartX = Number(point?.clientX || 0);
-                touchStartY = Number(point?.clientY || 0);
-            }, { passive: true });
-            pane.addEventListener('touchmove', (ev) => {
-                if (!touchActive) return;
-                const point = readTouchPoint(ev);
-                const dx = Math.abs(Number(point?.clientX || 0) - touchStartX);
-                const dy = Math.abs(Number(point?.clientY || 0) - touchStartY);
-                if ((dx + dy) > 10) suppressTap(320);
-            }, { passive: true });
-            const onTouchEnd = () => {
-                touchActive = false;
-            };
-            pane.addEventListener('touchend', onTouchEnd, { passive: true });
-            pane.addEventListener('touchcancel', onTouchEnd, { passive: true });
-        }
         const updateThumb = () => {
             if (!(track instanceof HTMLElement) || !(thumb instanceof HTMLElement)) return;
             const viewport = Number(pane.clientHeight || 0);
@@ -17173,9 +17327,6 @@ async function __tmRefreshAfterWake(reason) {
         pane.__tmChecklistScrollUpdateThumb = updateThumb;
         const show = () => {
             try { pane.__tmChecklistLastScrollAt = Date.now(); } catch (e) {}
-            if (__tmIsRuntimeMobileClient()) {
-                try { pane.__tmChecklistSuppressTapUntil = Date.now() + 260; } catch (e) {}
-            }
             updateThumb();
             track?.classList?.add('tm-checklist-scrollbar--visible');
             try { clearTimeout(pane.__tmChecklistScrollFxTimer); } catch (e) {}
@@ -17371,6 +17522,8 @@ async function __tmRefreshAfterWake(reason) {
             modal.appendChild(box);
             document.body.appendChild(modal);
 
+            const removeFromStack = __tmModalStackBind(() => cancelBtn.click());
+
             const focusInput = () => {
                 try {
                     input.focus({ preventScroll: true });
@@ -17385,11 +17538,13 @@ async function __tmRefreshAfterWake(reason) {
 
             okBtn.onclick = () => {
                 const value = String(input.value || '').trim();
+                removeFromStack();
                 modal.remove();
                 resolve(value);
             };
 
             cancelBtn.onclick = () => {
+                removeFromStack();
                 modal.remove();
                 resolve(null);
             };
@@ -17397,8 +17552,6 @@ async function __tmRefreshAfterWake(reason) {
             input.onkeydown = (e) => {
                 if (e.key === 'Enter') {
                     okBtn.click();
-                } else if (e.key === 'Escape') {
-                    cancelBtn.click();
                 }
             };
 
@@ -17435,30 +17588,22 @@ async function __tmRefreshAfterWake(reason) {
 
             const okBtn = modal.querySelector('#tm-confirm-ok');
             const cancelBtn = modal.querySelector('#tm-confirm-cancel');
-            const cleanupKey = () => {
-                try { document.removeEventListener('keydown', onKey, true); } catch (e) {}
-            };
-            function onKey(e) {
-                if (e.key === 'Escape') {
-                    cleanupKey();
-                    cancelBtn.click();
-                }
-            }
+
+            const removeFromStack = __tmModalStackBind(() => cancelBtn.click());
 
             okBtn.onclick = () => {
-                cleanupKey();
+                removeFromStack();
                 modal.remove();
                 resolve(true);
             };
             cancelBtn.onclick = () => {
-                cleanupKey();
+                removeFromStack();
                 modal.remove();
                 resolve(false);
             };
             modal.onclick = (e) => {
                 if (e.target === modal) cancelBtn.click();
             };
-            document.addEventListener('keydown', onKey, true);
         });
     }
 
@@ -17496,18 +17641,21 @@ async function __tmRefreshAfterWake(reason) {
             const okBtn = modal.querySelector('#tm-prompt-ok');
             const cancelBtn = modal.querySelector('#tm-prompt-cancel');
 
+            const removeFromStack = __tmModalStackBind(() => cancelBtn.click());
+
             okBtn.onclick = () => {
                 const value = String(select.value || '').trim();
+                removeFromStack();
                 modal.remove();
                 resolve(value);
             };
             cancelBtn.onclick = () => {
+                removeFromStack();
                 modal.remove();
                 resolve(null);
             };
             select.onkeydown = (e) => {
                 if (e.key === 'Enter') okBtn.click();
-                else if (e.key === 'Escape') cancelBtn.click();
             };
             modal.onclick = (e) => {
                 if (e.target === modal) cancelBtn.click();
@@ -17544,15 +17692,19 @@ async function __tmRefreshAfterWake(reason) {
             const cancelBtn = modal.querySelector('#tm-choice-cancel');
             const choiceButtons = Array.from(modal.querySelectorAll('[data-tm-choice-value]'));
 
+            const removeFromStack = __tmModalStackBind(() => cancelBtn.click());
+
             choiceButtons.forEach((btn) => {
                 btn.onclick = () => {
                     const value = String(btn.getAttribute('data-tm-choice-value') || '').trim();
+                    removeFromStack();
                     modal.remove();
                     resolve(value || null);
                 };
             });
 
             cancelBtn.onclick = () => {
+                removeFromStack();
                 modal.remove();
                 resolve(null);
             };
@@ -17989,23 +18141,27 @@ async function __tmRefreshAfterWake(reason) {
             const cancelBtn = modal.querySelector('#tm-prompt-cancel');
             const clearBtn = modal.querySelector('#tm-prompt-clear');
 
+            const removeFromStack = __tmModalStackBind(() => cancelBtn.click());
+
             okBtn.onclick = () => {
                 const raw = String(input.value || '').trim();
+                removeFromStack();
                 modal.remove();
                 if (!raw) return resolve('');
                 resolve(__tmParseDatetimeLocalToISO(raw));
             };
             clearBtn.onclick = () => {
+                removeFromStack();
                 modal.remove();
                 resolve('');
             };
             cancelBtn.onclick = () => {
+                removeFromStack();
                 modal.remove();
                 resolve(null);
             };
             input.onkeydown = (e) => {
                 if (e.key === 'Enter') okBtn.click();
-                else if (e.key === 'Escape') cancelBtn.click();
             };
             modal.onclick = (e) => {
                 if (e.target === modal) cancelBtn.click();
@@ -18041,10 +18197,14 @@ async function __tmRefreshAfterWake(reason) {
             const okBtn = modal.querySelector('#tm-prompt-ok');
             const cancelBtn = modal.querySelector('#tm-prompt-cancel');
             const clearBtn = modal.querySelector('#tm-prompt-clear');
+
+            const removeFromStack = __tmModalStackBind(() => cancelBtn.click());
+
             let settled = false;
             const finish = (value) => {
                 if (settled) return;
                 settled = true;
+                removeFromStack();
                 try { modal.remove(); } catch (e) {}
                 resolve(value);
             };
@@ -18069,7 +18229,6 @@ async function __tmRefreshAfterWake(reason) {
             }
             input.onkeydown = (e) => {
                 if (e.key === 'Enter') okBtn.click();
-                else if (e.key === 'Escape') cancelBtn.click();
             };
             modal.onclick = (e) => {
                 if (e.target === modal) cancelBtn.click();
@@ -18124,6 +18283,7 @@ async function __tmRefreshAfterWake(reason) {
         
         document.body.appendChild(state.rulesModal);
         __tmBindRulesManagerEvents(state.rulesModal);
+        state.__rulesUnstack = __tmModalStackBind(() => window.closeRulesManager?.());
     }
 
     function __tmBindRulesManagerEvents(rootEl) {
@@ -18881,6 +19041,7 @@ async function __tmRefreshAfterWake(reason) {
         state.priorityModal.innerHTML = __tmRenderPriorityScoreSettings(false);
         document.body.appendChild(state.priorityModal);
         __tmBindRulesManagerEvents(state.priorityModal);
+        state.__priorityUnstack = __tmModalStackBind(() => window.closePriorityScoreSettings?.());
     }
     window.showPriorityScoreSettings = showPriorityScoreSettings;
 
@@ -18894,6 +19055,8 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     window.closePriorityScoreSettings = function() {
+        state.__priorityUnstack?.();
+        state.__priorityUnstack = null;
         if (state.priorityModal) {
             state.priorityModal.remove();
             state.priorityModal = null;
@@ -19074,13 +19237,19 @@ async function __tmRefreshAfterWake(reason) {
                     </div>
                 </div>
                 <div class="tm-prompt-buttons">
-                    <button class="tm-prompt-btn tm-prompt-btn-secondary" onclick="this.closest('.tm-prompt-modal').remove()">取消</button>
+                    <button class="tm-prompt-btn tm-prompt-btn-secondary" id="tm-cancel-quadrant-rule">取消</button>
                     <button class="tm-prompt-btn tm-prompt-btn-primary" id="tm-save-quadrant-rule">保存</button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(modal);
+        const __quadrantRuleUnstack = __tmModalStackBind(() => modal.remove());
+
+        document.getElementById('tm-cancel-quadrant-rule').onclick = function() {
+            __quadrantRuleUnstack?.();
+            modal.remove();
+        };
         
         document.getElementById('tm-save-quadrant-rule').onclick = async function() {
             const selectedImportance = Array.from(modal.querySelectorAll('[data-quadrant-importance]:checked')).map(cb => cb.value);
@@ -19102,6 +19271,7 @@ async function __tmRefreshAfterWake(reason) {
             SettingsStore.data.quadrantConfig = quadrantConfig;
             await SettingsStore.save();
             
+            __quadrantRuleUnstack?.();
             modal.remove();
             hint('✅ 四象限规则已更新', 'success');
             showSettings();
@@ -19268,6 +19438,8 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmClosePriorityDocDeltaPicker = function() {
+        state.__priorityDocDeltaPickerUnstack?.();
+        state.__priorityDocDeltaPickerUnstack = null;
         if (state.priorityDocDeltaPicker) {
             try { state.priorityDocDeltaPicker.remove(); } catch (e) {}
             state.priorityDocDeltaPicker = null;
@@ -19275,6 +19447,8 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmClosePriorityGroupDeltaPicker = function() {
+        state.__priorityGroupDeltaPickerUnstack?.();
+        state.__priorityGroupDeltaPickerUnstack = null;
         if (state.priorityGroupDeltaPicker) {
             try { state.priorityGroupDeltaPicker.remove(); } catch (e) {}
             state.priorityGroupDeltaPicker = null;
@@ -19351,6 +19525,7 @@ async function __tmRefreshAfterWake(reason) {
         `;
         document.body.appendChild(picker);
         state.priorityDocDeltaPicker = picker;
+        state.__priorityDocDeltaPickerUnstack = __tmModalStackBind(() => window.tmClosePriorityDocDeltaPicker?.());
 
         const listEl = picker.querySelector('#tmPriorityDocDeltaList');
 
@@ -19469,6 +19644,7 @@ async function __tmRefreshAfterWake(reason) {
         `;
         document.body.appendChild(picker);
         state.priorityGroupDeltaPicker = picker;
+        state.__priorityGroupDeltaPickerUnstack = __tmModalStackBind(() => window.tmClosePriorityGroupDeltaPicker?.());
 
         const listEl = picker.querySelector('#tmPriorityGroupDeltaList');
         if (!listEl) return;
@@ -19794,6 +19970,10 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.closeRulesManager = function() {
+        state.__priorityUnstack?.();
+        state.__priorityUnstack = null;
+        state.__rulesUnstack?.();
+        state.__rulesUnstack = null;
         if (state.rulesModal) {
             state.rulesModal.remove();
             state.rulesModal = null;
@@ -21292,12 +21472,12 @@ async function __tmRefreshAfterWake(reason) {
     window.tmShowSearchModal = function() {
         const modal = document.createElement('div');
         modal.className = 'tm-modal';
-        modal.style.zIndex = '200001'; // 高于主界面
+        modal.style.zIndex = '200001';
         modal.innerHTML = `
             <div class="tm-box" style="width: 500px; height: auto; max-height: 80vh; position: relative;">
                 <div class="tm-header">
                     <div style="font-size: 18px; font-weight: bold; color: var(--tm-text-color);">🔍 搜索任务</div>
-                    <button class="tm-btn tm-btn-gray" onclick="this.closest('.tm-modal').remove()">关闭</button>
+                    <button class="tm-btn tm-btn-gray" onclick="window.__tmCloseSearchModal?.()">关闭</button>
                 </div>
                 <div style="padding: 20px;">
                     <input type="text" id="tmPopupSearchInput" class="tm-input" 
@@ -21305,22 +21485,25 @@ async function __tmRefreshAfterWake(reason) {
                            value="${esc(String(state.searchKeyword || ''))}" 
                            style="width: 100%; margin-bottom: 15px; font-size: 16px; padding: 8px;">
                     <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                         <button class="tm-btn tm-btn-secondary" onclick="tmSearch(''); this.closest('.tm-modal').remove()">清除搜索</button>
-                         <button class="tm-btn tm-btn-primary" onclick="tmSearch(document.getElementById('tmPopupSearchInput').value); this.closest('.tm-modal').remove()">搜索</button>
+                         <button class="tm-btn tm-btn-secondary" onclick="tmSearch(''); window.__tmCloseSearchModal?.()">清除搜索</button>
+                         <button class="tm-btn tm-btn-primary" onclick="tmSearch(document.getElementById('tmPopupSearchInput').value); window.__tmCloseSearchModal?.()">搜索</button>
                     </div>
                 </div>
             </div>
         `;
         document.body.appendChild(modal);
-        // 自动聚焦
+        state.__searchUnstack = __tmModalStackBind(() => window.__tmCloseSearchModal?.());
+        window.__tmCloseSearchModal = function() {
+            state.__searchUnstack?.();
+            state.__searchUnstack = null;
+            try { modal.remove(); } catch (e) {}
+        };
         setTimeout(() => modal.querySelector('input').focus(), 50);
-        
-        // 回车搜索
         const input = modal.querySelector('input');
         input.onkeyup = (e) => {
             if (e.key === 'Enter') {
                 tmSearch(input.value);
-                modal.remove();
+                window.__tmCloseSearchModal?.();
             }
         };
     };
@@ -21743,19 +21926,6 @@ async function __tmRefreshAfterWake(reason) {
         if (!id) return;
         const target = ev?.target;
         if (target?.closest?.('input,button,select,textarea,a,.tm-tree-toggle')) return;
-        if (Number(state.checklistDetailSuppressOpenUntil || 0) > Date.now()) {
-            try { ev?.preventDefault?.(); } catch (e) {}
-            try { ev?.stopPropagation?.(); } catch (e) {}
-            return;
-        }
-        if (__tmIsMobileDevice()) {
-            const pane = state.modal?.querySelector?.('.tm-checklist-scroll');
-            if (Number(pane?.__tmChecklistSuppressTapUntil || 0) > Date.now()) {
-                try { ev?.preventDefault?.(); } catch (e) {}
-                try { ev?.stopPropagation?.(); } catch (e) {}
-                return;
-            }
-        }
         state.detailTaskId = id;
         state.checklistDetailDismissed = false;
         if (__tmChecklistUseSheetMode(state.modal)) state.checklistDetailSheetOpen = true;
@@ -21788,16 +21958,6 @@ async function __tmRefreshAfterWake(reason) {
     window.tmChecklistCloseSheet = function(ev) {
         try { ev?.stopPropagation?.(); } catch (e) {}
         try { ev?.preventDefault?.(); } catch (e) {}
-        try { state.checklistDetailSuppressOpenUntil = Date.now() + 700; } catch (e) {}
-        try {
-            const pane = state.modal?.querySelector?.('.tm-checklist-scroll');
-            if (pane instanceof HTMLElement) {
-                pane.__tmChecklistSuppressTapUntil = Math.max(
-                    Number(pane.__tmChecklistSuppressTapUntil || 0),
-                    Date.now() + 520
-                );
-            }
-        } catch (e) {}
         state.checklistDetailDismissed = true;
         state.checklistDetailSheetOpen = false;
         __tmRefreshChecklistSelectionInPlace(state.modal);
@@ -21865,15 +22025,6 @@ async function __tmRefreshAfterWake(reason) {
             const closeByDistance = dy >= 88;
             const closeByVelocity = velocity > 0.55 && dy > 18;
             if (closeByDistance || closeByVelocity) {
-                try {
-                    const pane = state.modal?.querySelector?.('.tm-checklist-scroll');
-                    if (pane instanceof HTMLElement) {
-                        pane.__tmChecklistSuppressTapUntil = Math.max(
-                            Number(pane.__tmChecklistSuppressTapUntil || 0),
-                            Date.now() + 520
-                        );
-                    }
-                } catch (e) {}
                 window.tmChecklistCloseSheet(e2);
                 return;
             }
@@ -21937,43 +22088,57 @@ async function __tmRefreshAfterWake(reason) {
         render();
     };
 
+    function __tmNormalizeLucideIconName(iconName) {
+        const name = String(iconName || '').trim();
+        switch (name) {
+            case 'chevrons-down-up': return 'chevrons-down-up';
+            case 'chevrons-up-down': return 'chevrons-up-down';
+            default: return name;
+        }
+    }
+
     function __tmLucideIconSvg(iconName) {
+        const normalizedName = __tmNormalizeLucideIconName(iconName);
         const body = (() => {
-            switch (String(iconName || '').trim()) {
-                case 'clipboard-list': return '<rect x="9" y="3" width="6" height="4" rx="1"></rect><path d="M9 5H7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path><path d="M9 12h6"></path><path d="M9 16h6"></path>';
-                case 'calendar-days': return '<path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path><path d="M16 18h.01"></path>';
-                case 'calendar-plus-2': return '<path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path><path d="M12 14v6"></path><path d="M9 17h6"></path>';
-                case 'calendar-clock': return '<path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h10"></path><circle cx="17" cy="17" r="4"></circle><path d="M17 15v2l1.5 1"></path>';
-                case 'refresh-cw': return '<path d="M21 12a9 9 0 0 0-15.5-6.4L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 15.5 6.4L21 16"></path><path d="M16 16h5v5"></path>';
+            switch (normalizedName) {
+                case 'clipboard-list': return '<rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="M12 11h4" /><path d="M12 16h4" /><path d="M8 11h.01" /><path d="M8 16h.01" />';
+                case 'calendar-days': return '<path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" />';
+                case 'calendar-plus-2': return '<path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /><path d="M10 16h4" /><path d="M12 14v4" />';
+                case 'calendar-clock': return '<path d="M16 14v2.2l1.6 1" /><path d="M16 2v4" /><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5" /><path d="M3 10h5" /><path d="M8 2v4" /><circle cx="16" cy="16" r="6" />';
+                case 'refresh-cw': return '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" />';
                 case 'chevron-left': return '<path d="m15 18-6-6 6-6"></path>';
                 case 'chevron-right': return '<path d="m9 18 6-6-6-6"></path>';
-                case 'map': return '<polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line>';
-                case 'bot': return '<rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line>';
-                case 'settings': return '<path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.65.26 1.35.41 2.05.41H21a2 2 0 1 1 0 4h-.09c-.7 0-1.4.15-2.05.59Z"></path>';
-                case 'save': return '<path d="M5 3h11l5 5v13a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"></path><path d="M17 22v-8H7v8"></path><path d="M7 3v5h8"></path>';
-                case 'menu': return '<line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line>';
-                case 'plus': return '<path d="M12 5v14"></path><path d="M5 12h14"></path>';
+                case 'chevrons-up': return '<path d="m17 11-5-5-5 5" /><path d="m17 18-5-5-5 5" />';
+                case 'chevrons-down': return '<path d="m7 6 5 5 5-5" /><path d="m7 13 5 5 5-5" />';
+                case 'chevrons-down-up': return '<path d="m7 20 5-5 5 5" /><path d="m7 4 5 5 5-5" />';
+                case 'chevrons-up-down': return '<path d="m7 15 5 5 5-5" /><path d="m7 9 5-5 5 5" />';
+                case 'map': return '<path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z" /><path d="M15 5.764v15" /><path d="M9 3.236v15" />';
+                case 'bot': return '<path d="M12 8V4H8" /><rect width="16" height="12" x="4" y="8" rx="2" /><path d="M2 14h2" /><path d="M20 14h2" /><path d="M15 13v2" /><path d="M9 13v2" />';
+                case 'settings': return '<path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" />';
+                case 'save': return '<path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" /><path d="M7 3v4a1 1 0 0 0 1 1h7" />';
+                case 'menu': return '<path d="M4 12h16" /><path d="M4 18h16" /><path d="M4 6h16" />';
+                case 'plus': return '<path d="M5 12h14" /><path d="M12 5v14" />';
                 case 'x': return '<path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>';
-                case 'trash-2': return '<path d="M3 6h18"></path><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"></path><path d="M19 6l-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path>';
-                case 'search': return '<circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>';
-                case 'download': return '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path>';
-                case 'puzzle': return '<path d="M19.43 12.98V17a2 2 0 0 1-2 2h-4.02a2 2 0 0 1-3.84 0H5.55a2 2 0 0 1-2-2v-4.02a2 2 0 0 1 0-3.84V5.12a2 2 0 0 1 2-2h4.02a2 2 0 0 1 3.84 0h4.02a2 2 0 0 1 2 2v4.02a2 2 0 0 1 0 3.84Z"></path>';
-                case 'pin': return '<path d="M12 17v5"></path><path d="M7 3h10l-2 6 3 3H6l3-3Z"></path>';
-                case 'file-text': return '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path>';
-                case 'chart-column': return '<path d="M3 3v18h18"></path><rect x="7" y="13" width="3" height="5"></rect><rect x="12" y="9" width="3" height="9"></rect><rect x="17" y="6" width="3" height="12"></rect>';
-                case 'alarm-clock': return '<circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2"></path><path d="M5 3 2 6"></path><path d="m22 6-3-3"></path>';
-                case 'flag': return '<path d="M4 4h11l-1.5 3L15 10H4z"></path><path d="M4 22V4"></path>';
-                case 'brush-cleaning': return '<path d="m16 22-1-4"></path><path d="M19 8c.2 2-1 3.5-2.5 4.5"></path><path d="m15 2 7 7-4 4-7-7Z"></path><path d="M2 14c4 0 5.5 2 6 4 .5 2 2 4 6 4"></path>';
-                case 'undo-2': return '<path d="M9 14 4 9l5-5"></path><path d="M20 20a8 8 0 0 0-8-8H4"></path>';
+                case 'trash-2': return '<path d="M10 11v6" /><path d="M14 11v6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />';
+                case 'search': return '<path d="m21 21-4.34-4.34" /><circle cx="11" cy="11" r="8" />';
+                case 'download': return '<path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" />';
+                case 'puzzle': return '<path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z" />';
+                case 'pin': return '<path d="M12 17v5" /><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />';
+                case 'file-text': return '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" />';
+                case 'chart-column': return '<path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" />';
+                case 'alarm-clock': return '<circle cx="12" cy="13" r="8" /><path d="M12 9v4l2 2" /><path d="M5 3 2 6" /><path d="m22 6-3-3" /><path d="M6.38 18.7 4 21" /><path d="M17.64 18.67 20 21" />';
+                case 'flag': return '<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528" />';
+                case 'brush-cleaning': return '<path d="m16 22-1-4" /><path d="M19 13.99a1 1 0 0 0 1-1V12a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v.99a1 1 0 0 0 1 1" /><path d="M5 14h14l1.973 6.767A1 1 0 0 1 20 22H4a1 1 0 0 1-.973-1.233z" /><path d="m8 22 1-4" />';
+                case 'undo-2': return '<path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />';
                 case 'check-circle-2': return '<circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path>';
                 case 'x-circle': return '<circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path>';
-                case 'triangle-alert': return '<path d="m10.29 3.86-8.53 14.8A2 2 0 0 0 3.48 22h17.04a2 2 0 0 0 1.72-3.01l-8.53-14.8a2 2 0 0 0-3.42 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path>';
-                case 'timer': return '<circle cx="12" cy="13" r="8"></circle><path d="M12 13V9"></path><path d="M9 2h6"></path><path d="M12 2v3"></path>';
-                case 'tag': return '<path d="M20 13 11 22l-9-9V4h9Z"></path><path d="M7 7h.01"></path>';
-                case 'square-pen': return '<path d="M3 3h14v14H3z"></path><path d="m14 14 6-6"></path><path d="m16 6 2 2"></path>';
-                case 'panel-left': return '<rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M9 3v18"></path>';
-                case 'map-pin': return '<path d="M20 10c0 4.42-8 12-8 12s-8-7.58-8-12a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle>';
-                case 'circle-dot': return '<circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="2"></circle>';
+                case 'triangle-alert': return '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" />';
+                case 'timer': return '<line x1="10" x2="14" y1="2" y2="2" /><line x1="12" x2="15" y1="14" y2="11" /><circle cx="12" cy="14" r="8" />';
+                case 'tag': return '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /><circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />';
+                case 'square-pen': return '<path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />';
+                case 'panel-left': return '<rect width="18" height="18" x="3" y="3" rx="2" /><path d="M9 3v18" />';
+                case 'map-pin': return '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" />';
+                case 'circle-dot': return '<circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="1" />';
                 default: return '<circle cx="12" cy="12" r="9"></circle>';
             }
         })();
@@ -21981,8 +22146,9 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     function __tmRenderLucideIcon(iconName, extraClass = '') {
+        const normalizedName = __tmNormalizeLucideIconName(iconName);
         const cls = `tm-lucide-emoji${extraClass ? ` ${extraClass}` : ''}`;
-        return `<span class="${cls}" data-tm-lucide="${iconName}">${__tmLucideIconSvg(iconName)}</span>`;
+        return `<span class="${cls}" data-tm-lucide="${normalizedName}">${__tmLucideIconSvg(normalizedName)}</span>`;
     }
 
     function __tmRenderTaskHorizonTopbarIcon(size = 18) {
@@ -25030,7 +25196,6 @@ async function __tmRefreshAfterWake(reason) {
                         <!-- 移动端下拉菜单 -->
                         <div id="tmMobileMenu" style="display:none; position:absolute; right:0; top:45px; width:max-content; max-width:min(420px, calc(100% - 8px)); min-width:0; box-sizing:border-box; padding:10px; border:1px solid var(--tm-border-color); border-radius:6px; background:var(--tm-header-bg); z-index:10001; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                             <div style="display:flex; flex-direction:column; gap:10px;">
-                                ${!showMobileBottomViewBar ? `
                                 <div class="tm-mobile-only-item" style="display:flex; flex-direction:column; gap:6px; align-items:stretch;">
                                     <span style="color:var(--tm-text-color);">视图:</span>
                                     <div class="tm-mobile-view-switcher-wrap">
@@ -25038,23 +25203,8 @@ async function __tmRefreshAfterWake(reason) {
                                             ${__tmRenderViewSwitcherButtons({ compact: true })}
                                         </div>
                                     </div>
-                                    ${state.viewMode === 'kanban' ? `
-                                        <div style="margin-top:6px;">
-                                            <div class="tm-view-segmented tm-kanban-mode-segmented bc-tabs-list" role="tablist" aria-label="看板模式" style="width:100%;">
-                                                <button class="tm-view-seg-item bc-tabs-trigger ${!SettingsStore.data.kanbanHeadingGroupMode ? 'tm-view-seg-item--active' : ''}" data-state="${!SettingsStore.data.kanbanHeadingGroupMode ? 'active' : 'inactive'}" onclick="tmSetKanbanHeadingGroupMode('status', event)" role="tab" aria-selected="${!SettingsStore.data.kanbanHeadingGroupMode ? 'true' : 'false'}" style="flex:1;line-height:30px;">状态</button>
-                                                <button class="tm-view-seg-item bc-tabs-trigger ${SettingsStore.data.kanbanHeadingGroupMode ? 'tm-view-seg-item--active' : ''}" data-state="${SettingsStore.data.kanbanHeadingGroupMode ? 'active' : 'inactive'}" onclick="tmSetKanbanHeadingGroupMode('heading', event)" role="tab" aria-selected="${SettingsStore.data.kanbanHeadingGroupMode ? 'true' : 'false'}" style="flex:1;line-height:30px;">标题</button>
-                                            </div>
-                                        </div>
-                                    ` : showWhiteboardAllTabsModeToggle ? `
-                                        <div style="margin-top:6px;">
-                                            <div class="tm-view-segmented tm-kanban-mode-segmented bc-tabs-list" role="tablist" aria-label="白板模式" style="width:100%;">
-                                                <button class="tm-view-seg-item bc-tabs-trigger ${whiteboardAllTabsLayoutMode !== 'stream' ? 'tm-view-seg-item--active' : ''}" data-state="${whiteboardAllTabsLayoutMode !== 'stream' ? 'active' : 'inactive'}" onclick="tmSetWhiteboardAllTabsLayoutMode('board', event)" role="tab" aria-selected="${whiteboardAllTabsLayoutMode !== 'stream' ? 'true' : 'false'}" style="flex:1;line-height:30px;">白板</button>
-                                                <button class="tm-view-seg-item bc-tabs-trigger ${whiteboardAllTabsLayoutMode === 'stream' ? 'tm-view-seg-item--active' : ''}" data-state="${whiteboardAllTabsLayoutMode === 'stream' ? 'active' : 'inactive'}" onclick="tmSetWhiteboardAllTabsLayoutMode('stream', event)" role="tab" aria-selected="${whiteboardAllTabsLayoutMode === 'stream' ? 'true' : 'false'}" style="flex:1;line-height:30px;">卡片流</button>
-                                            </div>
-                                        </div>
-                                    ` : ''}
                                 </div>
-                                ` : state.viewMode === 'kanban' ? `
+                                ${state.viewMode === 'kanban' ? `
                                 <div class="tm-mobile-only-item" style="display:flex; flex-direction:column; gap:6px; align-items:stretch;">
                                     <span style="color:var(--tm-text-color);">看板模式:</span>
                                     <div class="tm-view-segmented tm-kanban-mode-segmented bc-tabs-list" role="tablist" aria-label="看板模式" style="width:100%;">
@@ -25062,7 +25212,8 @@ async function __tmRefreshAfterWake(reason) {
                                         <button class="tm-view-seg-item bc-tabs-trigger ${SettingsStore.data.kanbanHeadingGroupMode ? 'tm-view-seg-item--active' : ''}" data-state="${SettingsStore.data.kanbanHeadingGroupMode ? 'active' : 'inactive'}" onclick="tmSetKanbanHeadingGroupMode('heading', event)" role="tab" aria-selected="${SettingsStore.data.kanbanHeadingGroupMode ? 'true' : 'false'}" style="flex:1;line-height:30px;">标题</button>
                                     </div>
                                 </div>
-                                ` : showWhiteboardAllTabsModeToggle ? `
+                                ` : ''}
+                                ${showWhiteboardAllTabsModeToggle ? `
                                 <div class="tm-mobile-only-item" style="display:flex; flex-direction:column; gap:6px; align-items:stretch;">
                                     <span style="color:var(--tm-text-color);">白板模式:</span>
                                     <div class="tm-view-segmented tm-kanban-mode-segmented bc-tabs-list" role="tablist" aria-label="白板模式" style="width:100%;">
@@ -25131,8 +25282,8 @@ async function __tmRefreshAfterWake(reason) {
                                      </button>
                                 </div>
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px;">
-                                     <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCollapseAllTasks()" style="flex:1; padding: 6px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(0deg);margin-right:4px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>折叠</button>
-                                     <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmExpandAllTasks()" style="flex:1; padding: 6px;"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(90deg);margin-right:4px;vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>展开</button>
+                                     <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCollapseAllTasks()" style="flex:1; padding: 6px;"><span style="display:inline-flex;align-items:center;gap:6px;">${__tmRenderLucideIcon('chevrons-down-up')}<span>折叠</span></span></button>
+                                     <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmExpandAllTasks()" style="flex:1; padding: 6px;"><span style="display:inline-flex;align-items:center;gap:6px;">${__tmRenderLucideIcon('chevrons-up-down')}<span>展开</span></span></button>
                                 </div>
                                 ${currentRule ? `<div class="tm-mobile-only-item" style="color:var(--tm-secondary-text);font-size:12px;">当前规则: ${esc(currentRule.name)} (${filteredCount}任务)</div>` : ''}
                             </div>
@@ -25503,6 +25654,81 @@ async function __tmRefreshAfterWake(reason) {
 
                     @media (max-width: 1024px) {
                         .tm-modal.tm-modal--mobile .tm-header-selectors {
+                            display: none !important;
+                        }
+                    }
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) {
+                        --tm-mobile-bottom-viewbar-offset: calc(env(safe-area-inset-bottom, 0px) + 10px);
+                    }
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-viewbar {
+                        position: absolute;
+                        left: 0;
+                        right: 0;
+                        bottom: var(--tm-mobile-bottom-viewbar-offset);
+                        padding: 0 14px;
+                        display: flex;
+                        justify-content: center;
+                        pointer-events: none;
+                        z-index: 45;
+                    }
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-viewbar__inner {
+                        pointer-events: auto;
+                        width: min(100%, 420px);
+                        padding: 3px;
+                        border-radius: 999px;
+                        border: 1px solid color-mix(in srgb, var(--tm-border-color) 84%, transparent);
+                        background: color-mix(in srgb, var(--tm-header-bg) 96%, rgba(255,255,255,0.12));
+                        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+                        backdrop-filter: blur(14px);
+                        -webkit-backdrop-filter: blur(14px);
+                        overflow-x: auto;
+                        scrollbar-width: none;
+                        opacity: 0.3;
+                        transition: opacity 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+                    }
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-viewbar__inner::-webkit-scrollbar {
+                        display: none;
+                    }
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-viewbar.tm-mobile-bottom-viewbar--active .tm-mobile-bottom-viewbar__inner,
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-viewbar:active .tm-mobile-bottom-viewbar__inner,
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-viewbar:focus-within .tm-mobile-bottom-viewbar__inner {
+                        opacity: 0.8;
+                    }
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-view-switcher {
+                        display: flex;
+                        width: max-content;
+                        min-width: 100%;
+                        gap: 4px;
+                        padding: 0;
+                        background: transparent;
+                        border: none;
+                        box-shadow: none;
+                        flex-wrap: nowrap;
+                    }
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-view-switcher .tm-view-seg-item,
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-view-switcher .bc-tabs-trigger {
+                        height: 28px !important;
+                        min-height: 28px !important;
+                        line-height: 28px !important;
+                        padding: 0 12px !important;
+                        border-radius: 999px !important;
+                        font-size: 13px !important;
+                        font-weight: 700 !important;
+                        white-space: nowrap;
+                        flex: 1 0 auto;
+                        background: transparent;
+                        border-color: transparent;
+                        box-shadow: none;
+                    }
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-view-switcher .tm-view-seg-item--active,
+                    .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-view-switcher .bc-tabs-trigger.tm-view-seg-item--active {
+                        background: var(--tm-topbar-seg-item-active-bg) !important;
+                        color: var(--tm-topbar-control-text) !important;
+                        border-color: color-mix(in srgb, var(--tm-topbar-control-border) 72%, transparent) !important;
+                        box-shadow: 0 4px 12px color-mix(in srgb, var(--tm-primary-color) 16%, transparent);
+                    }
+                    @media (orientation: landscape) {
+                        .tm-modal.tm-modal--mobile:not(.tm-modal--dock) .tm-mobile-bottom-viewbar {
                             display: none !important;
                         }
                     }
@@ -31728,6 +31954,8 @@ async function __tmRefreshAfterWake(reason) {
         ];
     }
 
+    let __desktopMenuUnstack = null;
+
     window.tmToggleDesktopMenu = function(e) {
         if (e) { e.stopPropagation(); e.preventDefault(); }
         
@@ -31739,6 +31967,8 @@ async function __tmRefreshAfterWake(reason) {
                 try { document.removeEventListener('click', state.desktopMenuCloseHandler); } catch (e2) {}
                 state.desktopMenuCloseHandler = null;
             }
+            __desktopMenuUnstack?.();
+            __desktopMenuUnstack = null;
             __tmAnimatePopupOutAndRemove(existing);
             return;
         }
@@ -31801,8 +32031,8 @@ async function __tmRefreshAfterWake(reason) {
             ${renderDesktopMenuToggle('日历侧边栏', !!SettingsStore.data.calendarSideDockEnabled, `tmToggleCalendarSideDock(this.checked); tmCloseDesktopMenu()`)}
             ${state.searchKeyword ? renderDesktopMenuButton(`<span>清除搜索</span>`, `tmSearch(''); tmCloseDesktopMenu()`) : ''}
             ${renderDesktopMenuToggle('白板顺序模式', !!SettingsStore.data.whiteboardSequenceMode, `tmToggleWhiteboardSequenceMode(this.checked); tmCloseDesktopMenu()`)}
-            ${renderDesktopMenuButton(`<svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(0deg);vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>全部折叠</span>`, `tmCollapseAllTasks(); tmCloseDesktopMenu()`)}
-            ${renderDesktopMenuButton(`<svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(90deg);vertical-align:middle;"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>全部展开</span>`, `tmExpandAllTasks(); tmCloseDesktopMenu()`)}
+            ${renderDesktopMenuButton(`${__tmRenderLucideIcon('chevrons-down-up')}<span>全部折叠</span>`, `tmCollapseAllTasks(); tmCloseDesktopMenu()`)}
+            ${renderDesktopMenuButton(`${__tmRenderLucideIcon('chevrons-up-down')}<span>全部展开</span>`, `tmExpandAllTasks(); tmCloseDesktopMenu()`)}
         `;
         if (!__tmIsDarkMode()) {
             try {
@@ -31821,6 +32051,8 @@ async function __tmRefreshAfterWake(reason) {
         // 点击外部关闭
         const closeHandler = (ev) => {
             if (!menu.contains(ev.target) && ev.target !== e.target) {
+                __desktopMenuUnstack?.();
+                __desktopMenuUnstack = null;
                 menu.remove();
                 try { document.removeEventListener('click', closeHandler); } catch (e2) {}
                 if (state.desktopMenuCloseHandler === closeHandler) state.desktopMenuCloseHandler = null;
@@ -31857,9 +32089,12 @@ async function __tmRefreshAfterWake(reason) {
             menu.style.top = `${nextTop}px`;
         } catch (e2) {}
         __tmAnimatePopupIn(menu, { origin: 'top-right' });
+        __desktopMenuUnstack = __tmModalStackBind(window.tmCloseDesktopMenu);
     };
 
     window.tmCloseDesktopMenu = function() {
+        __desktopMenuUnstack?.();
+        __desktopMenuUnstack = null;
         try {
             if (state.desktopMenuCloseTimer) {
                 clearTimeout(state.desktopMenuCloseTimer);
@@ -32070,6 +32305,8 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     function __tmCloseTopbarSelects() {
+        state.__topbarSelectUnstack?.();
+        state.__topbarSelectUnstack = null;
         try {
             document.querySelectorAll('.tm-topbar-select[data-open="true"]').forEach((el) => {
                 try { el.dataset.open = 'false'; } catch (e) {}
@@ -32189,6 +32426,7 @@ async function __tmRefreshAfterWake(reason) {
                 menu.style.top = `${Math.min(Math.round(rect.bottom + 8), maxTop)}px`;
                 __tmAnimatePopupIn(menu, { origin: 'top-left' });
             }
+            state.__topbarSelectUnstack = __tmModalStackBind(() => __tmCloseTopbarSelects());
         }
     };
 
@@ -32197,14 +32435,9 @@ async function __tmRefreshAfterWake(reason) {
         __tmCloseTopbarSelects();
     }
 
-    function __tmOnTopbarSelectOutsideKeydown(event) {
-        if (String(event?.key || '') === 'Escape') __tmCloseTopbarSelects();
-    }
-
     if (!window.__tmTopbarSelectOutsideBound) {
         window.__tmTopbarSelectOutsideBound = true;
         document.addEventListener('click', __tmOnTopbarSelectOutsideClick, true);
-        document.addEventListener('keydown', __tmOnTopbarSelectOutsideKeydown, true);
     }
 
     window.tmClose = function(event) {
@@ -33092,6 +33325,8 @@ async function __tmRefreshAfterWake(reason) {
         return false;
     }
 
+    let __contextMenuUnstack = null;
+
     function __tmShowCollectedOtherBlockContextMenu(event, taskId) {
         const tid = String(taskId || '').trim();
         const task = state.flatTasks?.[tid];
@@ -33104,6 +33339,8 @@ async function __tmRefreshAfterWake(reason) {
             try { document.removeEventListener('contextmenu', state.taskContextMenuCloseHandler); } catch (e) {}
             state.taskContextMenuCloseHandler = null;
         }
+        __contextMenuUnstack?.();
+        __contextMenuUnstack = null;
 
         const menu = document.createElement('div');
         menu.id = 'tm-task-context-menu';
@@ -33141,7 +33378,7 @@ async function __tmRefreshAfterWake(reason) {
             item.onmouseleave = () => item.style.backgroundColor = 'transparent';
             item.onclick = async (ev) => {
                 try { ev.stopPropagation(); } catch (e) {}
-                try { menu.remove(); } catch (e) {}
+                try { closeHandler(); } catch (e) {}
                 await onClick?.();
             };
             return item;
@@ -33212,7 +33449,7 @@ async function __tmRefreshAfterWake(reason) {
                 b.onclick = async (e) => {
                     e.stopPropagation();
                     await runTaskTimer(min, 'countdown');
-                    menu.remove();
+                    try { closeHandler(); } catch (e2) {}
                 };
                 btnRow.appendChild(b);
             });
@@ -33223,7 +33460,7 @@ async function __tmRefreshAfterWake(reason) {
             sw.onclick = async (e) => {
                 e.stopPropagation();
                 await runTaskTimer(0, 'stopwatch');
-                menu.remove();
+                try { closeHandler(); } catch (e2) {}
             };
             btnRow.appendChild(sw);
             timerWrap.appendChild(btnRow);
@@ -33283,12 +33520,15 @@ async function __tmRefreshAfterWake(reason) {
             } catch (e) {}
         });
         const closeHandler = () => {
+            __contextMenuUnstack?.();
+            __contextMenuUnstack = null;
             try { menu.remove(); } catch (e) {}
             try { document.removeEventListener('click', closeHandler); } catch (e) {}
             try { document.removeEventListener('contextmenu', closeHandler); } catch (e) {}
             if (state.taskContextMenuCloseHandler === closeHandler) state.taskContextMenuCloseHandler = null;
         };
         state.taskContextMenuCloseHandler = closeHandler;
+        __contextMenuUnstack = __tmModalStackBind(closeHandler);
         setTimeout(() => {
             try { document.addEventListener('click', closeHandler); } catch (e) {}
             try { document.addEventListener('contextmenu', closeHandler); } catch (e) {}
@@ -34873,7 +35113,11 @@ async function __tmRefreshAfterWake(reason) {
 
     let __tmInlineEditorState = null;
 
+    let __inlineEditorUnstack = null;
+
     function __tmCloseInlineEditor() {
+        __inlineEditorUnstack?.();
+        __inlineEditorUnstack = null;
         if (!__tmInlineEditorState) return;
         try { __tmInlineEditorState.cleanup?.(); } catch (e) {}
         try { __tmInlineEditorState.el?.remove?.(); } catch (e) {}
@@ -34951,20 +35195,14 @@ async function __tmRefreshAfterWake(reason) {
             if (anchorEl.contains && anchorEl.contains(t)) return;
             __tmCloseInlineEditor();
         };
-        const onDocKeyDown = (e) => {
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                __tmCloseInlineEditor();
-            }
-        };
 
         document.addEventListener('pointerdown', onDocPointerDown, true);
-        document.addEventListener('keydown', onDocKeyDown, true);
 
         cleanupFns.push(() => document.removeEventListener('pointerdown', onDocPointerDown, true));
-        cleanupFns.push(() => document.removeEventListener('keydown', onDocKeyDown, true));
 
         __tmInlineEditorState = { el: editor, cleanup };
+
+        __inlineEditorUnstack = __tmModalStackBind(__tmCloseInlineEditor);
 
         try {
             const focusable = editor.querySelector('input,select,button,textarea');
@@ -36472,7 +36710,6 @@ async function __tmRefreshAfterWake(reason) {
             const nextTask = state.flatTasks?.[nextId];
             if (!nextTask) return;
             if (embedded && String(state.viewMode || '').trim() === 'checklist') {
-                if (Number(state.checklistDetailSuppressOpenUntil || 0) > Date.now()) return;
                 state.detailTaskId = nextId;
                 state.checklistDetailDismissed = false;
                 state.checklistDetailSheetOpen = true;
@@ -40699,6 +40936,10 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmQuickAddClose = function() {
+        state.__quickAddDocPickerUnstack?.();
+        state.__quickAddDocPickerUnstack = null;
+        state.__quickAddUnstack?.();
+        state.__quickAddUnstack = null;
         if (state.quickAddModal) {
             try { state.quickAddModal.remove(); } catch (e) {}
             state.quickAddModal = null;
@@ -40809,7 +41050,6 @@ async function __tmRefreshAfterWake(reason) {
         if (input) {
             setTimeout(() => {
                 input.focus();
-                // 移动端尝试触发软键盘
                 try { input.click(); } catch(e) {}
             }, 300);
             input.onkeydown = (e) => {
@@ -40820,6 +41060,12 @@ async function __tmRefreshAfterWake(reason) {
                 window.tmQuickAddSubmit?.();
             };
         }
+
+        state.__quickAddUnstack = __tmModalStackBind(() => window.tmQuickAddClose?.());
+
+        modal.onclick = (e) => {
+            if (e.target === modal) window.tmQuickAddClose?.();
+        };
 
         window.tmQuickAddRenderMeta?.();
     };
@@ -41102,6 +41348,12 @@ async function __tmRefreshAfterWake(reason) {
         document.body.appendChild(picker);
         state.quickAddDocPicker = picker;
 
+        state.__quickAddDocPickerUnstack = __tmModalStackBind(() => window.tmQuickAddCloseDocPicker?.());
+
+        picker.onclick = (e) => {
+            if (e.target === picker) window.tmQuickAddCloseDocPicker?.();
+        };
+
         const listEl = picker.querySelector('#tmQuickAddDocList');
         const renderGroup = (label, docs, groupKey, initialOpen = false) => {
             const wrap = document.createElement('div');
@@ -41258,6 +41510,8 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmQuickAddCloseDocPicker = function() {
+        state.__quickAddDocPickerUnstack?.();
+        state.__quickAddDocPickerUnstack = null;
         if (state.quickAddDocPicker) {
             try { state.quickAddDocPicker.remove(); } catch (e) {}
             state.quickAddDocPicker = null;
@@ -42244,10 +42498,8 @@ async function __tmRefreshAfterWake(reason) {
         let savedSettingsContentScrollTop = Number(state.settingsContentScrollTop) || 0;
         if (state.settingsModal) {
             try {
-                if (__tmSettingsEscHandler) {
-                    document.removeEventListener('keydown', __tmSettingsEscHandler, true);
-                    __tmSettingsEscHandler = null;
-                }
+                state.__settingsUnstack?.();
+                state.__settingsUnstack = null;
             } catch (e) {}
             try {
                 const prevSidebar = state.settingsModal.querySelector('.tm-settings-sidebar');
@@ -43224,6 +43476,12 @@ async function __tmRefreshAfterWake(reason) {
                             { style: 'margin-bottom:10px;' }
                         )}
                         ${renderSingleSwitchSetting(
+                            '自动识别语义日期（全量分批）',
+                            '开启后，刷新任务后会分批扫描全部任务里的“明天/下周五/今晚8点”等表达，并弹窗确认写入完成时间。默认开启，如需避免同步后自动弹窗可关闭。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.semanticDateAutoPromptEnabled ? 'checked' : ''} onchange="updateSemanticDateAutoPromptEnabled(this.checked)">`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleSwitchSetting(
                             '父任务按子任务时间参与分组排序',
                             '按时间或四象限分组时：已过期远 > 已过期近 > 未过期近 > 未过期远。',
                             `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.groupSortByBestSubtaskTimeInTimeQuadrant ? 'checked' : ''} onchange="updateGroupSortByBestSubtaskTimeInTimeQuadrant(this.checked)">`
@@ -43469,16 +43727,7 @@ async function __tmRefreshAfterWake(reason) {
             </div>
         `;
         document.body.appendChild(state.settingsModal);
-        try {
-            __tmSettingsEscHandler = (e) => {
-                if (e.key !== 'Escape') return;
-                if (!state.settingsModal || !document.body.contains(state.settingsModal)) return;
-                try { e.preventDefault(); } catch (err) {}
-                try { e.stopPropagation(); } catch (err) {}
-                closeSettings();
-            };
-            document.addEventListener('keydown', __tmSettingsEscHandler, true);
-        } catch (e) {}
+        state.__settingsUnstack = __tmModalStackBind(() => window.closeSettings?.());
         try {
             const settingsSidebar = state.settingsModal.querySelector('.tm-settings-sidebar');
             const settingsTabs = state.settingsModal.querySelector('.tm-settings-tabs');
@@ -44949,6 +45198,8 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     function __tmCloseSummaryModal() {
+        state.__summaryUnstack?.();
+        state.__summaryUnstack = null;
         if (!state.summaryModal) return;
         try { state.summaryModal.remove(); } catch (e) {}
         state.summaryModal = null;
@@ -45080,6 +45331,7 @@ async function __tmRefreshAfterWake(reason) {
         `;
         state.summaryModal.appendChild(box);
         document.body.appendChild(state.summaryModal);
+        state.__summaryUnstack = __tmModalStackBind(() => __tmCloseSummaryModal());
 
         const root = state.summaryModal;
         const ctx = { docNameMap, docTaskCount, docToGroup, groupDocIdsMap, statusMap, groupNameMap, summaryTasks };
@@ -46374,6 +46626,15 @@ async function __tmRefreshAfterWake(reason) {
         }
     };
 
+    window.updateSemanticDateAutoPromptEnabled = async function(enabled) {
+        SettingsStore.data.semanticDateAutoPromptEnabled = !!enabled;
+        await SettingsStore.save();
+        if (!enabled) {
+            try { __tmCloseSemanticDateConfirmModal(); } catch (e) {}
+        }
+        showSettings();
+    };
+
     window.updateDefaultViewMode = async function(mode) {
         const next = __tmGetSafeViewMode(mode);
         SettingsStore.data.defaultViewMode = next;
@@ -47159,12 +47420,8 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.closeSettings = function() {
-        try {
-            if (__tmSettingsEscHandler) {
-                document.removeEventListener('keydown', __tmSettingsEscHandler, true);
-                __tmSettingsEscHandler = null;
-            }
-        } catch (e) {}
+        state.__settingsUnstack?.();
+        state.__settingsUnstack = null;
         if (state.settingsModal) {
             state.settingsModal.remove();
             state.settingsModal = null;
@@ -47404,7 +47661,6 @@ async function __tmRefreshAfterWake(reason) {
                     tmBtn.addEventListener('mouseleave', cancelHandler);
                     tmBtn.addEventListener('mouseup', endHandler);
                 } catch (e) {}
-
                 breadcrumb.appendChild(tmBtn);
             });
             
@@ -47647,7 +47903,25 @@ async function __tmRefreshAfterWake(reason) {
             try { __tmBreadcrumbObserver.disconnect(); } catch (e) {}
             __tmBreadcrumbObserver = null;
         }
-        const observer = new MutationObserver(() => {
+        const observer = new MutationObserver((mutations) => {
+            const list = Array.isArray(mutations) ? mutations : [];
+            const onlyTaskHorizonModalMutations = list.length > 0 && list.every((mutation) => {
+                const target = mutation?.target;
+                if (target instanceof Element && target.closest?.('.tm-modal')) return true;
+                const nodes = [
+                    ...(Array.isArray(mutation?.addedNodes) ? mutation.addedNodes : Array.from(mutation?.addedNodes || [])),
+                    ...(Array.isArray(mutation?.removedNodes) ? mutation.removedNodes : Array.from(mutation?.removedNodes || [])),
+                ];
+                if (!nodes.length) return false;
+                return nodes.every((node) => {
+                    if (!(node instanceof Element)) return true;
+                    if (node.matches?.('.tm-modal')) return true;
+                    if (node.closest?.('.tm-modal')) return true;
+                    if (node.querySelector?.('.tm-modal')) return true;
+                    return false;
+                });
+            });
+            if (onlyTaskHorizonModalMutations) return;
             __tmRefreshShellEntrances();
         });
 
@@ -48378,10 +48652,8 @@ async function __tmRefreshAfterWake(reason) {
             }
         } catch (e) {}
         try {
-            if (__tmSettingsEscHandler) {
-                document.removeEventListener('keydown', __tmSettingsEscHandler, true);
-                __tmSettingsEscHandler = null;
-            }
+            state.__settingsUnstack?.();
+            state.__settingsUnstack = null;
         } catch (e) {}
         try {
             document.removeEventListener('pointerdown', __tmRememberFocusedProtyleOnPointerDown, true);
@@ -48514,7 +48786,6 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
         try {
             document.removeEventListener('click', __tmOnTopbarSelectOutsideClick, true);
-            document.removeEventListener('keydown', __tmOnTopbarSelectOutsideKeydown, true);
             try { delete window.__tmTopbarSelectOutsideBound; } catch (e2) { window.__tmTopbarSelectOutsideBound = false; }
         } catch (e) {}
         try {
