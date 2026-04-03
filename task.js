@@ -14375,6 +14375,7 @@
     let __tmTopBarAdded = false;
     let __tmTopBarEl = null;
     let __tmTopBarClickCaptureHandler = null;
+    let __tmTopBarDocumentCaptureHandler = null;
     let __tmTopBarClickInFlight = false;
     let __tmTomatoTimerHooked = false;
     let __tmTomatoOriginalTimerFns = null;
@@ -14408,6 +14409,54 @@
             try { console.error(`[OpenManager:${String(reason || '')}]`, e); } catch (e2) {}
             try { hint(`❌ 加载失败: ${e?.message || String(e)}`, 'error'); } catch (e3) {}
         }
+    }
+
+    function __tmOpenManagerFromTopbarEntry() {
+        const options = { preserveViewMode: true };
+        try {
+            if (!__tmIsRuntimeMobileClient()) options.forceOpenTab = true;
+        } catch (e) {
+            options.forceOpenTab = true;
+        }
+        return openManager(options);
+    }
+
+    function __tmFindMobileTopBarTriggerFromEventTarget(target) {
+        const labels = new Set(['任务管理器', '任务管理']);
+        let el = target instanceof Element ? target : null;
+        let depth = 0;
+        while (el && depth < 8) {
+            if (el.closest?.('.tm-modal')) return null;
+            const ariaLabel = String(el.getAttribute?.('aria-label') || '').trim();
+            const title = String(el.getAttribute?.('title') || '').trim();
+            const text = String(el.textContent || '').replace(/\s+/g, ' ').trim();
+            if (labels.has(ariaLabel) || labels.has(title) || labels.has(text)) {
+                return el;
+            }
+            el = el.parentElement;
+            depth += 1;
+        }
+        return null;
+    }
+
+    function __tmBindMobileTopBarDocumentCapture() {
+        if (!__tmIsMobileTopBarRegistrationHost()) return;
+        if (__tmTopBarDocumentCaptureHandler) return;
+        __tmTopBarDocumentCaptureHandler = (e) => {
+            if (__tmTopBarClickInFlight) return;
+            const trigger = __tmFindMobileTopBarTriggerFromEventTarget(e?.target);
+            if (!trigger) return;
+            __tmTopBarClickInFlight = true;
+            try {
+                try { e.preventDefault?.(); } catch (e2) {}
+                try { e.stopImmediatePropagation?.(); } catch (e2) {}
+                try { e.stopPropagation?.(); } catch (e2) {}
+                try { __tmOpenManagerFromTopbarEntry(); } catch (e2) {}
+            } finally {
+                setTimeout(() => { __tmTopBarClickInFlight = false; }, 0);
+            }
+        };
+        try { document.addEventListener('click', __tmTopBarDocumentCaptureHandler, true); } catch (e) {}
     }
 
 function __tmScheduleWakeReload(reason) {
@@ -15142,14 +15191,14 @@ async function __tmRefreshAfterWake(reason) {
             ? {
                 shortLabel: '打开任务管理器',
                 longLabel: '快速新建任务',
-                shortRun: () => openManager({ preserveViewMode: true, forceOpenTab: true }),
+                shortRun: () => __tmOpenManagerFromTopbarEntry(),
                 longRun: () => window.tmQuickAddOpen?.(),
             }
             : {
                 shortLabel: '快速新建任务',
                 longLabel: '打开任务管理器',
                 shortRun: () => window.tmQuickAddOpen?.(),
-                longRun: () => openManager({ preserveViewMode: true, forceOpenTab: true }),
+                longRun: () => __tmOpenManagerFromTopbarEntry(),
             };
     }
 
@@ -23267,13 +23316,11 @@ async function __tmRefreshAfterWake(reason) {
         const isLandscape = !!(isMobile && (() => { try { return !!window.matchMedia?.('(orientation: landscape)')?.matches; } catch (e) { return false; } })());
         const isDesktopNarrow = !!(!isMobile && (() => { try { return !!window.matchMedia?.('(max-width: 768px)')?.matches; } catch (e) { return false; } })());
         const kind = String(state.uiAnimKind || '').trim();
-        const bodyAnimClass = ((isMobile || hostUsesMobileUI) && !isAnimatedDockHost && (Date.now() - (Number(state.uiAnimTs) || 0) < 390))
+        const hasFreshUiAnim = (Date.now() - (Number(state.uiAnimTs) || 0) < 390);
+        const bodyAnimClass = ((isMobile || hostUsesMobileUI) && !isAnimatedDockHost && hasFreshUiAnim)
             ? (kind === 'from-right' ? ' tm-body-anim--from-right' : kind === 'from-left' ? ' tm-body-anim--from-left' : ' tm-body-anim')
             : '';
-        const boxAnimClass = (!(isMobile || hostUsesMobileUI) && (Date.now() - (Number(state.uiAnimTs) || 0) < 390))
-            ? (kind === 'from-right' ? ' tm-box-anim--from-right' : kind === 'from-left' ? ' tm-box-anim--from-left' : ' tm-box-anim')
-            : '';
-        const stageAnimClass = (isAnimatedDockHost && (Date.now() - (Number(state.uiAnimTs) || 0) < 390))
+        const stageAnimClass = ((!isMobile && !hostUsesMobileUI) && hasFreshUiAnim)
             ? (kind === 'from-right' ? ' tm-stage-anim--from-right' : kind === 'from-left' ? ' tm-stage-anim--from-left' : ' tm-stage-anim')
             : '';
         const tableFillColumns = SettingsStore.data.kanbanFillColumns === true;
@@ -26019,7 +26066,7 @@ async function __tmRefreshAfterWake(reason) {
             : mainBodyHtml;
 
         state.modal.innerHTML = `
-            <div class="tm-box${showCalendarSideDock || showAiSideDock ? ' tm-box--with-cal-dock' : ''}${boxAnimClass}">
+            <div class="tm-box${showCalendarSideDock || showAiSideDock ? ' tm-box--with-cal-dock' : ''}">
                 <div class="tm-filter-rule-bar" style="padding: ${topbarPadding};${topbarHeightStyle}">
                         <div class="tm-topbar-row tm-topbar-row--main" style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;justify-content:space-between;min-width:0;">
                         <div class="tm-topbar-row tm-topbar-row--brand" style="display:flex;align-items:center;gap:10px;min-width:0;">
@@ -48754,25 +48801,34 @@ async function __tmRefreshAfterWake(reason) {
     let __tmEnsureTabPromise = null;
 
     function __tmBindTopBarClickCapture(topBarEl) {
-        const el = topBarEl || __tmTopBarEl;
+        const el = __tmResolveManagedTopBarEntry(topBarEl || __tmTopBarEl);
         if (!el) return;
         if (__tmTopBarEl && __tmTopBarEl !== el && __tmTopBarClickCaptureHandler) {
             try { __tmTopBarEl.removeEventListener('click', __tmTopBarClickCaptureHandler, true); } catch (e) {}
         }
         __tmTopBarEl = el;
-        if (__tmTopBarClickCaptureHandler) return;
-        __tmTopBarClickCaptureHandler = (e) => {
-            if (__tmTopBarClickInFlight) return;
-            __tmTopBarClickInFlight = true;
-            try {
-                try { e.preventDefault?.(); } catch (e2) {}
-                try { e.stopImmediatePropagation?.(); } catch (e2) {}
-                try { e.stopPropagation?.(); } catch (e2) {}
-                try { openManager({ preserveViewMode: true, forceOpenTab: true }); } catch (e2) {}
-            } finally {
-                setTimeout(() => { __tmTopBarClickInFlight = false; }, 0);
-            }
-        };
+        if (!__tmTopBarClickCaptureHandler) {
+            __tmTopBarClickCaptureHandler = (e) => {
+                if (__tmTopBarClickInFlight) return;
+                __tmTopBarClickInFlight = true;
+                try {
+                    try { e.preventDefault?.(); } catch (e2) {}
+                    try { e.stopImmediatePropagation?.(); } catch (e2) {}
+                    try { e.stopPropagation?.(); } catch (e2) {}
+                    const isDesktopTabHost = !__tmIsRuntimeMobileClient() && !__tmIsDockHost();
+                    if (isDesktopTabHost) {
+                        Promise.resolve().then(async () => {
+                            try { await __tmEnsureTabOpened(1800); } catch (e2) {}
+                            try { await openManager({ preserveViewMode: true, skipEnsureTabOpened: true }); } catch (e2) {}
+                        }).catch(() => null);
+                    } else {
+                        try { __tmOpenManagerFromTopbarEntry(); } catch (e2) {}
+                    }
+                } finally {
+                    setTimeout(() => { __tmTopBarClickInFlight = false; }, 0);
+                }
+            };
+        }
         try { el.addEventListener('click', __tmTopBarClickCaptureHandler, true); } catch (e) {}
     }
 
@@ -48784,39 +48840,103 @@ async function __tmRefreshAfterWake(reason) {
         }
     }
 
+    function __tmGetManagedTopBarLookupSelector() {
+        return __tmIsMobileTopBarRegistrationHost()
+            ? '[aria-label="任务管理器"], [aria-label="任务管理"], [title="任务管理器"], [title="任务管理"]'
+            : '[aria-label="任务管理器"], [aria-label="任务管理"]';
+    }
+
+    function __tmIsManagedTopBarEntry(el) {
+        if (!(el instanceof Element)) return false;
+        const label = String(
+            __tmIsMobileTopBarRegistrationHost()
+                ? (el.getAttribute?.('aria-label') || el.getAttribute?.('title') || '')
+                : (el.getAttribute?.('aria-label') || '')
+        ).trim();
+        if (label !== '任务管理器' && label !== '任务管理') return false;
+        if (__tmTopBarEl instanceof Element && el === __tmTopBarEl) return true;
+        if (el.closest?.('.layout-tab-bar, .layout-tab-bar__item, .layout-tab-container, .layout-tab-bar .item, .fn__flex-column[data-type="wnd"], .tm-modal')) return false;
+        if (__tmIsMobileTopBarRegistrationHost()) return true;
+        if (el.closest?.('#toolbar, .toolbar, .toolbar__item, .topbar')) return true;
+        try {
+            const owner = el.closest?.('[id], [class]') || el;
+            const ownerId = String(owner?.id || '').trim();
+            const ownerCls = String(owner?.className?.baseVal || owner?.className || '').trim();
+            return /(toolbar|topbar)/i.test(`${ownerId} ${ownerCls}`);
+        } catch (e) {}
+        return false;
+    }
+
+    function __tmResolveManagedTopBarEntry(sourceEl) {
+        if (sourceEl instanceof Element) {
+            if (__tmIsManagedTopBarEntry(sourceEl)) return sourceEl;
+            try {
+                const nested = sourceEl.querySelector?.(__tmGetManagedTopBarLookupSelector());
+                if (nested instanceof Element && __tmIsManagedTopBarEntry(nested)) return nested;
+            } catch (e) {}
+        }
+        try {
+            return Array.from(document.querySelectorAll(__tmGetManagedTopBarLookupSelector()))
+                .find((el) => __tmIsManagedTopBarEntry(el)) || null;
+        } catch (e) {}
+        return null;
+    }
+
     function __tmGetTopBarEntries() {
         try {
-            return Array.from(document.querySelectorAll('[aria-label="任务管理器"], [aria-label="任务管理"]'));
+            const seen = new Set();
+            const entries = [];
+            const currentTopBar = __tmResolveManagedTopBarEntry(__tmTopBarEl);
+            if (currentTopBar instanceof Element && document.body.contains(currentTopBar)) {
+                entries.push(currentTopBar);
+                seen.add(currentTopBar);
+            }
+            Array.from(document.querySelectorAll(__tmGetManagedTopBarLookupSelector())).forEach((el) => {
+                if (!(el instanceof Element) || seen.has(el) || !__tmIsManagedTopBarEntry(el)) return;
+                seen.add(el);
+                entries.push(el);
+            });
+            return entries;
         } catch (e) {
             return [];
         }
     }
 
-    function __tmDeduplicateTopBarEntries() {
+    function __tmDeduplicateTopBarEntries(allowRemoval = __tmIsMobileTopBarRegistrationHost()) {
         const entries = __tmGetTopBarEntries();
         if (!entries.length) return null;
         const keeper = (__tmTopBarEl instanceof Element && entries.includes(__tmTopBarEl))
             ? __tmTopBarEl
             : entries[0];
-        entries.forEach((el) => {
-            if (!(el instanceof Element) || el === keeper) return;
-            try { el.remove(); } catch (e) {}
-        });
+        if (allowRemoval) {
+            entries.forEach((el) => {
+                if (!(el instanceof Element) || el === keeper) return;
+                try { el.remove(); } catch (e) {}
+            });
+        }
         return keeper instanceof Element ? keeper : null;
     }
 
-    function __tmRemoveTopBarIcon() {
+    function __tmRemoveTopBarIcon(options = {}) {
+        const shouldRemoveDom = options?.removeDom ?? __tmIsMobileTopBarRegistrationHost();
         try {
-            if (__tmTopBarEl && __tmTopBarClickCaptureHandler) {
-                try { __tmTopBarEl.removeEventListener('click', __tmTopBarClickCaptureHandler, true); } catch (e) {}
+            const currentTopBar = __tmResolveManagedTopBarEntry(__tmTopBarEl);
+            if (currentTopBar && __tmTopBarClickCaptureHandler) {
+                try { currentTopBar.removeEventListener('click', __tmTopBarClickCaptureHandler, true); } catch (e) {}
             }
         } catch (e) {}
         try {
-            const entries = __tmGetTopBarEntries();
-            entries.forEach((el) => { try { el.remove(); } catch (e) {} });
-            const exists = __tmTopBarEl;
-            if (exists?.remove && !(exists instanceof Element && entries.includes(exists))) exists.remove();
+            if (__tmTopBarDocumentCaptureHandler) {
+                try { document.removeEventListener('click', __tmTopBarDocumentCaptureHandler, true); } catch (e2) {}
+                __tmTopBarDocumentCaptureHandler = null;
+            }
         } catch (e) {}
+        if (shouldRemoveDom) {
+            try {
+                const entries = __tmGetTopBarEntries();
+                entries.forEach((el) => { try { el.remove(); } catch (e) {} });
+            } catch (e) {}
+        }
         try { delete globalThis[__TM_MOBILE_TOPBAR_REGISTERED_KEY]; } catch (e) {}
         __tmTopBarEl = null;
         __tmTopBarAdded = false;
@@ -48830,22 +48950,24 @@ async function __tmRefreshAfterWake(reason) {
         const isMobileTopBarHost = __tmIsMobileTopBarRegistrationHost();
         if (isMobileTopBarHost && globalThis[__TM_MOBILE_TOPBAR_REGISTERED_KEY]) {
             __tmTopBarAdded = true;
+            try { __tmBindMobileTopBarDocumentCapture(); } catch (e) {}
             try {
-                const exists = __tmDeduplicateTopBarEntries();
+                const exists = __tmDeduplicateTopBarEntries(true);
                 if (exists) __tmBindTopBarClickCapture(exists);
             } catch (e) {}
             return;
         }
         if (__tmTopBarAdded) {
             if (isMobileTopBarHost) {
+                try { __tmBindMobileTopBarDocumentCapture(); } catch (e) {}
                 try {
-                    const exists = __tmDeduplicateTopBarEntries();
+                    const exists = __tmDeduplicateTopBarEntries(true);
                     if (exists) __tmBindTopBarClickCapture(exists);
                 } catch (e) {}
                 return;
             }
             try {
-                const exists = __tmDeduplicateTopBarEntries();
+                const exists = __tmDeduplicateTopBarEntries(false);
                 if (exists) {
                     __tmSetUseIcon(exists, 'iconTaskHorizon');
                     __tmBindTopBarClickCapture(exists);
@@ -48863,9 +48985,12 @@ async function __tmRefreshAfterWake(reason) {
             // 如果已经添加过，思源可能会处理，或者我们可以检查 DOM
             // 但是 addTopBar 没有 ID 参数，不好检查。
             // 我们可以检查 aria-label 或 title
-            const exists = document.querySelector('[aria-label="任务管理器"], [aria-label="任务管理"]');
+            const exists = __tmDeduplicateTopBarEntries(isMobileTopBarHost);
             if (exists) {
                 __tmSetUseIcon(exists, 'iconTaskHorizon');
+                if (isMobileTopBarHost) {
+                    try { __tmBindMobileTopBarDocumentCapture(); } catch (e) {}
+                }
                 try { __tmBindTopBarClickCapture(exists); } catch (e) {}
                 __tmTopBarAdded = true;
                 if (isMobileTopBarHost) {
@@ -48878,16 +49003,21 @@ async function __tmRefreshAfterWake(reason) {
                 icon: "iconTaskHorizon",
                 title: "任务管理器",
                 position: "right",
-                callback: () => {}
+                callback: () => {
+                    try { __tmOpenManagerFromTopbarEntry(); } catch (e) {}
+                }
             });
-            try { __tmBindTopBarClickCapture(topBarEl || document.querySelector('[aria-label="任务管理器"], [aria-label="任务管理"]')); } catch (e) {}
+            if (isMobileTopBarHost) {
+                try { __tmBindMobileTopBarDocumentCapture(); } catch (e) {}
+            }
+            try { __tmBindTopBarClickCapture(topBarEl || __tmDeduplicateTopBarEntries(isMobileTopBarHost)); } catch (e) {}
             __tmTopBarAdded = true;
             if (isMobileTopBarHost) {
                 try { globalThis[__TM_MOBILE_TOPBAR_REGISTERED_KEY] = true; } catch (e) {}
             }
             setTimeout(() => {
                 try {
-                    const exists = __tmDeduplicateTopBarEntries() || document.querySelector('[aria-label="任务管理器"], [aria-label="任务管理"]');
+                    const exists = __tmDeduplicateTopBarEntries(isMobileTopBarHost);
                     try { __tmSetUseIcon(exists, 'iconTaskHorizon'); } catch (e2) {}
                     try { if (exists) __tmBindTopBarClickCapture(exists); } catch (e2) {}
                 } catch (e) {}
@@ -49541,14 +49671,15 @@ async function __tmRefreshAfterWake(reason) {
     // 查找已打开的任务管理器标签页
     function __tmFindExistingTaskManagerTab() {
         try {
-            if (!window.siyuan || !window.siyuan.ws || !window.siyuan.ws.apps) return null;
-            
-            const apps = window.siyuan.ws.apps;
-            for (const app of apps) {
-                if (app && app.custom && app.custom['task-horizon']) {
-                    return app;
-                }
-            }
+            const custom = __tmFindExistingTaskHorizonCustomModel?.();
+            if (custom?.tab) return custom.tab;
+            if (custom?.headElement instanceof Element) return custom.headElement;
+            if (custom) return custom;
+        } catch (e) {}
+        try {
+            const tabId = String(globalThis.__taskHorizonCustomTabId || '').trim();
+            if (!tabId) return null;
+            return document.querySelector(`.layout-tab-bar [data-id="${tabId}"], .layout-tab-bar [data-key="${tabId}"]`);
         } catch (e) {}
         return null;
     }
@@ -49556,13 +49687,30 @@ async function __tmRefreshAfterWake(reason) {
     // 切换到指定标签页
     function __tmSwitchToTab(tab) {
         try {
-            if (window.siyuan && window.siyuan.layout && window.siyuan.layout.centerLayout) {
+            if (!(tab instanceof Element) && window.siyuan && window.siyuan.layout && window.siyuan.layout.centerLayout) {
                 window.siyuan.layout.centerLayout.switchTab(tab);
+                return true;
             }
         } catch (e) {
-            // 如果切换失败，则打开新标签页
-            openManager({ preserveViewMode: true });
         }
+        try {
+            const header = tab instanceof Element ? tab : (tab?.headElement instanceof Element ? tab.headElement : null);
+            if (header) {
+                try {
+                    header.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                } catch (e) {
+                    try { header.click(); } catch (e2) {}
+                }
+                return true;
+            }
+        } catch (e) {}
+        try {
+            if (typeof globalThis.__taskHorizonOpenTabView === 'function') {
+                globalThis.__taskHorizonOpenTabView();
+                return true;
+            }
+        } catch (e) {}
+        return false;
     }
 
     async function openManager(options) {
