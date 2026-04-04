@@ -25,13 +25,12 @@ const TASK_DOCK_MIRROR_ATTR = "data-task-horizon-dock-mirror";
 const DOCK_VIEW_IDS = new Set(["list", "checklist", "timeline", "kanban", "calendar", "whiteboard"]);
 
 const ICON_SYMBOL = `<symbol id="${ICON_ID}" viewBox="0 0 24 24">
-  <g fill="none" stroke="currentColor" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M9 4h6" />
-    <path d="M9.5 2.75h5a1.75 1.75 0 0 1 1.75 1.75v1.25h1A2.75 2.75 0 0 1 20 8.5v10.75A2.75 2.75 0 0 1 17.25 22h-10.5A2.75 2.75 0 0 1 4 19.25V8.5a2.75 2.75 0 0 1 2.75-2.75h1V4.5A1.75 1.75 0 0 1 9.5 2.75Z" />
-    <path d="M8.5 10h7" />
-    <path d="M8.5 13.5h7" />
-    <path d="M8.5 17h3.75" />
-    <path d="m13.9 17.2 1.55 1.55 2.8-3.2" />
+  <g transform="translate(12 12) scale(1.25) translate(-12 -12)" fill="none" stroke="currentColor">
+    <path d="M7.25 3.75h9.5c1.105 0 2 .895 2 2v12.5c0 1.105-.895 2-2 2h-9.5c-1.105 0-2-.895-2-2V5.75c0-1.105.895-2 2-2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+    <path d="M8.75 7h6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+    <path d="M8.75 10.5h6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+    <path d="M8.75 14h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+    <path d="M12.1 17.6l1.55 1.55 3.2-3.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
   </g>
 </symbol>`;
 

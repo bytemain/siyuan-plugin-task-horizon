@@ -50753,7 +50753,7 @@ async function __tmRefreshAfterWake(reason) {
 
         const tmBtn = document.createElement('button');
         tmBtn.className = 'tm-breadcrumb-btn';
-        tmBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;line-height:0"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="display:block;fill:none;flex:0 0 auto;transform:translateY(1px)"><g transform="translate(12 12) scale(1.25) translate(-12 -12)" fill="none" stroke="currentColor"><path d="M7.25 3.75h9.5c1.105 0 2 .895 2 2v12.5c0 1.105-.895 2-2 2h-9.5c-1.105 0-2-.895-2-2V5.75c0-1.105.895-2 2-2Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path><path d="M8.75 7h6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path><path d="M8.75 10.5h6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path><path d="M8.75 14h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path><path d="M12.1 17.6l1.55 1.55 3.2-3.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></span>';
+        tmBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;line-height:0"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="display:block;fill:none;flex:0 0 auto;transform:translateY(1px)"><use href="#iconTaskHorizon" xlink:href="#iconTaskHorizon"></use></svg></span>';
         tmBtn.style.cssText = `
             width: 28px;
             height: 28px;
