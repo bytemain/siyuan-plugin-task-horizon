@@ -1,21 +1,100 @@
-# 任务管理器（Task Horizon）
+<!-- Hero -->
+<div style="text-align:center;margin-bottom:15px;padding:28px 20px 20px;background:var(--b3-theme-surface);border-radius:12px;border:1px solid var(--b3-border-color);box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+  <h1 style="margin:0 0 8px;font-size:32px;font-weight:800;letter-spacing:-0.02em;color:var(--b3-theme-on-background);">Task Horizon</h1>
+  <p style="margin:0 auto;font-size:15px;color:var(--b3-theme-on-surface);max-width:600px;">思源笔记专业任务管理插件 · 看板 | 时间轴 | 日历 | 表格 | 四象限 | 悬浮条 | 番茄钟联动</p>
+</div>
 
-使用说明：
-[任务管理器插件 V1.3 发布：新增日历视图，支持：看板/ 时间轴 / 表格视图 / 四象限分组 / 悬浮条快速编辑 / 任务快速新建 / 自定义优先级排序 / 番茄钟联动](https://ld246.com/article/1770607439695)
+<!-- 贡献者 + 交流群 + 版本链接（铺满100%版） -->
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:15px;">
+  
+  <!-- 👤 PR贡献 -->
+  <div style="flex:1 1 140px;min-width:140px;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--b3-theme-surface);border-radius:10px;border:1px solid var(--b3-border-color);">
+    <div style="width:32px;height:32px;background:var(--b3-theme-primary-lightest);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">👤</div>
+    <div>
+      <div style="font-size:10px;color:var(--b3-theme-on-surface);font-weight:700;">PR贡献</div>
+      <a href="https://github.com/bytemain" style="font-size:13px;color:var(--b3-theme-on-background);text-decoration:none;font-weight:600;">bytemain</a>
+    </div>
+  </div>
+  
+  <!-- 💬 插件交流群 -->
+  <div style="flex:1 1 140px;min-width:140px;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--b3-theme-surface);border-radius:10px;border:1px solid var(--b3-border-color);">
+    <div style="width:32px;height:32px;background:var(--b3-theme-secondary-lightest, rgba(243, 169, 47, 0.12));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">💬</div>
+    <div>
+      <div style="font-size:10px;color:var(--b3-theme-on-surface);font-weight:700;">插件交流群</div>
+      <a href="https://qm.qq.com/q/MRkXe3Z00U" style="font-size:13px;color:var(--b3-theme-primary);text-decoration:none;font-weight:600;">758666272</a>
+    </div>
+  </div>
+  
+  <!-- 📖 V1.3 使用说明 -->
+  <a href="https://ld246.com/article/1770607439695" style="flex:1 1 140px;min-width:140px;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--b3-theme-surface);border-radius:10px;border:1px solid var(--b3-border-color);text-decoration:none;">
+    <div style="width:32px;height:32px;background:var(--b3-theme-primary-lightest);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">📖</div>
+    <div>
+      <div style="font-size:10px;color:var(--b3-theme-on-surface);font-weight:700;">V1.3</div>
+      <div style="font-size:13px;color:var(--b3-theme-primary);font-weight:600;">使用说明</div>
+    </div>
+  </a>
+  
+  <!-- 🎨 V1.5 视图介绍 -->
+  <a href="https://ld246.com/article/1771900014059" style="flex:1 1 140px;min-width:140px;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--b3-theme-surface);border-radius:10px;border:1px solid var(--b3-border-color);text-decoration:none;">
+    <div style="width:32px;height:32px;background:var(--b3-theme-secondary-lightest, rgba(243, 169, 47, 0.12));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">🎨</div>
+    <div>
+      <div style="font-size:10px;color:var(--b3-theme-on-surface);font-weight:700;">V1.5</div>
+      <div style="font-size:13px;color:var(--b3-theme-primary);font-weight:600;">功能介绍</div>
+    </div>
+  </a>
+  
+  <!-- ✨ V2.0 更新亮点 -->
+  <a href="https://ld246.com/article/1774945151303" style="flex:1 1 140px;min-width:140px;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--b3-theme-surface);border-radius:10px;border:1px solid var(--b3-border-color);text-decoration:none;">
+    <div style="width:32px;height:32px;background:var(--b3-theme-success-lightest, rgba(101, 184, 77, 0.12));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">✨</div>
+    <div>
+      <div style="font-size:10px;color:var(--b3-theme-on-surface);font-weight:700;">V2.0</div>
+      <div style="font-size:13px;color:var(--b3-theme-primary);font-weight:600;">更新亮点</div>
+    </div>
+  </a>
+  
+</div>
 
-功能介绍：
-
-[任务管理器插件 V1.5发布：支持白板视图，附时间轴、看板、日历、表格 视图使用介绍](https://ld246.com/article/1771900014059)
-
-[任务管理器插件 V1.5~2.0 更新介绍：新增 清单 & 卡片流视图 / 侧边栏 / AI 助手 / 其他块添加 / Excel 导出](https://ld246.com/article/1774945151303)
-
-PR贡献名单：[bytemain](https://github.com/bytemain)
-
-赞助者名单：[bigyelloworange](https://ld246.com/member/bigyelloworange) / [Floria233](https://ld246.com/member/Floria233) / [nj90hou](https://ld246.com/member/nj90hou) / [sky90038528](https://ld246.com/member/sky90038528) / [Lu9693](https://ld246.com/member/Lu9693) / [ggltxj](https://ld246.com/member/ggltxj) / [mozhu](https://ld246.com/member/mozhu) / [ppt68298100](https://ld246.com/member/ppt68298100) / [NorthCJ](https://ld246.com/member/NorthCJ) / [601063672](https://ld246.com/member/601063672) / [mcz007](https://ld246.com/member/mcz007) / [Afterglow](https://ld246.com/member/Afterglow) 
-
-插件交流Q群：[758666272](https://qm.qq.com/q/MRkXe3Z00U) 
+<!-- 赞助者标签云 -->
+<div style="margin-bottom:15px;">
+  <div style="font-size:13px;color:var(--b3-theme-on-surface);font-weight:700;margin-bottom:10px;">💖 赞助者</div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+    <a href="https://ld246.com/member/bigyelloworange" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">bigyelloworange</a>
+    <a href="https://ld246.com/member/Floria233" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">Floria233</a>
+    <a href="https://ld246.com/member/nj90hou" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">nj90hou</a>
+    <a href="https://ld246.com/member/sky90038528" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">sky90038528</a>
+    <a href="https://ld246.com/member/Lu9693" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">Lu9693</a>
+    <a href="https://ld246.com/member/ggltxj" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">ggltxj</a>
+    <a href="https://ld246.com/member/mozhu" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">mozhu</a>
+    <a href="https://ld246.com/member/ppt68298100" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">ppt68298100</a>
+    <a href="https://ld246.com/member/NorthCJ" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">NorthCJ</a>
+    <a href="https://ld246.com/member/601063672" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">601063672</a>
+    <a href="https://ld246.com/member/mcz007" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">mcz007</a>
+    <a href="https://ld246.com/member/Afterglow" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">Afterglow</a>
+  </div>
+</div>
 
 # 更新记录
+
+## 2.0.6更新内容
+- **新增：悬浮条显示图标设置，可以自定义哪些不显示**
+- **新增：任务右键菜单增加隐藏已完成子任务开关，可以切换当前选中父任务是否显示已完成的子任务**
+- **新增：任务右键菜单增加置顶功能，有此功能可以隐藏置顶列减少表格视图列占用**
+- **新增：日历设置增加“默认折叠桌面端日历左侧侧边栏”选项，开启后日历默认折叠左侧边栏，可在顶栏日历侧边栏按钮展开侧边栏**
+- **新增：外观设置新“增日历边框线颜色”设置，可调整日历整体边框颜色**
+- 外观优化：
+  - 卡片流标题颜色优化
+  - 快速添加条图标样式与任务详情同步
+  - 界面图标由Lucide更换为Phosphor
+  - 窗口弹出增加动画
+- 优化：重构插件新建编辑任务队列，异步刷新减少编辑任务后的等待
+- 优化：标题模式下增加已完成看板
+- 优化：去除文档分组已切换提示，减少视觉干扰
+- 优化：已完成看板规则只按更新时间排，不受其他规则分组影响
+- 优化：有二级标题才显示二级标题分组，文档里没有任何二级标题任务详情就不显示二级标题标签
+- 修复：笔记中单独的任务详情页面任务名称显示不全问题
+- 修复：日历侧边栏顶部全天日程没有固定问题
+- 修复：在不是当前文档分组的文档下的任务详情弹窗无法编辑的问题
+- 修复：思源笔记同步后插件完全重载的问题
 
 ## 2.0.5更新内容
 - **新增：常规设置->视图与布局中新增移动端清单紧凑视图标题跳转设置，开启后可点击标题弹出任务详情，不跳转文档**

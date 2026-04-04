@@ -1323,7 +1323,7 @@
     --fc-slot-min-height: 29px;
     --fc-timegrid-slot-min-height: 29px;
     --fc-page-bg-color: var(--tm-bg-color);
-    --fc-border-color: rgba(0,0,0,0.14);
+    --fc-border-color: var(--tm-calendar-grid-border-color, var(--tm-table-border-color, rgba(0,0,0,0.14)));
     --fc-today-bg-color: rgba(0,120,212,0.08);
     --fc-now-indicator-color: #0078d4;
     --fc-button-text-color: #323130;
@@ -1339,7 +1339,7 @@
 [data-theme-mode="dark"] .tm-calendar-host {
     --tm-cal-allday-summary-bg: color-mix(in srgb, #2b2f34 84%, var(--tm-bg-color) 16%);
     --tm-cal-allday-summary-hover-bg: color-mix(in srgb, #353a40 86%, var(--tm-bg-color) 14%);
-    --fc-border-color: rgba(255,255,255,0.14);
+    --fc-border-color: var(--tm-calendar-grid-border-color, var(--tm-table-border-color, rgba(255,255,255,0.14)));
 }
 
 #tmCalendarSideDockTimeline {
@@ -1351,7 +1351,7 @@
     --fc-slot-min-height: 29px;
     --fc-timegrid-slot-min-height: 29px;
     --fc-page-bg-color: var(--tm-bg-color);
-    --fc-border-color: rgba(0,0,0,0.14);
+    --fc-border-color: var(--tm-calendar-grid-border-color, var(--tm-table-border-color, rgba(0,0,0,0.14)));
     --fc-today-bg-color: rgba(0,120,212,0.08);
     --fc-now-indicator-color: #0078d4;
     position: relative;
@@ -1381,7 +1381,7 @@
 [data-theme-mode="dark"] #tmCalendarSideDockTimeline {
     --tm-cal-allday-summary-bg: color-mix(in srgb, #2b2f34 84%, var(--tm-bg-color) 16%);
     --tm-cal-allday-summary-hover-bg: color-mix(in srgb, #353a40 86%, var(--tm-bg-color) 14%);
-    --fc-border-color: rgba(255,255,255,0.14);
+    --fc-border-color: var(--tm-calendar-grid-border-color, var(--tm-table-border-color, rgba(255,255,255,0.14)));
 }
 
 .tm-calendar-host .fc .fc-timegrid-now-indicator-container,

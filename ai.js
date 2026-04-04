@@ -4645,8 +4645,8 @@
                     <div class="tm-ai-sidebar__title-row">
                         <div class="tm-ai-sidebar__title">AI 工作台</div>
                         <button class="tm-ai-sidebar__title-toggle" data-ai-sidebar-action="toggle-setup" title="${aiRuntime.setupCollapsed ? '展开顶部设置区' : '折叠顶部设置区'}" aria-label="${aiRuntime.setupCollapsed ? '展开顶部设置区' : '折叠顶部设置区'}" aria-expanded="${aiRuntime.setupCollapsed ? 'false' : 'true'}">
-                            <svg class="tm-ai-sidebar__title-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(${aiRuntime.setupCollapsed ? '0deg' : '90deg'});">
-                                <path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <svg class="tm-ai-sidebar__title-toggle-icon" viewBox="0 0 24 24" width="16" height="16" style="transform:rotate(${aiRuntime.setupCollapsed ? '0deg' : '90deg'});" aria-hidden="true">
+                                <path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.45" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </button>
                     </div>
@@ -4706,8 +4706,8 @@
                                     <div class="tm-ai-sidebar__section-head">
                                         <div class="tm-ai-sidebar__section-title">候选任务</div>
                                         <button class="tm-ai-sidebar__section-toggle" data-ai-sidebar-action="toggle-task-picker" title="${aiRuntime.taskPickerCollapsed ? '展开候选任务' : '折叠候选任务'}" aria-label="${aiRuntime.taskPickerCollapsed ? '展开候选任务' : '折叠候选任务'}" aria-expanded="${aiRuntime.taskPickerCollapsed ? 'false' : 'true'}">
-                                            <svg class="tm-ai-sidebar__section-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(${aiRuntime.taskPickerCollapsed ? '0deg' : '90deg'});">
-                                                <path d="M5 3.5L10.5 8 5 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            <svg class="tm-ai-sidebar__section-toggle-icon" viewBox="0 0 24 24" width="16" height="16" style="transform:rotate(${aiRuntime.taskPickerCollapsed ? '0deg' : '90deg'});" aria-hidden="true">
+                                                <path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.45" stroke-linecap="round" stroke-linejoin="round"></path>
                                             </svg>
                                         </button>
                                     </div>
@@ -4735,8 +4735,8 @@
                                         <span class="tm-ai-sidebar__composer-toggle-title">排期参数</span>
                                         <span class="tm-ai-sidebar__composer-toggle-summary">${esc(plannerSummary)}</span>
                                     </span>
-                                    <svg class="tm-ai-sidebar__composer-toggle-icon" viewBox="0 0 16 16" width="16" height="16" style="transform:rotate(${aiRuntime.schedulePlannerCollapsed ? '0deg' : '90deg'});">
-                                        <path d="M5 3.5L10.5 8 5 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    <svg class="tm-ai-sidebar__composer-toggle-icon" viewBox="0 0 24 24" width="16" height="16" style="transform:rotate(${aiRuntime.schedulePlannerCollapsed ? '0deg' : '90deg'});" aria-hidden="true">
+                                        <path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.45" stroke-linecap="round" stroke-linejoin="round"></path>
                                     </svg>
                                 </button>
                                 ${aiRuntime.schedulePlannerCollapsed ? '' : `

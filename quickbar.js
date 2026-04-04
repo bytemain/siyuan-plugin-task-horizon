@@ -37,28 +37,34 @@
                 defaultValue: 'none'
             },
             {
+                name: '开始日期',
+                attrKey: 'custom-start-date',
+                type: 'date',
+                defaultValue: ''
+            },
+            {
                 name: '完成日期',
                 attrKey: 'custom-completion-time',
                 type: 'date',
                 defaultValue: ''
-            }
-        ],
-        // 第二行显示的属性
-        secondRow: [
+            },
             {
                 name: '时长',
                 attrKey: 'custom-duration',
                 type: 'text',
                 placeholder: '输入时长',
                 defaultValue: ''
-            },
+            }
+        ],
+        // 第二行显示的属性
+        secondRow: [
             {
                 name: '备注',
                 attrKey: 'custom-remark',
                 type: 'text',
                 placeholder: '输入备注',
                 defaultValue: ''
-            }
+            },
         ]
     };
 
@@ -99,6 +105,8 @@
         { attrKey: 'custom-remark', name: '备注', type: 'text', placeholder: '输入备注' }
     ];
     const quickbarInlineFieldAllowSet = new Set(quickbarInlineFieldDefs.map(item => item.attrKey));
+    const quickbarVisibleItemDefaults = ['custom-status', 'custom-priority', 'custom-start-date', 'custom-completion-time', 'custom-duration', 'custom-remark', 'action-ai-title', 'action-reminder', 'action-more'];
+    const quickbarVisibleItemAllowSet = new Set(quickbarVisibleItemDefaults);
     let inlineMetaCache = new Map();
     let inlineMetaLayoutCache = new Map();
     let inlineMetaObserver = null;
@@ -150,6 +158,18 @@
             };
         } catch (e) {
             return { enabled: false, showOnMobile: false, fields: fallbackFields.slice() };
+        }
+    }
+
+    function getQuickbarVisibleSettings() {
+        try {
+            const rawItems = JSON.parse(localStorage.getItem('tm_quickbar_visible_items') || 'null');
+            const items = Array.isArray(rawItems)
+                ? rawItems.map(v => String(v || '').trim()).filter(v => quickbarVisibleItemAllowSet.has(v))
+                : quickbarVisibleItemDefaults.slice();
+            return { items: items.length ? items : quickbarVisibleItemDefaults.slice() };
+        } catch (e) {
+            return { items: quickbarVisibleItemDefaults.slice() };
         }
     }
 
@@ -410,7 +430,7 @@
                 border: 1px solid var(--b3-border-color);
                 box-shadow: var(--b3-dialog-shadow);
                 white-space: nowrap;
-                overflow-x: auto;
+                overflow: visible;
                 max-width: min(92vw, 980px);
             }
             .sy-custom-props-floatbar__row {
@@ -465,6 +485,55 @@
             }
             .sy-custom-props-floatbar__prop-value {
                 font-weight: 500;
+            }
+            .sy-custom-props-floatbar__prop--core {
+                gap: 5px;
+                padding: 0 8px;
+                border-radius: 8px;
+            }
+            .sy-custom-props-floatbar__prop--remark {
+                gap: 5px;
+            }
+            .sy-custom-props-floatbar__prop--icon-only {
+                width: 26px;
+                padding: 0;
+                justify-content: center;
+            }
+            .sy-custom-props-floatbar__status-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 999px;
+                background: var(--qb-status-fg, #757575);
+                box-shadow: 0 0 0 1px var(--qb-status-border, rgba(117,117,117,0.35));
+                display: inline-block;
+                flex: 0 0 auto;
+            }
+            .sy-custom-props-floatbar__prop-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 0;
+                flex: 0 0 auto;
+            }
+            .sy-custom-props-floatbar__prop-icon svg {
+                width: 14px;
+                height: 14px;
+                display: block;
+            }
+            .sy-custom-props-floatbar [data-tooltip]::after {
+                content: none !important;
+                display: none !important;
+            }
+            .sy-custom-props-floatbar [data-tooltip]::before {
+                white-space: nowrap;
+                border-radius: 6px;
+            }
+            .sy-custom-props-floatbar [data-tooltip]:not([data-side])::before,
+            .sy-custom-props-floatbar [data-tooltip][data-side="top"]::before {
+                bottom: calc(100% + 8px);
+            }
+            .sy-custom-props-floatbar [data-tooltip][data-side="bottom"]::before {
+                top: calc(100% + 8px);
             }
             .sy-custom-props-floatbar__select {
                 position: absolute;
@@ -662,11 +731,15 @@
                 padding: 0;
             }
             .sy-custom-props-floatbar__action .qb-icon {
-                font-size: 13px;
-                line-height: 1;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
+                line-height: 0;
+            }
+            .sy-custom-props-floatbar__action .qb-icon svg {
+                width: 14px;
+                height: 14px;
+                display: block;
             }
             .sy-custom-props-floatbar__action.is-wide {
                 width: auto;
@@ -972,6 +1045,32 @@
             return `${m[1]}-${m[2]}-${m[3]}`;
         }
 
+        function renderPhosphorBoldIcon(iconName, size = 14) {
+            const name = String(iconName || '').trim().toLowerCase();
+            const official = {
+                sparkle: 'M199,125.31l-49.88-18.39L130.69,57a19.92,19.92,0,0,0-37.38,0L74.92,106.92,25,125.31a19.92,19.92,0,0,0,0,37.38l49.88,18.39L93.31,231a19.92,19.92,0,0,0,37.38,0l18.39-49.88L199,162.69a19.92,19.92,0,0,0,0-37.38Zm-63.38,35.16a12,12,0,0,0-7.11,7.11L112,212.28l-16.47-44.7a12,12,0,0,0-7.11-7.11L43.72,144l44.7-16.47a12,12,0,0,0,7.11-7.11L112,75.72l16.47,44.7a12,12,0,0,0,7.11,7.11L180.28,144ZM140,40a12,12,0,0,1,12-12h12V16a12,12,0,0,1,24,0V28h12a12,12,0,0,1,0,24H188V64a12,12,0,0,1-24,0V52H152A12,12,0,0,1,140,40ZM252,88a12,12,0,0,1-12,12h-4v4a12,12,0,0,1-24,0v-4h-4a12,12,0,0,1,0-24h4V72a12,12,0,0,1,24,0v4h4A12,12,0,0,1,252,88Z',
+                'alarm-clock': 'M128,36A100,100,0,1,0,228,136,100.11,100.11,0,0,0,128,36Zm0,176a76,76,0,1,1,76-76A76.08,76.08,0,0,1,128,212ZM32.49,72.49a12,12,0,1,1-17-17l32-32a12,12,0,1,1,17,17Zm208,0a12,12,0,0,1-17,0l-32-32a12,12,0,1,1,17-17l32,32A12,12,0,0,1,240.49,72.49ZM176,124a12,12,0,0,1,0,24H128a12,12,0,0,1-12-12V88a12,12,0,0,1,24,0v36Z',
+                'calendar-check': 'M208,28H188V20a12,12,0,0,0-24,0v8H92V20a12,12,0,0,0-24,0v8H48A20.02229,20.02229,0,0,0,28,48V208a20.02229,20.02229,0,0,0,20,20H208a20.02229,20.02229,0,0,0,20-20V48A20.02229,20.02229,0,0,0,208,28Zm-4,24V76H52V52ZM52,204V100H204V204Zm120.72559-84.2373a12.00022,12.00022,0,0,1-.499,16.96386l-46.6665,44a11.99953,11.99953,0,0,1-16.48486-.02051l-25.3335-24a11.99964,11.99964,0,1,1,16.50586-17.42187l17.1001,16.19922,38.415-36.21973A11.99993,11.99993,0,0,1,172.72559,119.7627Z',
+                'calendar-plus-2': 'M208,28H188V24a12,12,0,0,0-24,0v4H92V24a12,12,0,0,0-24,0v4H48A20,20,0,0,0,28,48V208a20,20,0,0,0,20,20H208a20,20,0,0,0,20-20V48A20,20,0,0,0,208,28ZM68,52a12,12,0,0,0,24,0h72a12,12,0,0,0,24,0h16V76H52V52ZM52,204V100H204V204Zm112-52a12,12,0,0,1-12,12H140v12a12,12,0,0,1-24,0V164H104a12,12,0,0,1,0-24h12V128a12,12,0,0,1,24,0v12h12A12,12,0,0,1,164,152Z',
+                'dots-three': 'M144,128a16,16,0,1,1-16-16A16,16,0,0,1,144,128ZM60,112a16,16,0,1,0,16,16A16,16,0,0,0,60,112Zm136,0a16,16,0,1,0,16,16A16,16,0,0,0,196,112Z',
+                'note-pencil': 'M232.48535,55.51465l-32-32a12.00062,12.00062,0,0,0-16.9707,0l-96,96A12.002,12.002,0,0,0,84,128v32a12.00028,12.00028,0,0,0,12,12h32a11.99907,11.99907,0,0,0,8.48535-3.51465l96-96A11.99973,11.99973,0,0,0,232.48535,55.51465ZM192,48.97046,207.0293,64,196,75.0293,180.9707,60ZM123.0293,148H108V132.97046L164,76.9707,179.0293,92ZM228,128.56836V208a20.0226,20.0226,0,0,1-20,20H48a20.0226,20.0226,0,0,1-20-20V48A20.02244,20.02244,0,0,1,48,28h79.43164a12,12,0,0,1,0,24H52V204H204V128.56836a12,12,0,0,1,24,0Z',
+                timer: 'M128,44a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,44Zm0,168a72,72,0,1,1,72-72A72.08,72.08,0,0,1,128,212ZM164.49,99.51a12,12,0,0,1,0,17l-28,28a12,12,0,0,1-17-17l28-28A12,12,0,0,1,164.49,99.51ZM92,16A12,12,0,0,1,104,4h48a12,12,0,0,1,0,24H104A12,12,0,0,1,92,16Z',
+            }[name];
+            if (official) {
+                return `<svg viewBox="0 0 256 256" width="${size}" height="${size}" aria-hidden="true"><path fill="currentColor" stroke="none" d="${official}"></path></svg>`;
+            }
+            const body = (() => {
+                switch (name) {
+                    case 'caret-double-up': return '<path d="m6 15 6-6 6 6" /><path d="m6 20 6-6 6 6" />';
+                    case 'caret-double-down': return '<path d="m6 4 6 6 6-6" /><path d="m6 10 6 6 6-6" />';
+                    case 'minus': return '<path d="M6 12h12" />';
+                    case 'circle-dot': return '<circle cx="12" cy="12" r="8.75" /><circle cx="12" cy="12" r="1.25" />';
+                    default: return '<circle cx="12" cy="12" r="8.75" />';
+                }
+            })();
+            return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.45" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`;
+        }
+
         function getPriorityJiraInfo(value) {
             const p = String(value || '').trim().toLowerCase();
             if (p === 'high') return { key: 'high', label: '高', iconType: 'high', color: '#de350b', bg: 'rgba(222,53,11,0.14)', border: 'rgba(222,53,11,0.34)' };
@@ -1046,6 +1145,37 @@
             const bg = hexToRgba(c, 0.16) || 'rgba(117,117,117,0.16)';
             const border = hexToRgba(c, 0.35) || 'rgba(117,117,117,0.35)';
             return `--qb-status-bg:${bg};--qb-status-fg:${c};--qb-status-border:${border};`;
+        }
+
+        function buildTooltipAttrs(label, side = 'top') {
+            const text = String(label || '').trim();
+            if (!text) return '';
+            return ` data-tooltip="${esc(text)}" data-side="${esc(String(side || 'top').trim() || 'top')}" aria-label="${esc(text)}"`;
+        }
+
+        function getFloatbarCoreIconName(attrKey) {
+            const key = String(attrKey || '').trim();
+            if (key === 'custom-start-date') return 'calendar-plus-2';
+            if (key === 'custom-completion-time') return 'calendar-check';
+            if (key === 'custom-duration') return 'timer';
+            if (key === 'custom-remark') return 'note-pencil';
+            return '';
+        }
+
+        function renderFloatbarCoreLikeProp(config, value, opts = {}) {
+            const attrKey = String(config?.attrKey || '').trim();
+            const className = ['sy-custom-props-floatbar__prop', 'sy-custom-props-floatbar__prop--icon-only', 'sy-custom-props-floatbar__prop--core', String(opts.extraClass || '').trim()].filter(Boolean).join(' ');
+            return `
+                    <span class="${className}"
+                          data-attr="${esc(attrKey)}"
+                          data-type="${esc(String(config?.type || ''))}"
+                          data-name="${esc(String(config?.name || ''))}"
+                          data-value="${esc(String(value ?? ''))}"
+                          ${buildTooltipAttrs(config?.name || '')}
+                          style="">
+                        <span class="sy-custom-props-floatbar__prop-icon">${renderPhosphorBoldIcon(getFloatbarCoreIconName(attrKey), 14)}</span>
+                    </span>
+                `;
         }
 
         function normalizeCustomProps(attrs) {
@@ -1212,13 +1342,20 @@
         // 渲染悬浮条
         function renderFloatBar() {
             const rows = [];
+            const visibleSettings = getQuickbarVisibleSettings();
+            const visibleSet = new Set(visibleSettings.items);
             const allProps = [...customPropsConfig.firstRow, ...customPropsConfig.secondRow]
+                .filter(config => visibleSet.has(String(config?.attrKey || '').trim()))
                 .map(config => renderPropElement(config, currentProps[config.attrKey]));
-            if (isAiFeatureEnabled()) {
-                allProps.push(`<button class="sy-custom-props-floatbar__action" data-action="ai-title" title="AI 优化任务名称"><span class="qb-icon">✨</span></button>`);
+            if (isAiFeatureEnabled() && visibleSet.has('action-ai-title')) {
+                allProps.push(`<button class="sy-custom-props-floatbar__action" data-action="ai-title"${buildTooltipAttrs('AI 优化任务名称')}><span class="qb-icon">${renderPhosphorBoldIcon('sparkle')}</span></button>`);
             }
-            allProps.push(`<button class="sy-custom-props-floatbar__action" data-action="reminder" title="添加提醒">⏰</button>`);
-            allProps.push(`<button class="sy-custom-props-floatbar__action" data-action="more" title="更多">⋯</button>`);
+            if (visibleSet.has('action-reminder')) {
+                allProps.push(`<button class="sy-custom-props-floatbar__action" data-action="reminder"${buildTooltipAttrs('添加提醒')}><span class="qb-icon">${renderPhosphorBoldIcon('alarm-clock')}</span></button>`);
+            }
+            if (visibleSet.has('action-more')) {
+                allProps.push(`<button class="sy-custom-props-floatbar__action" data-action="more"${buildTooltipAttrs('更多')}><span class="qb-icon">${renderPhosphorBoldIcon('dots-three')}</span></button>`);
+            }
             rows.push(`<div class="sy-custom-props-floatbar__row">${allProps.join('')}</div>`);
 
             floatBar.innerHTML = rows.join('');
@@ -1229,18 +1366,19 @@
 
         // 渲染单个属性元素
         function renderPropElement(config, value) {
-            const escapedName = String(config.name).replace(/"/g, '&quot;');
-            const escapedValue = String(value ?? '').replace(/"/g, '&quot;');
+            const escapedName = esc(String(config.name || ''));
+            const escapedValue = esc(String(value ?? ''));
+            const attrKey = String(config.attrKey || '').trim();
 
             if (config.type === 'select') {
-                if (config.attrKey === 'custom-priority') {
+                if (attrKey === 'custom-priority') {
                     return `
                         <span class="sy-custom-props-floatbar__prop is-priority-prop"
-                              data-attr="${config.attrKey}"
+                              data-attr="${esc(attrKey)}"
                               data-type="${config.type}"
                               data-name="${escapedName}"
                               data-value="${escapedValue}"
-                              title="${escapedName}">
+                              ${buildTooltipAttrs(config.name || '')}>
                             ${renderPriorityChip(value, 'prop')}
                         </span>
                     `;
@@ -1253,50 +1391,45 @@
                 const color = statusInfo.color;
                 return `
                     <span class="sy-custom-props-floatbar__prop"
-                          data-attr="${config.attrKey}"
+                          data-attr="${esc(attrKey)}"
                           data-type="${config.type}"
                           data-name="${escapedName}"
                           data-value="${escapedValue}"
-                          title="${escapedName}"
+                          ${buildTooltipAttrs(config.name || '')}
                           style="background: ${bgColor}; border-color: ${color}; color: ${color};">
                         <span class="sy-custom-props-floatbar__prop-value">${displayText}</span>
                     </span>
                 `;
             } else if (config.type === 'date') {
-                // 日期类型属性
-                const displayText = value ? formatDate(value) : '🗓️日期';
-                const isEmpty = !value;
-                const style = isEmpty ? 'opacity: 0.6;' : '';
-
-                return `
-                    <span class="sy-custom-props-floatbar__prop"
-                          data-attr="${config.attrKey}"
-                          data-type="${config.type}"
-                          data-name="${escapedName}"
-                          data-value="${escapedValue}"
-                          title="${escapedName}"
-                          style="${style}">
-                        <span class="sy-custom-props-floatbar__prop-value">${displayText}</span>
-                    </span>
-                `;
+                return renderFloatbarCoreLikeProp(config, value);
             } else {
                 // 文本类型属性（时长、备注）
-                const displayText = value || escapedName;
-                const isEmpty = !value;
-                const style = isEmpty ? 'opacity: 0.6;' : '';
-                const truncatedValue = String(displayText).length > 15
-                    ? String(displayText).substring(0, 15) + '...'
-                    : displayText;
-
-                return `
-                    <span class="sy-custom-props-floatbar__prop"
-                          data-attr="${config.attrKey}"
+                if (attrKey === 'custom-duration') {
+                    return renderFloatbarCoreLikeProp(config, value);
+                }
+                if (attrKey === 'custom-remark') {
+                    return `
+                    <span class="sy-custom-props-floatbar__prop sy-custom-props-floatbar__prop--icon-only"
+                          data-attr="${esc(attrKey)}"
                           data-type="${config.type}"
                           data-name="${escapedName}"
                           data-value="${escapedValue}"
-                          title="${escapedName}"
+                          ${buildTooltipAttrs(config.name || '')}
+                          style="">
+                        <span class="sy-custom-props-floatbar__prop-icon">${renderPhosphorBoldIcon('note-pencil', 14)}</span>
+                    </span>
+                `;
+                }
+                const style = value ? '' : 'opacity: 0.6;';
+                return `
+                    <span class="sy-custom-props-floatbar__prop sy-custom-props-floatbar__prop--icon-only"
+                          data-attr="${esc(attrKey)}"
+                          data-type="${config.type}"
+                          data-name="${escapedName}"
+                          data-value="${escapedValue}"
+                          ${buildTooltipAttrs(config.name || '')}
                           style="${style}">
-                        <span class="sy-custom-props-floatbar__prop-value">${truncatedValue}</span>
+                        <span class="sy-custom-props-floatbar__prop-icon">${renderPhosphorBoldIcon(getFloatbarCoreIconName(attrKey), 14)}</span>
                     </span>
                 `;
             }
@@ -2850,6 +2983,10 @@
                     }
                 } else if (e.key === 'tm_enable_quickbar_inline_meta' || e.key === 'tm_quickbar_inline_fields' || e.key === 'tm_quickbar_inline_show_on_mobile') {
                     refreshInlineMetaMode(true);
+                } else if (e.key === 'tm_quickbar_visible_items') {
+                    try {
+                        if (floatBar && floatBar.style.display !== 'none') renderFloatBar();
+                    } catch (err) {}
                 } else if (isInlineMetaScopeStorageKey(e.key)) {
                     clearInlineMetaScopeDocCache();
                     refreshInlineMetaMode(true);
@@ -2867,6 +3004,14 @@
         globalThis.__taskHorizonQuickbarRefreshInline = () => {
             try { refreshInlineMetaMode(true); } catch (e) {}
         };
+        globalThis.__taskHorizonQuickbarRefresh = () => {
+            try {
+                if (floatBar && floatBar.style.display !== 'none') {
+                    renderFloatBar();
+                    updatePosition();
+                }
+            } catch (e) {}
+        };
 
         globalThis.__taskHorizonQuickbarCleanup = () => {
             quickbarDisposed = true;
@@ -2880,6 +3025,7 @@
             blockMenuObserver = null;
             try { delete globalThis.__taskHorizonQuickbarToggle; } catch (e) {}
             try { delete globalThis.__taskHorizonQuickbarRefreshInline; } catch (e) {}
+            try { delete globalThis.__taskHorizonQuickbarRefresh; } catch (e) {}
             try { delete globalThis.__taskHorizonQuickbarCleanup; } catch (e) {}
             try { delete globalThis.__taskHorizonQuickbarLoaded; } catch (e) {}
         };

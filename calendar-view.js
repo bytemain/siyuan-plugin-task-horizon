@@ -1427,9 +1427,7 @@
     function syncSideDayLayout(rootEl, calendar, settings) {
         if (!(rootEl instanceof HTMLElement)) return false;
         const nextSettings = settings || getSettings();
-        const contentHeight = getCalendarTimeGridContentHeight(nextSettings);
-        try { calendar?.setOption?.('height', 'auto'); } catch (e) {}
-        try { calendar?.setOption?.('contentHeight', contentHeight); } catch (e) {}
+        try { calendar?.setOption?.('height', 'parent'); } catch (e) {}
         try { applyTimeAxisColumnLayout(rootEl, 40); } catch (e) {}
         try { forceSideDaySlotHeight(rootEl, nextSettings); } catch (e) {}
         try { calendar?.updateSize?.(); } catch (e) {}
@@ -1706,6 +1704,7 @@
             lastViewType: String(s.calendarLastViewType || '').trim(),
             lastDate: String(s.calendarLastDate || '').trim(),
             sidebarWidth: Number(s.calendarSidebarWidth) || 280,
+            collapseDesktopSidebarDefault: !!s.calendarSidebarCollapsedDesktopDefault,
             collapseCalendars: !!s.calendarSidebarCollapseCalendars,
             collapseDocGroups: !!s.calendarSidebarCollapseDocGroups,
             collapseTomato: !!s.calendarSidebarCollapseTomato,
@@ -5638,12 +5637,12 @@
             timeZone: 'local',
             initialView: 'timeGridDay',
             initialDate,
-            height: 'auto',
-            contentHeight: getSideDayContentHeight(settings),
-            expandRows: false,
+            height: 'parent',
+            expandRows: true,
             firstDay: Number(settings.firstDay) === 0 ? 0 : 1,
             headerToolbar: false,
             dayHeaders: false,
+            stickyHeaderDates: true,
             nowIndicator: true,
             editable: true,
             eventStartEditable: true,
@@ -8501,7 +8500,7 @@
         renderTaskPage(wrap, s);
         setSidePage(wrap, state.sidePage);
         if (isMobileDevice || isDockHost) setCalendarSidebarOpen(wrap, false);
-        else setCalendarSidebarOpen(wrap, true);
+        else setCalendarSidebarOpen(wrap, !s.collapseDesktopSidebarDefault);
         bindSidebarResize(wrap);
         let calendar = null;
         let mainCalendarEventsPerfTrace = null;
@@ -10000,6 +9999,10 @@
                     </select>
                 </div>
                 <div class="tm-calendar-settings-row">
+                    <div class="tm-calendar-settings-label">默认折叠桌面端日历左侧侧边栏</div>
+                    <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarSidebarCollapsedDesktopDefault" ${s.collapseDesktopSidebarDefault ? 'checked' : ''}>
+                </div>
+                <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">显示起始时间</div>
                     <select class="tm-calendar-settings-select" data-tm-cal-setting="calendarVisibleStartTime">${visibleStartOptions}</select>
                 </div>
@@ -10145,6 +10148,13 @@
                     try { applyCalendarVisibleSlotRange(state.sideDay?.calendar, settings); } catch (e2) {}
                     try { state.calendar?.updateSize?.(); } catch (e2) {}
                     try { syncSideDayLayout(state.sideDay?.rootEl, state.sideDay?.calendar, settings); } catch (e2) {}
+                } else if (key === 'calendarSidebarCollapsedDesktopDefault') {
+                    try {
+                        const root = state.wrapEl;
+                        if (root instanceof HTMLElement && !root.classList.contains('tm-calendar-wrap--mobile') && state.isDockHost !== true) {
+                            setCalendarSidebarOpen(root, !store.data.calendarSidebarCollapsedDesktopDefault, state.sidePage || 'calendar');
+                        }
+                    } catch (e2) {}
                 } else if (key === 'calendarHourSlotHeightMode') {
                     const settings = getSettings();
                     try { refreshCalendarSlotHeight(settings); } catch (e2) {}
