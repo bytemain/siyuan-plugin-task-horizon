@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.0.7
+// @version      2.0.8
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -6310,6 +6310,11 @@
             flex-direction: column;
         }
 
+        .tm-modal:not(.tm-modal--mobile) .tm-checklist-side {
+            border-left: none;
+            background: var(--tm-bg-color);
+        }
+
         .tm-checklist-resizer {
             flex: 0 0 0;
             width: 0;
@@ -6354,6 +6359,10 @@
             padding: 14px 16px;
         }
 
+        .tm-modal:not(.tm-modal--mobile) .tm-checklist-side .tm-checklist-detail-wrap {
+            padding: 0;
+        }
+
         .tm-checklist-empty-detail {
             height: 100%;
             min-height: 260px;
@@ -6375,6 +6384,14 @@
             box-shadow: var(--tm-shadow);
             padding: 16px;
             color: var(--tm-text-color);
+        }
+
+        .tm-modal:not(.tm-modal--mobile) .tm-checklist-side .tm-checklist-detail-card {
+            min-height: 100%;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
         }
 
         .tm-checklist-side .tm-checklist-detail-head {
@@ -23978,8 +23995,9 @@ async function __tmRefreshAfterWake(reason) {
         if (globalNewTaskDocId && globalNewTaskDocId !== '__dailyNote__') {
             items.push({
                 id: globalNewTaskDocId,
-                label: `📥 ${__tmGetDocDisplayName(globalNewTaskDocId, '未命名文档')}`,
+                label: __tmGetDocDisplayName(globalNewTaskDocId, '未命名文档'),
                 kind: 'doc',
+                iconHtml: __tmRenderDocIcon(globalNewTaskDocId, { fallbackText: '📥', size: 14 }),
                 active: activeDocId === globalNewTaskDocId,
             });
         }
@@ -23987,8 +24005,9 @@ async function __tmRefreshAfterWake(reason) {
         if (currentGroupId !== 'all' && Array.isArray(state.otherBlocks) && state.otherBlocks.length > 0) {
             items.push({
                 id: __TM_OTHER_BLOCK_TAB_ID,
-                label: `🧩 ${__TM_OTHER_BLOCK_TAB_NAME}`,
+                label: __TM_OTHER_BLOCK_TAB_NAME,
                 kind: 'other',
+                iconHtml: '<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;min-width:14px;line-height:1;">🧩</span>',
                 active: __tmIsOtherBlockTabId(activeDocId),
             });
         }
@@ -24000,6 +24019,7 @@ async function __tmRefreshAfterWake(reason) {
                 id,
                 label: __tmGetDocDisplayName(doc, String(doc?.name || '').trim() || '未命名文档'),
                 kind: 'doc',
+                iconHtml: __tmRenderDocIcon(doc, { size: 14 }),
                 active: activeDocId === id,
             });
         });
@@ -24649,8 +24669,9 @@ async function __tmRefreshAfterWake(reason) {
             `;
 
             const label = document.createElement('span');
-            label.style.cssText = 'min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
-            label.textContent = String(item?.label || '').trim() || '未命名页签';
+            label.style.cssText = 'display:inline-flex; align-items:center; gap:8px; min-width:0; flex:1; overflow:hidden;';
+            const iconHtml = String(item?.iconHtml || '').trim();
+            label.innerHTML = `${iconHtml ? iconHtml : ''}<span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(String(item?.label || '').trim() || '未命名页签')}</span>`;
             btn.appendChild(label);
 
             if (item?.active) {
@@ -25694,15 +25715,8 @@ async function __tmRefreshAfterWake(reason) {
     window.tmHandleManagerIconClick = async function(ev) {
         try { ev?.stopPropagation?.(); } catch (e) {}
         try { ev?.preventDefault?.(); } catch (e) {}
-        if (globalThis.__taskHorizonPluginIsMobile) return;
         try {
-            if (String(state.viewMode || '').trim() === 'calendar' && typeof window.tmCalendarToggleSidebar === 'function') {
-                window.tmCalendarToggleSidebar();
-                return;
-            }
-            if (typeof window.tmToggleCalendarSideDock === 'function') {
-                await window.tmToggleCalendarSideDock();
-            }
+            window.tmShowAllDocTabMenu?.(ev);
         } catch (e) {}
     };
 
@@ -27951,6 +27965,7 @@ async function __tmRefreshAfterWake(reason) {
                             : Math.max(1, Math.floor((availableWidth + streamGap) / (streamMinCardWidth + streamGap)))
                     )
                 );
+                const showMobileStreamDocCount = !(isMobile && colCount >= 2);
                 const cols = Array.from({ length: colCount }, () => ({ score: 0, items: [] }));
                 orderedVisibleDocIds.forEach((docId, idx) => {
                     const docTasks = (streamByDoc.get(docId) || []).slice().sort(__tmCompareTasksByDocFlow);
@@ -28055,7 +28070,7 @@ async function __tmRefreshAfterWake(reason) {
                                 <div class="tm-whiteboard-stream-doc-meta">
                                     ${__tmRenderDocIcon(docId, { fallbackText: '📄', className: 'tm-whiteboard-stream-doc-icon', size: 14 })}
                                     <span class="tm-whiteboard-stream-doc-title" onclick="event.preventDefault(); event.stopPropagation(); tmOpenDocById('${escSq(docId)}');" title="打开文档">${esc(docNameById.get(docId) || '未知文档')}</span>
-                                    <span class="tm-badge tm-badge--count">${docTasks.length}</span>
+                                    ${showMobileStreamDocCount ? `<span class="tm-badge tm-badge--count">${docTasks.length}</span>` : ''}
                                 </div>
                                 <div class="tm-whiteboard-stream-doc-actions" onclick="event.stopPropagation()">
                                     <button class="tm-group-create-btn tm-whiteboard-stream-doc-add-btn"
@@ -28785,7 +28800,7 @@ async function __tmRefreshAfterWake(reason) {
                         <div class="tm-topbar-row tm-topbar-row--main" style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;justify-content:space-between;min-width:0;">
                         <div class="tm-topbar-row tm-topbar-row--brand" style="display:flex;align-items:center;gap:10px;min-width:0;">
                             <div class="tm-title" style="font-size: 16px; font-weight: 700; white-space: nowrap; display:inline-flex; align-items:center; gap:4px;">
-                                <span onclick="tmHandleManagerIconClick(event)" style="cursor:${isMobile ? 'default' : 'pointer'};display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;line-height:0;">${__tmRenderTaskHorizonTopbarIcon(16)}</span>
+                                <span onclick="tmHandleManagerIconClick(event)" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;line-height:0;">${__tmRenderTaskHorizonTopbarIcon(16)}</span>
                                 <span onclick="tmHandleManagerTitleClick(event)" style="cursor:pointer;">任务管理器</span>
                             </div>
                             <button class="tm-btn tm-btn-info tm-topbar-add-btn bc-btn bc-btn--sm" onclick="tmAdd()" aria-label="新建任务" data-tm-floating-tooltip-label="新建任务" data-tm-tooltip-side="bottom" data-tm-tooltip-align="center" style="padding: 0; width: 30px; height: 30px; min-width: 30px; min-height: 30px; display: inline-flex; align-items: center; justify-content: center;">${__tmRenderLucideIcon('plus')}</button>
@@ -40560,11 +40575,15 @@ async function __tmRefreshAfterWake(reason) {
             if (!nextId) return;
             const nextTask = state.flatTasks?.[nextId];
             if (!nextTask) return;
+            if (embedded && !root.isConnected) return;
             try { root.__tmTaskDetailTask = nextTask; } catch (e) {}
             if (embedded && (String(state.viewMode || '').trim() === 'checklist' || String(state.viewMode || '').trim() === 'whiteboard')) {
+                const currentDetailId = String(state.detailTaskId || '').trim();
                 state.detailTaskId = nextId;
-                state.checklistDetailDismissed = false;
-                state.checklistDetailSheetOpen = true;
+                if (nextId !== currentDetailId) {
+                    state.checklistDetailDismissed = false;
+                    state.checklistDetailSheetOpen = true;
+                }
                 if (!__tmRefreshChecklistSelectionInPlace(state.modal)) render();
                 return;
             }
@@ -42190,7 +42209,7 @@ async function __tmRefreshAfterWake(reason) {
             const pinnedCollapsed = state.collapsedGroups?.has(pinnedGroupKey);
             const pinnedToggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${pinnedGroupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
             const pinnedDurationSum = __tmCalcGroupDurationText(pinnedRoots);
-            allRows.push(`<tr class="tm-group-row" data-group-key="${pinnedGroupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${pinnedGroupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${pinnedToggle}<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;min-width:16px;color:var(--tm-warning-color);">📌</span><span class="tm-group-label" style="color:var(--tm-warning-color);">置顶</span><span class="tm-badge tm-badge--count">${pinnedRoots.length}</span>${pinnedDurationSum ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">📊</span>${esc(pinnedDurationSum)}</span>` : ''}</div></td></tr>`);
+            allRows.push(`<tr class="tm-group-row" data-group-key="${pinnedGroupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${pinnedGroupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${pinnedToggle}<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;min-width:16px;color:var(--tm-warning-color);">📌</span><span class="tm-group-label" style="color:var(--tm-warning-color);">置顶</span><span class="tm-badge tm-badge--count">${pinnedRoots.length}</span>${pinnedDurationSum ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">${__tmRenderBadgeIcon('chart-column')}</span>${esc(pinnedDurationSum)}</span>` : ''}</div></td></tr>`);
             if (!pinnedCollapsed) {
                 currentGroupBg = '';
                 pinnedRoots.forEach(task => {
@@ -42353,7 +42372,7 @@ async function __tmRefreshAfterWake(reason) {
                 };
                 const durationSum = calculateDuration(group.items);
                 
-                allRows.push(`<tr class="tm-group-row" data-group-key="${groupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:${color};"><div class="tm-group-sticky">${toggle}${esc(group.name)}<span class="tm-badge tm-badge--count">${group.items.length}</span>${durationSum ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">📊</span>${esc(durationSum)}</span>` : ''}</div></td></tr>`);
+                allRows.push(`<tr class="tm-group-row" data-group-key="${groupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:${color};"><div class="tm-group-sticky">${toggle}${esc(group.name)}<span class="tm-badge tm-badge--count">${group.items.length}</span>${durationSum ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">${__tmRenderBadgeIcon('chart-column')}</span>${esc(durationSum)}</span>` : ''}</div></td></tr>`);
                 
                 // 如果未折叠，渲染任务
                 if (!isCollapsed) {
@@ -42540,7 +42559,7 @@ async function __tmRefreshAfterWake(reason) {
                 // 计算该分组下所有任务的时长总和
                 const durationSum = calculateGroupDuration(group.items);
                 
-                allRows.push(`<tr class="tm-group-row" data-group-key="${esc(group.key)}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${group.key}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">${esc(group.label)}</span><span class="tm-badge tm-badge--count">${group.items.length}</span>${durationSum ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">📊</span>${esc(durationSum)}</span>` : ''}</div></td></tr>`);
+                allRows.push(`<tr class="tm-group-row" data-group-key="${esc(group.key)}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${group.key}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">${esc(group.label)}</span><span class="tm-badge tm-badge--count">${group.items.length}</span>${durationSum ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">${__tmRenderBadgeIcon('chart-column')}</span>${esc(durationSum)}</span>` : ''}</div></td></tr>`);
 
                 if (!isCollapsed) {
                     currentGroupBg = enableGroupBg
