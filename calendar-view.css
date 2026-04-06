@@ -73,7 +73,7 @@
     min-width: 220px;
     max-width: 560px;
     border-right: 1px solid var(--tm-border-color);
-    background: var(--tm-section-bg);
+    background: var(--tm-sidebar-bg, var(--tm-section-bg));
     transition: width 0.2s ease, min-width 0.2s ease, max-width 0.2s ease, border-color 0.2s ease, opacity 0.16s ease;
 }
 
@@ -1061,7 +1061,7 @@
 .tm-calendar-host.tm-cal-allday-collapsible .fc .tm-cal-allday-toggle:focus-visible,
 #tmCalendarSideDockTimeline.tm-cal-allday-collapsible .fc .tm-cal-allday-toggle:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--b3-theme-primary, #0078d4) 28%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 28%, transparent);
 }
 
 .tm-calendar-host.tm-cal-allday-collapsible .fc .tm-cal-allday-toggle-icon,
@@ -1113,7 +1113,7 @@
 .tm-calendar-host.tm-cal-allday-collapsible .fc .tm-cal-allday-summary:focus-visible,
 #tmCalendarSideDockTimeline.tm-cal-allday-collapsible .fc .tm-cal-allday-summary:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--b3-theme-primary, #0078d4) 24%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 24%, transparent);
 }
 
 .tm-calendar-host.tm-cal-allday-collapsed .fc .fc-timegrid-all-day,
@@ -1318,14 +1318,14 @@
     --tm-calendar-half-hour-slot-height: 29px;
     --tm-calendar-now-indicator-dot-size: 10px;
     --tm-calendar-now-indicator-line-width: 2px;
-    --tm-cal-allday-summary-bg: color-mix(in srgb, #eef1f4 76%, var(--tm-bg-color) 24%);
-    --tm-cal-allday-summary-hover-bg: color-mix(in srgb, #e4e8ec 82%, var(--tm-bg-color) 18%);
+    --tm-cal-allday-summary-bg: color-mix(in srgb, var(--tm-section-bg) 82%, var(--tm-bg-color) 18%);
+    --tm-cal-allday-summary-hover-bg: color-mix(in srgb, var(--tm-section-bg) 64%, var(--tm-bg-color) 36%);
     --fc-slot-min-height: 29px;
     --fc-timegrid-slot-min-height: 29px;
     --fc-page-bg-color: var(--tm-bg-color);
     --fc-border-color: var(--tm-calendar-grid-border-color, var(--tm-table-border-color, rgba(0,0,0,0.14)));
-    --fc-today-bg-color: rgba(0,120,212,0.08);
-    --fc-now-indicator-color: #0078d4;
+    --fc-today-bg-color: color-mix(in srgb, var(--tm-primary-color) 8%, var(--tm-bg-color));
+    --fc-now-indicator-color: var(--tm-primary-color);
     --fc-button-text-color: #323130;
     --fc-button-bg-color: #f3f2f1;
     --fc-button-border-color: rgba(0,0,0,0.12);
@@ -1337,8 +1337,8 @@
 
 [data-theme-mode="dark"] .tm-calendar-wrap,
 [data-theme-mode="dark"] .tm-calendar-host {
-    --tm-cal-allday-summary-bg: color-mix(in srgb, #2b2f34 84%, var(--tm-bg-color) 16%);
-    --tm-cal-allday-summary-hover-bg: color-mix(in srgb, #353a40 86%, var(--tm-bg-color) 14%);
+    --tm-cal-allday-summary-bg: color-mix(in srgb, var(--tm-section-bg) 84%, var(--tm-bg-color) 16%);
+    --tm-cal-allday-summary-hover-bg: color-mix(in srgb, var(--tm-section-bg) 66%, var(--tm-bg-color) 34%);
     --fc-border-color: var(--tm-calendar-grid-border-color, var(--tm-table-border-color, rgba(255,255,255,0.14)));
 }
 
@@ -1346,14 +1346,14 @@
     --tm-calendar-half-hour-slot-height: 29px;
     --tm-calendar-now-indicator-dot-size: 10px;
     --tm-calendar-now-indicator-line-width: 2px;
-    --tm-cal-allday-summary-bg: color-mix(in srgb, #eef1f4 76%, var(--tm-bg-color) 24%);
-    --tm-cal-allday-summary-hover-bg: color-mix(in srgb, #e4e8ec 82%, var(--tm-bg-color) 18%);
+    --tm-cal-allday-summary-bg: color-mix(in srgb, var(--tm-section-bg) 82%, var(--tm-bg-color) 18%);
+    --tm-cal-allday-summary-hover-bg: color-mix(in srgb, var(--tm-section-bg) 64%, var(--tm-bg-color) 36%);
     --fc-slot-min-height: 29px;
     --fc-timegrid-slot-min-height: 29px;
     --fc-page-bg-color: var(--tm-bg-color);
     --fc-border-color: var(--tm-calendar-grid-border-color, var(--tm-table-border-color, rgba(0,0,0,0.14)));
-    --fc-today-bg-color: rgba(0,120,212,0.08);
-    --fc-now-indicator-color: #0078d4;
+    --fc-today-bg-color: color-mix(in srgb, var(--tm-primary-color) 8%, var(--tm-bg-color));
+    --fc-now-indicator-color: var(--tm-primary-color);
     position: relative;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -1379,8 +1379,8 @@
 }
 
 [data-theme-mode="dark"] #tmCalendarSideDockTimeline {
-    --tm-cal-allday-summary-bg: color-mix(in srgb, #2b2f34 84%, var(--tm-bg-color) 16%);
-    --tm-cal-allday-summary-hover-bg: color-mix(in srgb, #353a40 86%, var(--tm-bg-color) 14%);
+    --tm-cal-allday-summary-bg: color-mix(in srgb, var(--tm-section-bg) 84%, var(--tm-bg-color) 16%);
+    --tm-cal-allday-summary-hover-bg: color-mix(in srgb, var(--tm-section-bg) 66%, var(--tm-bg-color) 34%);
     --fc-border-color: var(--tm-calendar-grid-border-color, var(--tm-table-border-color, rgba(255,255,255,0.14)));
 }
 
@@ -1969,11 +1969,11 @@
 #tmCalendarSideDockTimeline .fc .fc-event[data-tm-cal-source="schedule"],
 .tm-calendar-host .fc .fc-event.tm-cal-schedule-event,
 #tmCalendarSideDockTimeline .fc .fc-event.tm-cal-schedule-event {
-    --tm-cal-schedule-accent: #0078d4;
-    --tm-cal-schedule-text: #222;
-    --tm-cal-schedule-bg: rgba(0, 120, 212, 0.36);
-    --tm-cal-schedule-border: rgba(0, 120, 212, 0.42);
-    --tm-cal-schedule-hover-bg: rgba(0, 120, 212, 0.44);
+    --tm-cal-schedule-accent: var(--tm-primary-color);
+    --tm-cal-schedule-text: var(--tm-text-color);
+    --tm-cal-schedule-bg: color-mix(in srgb, var(--tm-cal-schedule-accent) 36%, transparent);
+    --tm-cal-schedule-border: color-mix(in srgb, var(--tm-cal-schedule-accent) 42%, transparent);
+    --tm-cal-schedule-hover-bg: color-mix(in srgb, var(--tm-cal-schedule-accent) 44%, transparent);
     --fc-event-border-color: transparent;
     border: 0 !important;
     border-color: transparent !important;
@@ -1997,10 +1997,10 @@
 
 .tm-calendar-host .fc .fc-timegrid-event.fc-event-mirror,
 #tmCalendarSideDockTimeline .fc .fc-timegrid-event.fc-event-mirror {
-    --tm-cal-selection-accent: #0078d4;
-    --tm-cal-selection-text: #222;
-    --tm-cal-selection-bg: rgba(0, 120, 212, 0.36);
-    --tm-cal-selection-border: rgba(0, 120, 212, 0.42);
+    --tm-cal-selection-accent: var(--tm-primary-color);
+    --tm-cal-selection-text: var(--tm-text-color);
+    --tm-cal-selection-bg: color-mix(in srgb, var(--tm-cal-selection-accent) 36%, transparent);
+    --tm-cal-selection-border: color-mix(in srgb, var(--tm-cal-selection-accent) 42%, transparent);
     border: 1px solid var(--tm-cal-selection-border) !important;
     border-left: 4px solid var(--tm-cal-selection-accent) !important;
     border-radius: 4px !important;
@@ -2024,9 +2024,9 @@
 
 .tm-calendar-host .fc .fc-highlight,
 #tmCalendarSideDockTimeline .fc .fc-highlight {
-    --tm-cal-selection-accent: #0078d4;
-    --tm-cal-selection-bg: rgba(0, 120, 212, 0.22);
-    --tm-cal-selection-border: rgba(0, 120, 212, 0.32);
+    --tm-cal-selection-accent: var(--tm-primary-color);
+    --tm-cal-selection-bg: color-mix(in srgb, var(--tm-cal-selection-accent) 22%, transparent);
+    --tm-cal-selection-border: color-mix(in srgb, var(--tm-cal-selection-accent) 32%, transparent);
     background: var(--tm-cal-selection-bg) !important;
     border: 1px solid var(--tm-cal-selection-border) !important;
     border-left: 4px solid var(--tm-cal-selection-accent) !important;
@@ -2044,12 +2044,12 @@
 #tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-event.tm-cal-allday-soft-event,
 .tm-calendar-host .fc .fc-popover .fc-event.tm-cal-allday-soft-event,
 #tmCalendarSideDockTimeline .fc .fc-popover .fc-event.tm-cal-allday-soft-event {
-    --tm-cal-schedule-text: #222;
-    --tm-cal-schedule-bg: rgba(0, 120, 212, 0.36);
-    --tm-cal-schedule-border: rgba(0, 120, 212, 0.42);
+    --tm-cal-schedule-text: var(--tm-text-color);
+    --tm-cal-schedule-bg: color-mix(in srgb, var(--tm-cal-schedule-accent, var(--tm-primary-color)) 36%, transparent);
+    --tm-cal-schedule-border: color-mix(in srgb, var(--tm-cal-schedule-accent, var(--tm-primary-color)) 42%, transparent);
     border: 0 !important;
     outline: none !important;
-    border-left: 3px solid var(--tm-cal-schedule-accent, #0078d4) !important;
+    border-left: 3px solid var(--tm-cal-schedule-accent, var(--tm-primary-color)) !important;
     border-radius: 4px !important;
     background: var(--tm-cal-schedule-bg) !important;
     color: var(--tm-cal-schedule-text) !important;
@@ -2585,7 +2585,7 @@
 
 .tm-calendar-host .fc .tm-cal-task-event-check {
     --tm-cal-checkbox-size: 13px;
-    --tm-cal-checkbox-color: var(--tm-cal-schedule-accent, var(--tm-primary-color, var(--b3-theme-primary, #0078d4)));
+    --tm-cal-checkbox-color: var(--tm-cal-schedule-accent, var(--tm-primary-color));
     --tm-cal-checkbox-mark-left: 3px;
     --tm-cal-checkbox-mark-top: 0px;
     --tm-cal-checkbox-mark-width: 3px;
@@ -2810,7 +2810,7 @@
 
 #tmCalendarSideDockTimeline .fc .tm-cal-task-event-check {
     --tm-cal-checkbox-size: 13px;
-    --tm-cal-checkbox-color: var(--tm-cal-schedule-accent, var(--tm-primary-color, var(--b3-theme-primary, #0078d4)));
+    --tm-cal-checkbox-color: var(--tm-cal-schedule-accent, var(--tm-primary-color));
     --tm-cal-checkbox-mark-left: 3px;
     --tm-cal-checkbox-mark-top: 0px;
     --tm-cal-checkbox-mark-width: 3px;

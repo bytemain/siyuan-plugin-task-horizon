@@ -13,6 +13,7 @@ try {
     $excludePaths = @(
         '.git',
         '.gitignore',
+        '.impeccable.md',
         '.github',
         '.history',
         '.idea',

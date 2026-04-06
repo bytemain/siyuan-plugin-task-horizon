@@ -494,6 +494,16 @@
             .sy-custom-props-floatbar__prop--remark {
                 gap: 5px;
             }
+            .sy-custom-props-floatbar__prop--core .sy-custom-props-floatbar__prop-value {
+                display: inline-block;
+                max-width: 132px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .sy-custom-props-floatbar__prop--remark .sy-custom-props-floatbar__prop-value {
+                max-width: 180px;
+            }
             .sy-custom-props-floatbar__prop--icon-only {
                 width: 26px;
                 padding: 0;
@@ -1162,18 +1172,38 @@
             return '';
         }
 
+        function getFloatbarCoreDisplayValue(config, value) {
+            const attrKey = String(config?.attrKey || '').trim();
+            const rawValue = String(value ?? '').trim();
+            if (!rawValue) return '';
+            if (config?.type === 'date') return formatDate(rawValue);
+            if (attrKey === 'custom-remark') return truncateInlineValue(rawValue, 18);
+            if (attrKey === 'custom-duration') return truncateInlineValue(rawValue, 12);
+            return truncateInlineValue(rawValue, 15);
+        }
+
         function renderFloatbarCoreLikeProp(config, value, opts = {}) {
             const attrKey = String(config?.attrKey || '').trim();
-            const className = ['sy-custom-props-floatbar__prop', 'sy-custom-props-floatbar__prop--icon-only', 'sy-custom-props-floatbar__prop--core', String(opts.extraClass || '').trim()].filter(Boolean).join(' ');
+            const rawValue = String(value ?? '').trim();
+            const displayValue = String(opts.displayValue ?? getFloatbarCoreDisplayValue(config, rawValue));
+            const hasValue = !!displayValue;
+            const tooltipText = rawValue ? `${String(config?.name || '').trim()}: ${rawValue}` : (config?.name || '');
+            const className = [
+                'sy-custom-props-floatbar__prop',
+                'sy-custom-props-floatbar__prop--core',
+                hasValue ? '' : 'sy-custom-props-floatbar__prop--icon-only',
+                String(opts.extraClass || '').trim()
+            ].filter(Boolean).join(' ');
+            const style = hasValue ? '' : 'opacity: 0.6;';
             return `
                     <span class="${className}"
                           data-attr="${esc(attrKey)}"
                           data-type="${esc(String(config?.type || ''))}"
                           data-name="${esc(String(config?.name || ''))}"
                           data-value="${esc(String(value ?? ''))}"
-                          ${buildTooltipAttrs(config?.name || '')}
-                          style="">
-                        <span class="sy-custom-props-floatbar__prop-icon">${renderPhosphorBoldIcon(getFloatbarCoreIconName(attrKey), 14)}</span>
+                          ${buildTooltipAttrs(tooltipText)}
+                          style="${style}">
+                        <span class="sy-custom-props-floatbar__prop-icon">${renderPhosphorBoldIcon(getFloatbarCoreIconName(attrKey), 14)}</span>${hasValue ? `<span class="sy-custom-props-floatbar__prop-value">${esc(displayValue)}</span>` : ''}
                     </span>
                 `;
         }
@@ -1408,17 +1438,7 @@
                     return renderFloatbarCoreLikeProp(config, value);
                 }
                 if (attrKey === 'custom-remark') {
-                    return `
-                    <span class="sy-custom-props-floatbar__prop sy-custom-props-floatbar__prop--icon-only"
-                          data-attr="${esc(attrKey)}"
-                          data-type="${config.type}"
-                          data-name="${escapedName}"
-                          data-value="${escapedValue}"
-                          ${buildTooltipAttrs(config.name || '')}
-                          style="">
-                        <span class="sy-custom-props-floatbar__prop-icon">${renderPhosphorBoldIcon('note-pencil', 14)}</span>
-                    </span>
-                `;
+                    return renderFloatbarCoreLikeProp(config, value, { extraClass: 'sy-custom-props-floatbar__prop--remark' });
                 }
                 const style = value ? '' : 'opacity: 0.6;';
                 return `

@@ -39,7 +39,7 @@
     <div style="width:32px;height:32px;background:var(--b3-theme-secondary-lightest, rgba(243, 169, 47, 0.12));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">🎨</div>
     <div>
       <div style="font-size:10px;color:var(--b3-theme-on-surface);font-weight:700;">V1.5</div>
-      <div style="font-size:13px;color:var(--b3-theme-primary);font-weight:600;">功能介绍</div>
+      <div style="font-size:13px;color:var(--b3-theme-primary);font-weight:600;">视图介绍</div>
     </div>
   </a>
   
@@ -74,6 +74,18 @@
 </div>
 
 # 更新记录
+
+## 2.0.7更新内容
+- **新增：外观增加主题方案配置，预置四套主题，可以导入Tweakcn主题配置**
+- **新增：右击页签的“全部”按钮弹出页签下拉菜单，可展示页签栏所有文档**
+- **新增：文档页签支持设置和读取思源笔记文档的别名**
+- **新增：卡片流视图卡片右上角增加新建任务按钮**
+- 优化：文档图标同步思源笔记文档图标
+- 优化：卡片流和看板标题模式点击文档名可跳转至文档
+- 优化：文档页签菜单图标更换为Phosphor图标
+- 修复：影响其他插件页签弹出问题
+- 修复：时间轴视图折叠展开图标、文档二级标题分组图标样式
+- 修复：Quickbar不显示设置的日期、时长、备注内容问题
 
 ## 2.0.6更新内容
 - **新增：悬浮条显示图标设置，可以自定义哪些不显示**

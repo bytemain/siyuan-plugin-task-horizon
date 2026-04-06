@@ -94,12 +94,14 @@
         sidebarResizeCleanup: null,
         onVisibilityChange: null,
         calendarResizeObserver: null,
+        calendarResizeBox: null,
         mainLayoutRaf: null,
         mainLayoutWrap: null,
         mainLayoutHost: null,
         mainLayoutCalendar: null,
         mainLayoutNeedsUpdateSize: false,
         allDayCollapsed: false,
+        cnHolidaySignature: '',
         scheduleCache: {
             list: null,
             loadedAt: 0,
@@ -135,6 +137,7 @@
             calendar: null,
             dateKey: '',
             allDayCollapsed: false,
+            resizeBox: null,
             settingsStore: null,
             resolveTask: null,
             dragHost: null,
@@ -145,6 +148,78 @@
             popoverClickCapture: null,
         },
     };
+
+    const __tmCalendarDomPassCache = {
+        timeGridHeight: new WeakMap(),
+        timeAxis: new WeakMap(),
+        nowIndicator: new WeakMap(),
+        holidayDots: new WeakMap(),
+        lunarLabels: new WeakMap(),
+    };
+
+    function __tmCreateNodeListStamp(nodes) {
+        const list = Array.isArray(nodes) ? nodes : Array.from(nodes || []);
+        return {
+            count: list.length,
+            first: list.length ? list[0] : null,
+            last: list.length ? list[list.length - 1] : null,
+        };
+    }
+
+    function __tmSameNodeListStamp(a, b) {
+        return !!a && !!b
+            && a.count === b.count
+            && a.first === b.first
+            && a.last === b.last;
+    }
+
+    function __tmShouldSkipCalendarDomPass(cacheMap, rootEl, key, stamps) {
+        if (!(rootEl instanceof HTMLElement) || !cacheMap) return false;
+        const prev = cacheMap.get(rootEl);
+        if (!prev || prev.key !== key) return false;
+        const prevStamps = Array.isArray(prev.stamps) ? prev.stamps : [];
+        if (prevStamps.length !== stamps.length) return false;
+        for (let i = 0; i < stamps.length; i += 1) {
+            if (!__tmSameNodeListStamp(prevStamps[i], stamps[i])) return false;
+        }
+        return true;
+    }
+
+    function __tmRememberCalendarDomPass(cacheMap, rootEl, key, stamps) {
+        if (!(rootEl instanceof HTMLElement) || !cacheMap) return;
+        cacheMap.set(rootEl, { key, stamps });
+    }
+
+    function __tmApplyTimeGridHeightLayout(rootEl, settings) {
+        if (!(rootEl instanceof HTMLElement)) return false;
+        const nextSettings = settings || getSettings();
+        const slotHeight = getCalendarHalfHourSlotHeight(nextSettings);
+        const contentHeight = getCalendarTimeGridContentHeight(nextSettings);
+        const slotNodes = Array.from(rootEl.querySelectorAll('.fc-timegrid-slots tr, .fc-timegrid-slots td, .fc-timegrid-slot, .fc-timegrid-slot-lane, .fc-timegrid-slot-label, .fc-timegrid-slot-frame'));
+        const contentNodes = Array.from(rootEl.querySelectorAll('.fc-timegrid-body, .fc-timegrid-cols, .fc-timegrid-cols table, .fc-timegrid-slots, .fc-timegrid-slots table'));
+        const passKey = `${slotHeight}|${contentHeight}`;
+        const stamps = [
+            __tmCreateNodeListStamp(slotNodes),
+            __tmCreateNodeListStamp(contentNodes),
+        ];
+        try { applyCalendarSlotHeightStyle(rootEl, nextSettings); } catch (e) {}
+        if (__tmShouldSkipCalendarDomPass(__tmCalendarDomPassCache.timeGridHeight, rootEl, passKey, stamps)) return true;
+        for (const node of slotNodes) {
+            if (!(node instanceof HTMLElement)) continue;
+            try { node.style.setProperty('height', `${slotHeight}px`, 'important'); } catch (e) {}
+            try { node.style.setProperty('min-height', `${slotHeight}px`, 'important'); } catch (e) {}
+            try { node.style.setProperty('max-height', `${slotHeight}px`, 'important'); } catch (e) {}
+            try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
+        }
+        for (const node of contentNodes) {
+            if (!(node instanceof HTMLElement)) continue;
+            try { node.style.setProperty('height', `${contentHeight}px`, 'important'); } catch (e) {}
+            try { node.style.setProperty('min-height', `${contentHeight}px`, 'important'); } catch (e) {}
+            try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
+        }
+        __tmRememberCalendarDomPass(__tmCalendarDomPassCache.timeGridHeight, rootEl, passKey, stamps);
+        return true;
+    }
 
     function __tmPerfCreate(kind, meta = {}) {
         try {
@@ -674,7 +749,7 @@
 .tm-calendar-host .fc .fc-timegrid-now-indicator-line,
 #tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-line{border-top-width:2px !important;margin-top:-1px !important;overflow:visible !important;z-index:6 !important;}
 .tm-calendar-host .fc .fc-timegrid-now-indicator-line::before,
-#tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-line::before{content:"";position:absolute;left:0;top:50%;width:10px;height:10px;border-radius:999px;background:var(--fc-now-indicator-color, #0078d4);transform:translate(-50%, -50%);box-shadow:0 0 0 2px var(--fc-page-bg-color, #fff);}
+#tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-line::before{content:"";position:absolute;left:0;top:50%;width:10px;height:10px;border-radius:999px;background:var(--fc-now-indicator-color, var(--tm-primary-color));transform:translate(-50%, -50%);box-shadow:0 0 0 2px var(--fc-page-bg-color, #fff);}
 .tm-calendar-host .fc .fc-timegrid-now-indicator-arrow,
 #tmCalendarSideDockTimeline .fc .fc-timegrid-now-indicator-arrow{display:none !important;}
         `.trim();
@@ -847,7 +922,7 @@
     function applyScheduleEventColorVars(eventEl, color) {
         const el = eventEl instanceof Element ? eventEl : null;
         if (!el) return;
-        const accent = String(color || '').trim() || '#0078d4';
+        const accent = String(color || '').trim() || 'var(--tm-primary-color)';
         const rgb = parseColorToRgb(accent);
         const softBg = rgb ? toRgbaString(rgb, 0.36) : 'rgba(0, 120, 212, 0.36)';
         const softBorder = rgb ? toRgbaString(rgb, 0.42) : 'rgba(0, 120, 212, 0.42)';
@@ -880,7 +955,7 @@
     function applyAllDaySoftEventColorVars(eventEl, color) {
         const el = eventEl instanceof Element ? eventEl : null;
         if (!el) return;
-        const accent = String(color || '').trim() || '#0078d4';
+        const accent = String(color || '').trim() || 'var(--tm-primary-color)';
         const rgb = parseColorToRgb(accent);
         const textColor = isDarkThemeMode() ? 'rgba(255, 255, 255, 0.96)' : '#222';
         const softBg = rgb ? toRgbaString(rgb, 0.36) : 'rgba(0, 120, 212, 0.36)';
@@ -1199,46 +1274,7 @@
     }
 
     function applyMainCalendarSlotHeightLayout(rootEl, settings) {
-        if (!(rootEl instanceof HTMLElement)) return false;
-        const nextSettings = settings || getSettings();
-        const slotHeight = getCalendarHalfHourSlotHeight(nextSettings);
-        const contentHeight = getCalendarTimeGridContentHeight(nextSettings);
-        try { applyCalendarSlotHeightStyle(rootEl, nextSettings); } catch (e) {}
-        const slotSelectors = [
-            '.fc-timegrid-slots tr',
-            '.fc-timegrid-slots td',
-            '.fc-timegrid-slot',
-            '.fc-timegrid-slot-lane',
-            '.fc-timegrid-slot-label',
-            '.fc-timegrid-slot-frame',
-        ];
-        for (const selector of slotSelectors) {
-            const nodes = rootEl.querySelectorAll(selector);
-            for (const node of nodes) {
-                if (!(node instanceof HTMLElement)) continue;
-                try { node.style.setProperty('height', `${slotHeight}px`, 'important'); } catch (e) {}
-                try { node.style.setProperty('min-height', `${slotHeight}px`, 'important'); } catch (e) {}
-                try { node.style.setProperty('max-height', `${slotHeight}px`, 'important'); } catch (e) {}
-                try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
-            }
-        }
-        const contentSelectors = [
-            '.fc-timegrid-body',
-            '.fc-timegrid-cols',
-            '.fc-timegrid-cols table',
-            '.fc-timegrid-slots',
-            '.fc-timegrid-slots table',
-        ];
-        for (const selector of contentSelectors) {
-            const nodes = rootEl.querySelectorAll(selector);
-            for (const node of nodes) {
-                if (!(node instanceof HTMLElement)) continue;
-                try { node.style.setProperty('height', `${contentHeight}px`, 'important'); } catch (e) {}
-                try { node.style.setProperty('min-height', `${contentHeight}px`, 'important'); } catch (e) {}
-                try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
-            }
-        }
-        return true;
+        return __tmApplyTimeGridHeightLayout(rootEl, settings);
     }
 
     function getCalendarTimeGridContentHeight(settings) {
@@ -1289,46 +1325,7 @@
     }
 
     function forceSideDaySlotHeight(rootEl, settings) {
-        if (!(rootEl instanceof HTMLElement)) return false;
-        const nextSettings = settings || getSettings();
-        const slotHeight = getCalendarHalfHourSlotHeight(nextSettings);
-        const contentHeight = getCalendarTimeGridContentHeight(nextSettings);
-        try { applyCalendarSlotHeightStyle(rootEl, nextSettings); } catch (e) {}
-        const slotSelectors = [
-            '.fc-timegrid-slots tr',
-            '.fc-timegrid-slots td',
-            '.fc-timegrid-slot',
-            '.fc-timegrid-slot-lane',
-            '.fc-timegrid-slot-label',
-            '.fc-timegrid-slot-frame',
-        ];
-        for (const selector of slotSelectors) {
-            const nodes = rootEl.querySelectorAll(selector);
-            for (const node of nodes) {
-                if (!(node instanceof HTMLElement)) continue;
-                try { node.style.setProperty('height', `${slotHeight}px`, 'important'); } catch (e) {}
-                try { node.style.setProperty('min-height', `${slotHeight}px`, 'important'); } catch (e) {}
-                try { node.style.setProperty('max-height', `${slotHeight}px`, 'important'); } catch (e) {}
-                try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
-            }
-        }
-        const contentSelectors = [
-            '.fc-timegrid-body',
-            '.fc-timegrid-cols',
-            '.fc-timegrid-cols table',
-            '.fc-timegrid-slots',
-            '.fc-timegrid-slots table',
-        ];
-        for (const selector of contentSelectors) {
-            const nodes = rootEl.querySelectorAll(selector);
-            for (const node of nodes) {
-                if (!(node instanceof HTMLElement)) continue;
-                try { node.style.setProperty('height', `${contentHeight}px`, 'important'); } catch (e) {}
-                try { node.style.setProperty('min-height', `${contentHeight}px`, 'important'); } catch (e) {}
-                try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
-            }
-        }
-        return true;
+        return __tmApplyTimeGridHeightLayout(rootEl, settings);
     }
 
     function applyTimeAxisColumnLayout(rootEl, axisWidthPx = 40) {
@@ -1341,63 +1338,51 @@
         const allDayOpacity = '0.74';
         const labelColor = 'color-mix(in srgb, var(--tm-text-color) 72%, var(--tm-secondary-text) 28%)';
         const hourTranslateY = isSideDockRoot ? '-46%' : '12%';
+        const widthNodes = Array.from(rootEl.querySelectorAll('.fc-scrollgrid col:first-child, .fc-scrollgrid-section > td:first-child, .fc-scrollgrid-section > th:first-child, td.fc-timegrid-slot-label, .fc-timegrid-axis, .fc-timegrid-axis-frame, .fc-timegrid-slot-label-frame, .fc-timegrid-axis-cushion, .fc-timegrid-slot-label-cushion'));
+        const centerNodes = Array.from(rootEl.querySelectorAll('.fc-timegrid-axis, td.fc-timegrid-slot-label, .fc-timegrid-axis-frame, .fc-timegrid-slot-label-frame, .fc-timegrid-axis-cushion, .fc-timegrid-slot-label-cushion'));
+        const flexNodes = Array.from(rootEl.querySelectorAll('.fc-timegrid-axis-frame, .fc-timegrid-slot-label-frame, .fc-timegrid-axis-cushion, .fc-timegrid-slot-label-cushion'));
+        const hourNodes = Array.from(rootEl.querySelectorAll('.fc-timegrid-slots .fc-timegrid-axis-cushion, .fc-timegrid-slot-label-cushion'));
+        const allDayAxis = Array.from(getAllDayAxisCushions(rootEl) || []);
+        const passKey = [
+            width,
+            hourTranslateY,
+            labelColor,
+            hourFontSize,
+            allDayFontSize,
+            hourOpacity,
+            allDayOpacity,
+            isSideDockRoot ? 1 : 0,
+        ].join('|');
+        const stamps = [
+            __tmCreateNodeListStamp(widthNodes),
+            __tmCreateNodeListStamp(centerNodes),
+            __tmCreateNodeListStamp(flexNodes),
+            __tmCreateNodeListStamp(hourNodes),
+            __tmCreateNodeListStamp(allDayAxis),
+        ];
         try { rootEl.style.setProperty('--tm-calendar-axis-width', width); } catch (e) {}
         try { rootEl.style.setProperty('--tm-calendar-hour-translate-y', hourTranslateY); } catch (e) {}
-        const widthSelectors = [
-            '.fc-scrollgrid col:first-child',
-            '.fc-scrollgrid-section > td:first-child',
-            '.fc-scrollgrid-section > th:first-child',
-            'td.fc-timegrid-slot-label',
-            '.fc-timegrid-axis',
-            '.fc-timegrid-axis-frame',
-            '.fc-timegrid-slot-label-frame',
-            '.fc-timegrid-axis-cushion',
-            '.fc-timegrid-slot-label-cushion',
-        ];
-        for (const selector of widthSelectors) {
-            const nodes = rootEl.querySelectorAll(selector);
-            for (const node of nodes) {
-                if (!(node instanceof Element)) continue;
-                try { node.style.setProperty('width', width, 'important'); } catch (e) {}
-                try { node.style.setProperty('min-width', width, 'important'); } catch (e) {}
-                try { node.style.setProperty('max-width', width, 'important'); } catch (e) {}
-                try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
-            }
+        if (__tmShouldSkipCalendarDomPass(__tmCalendarDomPassCache.timeAxis, rootEl, passKey, stamps)) return true;
+        for (const node of widthNodes) {
+            if (!(node instanceof Element)) continue;
+            try { node.style.setProperty('width', width, 'important'); } catch (e) {}
+            try { node.style.setProperty('min-width', width, 'important'); } catch (e) {}
+            try { node.style.setProperty('max-width', width, 'important'); } catch (e) {}
+            try { node.style.setProperty('box-sizing', 'border-box', 'important'); } catch (e) {}
         }
-        const centerSelectors = [
-            '.fc-timegrid-axis',
-            'td.fc-timegrid-slot-label',
-            '.fc-timegrid-axis-frame',
-            '.fc-timegrid-slot-label-frame',
-            '.fc-timegrid-axis-cushion',
-            '.fc-timegrid-slot-label-cushion',
-        ];
-        for (const selector of centerSelectors) {
-            const nodes = rootEl.querySelectorAll(selector);
-            for (const node of nodes) {
-                if (!(node instanceof HTMLElement)) continue;
-                try { node.style.setProperty('text-align', 'center', 'important'); } catch (e) {}
-                try { node.style.setProperty('justify-content', 'center', 'important'); } catch (e) {}
-                try { node.style.setProperty('color', labelColor, 'important'); } catch (e) {}
-            }
+        for (const node of centerNodes) {
+            if (!(node instanceof HTMLElement)) continue;
+            try { node.style.setProperty('text-align', 'center', 'important'); } catch (e) {}
+            try { node.style.setProperty('justify-content', 'center', 'important'); } catch (e) {}
+            try { node.style.setProperty('color', labelColor, 'important'); } catch (e) {}
         }
-        const flexSelectors = [
-            '.fc-timegrid-axis-frame',
-            '.fc-timegrid-slot-label-frame',
-            '.fc-timegrid-axis-cushion',
-            '.fc-timegrid-slot-label-cushion',
-        ];
-        for (const selector of flexSelectors) {
-            const nodes = rootEl.querySelectorAll(selector);
-            for (const node of nodes) {
-                if (!(node instanceof HTMLElement)) continue;
-                try { node.style.setProperty('display', 'flex', 'important'); } catch (e) {}
-                try { node.style.setProperty('margin', '0 auto', 'important'); } catch (e) {}
-                try { node.style.setProperty('padding-left', '0', 'important'); } catch (e) {}
-                try { node.style.setProperty('padding-right', '0', 'important'); } catch (e) {}
-            }
+        for (const node of flexNodes) {
+            if (!(node instanceof HTMLElement)) continue;
+            try { node.style.setProperty('display', 'flex', 'important'); } catch (e) {}
+            try { node.style.setProperty('margin', '0 auto', 'important'); } catch (e) {}
+            try { node.style.setProperty('padding-left', '0', 'important'); } catch (e) {}
+            try { node.style.setProperty('padding-right', '0', 'important'); } catch (e) {}
         }
-        const hourNodes = rootEl.querySelectorAll('.fc-timegrid-slots .fc-timegrid-axis-cushion, .fc-timegrid-slot-label-cushion');
         for (const node of hourNodes) {
             if (!(node instanceof HTMLElement)) continue;
             try { node.style.setProperty('font-size', hourFontSize, 'important'); } catch (e) {}
@@ -1409,7 +1394,6 @@
             try { node.style.setProperty('padding-top', '0', 'important'); } catch (e) {}
             try { node.style.setProperty('transform', `translateY(var(--tm-calendar-hour-translate-y, ${hourTranslateY}))`, 'important'); } catch (e) {}
         }
-        const allDayAxis = getAllDayAxisCushions(rootEl);
         for (const node of allDayAxis) {
             if (!(node instanceof HTMLElement)) continue;
             try { node.style.setProperty('font-size', allDayFontSize, 'important'); } catch (e) {}
@@ -1421,6 +1405,7 @@
             try { node.style.setProperty('transform', 'none', 'important'); } catch (e) {}
         }
         try { ensureInlineAllDayAxisToggle(rootEl); } catch (e) {}
+        __tmRememberCalendarDomPass(__tmCalendarDomPassCache.timeAxis, rootEl, passKey, stamps);
         return true;
     }
 
@@ -1537,7 +1522,7 @@
             try { toggleBtn.style.setProperty('--tm-ui-secondary', 'color-mix(in srgb, var(--tm-bg-color, #fff) 92%, var(--tm-text-color, #000) 8%)'); } catch (e) {}
             try { toggleBtn.style.setProperty('--tm-ui-secondary-foreground', labelColor); } catch (e) {}
             try { toggleBtn.style.setProperty('--tm-ui-border', 'color-mix(in srgb, var(--tm-text-color, #000) 12%, transparent)'); } catch (e) {}
-            try { toggleBtn.style.setProperty('--tm-ui-ring', 'color-mix(in srgb, var(--b3-theme-primary, #0078d4) 26%, transparent)'); } catch (e) {}
+            try { toggleBtn.style.setProperty('--tm-ui-ring', 'color-mix(in srgb, var(--tm-primary-color) 26%, transparent)'); } catch (e) {}
             try { toggleBtn.style.setProperty('--tm-ui-radius', '999px'); } catch (e) {}
             const textEl = toggleBtn.querySelector('.tm-cal-allday-toggle-text');
             if (textEl instanceof HTMLElement) {
@@ -1563,18 +1548,25 @@
     function enhanceNowIndicator(rootEl) {
         if (!(rootEl instanceof HTMLElement)) return false;
         const pageBg = String(window.getComputedStyle(rootEl).getPropertyValue('--fc-page-bg-color') || '').trim() || '#fff';
-        const nowColor = String(window.getComputedStyle(rootEl).getPropertyValue('--fc-now-indicator-color') || '').trim() || '#0078d4';
-        const containers = rootEl.querySelectorAll('.fc-timegrid-now-indicator-container');
+        const nowColor = String(window.getComputedStyle(rootEl).getPropertyValue('--fc-now-indicator-color') || '').trim() || 'var(--tm-primary-color)';
+        const containers = Array.from(rootEl.querySelectorAll('.fc-timegrid-now-indicator-container'));
+        const arrows = Array.from(rootEl.querySelectorAll('.fc-timegrid-now-indicator-arrow'));
+        const lines = Array.from(rootEl.querySelectorAll('.fc-timegrid-now-indicator-line'));
+        const passKey = `${pageBg}|${nowColor}`;
+        const stamps = [
+            __tmCreateNodeListStamp(containers),
+            __tmCreateNodeListStamp(arrows),
+            __tmCreateNodeListStamp(lines),
+        ];
+        if (__tmShouldSkipCalendarDomPass(__tmCalendarDomPassCache.nowIndicator, rootEl, passKey, stamps)) return lines.length > 0;
         containers.forEach((node) => {
             if (!(node instanceof HTMLElement)) return;
             try { node.style.setProperty('overflow', 'visible', 'important'); } catch (e) {}
         });
-        const arrows = rootEl.querySelectorAll('.fc-timegrid-now-indicator-arrow');
         arrows.forEach((node) => {
             if (!(node instanceof HTMLElement)) return;
             try { node.style.setProperty('display', 'none', 'important'); } catch (e) {}
         });
-        const lines = rootEl.querySelectorAll('.fc-timegrid-now-indicator-line');
         lines.forEach((node) => {
             if (!(node instanceof HTMLElement)) return;
             try { node.style.setProperty('border-top-width', '2px', 'important'); } catch (e) {}
@@ -1601,6 +1593,7 @@
             try { dot.style.display = 'block'; } catch (e) {}
             try { dot.style.zIndex = '1'; } catch (e) {}
         });
+        __tmRememberCalendarDomPass(__tmCalendarDomPassCache.nowIndicator, rootEl, passKey, stamps);
         return lines.length > 0;
     }
 
@@ -1695,9 +1688,9 @@
             showStopwatch: tomatoMaster && (s.calendarShowStopwatch !== false),
             showIdle: tomatoMaster && !!s.calendarShowIdle,
             showOtherBlockCheckbox: readStoredBool('tm_calendar_show_other_block_checkbox', typeof s.calendarShowOtherBlockCheckbox === 'boolean' ? !!s.calendarShowOtherBlockCheckbox : undefined),
-            colorFocus: String(s.calendarColorFocus || '#1a73e8'),
-            colorBreak: String(s.calendarColorBreak || '#34a853'),
-            colorStopwatch: String(s.calendarColorStopwatch || '#f9ab00'),
+            colorFocus: String(s.calendarColorFocus || 'var(--tm-primary-color)'),
+            colorBreak: String(s.calendarColorBreak || 'var(--tm-success-color)'),
+            colorStopwatch: String(s.calendarColorStopwatch || 'var(--tm-warning-color, #f9ab00)'),
             colorIdle: String(s.calendarColorIdle || '#9aa0a6'),
             calendarsConfig: (s.calendarCalendarsConfig && typeof s.calendarCalendarsConfig === 'object' && !Array.isArray(s.calendarCalendarsConfig)) ? s.calendarCalendarsConfig : {},
             defaultCalendarId: String(s.calendarDefaultCalendarId || 'default'),
@@ -1747,7 +1740,7 @@
     }
 
     function getCalendarDefs(settings) {
-        const list = [{ id: 'default', name: '未分组', color: '#0078d4' }];
+        const list = [{ id: 'default', name: '未分组', color: 'var(--tm-primary-color)' }];
         const groups = state.settingsStore?.data?.docGroups || state.sideDay?.settingsStore?.data?.docGroups;
         if (Array.isArray(groups)) {
             for (const g of groups) {
@@ -1822,7 +1815,7 @@
                 <div class="tm-calendar-nav-item-row">
                     <label class="tm-calendar-nav-item tm-calendar-nav-item--grow">
                         <span class="tm-calendar-nav-left">
-                            <span class="tm-calendar-nav-dot" style="background:${esc(settings.scheduleColor || '#0078d4')};" data-tm-cal-color-kind="schedule" data-tm-cal-color-key="schedule" data-tm-cal-color-value="${esc(settings.scheduleColor || '#0078d4')}"></span>
+                            <span class="tm-calendar-nav-dot" style="background:${esc(settings.scheduleColor || 'var(--tm-primary-color)')};" data-tm-cal-color-kind="schedule" data-tm-cal-color-key="schedule" data-tm-cal-color-value="${esc(settings.scheduleColor || 'var(--tm-primary-color)')}"></span>
                             <span class="tm-calendar-nav-label">文档分组</span>
                         </span>
                         <input class="tm-calendar-nav-check" type="checkbox" data-tm-cal-filter="scheduleMaster" ${showSchedule ? 'checked' : ''}>
@@ -1916,7 +1909,7 @@
             const durationMin = Number(t?.durationMin);
             const depth = Number(t?.depth) || 0;
             const calendarId = String(t?.calendarId || 'default').trim() || 'default';
-            const dot = colorMap.get(calendarId) || '#0078d4';
+            const dot = colorMap.get(calendarId) || 'var(--tm-primary-color)';
             const safeDuration = (Number.isFinite(durationMin) && durationMin > 0) ? Math.round(durationMin) : 60;
             return `
                 <div class="tm-cal-task" draggable="true" data-tm-task-item="1" style="padding-left:${6 + Math.min(6, Math.max(0, depth)) * 10}px" data-task-id="${esc(id)}" data-task-title="${esc(title)}" data-task-spent="${esc(spent)}" data-task-duration-min="${esc(String(safeDuration))}" data-calendar-id="${esc(calendarId)}">
@@ -2236,7 +2229,7 @@
             const marked = !!(tid && todayTaskIds.has(tid));
             const textEl = tr.querySelector('.tm-task-content-clickable, .tm-task-text');
             if (textEl instanceof HTMLElement) {
-                if (marked) textEl.style.color = '#1a73e8';
+                if (marked) textEl.style.color = 'var(--tm-primary-color)';
                 else textEl.style.removeProperty('color');
             }
         });
@@ -2433,7 +2426,7 @@
             const settings = getSettings();
             const calId = String(payload.calendarId || '').trim() || pickDefaultCalendarId(settings);
             const defs = getCalendarDefs(settings);
-            const color = String(defs.find((d) => String(d?.id || '').trim() === calId)?.color || '#1a73e8').trim() || '#1a73e8';
+            const color = String(defs.find((d) => String(d?.id || '').trim() === calId)?.color || 'var(--tm-primary-color)').trim() || 'var(--tm-primary-color)';
             const nextKey = `${start.getTime()}|${end.getTime()}|${allDay ? 1 : 0}|${title}|${color}`;
             if (nextKey === previewKey) return;
             previewKey = nextKey;
@@ -5125,6 +5118,7 @@
             try { state.sideDay.resizeObserver.disconnect(); } catch (e) {}
             state.sideDay.resizeObserver = null;
         }
+        state.sideDay.resizeBox = null;
         try { state.sideDay.draggable?.destroy?.(); } catch (e) {}
         state.sideDay.draggable = null;
         state.sideDay.dragHost = null;
@@ -5226,7 +5220,7 @@
             const settings = getSettings();
             const calId = String(payload.calendarId || '').trim() || pickDefaultCalendarId(settings);
             const defs = getCalendarDefs(settings);
-            const color = String(defs.find((d) => String(d?.id || '').trim() === calId)?.color || '#1a73e8').trim() || '#1a73e8';
+            const color = String(defs.find((d) => String(d?.id || '').trim() === calId)?.color || 'var(--tm-primary-color)').trim() || 'var(--tm-primary-color)';
             const nextKey = `${start.getTime()}|${end.getTime()}|${allDay ? 1 : 0}|${title}|${color}`;
             if (nextKey === previewKey) return;
             previewKey = nextKey;
@@ -5797,8 +5791,8 @@
                         const eid = String(arg?.event?.id || '').trim();
                         if (eid) el.setAttribute('data-tm-cal-event-id', eid);
                         if (source) el.setAttribute('data-tm-cal-source', source);
-                        if (source === 'schedule' || source === 'tomato' || arg?.isMirror) applyScheduleEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'));
-                        if ((source === 'schedule' || source === 'taskdate') && arg?.event?.allDay === true) applyAllDaySoftEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'));
+                        if (source === 'schedule' || source === 'tomato' || arg?.isMirror) applyScheduleEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || 'var(--tm-primary-color)'));
+                        if ((source === 'schedule' || source === 'taskdate') && arg?.event?.allDay === true) applyAllDaySoftEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || 'var(--tm-primary-color)'));
                         const tid = String(ext.__tmTaskId || '').trim();
                         if (tid) el.setAttribute('data-tm-cal-task-id', tid);
                         const rid = String(ext.__tmReminderBlockId || '').trim();
@@ -5916,6 +5910,9 @@
                     try {
                         const wantMap = !!(curSettings.showCnHoliday || curSettings.showLunar);
                         state.cnHolidayMap = wantMap ? buildCnHolidayMap(cnHolidayDays, info.start, info.end, !!curSettings.showLunar) : new Map();
+                        state.cnHolidaySignature = wantMap
+                            ? `${info?.start?.toISOString?.() || ''}|${info?.end?.toISOString?.() || ''}|${cnHolidayDays.length}|${curSettings.showCnHoliday ? 1 : 0}|${curSettings.showLunar ? 1 : 0}`
+                            : '';
                         applyCnHolidayDots(rootEl);
                         applyCnLunarLabels(rootEl);
                     } catch (e0) {}
@@ -5962,7 +5959,7 @@
                             start: baseStart ? new Date(baseStart) : arg?.event?.start,
                             end: baseEnd ? new Date(baseEnd) : arg?.event?.end,
                             allDay: arg?.event?.allDay === true,
-                            color: String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'),
+                            color: String(arg?.event?.backgroundColor || arg?.event?.borderColor || 'var(--tm-primary-color)'),
                             calendarId: String(ext.calendarId || 'default'),
                             taskId: String(ext.__tmTaskId || ''),
                             reminderMode: String(ext.__tmReminderMode || ''),
@@ -6125,7 +6122,15 @@
 
         // 修复：使用 ResizeObserver 监听侧边栏日历容器尺寸变化
         if (rootEl && typeof ResizeObserver === 'function') {
-            const sideDayResizeObserver = new ResizeObserver(() => {
+            const sideDayResizeObserver = new ResizeObserver((entries) => {
+                const entry = Array.isArray(entries) && entries.length ? entries[0] : null;
+                const nextBox = {
+                    width: Math.round(Number(entry?.contentRect?.width || rootEl.clientWidth || 0)),
+                    height: Math.round(Number(entry?.contentRect?.height || rootEl.clientHeight || 0)),
+                };
+                const prevBox = state.sideDay?.resizeBox || null;
+                if (prevBox && prevBox.width === nextBox.width && prevBox.height === nextBox.height) return;
+                state.sideDay.resizeBox = nextBox;
                 requestAnimationFrame(() => {
                     try { syncSideDayLayout(rootEl, cal, getSettings()); } catch (e2) {}
                     try { clampSideDayPopover(rootEl); } catch (e2) {}
@@ -6364,7 +6369,7 @@
             const titleBase = linkedTitle || (String(it?.title || '').trim() || '日程');
             const calendarId = String(it?.calendarId || 'default');
             if (!isCalendarEnabled(calendarId, settings)) continue;
-            const calColor = defMap.get(calendarId)?.color || '#0078d4';
+            const calColor = defMap.get(calendarId)?.color || 'var(--tm-primary-color)';
             const rawColor = String(it?.color || '').trim();
             const color = rawColor || settings.scheduleColor || calColor;
             const allDayBase = (it?.allDay === true) || isAllDayRange(start, end);
@@ -6882,6 +6887,14 @@
         const root = rootEl || state.rootEl;
         if (!root || !(root instanceof Element)) return;
         const map = state.cnHolidayMap instanceof Map ? state.cnHolidayMap : new Map();
+        const monthCells = Array.from(root.querySelectorAll('.fc-daygrid-day[data-date]'));
+        const headerCells = Array.from(root.querySelectorAll('.fc-col-header-cell[data-date]'));
+        const passKey = `${String(state.cnHolidaySignature || map.size)}|${monthCells.length}|${headerCells.length}`;
+        const stamps = [
+            __tmCreateNodeListStamp(monthCells),
+            __tmCreateNodeListStamp(headerCells),
+        ];
+        if (__tmShouldSkipCalendarDomPass(__tmCalendarDomPassCache.holidayDots, root, passKey, stamps)) return;
         const ensureWeekHead = (labelEl) => {
             if (!labelEl) return null;
             const exist = labelEl.querySelector?.(':scope > .tm-cn-week-head');
@@ -6916,19 +6929,17 @@
                 else host.appendChild(dot);
             } catch (e) {}
         };
-
-        const monthCells = Array.from(root.querySelectorAll('.fc-daygrid-day[data-date]'));
         for (const cell of monthCells) {
             const dateKey = cell.getAttribute('data-date') || '';
             const label = cell.querySelector('.fc-daygrid-day-number');
             ensure(label, dateKey);
         }
-        const headerCells = Array.from(root.querySelectorAll('.fc-col-header-cell[data-date]'));
         for (const cell of headerCells) {
             const dateKey = cell.getAttribute('data-date') || '';
             const label = cell.querySelector('.fc-col-header-cell-cushion');
             ensure(label, dateKey);
         }
+        __tmRememberCalendarDomPass(__tmCalendarDomPassCache.holidayDots, root, passKey, stamps);
     }
 
     function applyCnLunarLabels(rootEl) {
@@ -6936,13 +6947,22 @@
         if (!root || !(root instanceof Element)) return;
         const settings = getSettings();
         const map = state.cnHolidayMap instanceof Map ? state.cnHolidayMap : new Map();
+        const monthCells = Array.from(root.querySelectorAll('.fc-daygrid-day[data-date]'));
+        const headerCells = Array.from(root.querySelectorAll('.fc-col-header-cell[data-date]'));
+        const passKey = `${String(state.cnHolidaySignature || map.size)}|${settings.showLunar ? 1 : 0}|${String(state.calendar?.view?.type || '').trim()}|${monthCells.length}|${headerCells.length}`;
+        const stamps = [
+            __tmCreateNodeListStamp(monthCells),
+            __tmCreateNodeListStamp(headerCells),
+        ];
         const removeAll = () => {
             root.querySelectorAll('.tm-cn-lunar').forEach((el) => { try { el.remove(); } catch (e) {} });
         };
         if (!settings.showLunar) {
             removeAll();
+            __tmRememberCalendarDomPass(__tmCalendarDomPassCache.lunarLabels, root, passKey, stamps);
             return;
         }
+        if (__tmShouldSkipCalendarDomPass(__tmCalendarDomPassCache.lunarLabels, root, passKey, stamps)) return;
         removeAll();
         const lunarDayText = (raw) => {
             const s = String(raw || '').trim();
@@ -7019,20 +7039,19 @@
             try { el.style.setProperty('font-weight', '400', 'important'); } catch (e) {}
             try { titleEl.appendChild(el); } catch (e) {}
         };
-        const monthCells = Array.from(root.querySelectorAll('.fc-daygrid-day[data-date]'));
         for (const cell of monthCells) {
             const dateKey = cell.getAttribute('data-date') || '';
             addMonth(cell, dateKey);
         }
         const vtNow = String(state.calendar?.view?.type || '').trim();
-        if (vtNow === 'dayGridMonth') return;
-
-        const headerCells = Array.from(root.querySelectorAll('.fc-col-header-cell[data-date]'));
-        for (const cell of headerCells) {
-            const dateKey = cell.getAttribute('data-date') || '';
-            const label = cell.querySelector('.fc-col-header-cell-cushion');
-            addWeek(label, dateKey);
+        if (vtNow !== 'dayGridMonth') {
+            for (const cell of headerCells) {
+                const dateKey = cell.getAttribute('data-date') || '';
+                const label = cell.querySelector('.fc-col-header-cell-cushion');
+                addWeek(label, dateKey);
+            }
         }
+        __tmRememberCalendarDomPass(__tmCalendarDomPassCache.lunarLabels, root, passKey, stamps);
     }
 
     function normalizeCnHolidayName(rawName) {
@@ -7223,7 +7242,7 @@
     }
 
     function toast(msg, type) {
-        const colors = { success: '#34a853', error: '#ea4335', info: '#4285f4', warning: '#f9ab00' };
+        const colors = { success: 'var(--tm-success-color)', error: 'var(--tm-danger-color)', info: 'var(--tm-primary-color)', warning: 'var(--tm-warning-color, #f9ab00)' };
         const el = document.createElement('div');
         el.className = 'tm-hint';
         el.style.background = colors[type] || '#666';
@@ -7602,7 +7621,7 @@
             if (!(colorEl instanceof HTMLInputElement)) return;
             const defs = getCalendarDefs(getSettings());
             const def = defs.find((d) => String(d?.id || '').trim() === calendarId);
-            const nextColor = String(def?.color || '#0078d4').trim() || '#0078d4';
+            const nextColor = String(def?.color || 'var(--tm-primary-color)').trim() || 'var(--tm-primary-color)';
             colorEl.value = nextColor;
         };
         const calendarSelEl = modal.querySelector('[data-tm-cal-field="calendarId"]');
@@ -7618,7 +7637,7 @@
             const calendarId = getInputValue('calendarId') || calendarId0 || 'default';
             const s0 = getInputValue('start');
             const e0 = getInputValue('end');
-            const color = getInputValue('color') || '#0078d4';
+            const color = getInputValue('color') || 'var(--tm-primary-color)';
             const reminderSelect = String(getInputValue('reminderSelect') || '').trim() || 'inherit';
             const reminderMode = reminderSelect === 'inherit' ? 'inherit' : 'custom';
             const reminderEnabled = (() => {
@@ -7806,8 +7825,8 @@
         const end = init.end instanceof Date ? init.end : null;
         const title0 = String(init.title || '').trim();
         const calendarId0 = String(init.calendarId || '').trim() || pickDefaultCalendarId(settings);
-        const calDef0 = calDefs.find((d) => d.id === calendarId0) || calDefs[0] || { id: 'default', name: '时间轴', color: '#0078d4' };
-        const color0 = String(init.color || '').trim() || String(calDef0.color || '#0078d4');
+        const calDef0 = calDefs.find((d) => d.id === calendarId0) || calDefs[0] || { id: 'default', name: '时间轴', color: 'var(--tm-primary-color)' };
+        const color0 = String(init.color || '').trim() || String(calDef0.color || 'var(--tm-primary-color)');
         const calendarOptions = calDefs.map((d) => `<option value="${esc(d.id)}" ${d.id === calendarId0 ? 'selected' : ''}>${esc(d.name)}</option>`).join('');
         const deviceSummary0 = taskDateEditor
             ? '此事件来自任务日期，仅支持同步修改任务的开始日期和完成日期'
@@ -7941,7 +7960,7 @@
             if (!(colorEl instanceof HTMLInputElement)) return;
             const defs = getCalendarDefs(getSettings());
             const def = defs.find((d) => String(d?.id || '').trim() === calendarId);
-            const nextColor = String(def?.color || '#0078d4').trim() || '#0078d4';
+            const nextColor = String(def?.color || 'var(--tm-primary-color)').trim() || 'var(--tm-primary-color)';
             colorEl.value = nextColor;
         };
         const syncMonthlyModeSummary = () => {
@@ -8058,7 +8077,7 @@
                 const calendarId = getInputValue('calendarId') || calendarId0 || 'default';
                 const s0 = getInputValue('start');
                 const e0 = getInputValue('end');
-                const color = getInputValue('color') || '#0078d4';
+                const color = getInputValue('color') || 'var(--tm-primary-color)';
                 const nextStart = s0 ? new Date(s0) : null;
                 const nextEnd = e0 ? new Date(e0) : null;
                 const canUseInputTime = !!(
@@ -8097,7 +8116,7 @@
                             const calendarIdNow = getInputValue('calendarId') || calendarId0 || 'default';
                             const startRaw = getInputValue('start');
                             const endRaw = getInputValue('end');
-                            const colorNow = getInputValue('color') || '#0078d4';
+                            const colorNow = getInputValue('color') || 'var(--tm-primary-color)';
                             const reminderSelectNow = String(getInputValue('reminderSelect') || '').trim() || 'inherit';
                             const reminderModeNow = reminderSelectNow === 'inherit' ? 'inherit' : 'custom';
                             const reminderEnabledNow = (() => {
@@ -8203,7 +8222,7 @@
                 const calendarId = getInputValue('calendarId') || calendarId0 || 'default';
                 const s0 = getInputValue('start');
                 const e0 = getInputValue('end');
-                const color = getInputValue('color') || '#0078d4';
+                const color = getInputValue('color') || 'var(--tm-primary-color)';
                 const reminderSelect = String(getInputValue('reminderSelect') || '').trim() || 'inherit';
                 const reminderMode = reminderSelect === 'inherit' ? 'inherit' : 'custom';
                 const reminderEnabled = (() => {
@@ -8746,8 +8765,8 @@
                             const eid = String(arg?.event?.id || '').trim();
                             if (eid) el.setAttribute('data-tm-cal-event-id', eid);
                             if (source) el.setAttribute('data-tm-cal-source', source);
-                            if (source === 'schedule' || source === 'tomato' || arg?.isMirror) applyScheduleEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'));
-                            if ((source === 'schedule' || source === 'taskdate') && arg?.event?.allDay === true) applyAllDaySoftEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'));
+                            if (source === 'schedule' || source === 'tomato' || arg?.isMirror) applyScheduleEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || 'var(--tm-primary-color)'));
+                            if ((source === 'schedule' || source === 'taskdate') && arg?.event?.allDay === true) applyAllDaySoftEventColorVars(el, String(arg?.event?.backgroundColor || arg?.event?.borderColor || 'var(--tm-primary-color)'));
                             const aggDay = String(ext.__tmAggregateDay || '').trim();
                             if (aggDay) el.setAttribute('data-tm-cal-agg-day', aggDay);
                             const tid = String(ext.__tmTaskId || '').trim();
@@ -8920,6 +8939,9 @@
                     try {
                         const wantMap = !!(settings.showCnHoliday || settings.showLunar);
                         state.cnHolidayMap = wantMap ? buildCnHolidayMap(cnHolidayDays, info.start, info.end, !!settings.showLunar) : new Map();
+                        state.cnHolidaySignature = wantMap
+                            ? `${info?.start?.toISOString?.() || ''}|${info?.end?.toISOString?.() || ''}|${cnHolidayDays.length}|${settings.showCnHoliday ? 1 : 0}|${settings.showLunar ? 1 : 0}|${String(viewType || '').trim()}`
+                            : '';
                         applyCnHolidayDots(wrap);
                         applyCnLunarLabels(wrap);
                     } catch (e0) {}
@@ -9027,7 +9049,7 @@
                             start: baseStart ? new Date(baseStart) : arg?.event?.start,
                             end: baseEnd ? new Date(baseEnd) : arg?.event?.end,
                             allDay: arg?.event?.allDay === true,
-                            color: String(arg?.event?.backgroundColor || arg?.event?.borderColor || '#0078d4'),
+                            color: String(arg?.event?.backgroundColor || arg?.event?.borderColor || 'var(--tm-primary-color)'),
                             calendarId: String(ext.calendarId || 'default'),
                             taskId: String(ext.__tmTaskId || ''),
                             reminderMode: String(ext.__tmReminderMode || ''),
@@ -9289,7 +9311,15 @@
         // 修复：使用 ResizeObserver 监听日历容器尺寸变化，更可靠地处理布局问题
         const calendarHost = wrap?.querySelector?.('.tm-calendar-host');
         if (calendarHost && typeof ResizeObserver === 'function') {
-            const calendarResizeObserver = new ResizeObserver(() => {
+            const calendarResizeObserver = new ResizeObserver((entries) => {
+                const entry = Array.isArray(entries) && entries.length ? entries[0] : null;
+                const nextBox = {
+                    width: Math.round(Number(entry?.contentRect?.width || calendarHost.clientWidth || 0)),
+                    height: Math.round(Number(entry?.contentRect?.height || calendarHost.clientHeight || 0)),
+                };
+                const prevBox = state.calendarResizeBox || null;
+                if (prevBox && prevBox.width === nextBox.width && prevBox.height === nextBox.height) return;
+                state.calendarResizeBox = nextBox;
                 // 使用 requestAnimationFrame 确保在渲染周期中执行
                 try { scheduleMainCalendarLayoutRefresh(wrap, host, calendar, { updateSize: true }); } catch (e2) {}
             });
@@ -9566,7 +9596,7 @@
                             start: baseStart ? new Date(baseStart) : api?.start,
                             end: baseEnd ? new Date(baseEnd) : api?.end,
                             allDay: api?.allDay === true,
-                            color: String(api?.backgroundColor || api?.borderColor || '#0078d4'),
+                            color: String(api?.backgroundColor || api?.borderColor || 'var(--tm-primary-color)'),
                             calendarId: String(ext.calendarId || 'default'),
                             taskId: String(ext.__tmTaskId || ''),
                             reminderMode: String(ext.__tmReminderMode || ''),
@@ -9651,9 +9681,9 @@
             } else if (k === 'cnHoliday') {
                 store.data.calendarCnHolidayColor = '#ff3333';
             } else if (k === 'tomato') {
-                if (kk === 'focus') store.data.calendarColorFocus = '#1a73e8';
-                if (kk === 'break') store.data.calendarColorBreak = '#34a853';
-                if (kk === 'stopwatch') store.data.calendarColorStopwatch = '#f9ab00';
+                if (kk === 'focus') store.data.calendarColorFocus = 'var(--tm-primary-color)';
+                if (kk === 'break') store.data.calendarColorBreak = 'var(--tm-success-color)';
+                if (kk === 'stopwatch') store.data.calendarColorStopwatch = 'var(--tm-warning-color, #f9ab00)';
                 if (kk === 'idle') store.data.calendarColorIdle = '#9aa0a6';
             } else {
                 return;
@@ -9683,7 +9713,7 @@
             } catch (e2) {}
             const kind = String(dot.getAttribute('data-tm-cal-color-kind') || '').trim();
             const key = String(dot.getAttribute('data-tm-cal-color-key') || '').trim();
-            const value = String(dot.getAttribute('data-tm-cal-color-value') || '').trim() || '#0078d4';
+            const value = String(dot.getAttribute('data-tm-cal-color-value') || '').trim() || 'var(--tm-primary-color)';
             if (kind === 'taskDates' && String(getSettings().taskDateColorMode || 'group').trim() === 'group') return;
             try { e.preventDefault(); } catch (e2) {}
             try { e.stopPropagation(); } catch (e2) {}
@@ -9906,6 +9936,7 @@
             try { state.calendarResizeObserver.disconnect(); } catch (e) {}
             state.calendarResizeObserver = null;
         }
+        state.calendarResizeBox = null;
         if (state.tomatoRefetchTimer) {
             try { clearTimeout(state.tomatoRefetchTimer); } catch (e) {}
             state.tomatoRefetchTimer = null;
@@ -9928,6 +9959,7 @@
         state.taskListEl = null;
         state.taskPageHost = null;
         state.taskPageHtml = '';
+        state.cnHolidaySignature = '';
         if (state._persistTimer) {
             try { clearTimeout(state._persistTimer); } catch (e) {}
             state._persistTimer = null;
@@ -10235,7 +10267,7 @@
                 start,
                 end,
                 allDay,
-                color: String(item.color || '#0078d4'),
+                color: String(item.color || 'var(--tm-primary-color)'),
                 calendarId: String(item.calendarId || 'default'),
                 taskId: String(item.taskId || item.task_id || item.linkedTaskId || item.linked_task_id || '').trim(),
                 blockId: getScheduleLinkedBlockId(item),

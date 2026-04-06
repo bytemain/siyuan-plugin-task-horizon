@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.0.6
+// @version      2.0.7
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -44,7 +44,7 @@
             --tm-header-bg: #f8f9fa;
             --tm-input-bg: #ffffff;
             --tm-input-border: #ddd;
-            --tm-table-header-bg: #f8f9fa;
+            --tm-table-header-bg: #f9fafb;
             --tm-table-border: #e9ecef;
             --tm-task-done-color: #999999;
             --tm-doc-item-bg: #f8f9fa;
@@ -60,6 +60,7 @@
             --tm-info-bg: #f0f9ff;
             --tm-info-border: #4285f4;
             --tm-section-bg: #f8f9fa;
+            --tm-sidebar-bg: #f8f9fa;
             --tm-card-bg: #ffffff;
             --tm-font-size: 14px;
             --tm-header-height: 44px;
@@ -156,7 +157,7 @@
             --tm-header-bg: #252525;
             --tm-input-bg: #2d2d2d;
             --tm-input-border: #444444;
-            --tm-table-header-bg: #252525;
+            --tm-table-header-bg: #1f1f1f;
             --tm-table-border: #333333;
             --tm-task-done-color: #666666;
             --tm-doc-item-bg: #252525;
@@ -172,6 +173,7 @@
             --tm-info-bg: #1a2733;
             --tm-info-border: #6ba5ff;
             --tm-section-bg: #252525;
+            --tm-sidebar-bg: #252525;
             --tm-card-bg: #2d2d2d;
             --tm-empty-cell-bg: #1a1a1a;
             --tm-topbar-grad-start: #2D2D2D;
@@ -215,6 +217,116 @@
             box-shadow: var(--tm-shadow);
             padding: 14px;
             box-sizing: border-box;
+        }
+
+        .tm-theme-import-backdrop {
+            position: fixed;
+            inset: 0;
+            background: var(--tm-modal-overlay);
+            z-index: 200005;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: clamp(12px, 3vh, 24px);
+            box-sizing: border-box;
+            overflow: auto;
+        }
+
+        .tm-theme-import-dialog {
+            width: min(720px, 100%);
+            max-width: min(720px, calc(100vw - 24px));
+            max-height: min(86vh, 960px);
+            background: var(--tm-bg-color);
+            border: 1px solid var(--tm-border-color);
+            border-radius: 14px;
+            box-shadow: var(--tm-shadow);
+            padding: 16px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tm-theme-import-content {
+            min-height: 0;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 2px;
+        }
+
+        .tm-theme-import-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--tm-text-color);
+        }
+
+        .tm-theme-import-desc {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--tm-secondary-text);
+        }
+
+        .tm-theme-import-name {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .tm-theme-import-name-label {
+            font-size: 12px;
+            color: var(--tm-secondary-text);
+        }
+
+        .tm-theme-import-name-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--tm-input-border);
+            border-radius: 8px;
+            background: var(--tm-input-bg);
+            color: var(--tm-text-color);
+            box-sizing: border-box;
+        }
+
+        .tm-theme-import-textarea {
+            width: 100%;
+            min-height: 240px;
+            height: min(42vh, 380px);
+            padding: 12px;
+            border: 1px solid var(--tm-input-border);
+            border-radius: 10px;
+            background: var(--tm-input-bg);
+            color: var(--tm-text-color);
+            box-sizing: border-box;
+            resize: vertical;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .tm-theme-import-helper {
+            font-size: 12px;
+            color: var(--tm-secondary-text);
+            min-height: 18px;
+        }
+
+        .tm-theme-import-actions {
+            margin-top: auto;
+            padding-top: 4px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-height: 740px) {
+            .tm-theme-import-dialog {
+                max-height: calc(100vh - 16px);
+                padding: 14px;
+            }
+
+            .tm-theme-import-textarea {
+                min-height: 180px;
+                height: min(34vh, 280px);
+            }
         }
 
         .tm-color-grid-10 {
@@ -342,7 +454,7 @@
         }
 
         .tm-group-row[data-group-kind="h2"] td {
-            background: var(--tm-subgroup-bg) !important;
+            background: var(--tm-header-bg) !important;
         }
 
         .tm-group-sticky {
@@ -359,7 +471,7 @@
         }
 
         .tm-group-row[data-group-kind="h2"] .tm-group-sticky {
-            background: var(--tm-subgroup-bg);
+            background: var(--tm-header-bg);
         }
 
         .tm-badge {
@@ -412,6 +524,23 @@
             width: 14px;
             height: 14px;
             display: block;
+        }
+        .tm-doc-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1em;
+            height: 1em;
+            line-height: 1;
+            flex: 0 0 auto;
+            vertical-align: middle;
+        }
+        .tm-doc-icon__img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            max-width: none;
         }
         .tm-icon-label {
             display: inline-flex;
@@ -1208,9 +1337,9 @@
         }
         
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.4); }
-            70% { box-shadow: 0 0 0 5px rgba(66, 133, 244, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0); }
+            0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tm-primary-color) 40%, transparent); }
+            70% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--tm-primary-color) 0%, transparent); }
+            100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tm-primary-color) 0%, transparent); }
         }
 
         /* 浮动的任务管理按钮样式 */
@@ -2381,6 +2510,8 @@
         .tm-filter-rule-bar .tm-topbar-select .bc-select-trigger {
             width: 100%;
             min-width: 0;
+            background: var(--tm-topbar-seg-bg);
+            border-color: var(--tm-topbar-seg-border);
         }
 
         .tm-filter-rule-bar .tm-header-selectors .tm-topbar-select[data-tm-auto-width="true"] .bc-select-trigger {
@@ -2918,9 +3049,9 @@
             color: var(--tm-task-done-color);
         }
         .tm-whiteboard-pool-item.tm-whiteboard-pool-item--selected {
-            border-color: #2f6fed;
-            box-shadow: 0 0 0 2px rgba(47,111,237,0.18);
-            background: color-mix(in srgb, var(--tm-bg-color) 86%, #2f6fed 14%);
+            border-color: var(--tm-primary-color);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 18%, transparent);
+            background: color-mix(in srgb, var(--tm-bg-color) 86%, var(--tm-primary-color) 14%);
         }
 
         .tm-whiteboard-pool-toggle {
@@ -3149,7 +3280,7 @@
             --tm-whiteboard-stream-doc-accent: var(--tm-primary-color);
             border: 1px solid color-mix(in srgb, var(--tm-border-color) 88%, var(--tm-text-color) 12%);
             border-radius: 14px;
-            background: var(--tm-section-bg);
+            background: var(--card);
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.04);
             overflow: hidden;
             transition: border-color .12s ease, box-shadow .12s ease;
@@ -3215,6 +3346,36 @@
         .tm-whiteboard-stream-doc-title:hover {
             color: var(--tm-whiteboard-stream-doc-title-color, var(--tm-primary-color));
             opacity: .92;
+        }
+
+        .tm-whiteboard-stream-doc-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+
+        .tm-whiteboard-stream-doc-add-btn {
+            width: 24px;
+            min-width: 24px;
+            height: 24px;
+            padding: 0;
+            border-radius: 7px;
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1px solid transparent;
+            background: transparent;
+            background-color: transparent;
+            background-image: none;
+            box-shadow: none;
+        }
+
+        .tm-whiteboard-stream-doc-add-btn:not(:hover):not(:focus-visible) {
+            border-color: transparent !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            background-image: none !important;
+            box-shadow: none !important;
         }
 
         .tm-whiteboard-stream-doc-grip {
@@ -3290,6 +3451,10 @@
         .tm-whiteboard-stream-task {
             padding: 0;
             border-radius: 10px;
+            background: var(--card);
+            border: none;
+            color: var(--card-foreground);
+            box-shadow: none;
         }
 
         .tm-whiteboard-stream-task-head {
@@ -3298,11 +3463,13 @@
             gap: 8px;
             padding: 7px 8px;
             border-radius: 10px;
+            background: var(--card);
+            color: var(--card-foreground);
             transition: background .12s ease;
         }
 
         .tm-whiteboard-stream-task-head:hover {
-            background: var(--tm-table-header-bg);
+            background: var(--card);
         }
 
         .tm-whiteboard-stream-task-toggle-slot {
@@ -3331,7 +3498,7 @@
             flex: 1 1 auto;
             display: -webkit-box;
             line-height: 1.35;
-            color: var(--tm-text-color);
+            color: var(--card-foreground);
             cursor: pointer;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -3425,7 +3592,7 @@
         }
 
         .tm-whiteboard-edge.tm-whiteboard-edge--manual {
-            stroke: #2f6fed;
+            stroke: var(--tm-primary-color);
             pointer-events: stroke;
             cursor: pointer;
         }
@@ -3438,11 +3605,11 @@
         .tm-whiteboard-edge.tm-whiteboard-multi-selected {
             stroke-width: 2.8;
             opacity: 1;
-            filter: drop-shadow(0 0 1px rgba(47,111,237,.45));
+            filter: drop-shadow(0 0 1px color-mix(in srgb, var(--tm-primary-color) 45%, transparent));
         }
 
         .tm-whiteboard-edge.tm-whiteboard-edge--preview {
-            stroke: #2f6fed;
+            stroke: var(--tm-primary-color);
             stroke-dasharray: 6 4;
             opacity: 0.9;
         }
@@ -3524,22 +3691,22 @@
         }
 
         .tm-whiteboard-card.tm-whiteboard-card--selected {
-            border-color: #2f6fed;
-            box-shadow: 0 0 0 2px rgba(47,111,237,0.18);
+            border-color: var(--tm-primary-color);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 18%, transparent);
         }
 
         .tm-whiteboard-subcard.tm-whiteboard-card--selected {
-            border-color: #2f6fed;
-            box-shadow: 0 0 0 2px rgba(47,111,237,0.18);
+            border-color: var(--tm-primary-color);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 18%, transparent);
         }
 
         .tm-whiteboard-card.tm-whiteboard-multi-selected,
         .tm-whiteboard-subcard.tm-whiteboard-multi-selected,
         .tm-whiteboard-node.tm-whiteboard-multi-selected,
         .tm-whiteboard-note.tm-whiteboard-multi-selected {
-            border-color: #2f6fed !important;
-            box-shadow: 0 0 0 2px rgba(47,111,237,0.26) !important;
-            outline: 1px solid rgba(47,111,237,0.55);
+            border-color: var(--tm-primary-color) !important;
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 26%, transparent) !important;
+            outline: 1px solid color-mix(in srgb, var(--tm-primary-color) 55%, transparent);
             outline-offset: 0;
         }
 
@@ -3585,8 +3752,8 @@
         }
 
         .tm-whiteboard-node.tm-whiteboard-card--selected {
-            border-color: #2f6fed !important;
-            box-shadow: 0 0 0 2px rgba(47,111,237,0.18) !important;
+            border-color: var(--tm-primary-color) !important;
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 18%, transparent) !important;
         }
 
         .tm-whiteboard-node--sub {
@@ -3671,8 +3838,8 @@
         }
 
         .tm-whiteboard-note.tm-whiteboard-note--selected {
-            border-color: #2f6fed;
-            box-shadow: 0 0 0 2px rgba(47,111,237,0.18);
+            border-color: var(--tm-primary-color);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 18%, transparent);
         }
 
         .tm-whiteboard-note-tools {
@@ -3705,8 +3872,8 @@
             width: 12px;
             height: 12px;
             border-radius: 3px;
-            border: 1px solid #2f6fed;
-            background: color-mix(in srgb, #2f6fed 72%, #ffffff);
+            border: 1px solid var(--tm-primary-color);
+            background: color-mix(in srgb, var(--tm-primary-color) 72%, var(--tm-bg-color));
             cursor: nwse-resize;
             z-index: 9;
             box-shadow: 0 1px 2px rgba(0,0,0,0.18);
@@ -3719,8 +3886,8 @@
             width: 10px;
             height: 18px;
             border-radius: 3px;
-            border: 1px solid #2f6fed;
-            background: color-mix(in srgb, #2f6fed 60%, #ffffff);
+            border: 1px solid var(--tm-primary-color);
+            background: color-mix(in srgb, var(--tm-primary-color) 60%, var(--tm-bg-color));
             cursor: ew-resize;
             z-index: 9;
             box-shadow: 0 1px 2px rgba(0,0,0,0.18);
@@ -3764,8 +3931,8 @@
 
         .tm-whiteboard-marquee {
             position: absolute;
-            border: 1px dashed #2f6fed;
-            background: rgba(47,111,237,0.12);
+            border: 1px dashed var(--tm-primary-color);
+            background: color-mix(in srgb, var(--tm-primary-color) 12%, transparent);
             pointer-events: none;
             z-index: 11;
         }
@@ -3834,8 +4001,8 @@
             left: 50% !important;
             bottom: -6px;
             transform: translateX(-50%);
-            border-color: #2f6fed;
-            background: color-mix(in srgb, var(--tm-bg-color) 86%, #2f6fed 14%);
+            border-color: var(--tm-primary-color);
+            background: color-mix(in srgb, var(--tm-bg-color) 86%, var(--tm-primary-color) 14%);
             z-index: 6;
         }
 
@@ -3847,7 +4014,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity .16s ease;
-            border-color: #2f6fed;
+            border-color: var(--tm-primary-color);
             background: var(--tm-bg-color) !important;
         }
 
@@ -3860,17 +4027,17 @@
         }
 
         .tm-task-link-dot.tm-task-link-dot--out {
-            background: #2f6fed;
-            border-color: #2f6fed;
+            background: var(--tm-primary-color);
+            border-color: var(--tm-primary-color);
         }
 
         .tm-task-link-dot.tm-task-link-dot--in {
-            background: #ffffff;
-            border-color: #2f6fed;
+            background: var(--tm-bg-color);
+            border-color: var(--tm-primary-color);
         }
 
         .tm-task-link-dot.tm-task-link-dot--active {
-            box-shadow: 0 0 0 2px rgba(47,111,237,0.24);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 24%, transparent);
         }
 
         .tm-gantt-row:hover .tm-task-link-dot--timeline,
@@ -3931,7 +4098,7 @@
             width: 320px;
             min-width: 280px;
             max-width: 360px;
-            background: var(--tm-table-header-bg);
+            background: var(--card);
             border: 1px solid var(--tm-border-color);
             border-radius: 10px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.03);
@@ -3958,11 +4125,11 @@
             justify-content: space-between;
             gap: 8px;
             font-weight: 700;
-            color: var(--tm-text-color);
+            color: var(--card-foreground);
             border-bottom: 1px solid var(--tm-border-color);
             position: sticky;
             top: 0;
-            background: var(--tm-table-header-bg);
+            background: var(--card);
             z-index: 6;
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
@@ -3977,6 +4144,26 @@
             white-space: nowrap;
             flex: 1 1 auto;
             min-width: 0;
+        }
+
+        .tm-kanban-col-title.tm-kanban-col-title--link {
+            padding: 0;
+            border: none;
+            background: transparent;
+            text-align: left;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .tm-kanban-col-title.tm-kanban-col-title--link:hover {
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+        }
+
+        .tm-kanban-col-title.tm-kanban-col-title--link:focus-visible {
+            outline: 2px solid color-mix(in srgb, var(--tm-primary-color) 38%, transparent);
+            outline-offset: 2px;
+            border-radius: 6px;
         }
 
         .tm-kanban-col-title.tm-kanban-col-title--pill {
@@ -4113,11 +4300,11 @@
             gap: 6px;
             padding: 4px 6px;
             border-radius: 6px;
-            background: var(--tm-header-bg);
+            background: var(--card);
             border: 1px solid var(--tm-border-color);
             font-size: 12px;
             font-weight: 600;
-            color: var(--tm-text-color);
+            color: var(--card-foreground);
             cursor: pointer;
             user-select: none;
         }
@@ -4134,13 +4321,20 @@
         }
 
         .tm-kanban-card {
-            background: var(--tm-bg-color);
-            border: 1px solid var(--tm-table-border-color);
+            background: var(--card);
+            border: 1px solid var(--border);
             border-radius: 10px;
             padding: 10px;
-            color: var(--tm-text-color);
+            color: var(--card-foreground);
             box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
             transition: box-shadow 0.16s ease, border-color 0.16s ease;
+        }
+
+        @supports (content-visibility: auto) {
+            .tm-kanban-card {
+                content-visibility: auto;
+                contain-intrinsic-size: 148px;
+            }
         }
 
         .tm-kanban-card:hover {
@@ -4155,14 +4349,14 @@
         .tm-kanban-subtasks {
             margin-top: 8px;
             padding-left: 10px;
-            border-left: 2px solid var(--tm-border-color);
+            border-left: 2px solid var(--border);
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
 
         .tm-kanban-card.tm-kanban-card--sub {
-            background: var(--tm-section-bg);
+            background: var(--card);
         }
 
         .tm-kanban-card.tm-kanban-card--done {
@@ -4192,7 +4386,7 @@
 
         .tm-kanban-parent-line strong {
             font-weight: 700;
-            color: var(--tm-text-color);
+            color: var(--card-foreground);
         }
 
         .tm-kanban-card-top {
@@ -4286,8 +4480,8 @@
         }
 
         .tm-kanban-toggle:hover {
-            background: var(--tm-table-header-bg);
-            color: var(--tm-text-color);
+            background: var(--card);
+            color: var(--card-foreground);
         }
 
         .tm-kanban-card-meta {
@@ -4386,7 +4580,7 @@
         }
 
         .tm-kanban-more:hover {
-            background: var(--tm-table-header-bg);
+            background: var(--card);
         }
 
         .tm-kanban-detail-float {
@@ -4402,7 +4596,7 @@
             flex-direction: column;
             border: 1px solid var(--tm-border-color);
             border-radius: 16px;
-            background: color-mix(in srgb, var(--tm-bg-color) 92%, var(--tm-section-bg) 8%);
+            background: var(--card);
             box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
             overflow: hidden;
             backdrop-filter: blur(10px);
@@ -4729,6 +4923,13 @@
             justify-content: flex-end;
             gap: 8px;
             margin-top: 12px;
+        }
+
+        .tm-task-detail .tm-task-detail-actions {
+            margin-top: 10px;
+            padding-top: 6px;
+            border-top: none;
+            background: transparent;
         }
 
         .tm-task-detail-shell {
@@ -5085,6 +5286,13 @@
             border: 1px solid var(--tm-border-color);
             border-radius: 18px;
             background: color-mix(in srgb, var(--tm-section-bg) 90%, var(--tm-bg-color));
+        }
+
+        .tm-task-detail .tm-task-detail-section {
+            padding: 10px 0 0;
+            border: none;
+            border-radius: 0;
+            background: transparent;
         }
 
         .tm-task-detail-section-head {
@@ -5514,8 +5722,8 @@
             margin-left: calc(-1 * var(--tm-checklist-pane-pad-left));
             margin-right: calc(-1 * var(--tm-checklist-pane-pad-right));
             padding-left: calc(var(--tm-checklist-pane-pad-left) + 8px);
-            background: var(--tm-subgroup-bg);
-            color: var(--tm-secondary-text);
+            background: var(--tm-header-bg);
+            color: var(--tm-text-color);
         }
 
         .tm-checklist-group-label {
@@ -5556,6 +5764,13 @@
             transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
         }
 
+        @supports (content-visibility: auto) {
+            .tm-checklist-item {
+                content-visibility: auto;
+                contain-intrinsic-size: 108px;
+            }
+        }
+
         .tm-checklist-item:hover {
             --tm-checklist-item-border-color: color-mix(in srgb, var(--tm-border-color) 72%, var(--tm-text-color) 28%);
             border-color: color-mix(in srgb, var(--tm-border-color) 72%, var(--tm-text-color) 28%);
@@ -5564,10 +5779,10 @@
         }
 
         .tm-checklist-item--active {
-            --tm-checklist-item-border-color: #2f6fed;
-            border-color: #2f6fed;
-            box-shadow: 0 0 0 1px #2f6fed inset, 0 12px 24px rgba(47, 111, 237, 0.14);
-            background: color-mix(in srgb, var(--tm-bg-color) 88%, #2f6fed 12%);
+            --tm-checklist-item-border-color: var(--tm-primary-color);
+            border-color: var(--tm-primary-color);
+            box-shadow: 0 0 0 1px var(--tm-primary-color) inset, 0 12px 24px color-mix(in srgb, var(--tm-primary-color) 14%, transparent);
+            background: color-mix(in srgb, var(--tm-bg-color) 88%, var(--tm-primary-color) 12%);
         }
 
         .tm-checklist-item--done .tm-checklist-title {
@@ -5762,6 +5977,10 @@
             padding-left: 14px;
         }
 
+        .tm-checklist-pane--compact.tm-checklist-pane--group-doc .tm-checklist-group-card > .tm-checklist-group.tm-checklist-group--doc {
+            padding-left: 7px;
+        }
+
         .tm-checklist-pane--compact .tm-checklist-group-card-items {
             position: relative;
             padding: 0;
@@ -5788,13 +6007,17 @@
             border: 0;
             border-radius: 0;
             background: transparent;
-            color: var(--tm-secondary-text);
+            color: var(--tm-text-color);
             font-size: calc(var(--tm-font-size) * 0.9);
             font-weight: 600;
         }
 
+        .tm-checklist-pane--compact.tm-checklist-pane--group-doc .tm-checklist-group-card .tm-checklist-group.tm-checklist-group--h2 {
+            padding-left: calc(var(--tm-checklist-card-divider-start) + 1px);
+        }
+
         .tm-checklist-pane--compact .tm-checklist-group-card .tm-checklist-group.tm-checklist-group--h2.tm-checklist-group--collapsed {
-            background: color-mix(in srgb, var(--tm-subgroup-bg) 84%, var(--tm-bg-color) 16%);
+            background: transparent;
         }
 
         .tm-checklist-pane--compact .tm-checklist-group-card .tm-checklist-item {
@@ -5964,8 +6187,8 @@
             border-bottom: 1px solid color-mix(in srgb, var(--tm-border-color) 92%, transparent);
             border-bottom-color: transparent;
             border-radius: 12px;
-            box-shadow: inset 0 0 0 1px color-mix(in srgb, #2f6fed 36%, var(--tm-border-color));
-            background-color: color-mix(in srgb, var(--tm-bg-color) 88%, #2f6fed 8%) !important;
+            box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tm-primary-color) 36%, var(--tm-border-color));
+            background-color: color-mix(in srgb, var(--tm-bg-color) 88%, var(--tm-primary-color) 8%) !important;
             z-index: 1;
         }
 
@@ -6147,26 +6370,11 @@
 
         .tm-checklist-detail-card {
             border: 1px solid var(--tm-border-color);
-            border-radius: 16px;
+            border-radius: 12px;
             background: var(--tm-bg-color);
             box-shadow: var(--tm-shadow);
             padding: 16px;
-        }
-
-        .tm-checklist-side .tm-checklist-detail-card {
-            border: none;
-            border-radius: 0;
-            background: transparent;
-            box-shadow: none;
-            padding: 0;
-        }
-
-        .tm-checklist-sheet .tm-checklist-detail-card {
-            border: none;
-            border-radius: 0;
-            background: transparent;
-            box-shadow: none;
-            padding: 0;
+            color: var(--tm-text-color);
         }
 
         .tm-checklist-side .tm-checklist-detail-head {
@@ -6175,14 +6383,6 @@
 
         .tm-checklist-sheet .tm-checklist-detail-head {
             margin-bottom: 10px;
-        }
-
-        .tm-checklist-side .tm-task-detail-row:first-of-type {
-            border-top: 1px solid var(--tm-border-color);
-        }
-
-        .tm-checklist-sheet .tm-task-detail-row:first-of-type {
-            border-top: 1px solid var(--tm-border-color);
         }
 
         .tm-checklist-detail-head {
@@ -6227,8 +6427,9 @@
             max-height: min(76vh, 680px);
             border-top-left-radius: 18px;
             border-top-right-radius: 18px;
-            background: var(--tm-section-bg);
-            border-top: 1px solid var(--tm-border-color);
+            background: var(--tm-bg-color);
+            border: 1px solid var(--tm-bg-color);
+            border-bottom: none;
             box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.22);
             transform: translateY(calc(100% + 16px));
             transition: transform 0.22s ease;
@@ -6274,18 +6475,33 @@
             flex: 1 1 auto;
             min-height: 0;
             overflow: auto;
-            padding: 0 12px calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 72px);
+            padding: 14px 16px calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 72px);
+        }
+
+        .tm-checklist-sheet .tm-checklist-detail-card {
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        .tm-checklist-sheet .tm-task-detail-section {
+            padding: 10px 0 0;
+            border: none;
+            border-radius: 0;
+            background: transparent;
         }
 
         .tm-checklist-sheet .tm-task-detail-actions {
             position: sticky;
             bottom: 0;
             z-index: 2;
-            margin-top: 12px;
-            padding-top: 10px;
+            margin-top: 10px;
+            padding-top: 6px;
             padding-bottom: env(safe-area-inset-bottom, 0px);
-            border-top: 1px solid var(--tm-border-color);
-            background: var(--tm-section-bg);
+            border-top: none;
+            background: var(--tm-bg-color);
         }
 
         .tm-modal.tm-modal--dock .tm-checklist-pane {
@@ -6370,9 +6586,17 @@
                 padding: 0 12px;
             }
 
+            .tm-checklist-pane--compact.tm-checklist-pane--group-doc .tm-checklist-group-card > .tm-checklist-group.tm-checklist-group--doc {
+                padding-left: 5px;
+            }
+
             .tm-checklist-pane--compact .tm-checklist-group-card .tm-checklist-group.tm-checklist-group--h2 {
                 padding-left: calc(var(--tm-checklist-card-divider-start) + 6px);
                 padding-right: 8px;
+            }
+
+            .tm-checklist-pane--compact.tm-checklist-pane--group-doc .tm-checklist-group-card .tm-checklist-group.tm-checklist-group--h2 {
+                padding-left: calc(var(--tm-checklist-card-divider-start) - 1px);
             }
 
             .tm-checklist-pane--compact .tm-checklist-leading {
@@ -6641,7 +6865,7 @@
         }
 
         .tm-gantt-dep.tm-gantt-dep--manual {
-            stroke: #2f6fed;
+            stroke: var(--tm-primary-color);
         }
 
         .tm-gantt-row {
@@ -6847,7 +7071,7 @@
 
         .tm-table tr.tm-timer-focus {
             opacity: 1;
-            background: rgba(66, 133, 244, 0.12);
+            background: color-mix(in srgb, var(--tm-primary-color) 12%, var(--tm-bg-color));
             box-shadow: none;
         }
 
@@ -6880,7 +7104,7 @@
         }
 
         .tm-table tr.tm-timer-focus:hover {
-            background: rgba(66, 133, 244, 0.16);
+            background: color-mix(in srgb, var(--tm-primary-color) 16%, var(--tm-bg-color));
         }
 
         .tm-checklist-item.tm-timer-dim {
@@ -6892,12 +7116,12 @@
             --tm-checklist-item-border-color: var(--tm-primary-color);
             border-color: var(--tm-primary-color);
             background: color-mix(in srgb, var(--tm-bg-color) 88%, var(--tm-primary-color) 12%);
-            box-shadow: inset 0 0 0 1px var(--tm-primary-color), 0 12px 24px rgba(66, 133, 244, 0.16);
+            box-shadow: inset 0 0 0 1px var(--tm-primary-color), 0 12px 24px color-mix(in srgb, var(--tm-primary-color) 16%, transparent);
         }
 
         .tm-checklist-item.tm-timer-focus:hover {
             background: color-mix(in srgb, var(--tm-bg-color) 84%, var(--tm-primary-color) 16%);
-            box-shadow: inset 0 0 0 1px var(--tm-primary-color), 0 14px 28px rgba(66, 133, 244, 0.2);
+            box-shadow: inset 0 0 0 1px var(--tm-primary-color), 0 14px 28px color-mix(in srgb, var(--tm-primary-color) 20%, transparent);
         }
 
         .tm-checklist-pane--compact .tm-checklist-item.tm-timer-focus {
@@ -6905,13 +7129,13 @@
             border-bottom: 1px solid color-mix(in srgb, var(--tm-border-color) 92%, transparent);
             border-bottom-color: transparent;
             border-radius: 12px;
-            background-color: color-mix(in srgb, var(--tm-bg-color) 88%, #2f6fed 8%) !important;
+            background-color: color-mix(in srgb, var(--tm-bg-color) 88%, var(--tm-primary-color) 8%) !important;
             box-shadow: inset 0 0 0 1px var(--tm-primary-color);
             z-index: 1;
         }
 
         .tm-checklist-pane--compact .tm-checklist-item.tm-timer-focus:hover {
-            background-color: color-mix(in srgb, var(--tm-bg-color) 84%, #2f6fed 12%) !important;
+            background-color: color-mix(in srgb, var(--tm-bg-color) 84%, var(--tm-primary-color) 12%) !important;
             box-shadow: inset 0 0 0 1px var(--tm-primary-color);
         }
 
@@ -6944,7 +7168,7 @@
 
         .tm-block-highlight {
             outline: 2px solid var(--tm-primary-color);
-            background: rgba(66, 133, 244, 0.12);
+            background: color-mix(in srgb, var(--tm-primary-color) 12%, transparent);
         }
 
         .tm-task-cell {
@@ -7513,7 +7737,7 @@
         }
 
         .tm-priority-medium {
-            color: #f9ab00 !important;
+            color: var(--tm-warning-color, #f9ab00) !important;
             font-weight: 600;
         }
 
@@ -7884,7 +8108,7 @@
         .tm-settings-sidebar {
             padding: 12px 10px;
             border-right: 1px solid var(--tm-border-color);
-            background: var(--tm-section-bg);
+            background: var(--tm-sidebar-bg, var(--tm-section-bg));
             overflow-y: auto;
             min-height: 0;
         }
@@ -7929,6 +8153,7 @@
             display: flex;
             flex-direction: column;
             min-height: 0;
+            background: var(--tm-bg-color);
         }
 
         .tm-settings-content {
@@ -7941,7 +8166,7 @@
         }
 
         .tm-settings-panel {
-            background: var(--tm-section-bg);
+            background: var(--tm-sidebar-bg, var(--tm-section-bg));
             border: 1px solid var(--tm-border-color);
             border-radius: 10px;
             padding: 12px;
@@ -8572,10 +8797,10 @@
             calendarShowBreak: true,
             calendarShowStopwatch: true,
             calendarShowIdle: false,
-            calendarColorFocus: '#1a73e8',
-            calendarColorBreak: '#34a853',
-            calendarColorStopwatch: '#f9ab00',
-            calendarColorIdle: '#9aa0a6',
+            calendarColorFocus: 'var(--tm-primary-color)',
+            calendarColorBreak: 'var(--tm-success-color)',
+            calendarColorStopwatch: 'var(--tm-warning-color, #f9ab00)',
+            calendarColorIdle: 'var(--tm-secondary-text)',
             calendarCalendarsConfig: {},
             calendarDefaultCalendarId: 'default',
             calendarLastViewType: '',
@@ -8667,6 +8892,13 @@
             collapseAllIncludesGroups: false,
             docColorMap: {},
             docColorSeed: 1,
+            themeConfig: {
+                source: 'preset',
+                presetId: 'task-horizon-slate',
+                importName: '',
+                importLight: {},
+                importDark: {}
+            },
             // 外观配色（支持亮/暗）
             topbarGradientLightStart: '#E3ECF2',
             topbarGradientLightEnd: '#E3ECF2',
@@ -8693,24 +8925,24 @@
             topbarControlShadowYOffsetPx: 0,
             topbarControlShadowBlurPx: 0,
             topbarControlShadowStrengthPct: 100,
-            taskContentColorLight: '#333333',
-            taskContentColorDark: '#e0e0e0',
-            taskMetaColorLight: '#5f6368',
-            taskMetaColorDark: '#b0b8c4',
-            groupDocLabelColorLight: '#333333',
-            groupDocLabelColorDark: '#e0e0e0',
-            timeGroupBaseColorLight: '#1a73e8',
-            timeGroupBaseColorDark: '#6ba5ff',
-            timeGroupOverdueColorLight: '#d93025',
-            timeGroupOverdueColorDark: '#ff6b6b',
-            timeGroupPendingTaskBgColorLight: '#9aa0a6',
-            timeGroupPendingTaskBgColorDark: '#8ab4f8',
-            progressBarColorLight: '#4caf50',
-            progressBarColorDark: '#81c784',
-            calendarGridBorderColorLight: '#E1E1E1',
-            calendarGridBorderColorDark: '#333333',
-            tableBorderColorLight: '#e9ecef',
-            tableBorderColorDark: '#333333',
+            taskContentColorLight: 'var(--foreground)',
+            taskContentColorDark: 'var(--foreground)',
+            taskMetaColorLight: 'var(--muted-foreground)',
+            taskMetaColorDark: 'var(--muted-foreground)',
+            groupDocLabelColorLight: 'var(--foreground)',
+            groupDocLabelColorDark: 'var(--foreground)',
+            timeGroupBaseColorLight: 'var(--tm-primary-color)',
+            timeGroupBaseColorDark: 'var(--tm-primary-color)',
+            timeGroupOverdueColorLight: 'var(--tm-danger-color)',
+            timeGroupOverdueColorDark: 'var(--tm-danger-color)',
+            timeGroupPendingTaskBgColorLight: 'var(--tm-secondary-text)',
+            timeGroupPendingTaskBgColorDark: 'var(--tm-secondary-text)',
+            progressBarColorLight: 'var(--tm-success-color)',
+            progressBarColorDark: 'var(--tm-success-color)',
+            calendarGridBorderColorLight: 'var(--border)',
+            calendarGridBorderColorDark: 'var(--border)',
+            tableBorderColorLight: 'var(--border)',
+            tableBorderColorDark: 'var(--border)',
             enableGroupTaskBgByGroupColor: true,
             enableQuickbarInlineMeta: false,
             quickbarInlineFields: ['custom-status', 'custom-completion-time'],
@@ -8981,6 +9213,7 @@
                                 if (cloudData.docPinnedByGroup && typeof cloudData.docPinnedByGroup === 'object') this.data.docPinnedByGroup = cloudData.docPinnedByGroup;
                                 if (cloudData.currentGroupId) this.data.currentGroupId = cloudData.currentGroupId;
                                 if (cloudData.taskHeadingLevel) this.data.taskHeadingLevel = cloudData.taskHeadingLevel;
+                                if (cloudData.themeConfig && typeof cloudData.themeConfig === 'object') this.data.themeConfig = cloudData.themeConfig;
                                 if (typeof cloudData.topbarGradientLightStart === 'string') this.data.topbarGradientLightStart = cloudData.topbarGradientLightStart;
                                 if (typeof cloudData.topbarGradientLightEnd === 'string') this.data.topbarGradientLightEnd = cloudData.topbarGradientLightEnd;
                                 if (typeof cloudData.topbarGradientDarkStart === 'string') this.data.topbarGradientDarkStart = cloudData.topbarGradientDarkStart;
@@ -9337,6 +9570,7 @@
             this.data.whiteboardSequenceMode = Storage.get('tm_whiteboard_sequence_mode', this.data.whiteboardSequenceMode);
             this.data.docColorMap = Storage.get('tm_doc_color_map', this.data.docColorMap) || {};
             this.data.docColorSeed = Storage.get('tm_doc_color_seed', this.data.docColorSeed);
+            this.data.themeConfig = Storage.get('tm_theme_config', this.data.themeConfig) || this.data.themeConfig;
             this.data.enableGroupTaskBgByGroupColor = Storage.get('tm_enable_group_task_bg_by_group_color', this.data.enableGroupTaskBgByGroupColor);
             this.data.aiEnabled = !!Storage.get('tm_ai_enabled', this.data.aiEnabled);
             this.data.aiSideDockEnabled = !!Storage.get('tm_ai_side_dock_enabled', this.data.aiSideDockEnabled);
@@ -9631,6 +9865,7 @@
             Storage.set('tm_whiteboard_sequence_mode', !!this.data.whiteboardSequenceMode);
             Storage.set('tm_doc_color_map', this.data.docColorMap || {});
             Storage.set('tm_doc_color_seed', Number(this.data.docColorSeed) || 1);
+            Storage.set('tm_theme_config', __tmNormalizeThemeConfig(this.data.themeConfig));
             Storage.set('tm_enable_group_task_bg_by_group_color', !!this.data.enableGroupTaskBgByGroupColor);
             Storage.set('tm_ai_enabled', !!this.data.aiEnabled);
             Storage.set('tm_ai_side_dock_enabled', !!this.data.aiSideDockEnabled);
@@ -9680,6 +9915,7 @@
             this.data.columnWidths = widths;
             const map = this.data.docColorMap;
             this.data.docColorMap = (map && typeof map === 'object' && !Array.isArray(map)) ? map : {};
+            this.data.themeConfig = __tmNormalizeThemeConfig(this.data.themeConfig);
             const rawDocGroups = Array.isArray(this.data.docGroups) ? this.data.docGroups : [];
             this.data.docGroups = rawDocGroups.map((group) => __tmNormalizeDocGroupConfig(group)).filter(Boolean);
             const pinMap0 = this.data.docPinnedByGroup;
@@ -11491,8 +11727,16 @@
                         d.hpath as path,
                         d.box as notebook,
                         d.created,
+                        d.ial as ial,
+                        COALESCE(attr.alias, '') as alias,
                         COALESCE(tc.task_count, 0) as task_count
                     FROM blocks d
+                    LEFT JOIN (
+                        SELECT block_id, MAX(value) as alias
+                        FROM attributes
+                        WHERE name = 'alias'
+                        GROUP BY block_id
+                    ) attr ON attr.block_id = d.id
                     LEFT JOIN (
                         SELECT root_id, COUNT(*) as task_count
                         FROM blocks
@@ -11509,6 +11753,8 @@
                     return res.data.map(doc => ({
                         id: doc.id,
                         name: doc.name || '未命名文档',
+                        alias: __tmNormalizeDocAliasValue(doc.alias),
+                        icon: __tmNormalizeDocIconValue(__tmReadIalAttrValue(doc.ial, 'icon')),
                         path: doc.path || '',
                         notebook: doc.notebook || '',
                         taskCount: parseInt(doc.task_count) || 0,
@@ -14490,7 +14736,7 @@
             const owner = el.closest('tr[data-id], .tm-kanban-card[data-id], .tm-checklist-item[data-id]');
             const tid = String(owner?.getAttribute?.('data-id') || '').trim();
             if (!tid) return;
-            if (__tmHasTaskScheduledToday(tid)) el.style.color = '#1a73e8';
+            if (__tmHasTaskScheduledToday(tid)) el.style.color = 'var(--tm-primary-color)';
             else el.style.removeProperty('color');
         });
     }
@@ -14834,11 +15080,26 @@
         return __tmMountEl || document.body;
     }
 
+    function __tmCanReattachExistingModalToMount(targetEl = null) {
+        const modal = state?.modal;
+        if (!(modal instanceof HTMLElement)) return false;
+        const mountRoot = targetEl instanceof HTMLElement ? targetEl : __tmGetMountRoot();
+        if (!(mountRoot instanceof HTMLElement)) return false;
+        const prevMountRoot = modal.parentElement instanceof HTMLElement ? modal.parentElement : null;
+        if (!(prevMountRoot instanceof HTMLElement)) return false;
+        if (prevMountRoot === mountRoot) return true;
+        const prevHostKey = __tmGetHostSessionKeyByEl(prevMountRoot);
+        const nextHostKey = __tmGetHostSessionKeyByEl(mountRoot);
+        if (!prevHostKey || !nextHostKey) return false;
+        return prevHostKey === nextHostKey;
+    }
+
     function __tmTryReattachExistingModalToMount(targetEl = null) {
         const modal = state?.modal;
         if (!(modal instanceof HTMLElement)) return false;
         const mountRoot = targetEl instanceof HTMLElement ? targetEl : __tmGetMountRoot();
         if (!(mountRoot instanceof HTMLElement)) return false;
+        if (!__tmCanReattachExistingModalToMount(mountRoot)) return false;
         if (modal.parentElement === mountRoot && document.body.contains(modal)) return true;
         try {
             mountRoot.appendChild(modal);
@@ -16665,6 +16926,154 @@ async function __tmRefreshAfterWake(reason) {
     const __TM_DOC_EXPECTED_DEADLINE_ATTR = 'custom-tm-doc-deadline';
     const __tmDocExpectedMetaCache = new Map();
 
+    function __tmNormalizeDocAliasValue(value) {
+        return String(value ?? '').trim();
+    }
+
+    function __tmFindDocMetaById(docId) {
+        const id = String(docId || '').trim();
+        if (!id) return null;
+        return state.taskTree?.find?.((doc) => String(doc?.id || '').trim() === id)
+            || state.allDocuments?.find?.((doc) => String(doc?.id || '').trim() === id)
+            || null;
+    }
+
+    function __tmGetDocAliasValue(docOrId) {
+        const entry = (docOrId && typeof docOrId === 'object') ? docOrId : null;
+        const fallbackEntry = entry ? __tmFindDocMetaById(entry?.id) : __tmFindDocMetaById(docOrId);
+        return __tmNormalizeDocAliasValue(entry?.alias || fallbackEntry?.alias);
+    }
+
+    function __tmGetDocRawName(docOrId, fallback = '未命名文档') {
+        const entry = (docOrId && typeof docOrId === 'object') ? docOrId : null;
+        const fallbackEntry = entry ? __tmFindDocMetaById(entry?.id) : __tmFindDocMetaById(docOrId);
+        const name = String(entry?.name || fallbackEntry?.name || '').trim();
+        return name || String(fallback || '').trim() || '未命名文档';
+    }
+
+    function __tmGetDocDisplayName(docOrId, fallback = '未命名文档') {
+        const alias = __tmGetDocAliasValue(docOrId);
+        return alias || __tmGetDocRawName(docOrId, fallback);
+    }
+
+    function __tmDecodeHtmlEntities(value) {
+        const raw = String(value ?? '').trim();
+        if (!raw || !/[&]/.test(raw)) return raw;
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = raw;
+        return textarea.value;
+    }
+
+    function __tmReadIalAttrValue(ial, attrName) {
+        const source = String(ial || '').trim();
+        const key = String(attrName || '').trim();
+        if (!source || !key) return '';
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const match = new RegExp(`${escapedKey}="([^"]*)"`).exec(source);
+        if (!match) return '';
+        return __tmDecodeHtmlEntities(String(match[1] || '').replace(/\\"/g, '"').replace(/\\\\/g, '\\')).trim();
+    }
+
+    function __tmNormalizeDocIconValue(value) {
+        return String(value ?? '').trim();
+    }
+
+    function __tmGetDocIconValue(docOrId) {
+        const entry = (docOrId && typeof docOrId === 'object') ? docOrId : null;
+        const fallbackEntry = entry ? __tmFindDocMetaById(entry?.id) : __tmFindDocMetaById(docOrId);
+        return __tmNormalizeDocIconValue(entry?.icon || fallbackEntry?.icon);
+    }
+
+    function __tmDocIconCodeToEmoji(iconValue) {
+        const raw = __tmNormalizeDocIconValue(iconValue).toLowerCase();
+        if (!raw || /[./]/.test(raw) || /^https?:\/\//i.test(raw) || /^(?:\/)?api\/icon\//i.test(raw)) return '';
+        const parts = raw.split('-').map((part) => String(part || '').trim()).filter(Boolean);
+        if (!parts.length || parts.some((part) => !/^[0-9a-f]{1,6}$/.test(part))) return '';
+        try {
+            return parts.map((part) => String.fromCodePoint(parseInt(part.length < 5 ? `0${part}` : part, 16))).join('');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function __tmResolveDocIconImageSrc(iconValue) {
+        const raw = __tmDecodeHtmlEntities(__tmNormalizeDocIconValue(iconValue));
+        if (!raw) return '';
+        if (/^https?:\/\//i.test(raw)) return raw;
+        if (/^(?:\/)?api\/icon\/getDynamicIcon/i.test(raw)) return raw.startsWith('/') ? raw : `/${raw}`;
+        if (raw.includes('.')) {
+            if (/^(?:\/)?emojis\//i.test(raw)) return raw.startsWith('/') ? raw : `/${raw}`;
+            const encoded = raw.split('/').map((part) => encodeURIComponent(part)).join('/');
+            return `/emojis/${encoded}`;
+        }
+        return '';
+    }
+
+    function __tmRenderDocIcon(docOrId, options = {}) {
+        const className = ['tm-doc-icon', String(options?.className || '').trim()].filter(Boolean).join(' ');
+        const imgClassName = ['tm-doc-icon__img', String(options?.imgClassName || '').trim()].filter(Boolean).join(' ');
+        const styleParts = [];
+        const size = Number(options?.size);
+        if (Number.isFinite(size) && size > 0) {
+            styleParts.push(`width:${size}px;`, `height:${size}px;`, `font-size:${size}px;`);
+        }
+        const extraStyle = String(options?.style || '').trim();
+        if (extraStyle) styleParts.push(extraStyle);
+        const styleAttr = styleParts.length ? ` style="${__tmEscAttr(styleParts.join(''))}"` : '';
+        const iconValue = __tmGetDocIconValue(docOrId);
+        const emoji = __tmDocIconCodeToEmoji(iconValue);
+        if (emoji) {
+            return `<span class="${__tmEscAttr(className)}" aria-hidden="true"${styleAttr}>${esc(emoji)}</span>`;
+        }
+        const imgSrc = __tmResolveDocIconImageSrc(iconValue);
+        if (imgSrc) {
+            return `<span class="${__tmEscAttr(className)}" aria-hidden="true"${styleAttr}><img class="${__tmEscAttr(imgClassName)}" src="${__tmEscAttr(imgSrc)}" alt="" draggable="false" referrerpolicy="no-referrer"></span>`;
+        }
+        if (Object.prototype.hasOwnProperty.call(options || {}, 'fallbackText')) {
+            const fallbackText = String(options?.fallbackText ?? '');
+            if (fallbackText) {
+                return `<span class="${__tmEscAttr(className)}" aria-hidden="true"${styleAttr}>${esc(fallbackText)}</span>`;
+            }
+        }
+        return String(options?.fallbackHtml || '');
+    }
+
+    function __tmRenderDocGroupLabel(docOrId, text, options = {}) {
+        const cls = ['tm-icon-label', String(options?.className || '').trim()].filter(Boolean).join(' ');
+        const style = String(options?.style || '').trim();
+        const styleAttr = style ? ` style="${__tmEscAttr(style)}"` : '';
+        const size = Number(options?.size);
+        const iconSize = Number.isFinite(size) && size > 0 ? size : 14;
+        const fallbackHtml = __tmRenderInlineIcon('file-text', { size: iconSize });
+        const iconHtml = __tmRenderDocIcon(docOrId, {
+            size: iconSize,
+            fallbackHtml,
+        });
+        return `<span class="${cls}"${styleAttr}>${iconHtml}<span>${esc(String(text || ''))}</span></span>`;
+    }
+
+    function __tmSyncDocAliasInState(docId, alias) {
+        const id = String(docId || '').trim();
+        if (!id) return;
+        const normalizedAlias = __tmNormalizeDocAliasValue(alias);
+        [state.allDocuments, state.taskTree].forEach((list) => {
+            if (!Array.isArray(list)) return;
+            list.forEach((doc) => {
+                if (String(doc?.id || '').trim() !== id) return;
+                doc.alias = normalizedAlias;
+            });
+        });
+    }
+
+    async function __tmSaveNativeDocAlias(docId, alias) {
+        const id = String(docId || '').trim();
+        if (!id || __tmIsOtherBlockTabId(id)) return '';
+        const normalizedAlias = __tmNormalizeDocAliasValue(alias);
+        await API.setAttrs(id, { alias: normalizedAlias });
+        __tmSyncDocAliasInState(id, normalizedAlias);
+        return normalizedAlias;
+    }
+
     function __tmParseDateOnlyToLocalNoonTs(value) {
         const s = String(value || '').trim();
         if (!s) return 0;
@@ -16853,6 +17262,18 @@ async function __tmRefreshAfterWake(reason) {
         return __tmRgbToHex(__tmMixRgb(rgb, { r: g, g: g, b: g }, t));
     }
 
+    function __tmGetHeadingSubgroupLabelColor(colorStr, isDark) {
+        const rgba = __tmParseCssColorToRgba(colorStr);
+        if (!rgba) return 'var(--tm-secondary-text)';
+        const baseHex = __tmRgbToHex({
+            r: Math.round(rgba.r),
+            g: Math.round(rgba.g),
+            b: Math.round(rgba.b),
+        });
+        const desaturated = __tmDesaturateHex(baseHex, isDark ? 0.22 : 0.34);
+        return __tmDarkenHex(desaturated, isDark ? 0.12 : 0.18);
+    }
+
     function __tmParseCssColorToRgba(input) {
         const s0 = String(input || '').trim();
         if (!s0) return null;
@@ -16964,6 +17385,512 @@ async function __tmRefreshAfterWake(reason) {
         return `rgba(${Math.round(rgba.r)}, ${Math.round(rgba.g)}, ${Math.round(rgba.b)}, ${a})`;
     }
 
+    const __TM_THEME_TOKEN_KEYS = new Set([
+        'background', 'foreground',
+        'sidebar',
+        'card', 'card-foreground',
+        'popover', 'popover-foreground',
+        'primary', 'primary-foreground',
+        'secondary', 'secondary-foreground',
+        'muted', 'muted-foreground',
+        'accent', 'accent-foreground',
+        'destructive', 'destructive-foreground',
+        'border', 'input', 'ring',
+        'success', 'warning', 'info'
+    ]);
+    const __TM_THEME_TOKEN_KEY_ALIASES = Object.freeze({
+        'background-sidebar': 'sidebar',
+        'bg-sidebar': 'sidebar',
+        'sidebar-background': 'sidebar',
+    });
+    const __TM_TWEAKCN_URL = 'https://tweakcn.com';
+
+    const __TM_THEME_PRESETS = [
+        {
+            id: 'task-horizon-slate',
+            name: 'Modern Minimal',
+            description: '克制蓝灰，适合作为默认工作主题。',
+            light: {
+                background: '#ffffff',
+                foreground: '#333333',
+                card: '#ffffff',
+                'card-foreground': '#333333',
+                popover: '#ffffff',
+                'popover-foreground': '#333333',
+                primary: '#3b82f6',
+                'primary-foreground': '#ffffff',
+                secondary: '#f3f4f6',
+                'secondary-foreground': '#4b5563',
+                muted: '#f9fafb',
+                'muted-foreground': '#6b7280',
+                accent: '#e0f2fe',
+                'accent-foreground': '#1e3a8a',
+                destructive: '#ef4444',
+                'destructive-foreground': '#ffffff',
+                border: '#e5e7eb',
+                input: '#e5e7eb',
+                ring: '#3b82f6',
+                success: 'hsl(142 71% 45%)',
+                warning: 'hsl(38 92% 50%)',
+                info: 'hsl(199 89% 48%)'
+            },
+            dark: {
+                background: '#171717',
+                foreground: '#e5e5e5',
+                card: '#262626',
+                'card-foreground': '#e5e5e5',
+                popover: '#262626',
+                'popover-foreground': '#e5e5e5',
+                primary: '#3b82f6',
+                'primary-foreground': '#ffffff',
+                secondary: '#262626',
+                'secondary-foreground': '#e5e5e5',
+                muted: '#1f1f1f',
+                'muted-foreground': '#a3a3a3',
+                accent: '#1e3a8a',
+                'accent-foreground': '#bfdbfe',
+                destructive: '#ef4444',
+                'destructive-foreground': '#ffffff',
+                border: '#404040',
+                input: '#404040',
+                ring: '#3b82f6',
+                success: 'hsl(142 71% 52%)',
+                warning: 'hsl(40 96% 60%)',
+                info: 'hsl(199 94% 56%)'
+            }
+        },
+        {
+            id: 'task-horizon-warm-stone',
+            name: 'Warm Stone',
+            description: '暖灰米色，阅读感更柔和。',
+            light: {
+                background: 'hsl(36 33% 97%)',
+                foreground: 'hsl(24 10% 10%)',
+                card: 'hsl(36 24% 99%)',
+                'card-foreground': 'hsl(24 10% 10%)',
+                popover: 'hsl(36 24% 99%)',
+                'popover-foreground': 'hsl(24 10% 10%)',
+                primary: 'hsl(23 79% 50%)',
+                'primary-foreground': 'hsl(36 24% 99%)',
+                secondary: 'hsl(32 23% 92%)',
+                'secondary-foreground': 'hsl(24 10% 14%)',
+                muted: 'hsl(30 20% 93%)',
+                'muted-foreground': 'hsl(25 8% 40%)',
+                accent: 'hsl(42 90% 88%)',
+                'accent-foreground': 'hsl(24 18% 22%)',
+                destructive: 'hsl(0 72% 54%)',
+                'destructive-foreground': 'hsl(36 24% 99%)',
+                border: 'hsl(30 16% 86%)',
+                input: 'hsl(30 16% 86%)',
+                ring: 'hsl(23 79% 50%)',
+                success: 'hsl(142 65% 38%)',
+                warning: 'hsl(35 92% 50%)',
+                info: 'hsl(204 78% 44%)'
+            },
+            dark: {
+                background: 'hsl(24 10% 11%)',
+                foreground: 'hsl(35 25% 94%)',
+                card: 'hsl(24 9% 14%)',
+                'card-foreground': 'hsl(35 25% 94%)',
+                popover: 'hsl(24 9% 14%)',
+                'popover-foreground': 'hsl(35 25% 94%)',
+                primary: 'hsl(28 88% 62%)',
+                'primary-foreground': 'hsl(20 14% 10%)',
+                secondary: 'hsl(25 10% 18%)',
+                'secondary-foreground': 'hsl(35 25% 94%)',
+                muted: 'hsl(25 10% 18%)',
+                'muted-foreground': 'hsl(34 11% 68%)',
+                accent: 'hsl(30 38% 22%)',
+                'accent-foreground': 'hsl(35 25% 94%)',
+                destructive: 'hsl(0 72% 62%)',
+                'destructive-foreground': 'hsl(35 25% 94%)',
+                border: 'hsl(25 8% 26%)',
+                input: 'hsl(25 8% 26%)',
+                ring: 'hsl(28 88% 62%)',
+                success: 'hsl(142 60% 48%)',
+                warning: 'hsl(39 96% 62%)',
+                info: 'hsl(204 88% 62%)'
+            }
+        },
+        {
+            id: 'task-horizon-forest',
+            name: 'Forest Slate',
+            description: '森林中性，强调色偏青绿。',
+            light: {
+                background: 'hsl(160 28% 97%)',
+                foreground: 'hsl(170 28% 12%)',
+                card: 'hsl(0 0% 100%)',
+                'card-foreground': 'hsl(170 28% 12%)',
+                popover: 'hsl(0 0% 100%)',
+                'popover-foreground': 'hsl(170 28% 12%)',
+                primary: 'hsl(165 65% 36%)',
+                'primary-foreground': 'hsl(160 28% 97%)',
+                secondary: 'hsl(160 20% 92%)',
+                'secondary-foreground': 'hsl(170 28% 14%)',
+                muted: 'hsl(160 18% 93%)',
+                'muted-foreground': 'hsl(170 12% 38%)',
+                accent: 'hsl(154 46% 88%)',
+                'accent-foreground': 'hsl(170 28% 18%)',
+                destructive: 'hsl(0 75% 54%)',
+                'destructive-foreground': 'hsl(160 28% 97%)',
+                border: 'hsl(160 16% 86%)',
+                input: 'hsl(160 16% 86%)',
+                ring: 'hsl(165 65% 36%)',
+                success: 'hsl(145 63% 40%)',
+                warning: 'hsl(37 92% 48%)',
+                info: 'hsl(197 82% 44%)'
+            },
+            dark: {
+                background: 'hsl(173 27% 10%)',
+                foreground: 'hsl(160 24% 95%)',
+                card: 'hsl(172 24% 13%)',
+                'card-foreground': 'hsl(160 24% 95%)',
+                popover: 'hsl(172 24% 13%)',
+                'popover-foreground': 'hsl(160 24% 95%)',
+                primary: 'hsl(162 63% 52%)',
+                'primary-foreground': 'hsl(173 27% 10%)',
+                secondary: 'hsl(168 15% 18%)',
+                'secondary-foreground': 'hsl(160 24% 95%)',
+                muted: 'hsl(168 15% 18%)',
+                'muted-foreground': 'hsl(160 12% 68%)',
+                accent: 'hsl(164 33% 22%)',
+                'accent-foreground': 'hsl(160 24% 95%)',
+                destructive: 'hsl(0 72% 62%)',
+                'destructive-foreground': 'hsl(160 24% 95%)',
+                border: 'hsl(168 13% 24%)',
+                input: 'hsl(168 13% 24%)',
+                ring: 'hsl(162 63% 52%)',
+                success: 'hsl(145 63% 52%)',
+                warning: 'hsl(40 96% 60%)',
+                info: 'hsl(196 92% 62%)'
+            }
+        },
+        {
+            id: 'task-horizon-graphite',
+            name: 'Graphite',
+            description: '更冷静的石墨灰配蓝光强调。',
+            light: {
+                background: 'hsl(220 14% 96%)',
+                foreground: 'hsl(222 26% 14%)',
+                card: 'hsl(0 0% 100%)',
+                'card-foreground': 'hsl(222 26% 14%)',
+                popover: 'hsl(0 0% 100%)',
+                'popover-foreground': 'hsl(222 26% 14%)',
+                primary: 'hsl(223 68% 54%)',
+                'primary-foreground': 'hsl(210 40% 98%)',
+                secondary: 'hsl(220 16% 91%)',
+                'secondary-foreground': 'hsl(222 26% 16%)',
+                muted: 'hsl(220 16% 92%)',
+                'muted-foreground': 'hsl(220 10% 42%)',
+                accent: 'hsl(222 82% 92%)',
+                'accent-foreground': 'hsl(224 64% 24%)',
+                destructive: 'hsl(0 72% 51%)',
+                'destructive-foreground': 'hsl(210 40% 98%)',
+                border: 'hsl(220 13% 84%)',
+                input: 'hsl(220 13% 84%)',
+                ring: 'hsl(223 68% 54%)',
+                success: 'hsl(142 69% 40%)',
+                warning: 'hsl(38 92% 50%)',
+                info: 'hsl(207 90% 48%)'
+            },
+            dark: {
+                background: 'hsl(222 22% 9%)',
+                foreground: 'hsl(210 16% 94%)',
+                card: 'hsl(222 18% 12%)',
+                'card-foreground': 'hsl(210 16% 94%)',
+                popover: 'hsl(222 18% 12%)',
+                'popover-foreground': 'hsl(210 16% 94%)',
+                primary: 'hsl(221 83% 66%)',
+                'primary-foreground': 'hsl(222 22% 9%)',
+                secondary: 'hsl(223 15% 17%)',
+                'secondary-foreground': 'hsl(210 16% 94%)',
+                muted: 'hsl(223 15% 17%)',
+                'muted-foreground': 'hsl(217 10% 68%)',
+                accent: 'hsl(223 32% 22%)',
+                'accent-foreground': 'hsl(210 16% 94%)',
+                destructive: 'hsl(0 72% 62%)',
+                'destructive-foreground': 'hsl(210 16% 94%)',
+                border: 'hsl(223 13% 24%)',
+                input: 'hsl(223 13% 24%)',
+                ring: 'hsl(221 83% 66%)',
+                success: 'hsl(142 69% 52%)',
+                warning: 'hsl(40 96% 60%)',
+                info: 'hsl(207 96% 62%)'
+            }
+        }
+    ];
+
+    function __tmGetDefaultThemeConfig() {
+        return {
+            source: 'preset',
+            presetId: 'task-horizon-slate',
+            importName: '',
+            importLight: {},
+            importDark: {},
+            overrideLight: {},
+            overrideDark: {}
+        };
+    }
+
+    function __tmNormalizeThemeTokenKey(input) {
+        const rawKey = String(input || '').trim().replace(/^--/, '').toLowerCase();
+        const key = __TM_THEME_TOKEN_KEY_ALIASES[rawKey] || rawKey;
+        return __TM_THEME_TOKEN_KEYS.has(key) ? key : '';
+    }
+
+    function __tmNormalizeThemeSemanticColorValue(input) {
+        const raw = String(input || '').trim().replace(/;+$/, '').trim();
+        if (!raw) return '';
+        const direct = __tmNormalizeHexColor(raw, '');
+        if (direct) return direct;
+        if (/^[0-9.\s,%/+-]+$/.test(raw) && /%/.test(raw)) {
+            return __tmNormalizeHexColor(`hsl(${raw})`, '');
+        }
+        if (/^[0-9.\s/+-]+$/.test(raw)) {
+            return __tmNormalizeHexColor(`oklch(${raw})`, '');
+        }
+        return '';
+    }
+
+    function __tmNormalizeThemeTokenMap(input) {
+        const out = {};
+        if (!input || typeof input !== 'object') return out;
+        Object.keys(input).forEach((key) => {
+            const normalizedKey = __tmNormalizeThemeTokenKey(key);
+            if (!normalizedKey) return;
+            const normalizedValue = __tmNormalizeThemeSemanticColorValue(input[key]);
+            if (!normalizedValue) return;
+            out[normalizedKey] = normalizedValue;
+        });
+        return out;
+    }
+
+    function __tmNormalizeThemeConfig(input) {
+        const defaults = __tmGetDefaultThemeConfig();
+        const source = String(input?.source || defaults.source).trim() === 'imported' ? 'imported' : 'preset';
+        const preset = __tmGetThemePresetById(String(input?.presetId || defaults.presetId).trim() || defaults.presetId);
+        return {
+            source,
+            presetId: String(preset?.id || defaults.presetId),
+            importName: String(input?.importName || '').trim(),
+            importLight: __tmNormalizeThemeTokenMap(input?.importLight),
+            importDark: __tmNormalizeThemeTokenMap(input?.importDark),
+            overrideLight: __tmNormalizeThemeTokenMap(input?.overrideLight),
+            overrideDark: __tmNormalizeThemeTokenMap(input?.overrideDark),
+        };
+    }
+
+    function __tmGetThemePresetById(id) {
+        const normalizedId = String(id || '').trim();
+        return __TM_THEME_PRESETS.find((item) => item.id === normalizedId) || __TM_THEME_PRESETS[0];
+    }
+
+    function __tmResolveThemeTokenMap(themeConfig, isDark) {
+        const config = __tmNormalizeThemeConfig(themeConfig || SettingsStore?.data?.themeConfig);
+        const preset = __tmGetThemePresetById(config.presetId);
+        const presetTokens = __tmNormalizeThemeTokenMap(isDark ? preset?.dark : preset?.light);
+        const overrideTokens = __tmNormalizeThemeTokenMap(isDark ? config.overrideDark : config.overrideLight);
+        if (config.source !== 'imported') return { ...presetTokens, ...overrideTokens };
+        const importedLight = __tmNormalizeThemeTokenMap(config.importLight);
+        const importedDark = __tmNormalizeThemeTokenMap(config.importDark);
+        const activeImport = isDark ? ((Object.keys(importedDark).length ? importedDark : importedLight)) : importedLight;
+        return { ...presetTokens, ...activeImport, ...overrideTokens };
+    }
+
+    function __tmMixThemeColors(a, b, ratio, alphaScale = 1) {
+        const left = __tmParseCssColorToRgba(a);
+        const right = __tmParseCssColorToRgba(b);
+        if (!left && !right) return String(a || b || '').trim();
+        if (!left) return __tmScaleColorAlpha(b, alphaScale);
+        if (!right) return __tmScaleColorAlpha(a, alphaScale);
+        const mixed = __tmMixRgb(left, right, __tmClamp(ratio, 0, 1));
+        const alpha = __tmClamp(Number(mixed.a ?? 1) * __tmClamp(alphaScale, 0, 1), 0, 1);
+        return `rgba(${Math.round(mixed.r)}, ${Math.round(mixed.g)}, ${Math.round(mixed.b)}, ${alpha})`;
+    }
+
+    function __tmBuildThemePalette(themeConfig, isDark) {
+        const tokens = __tmResolveThemeTokenMap(themeConfig, isDark);
+        const background = tokens.background || (isDark ? 'hsl(222 47% 11%)' : 'hsl(210 20% 98%)');
+        const foreground = tokens.foreground || (isDark ? 'hsl(210 40% 98%)' : 'hsl(222 47% 11%)');
+        const card = tokens.card || __tmMixThemeColors(background, foreground, isDark ? 0.08 : 0.02);
+        const cardForeground = tokens['card-foreground'] || foreground;
+        const popover = tokens.popover || card;
+        const popoverForeground = tokens['popover-foreground'] || foreground;
+        const primary = tokens.primary || (isDark ? 'hsl(217 91% 60%)' : 'hsl(221 83% 53%)');
+        const primaryForeground = tokens['primary-foreground'] || __tmGetReadableTextColor(primary, '#0f172a', '#ffffff');
+        const secondary = tokens.secondary || __tmMixThemeColors(background, foreground, isDark ? 0.14 : 0.06);
+        const secondaryForeground = tokens['secondary-foreground'] || foreground;
+        const sidebar = tokens.sidebar || secondary;
+        const muted = tokens.muted || __tmMixThemeColors(background, foreground, isDark ? 0.18 : 0.08);
+        const mutedForeground = tokens['muted-foreground'] || __tmMixThemeColors(foreground, background, isDark ? 0.42 : 0.52);
+        const accent = tokens.accent || __tmMixThemeColors(primary, background, isDark ? 0.78 : 0.86);
+        const accentForeground = tokens['accent-foreground'] || __tmGetReadableTextColor(accent, '#0f172a', '#ffffff');
+        const destructive = tokens.destructive || (isDark ? 'hsl(0 72% 62%)' : 'hsl(0 72% 51%)');
+        const destructiveForeground = tokens['destructive-foreground'] || __tmGetReadableTextColor(destructive, '#0f172a', '#ffffff');
+        const border = tokens.border || __tmMixThemeColors(background, foreground, isDark ? 0.22 : 0.12);
+        const input = tokens.input || border;
+        const ring = tokens.ring || primary;
+        const success = tokens.success || (isDark ? 'hsl(142 71% 52%)' : 'hsl(142 71% 45%)');
+        const warning = tokens.warning || (isDark ? 'hsl(40 96% 60%)' : 'hsl(38 92% 50%)');
+        const info = tokens.info || __tmMixThemeColors(primary, background, isDark ? 0.12 : 0.08);
+        return {
+            background,
+            foreground,
+            card,
+            cardForeground,
+            popover,
+            popoverForeground,
+            primary,
+            primaryForeground,
+            secondary,
+            secondaryForeground,
+            sidebar,
+            muted,
+            mutedForeground,
+            accent,
+            accentForeground,
+            destructive,
+            destructiveForeground,
+            border,
+            input,
+            ring,
+            success,
+            warning,
+            info,
+        };
+    }
+
+    function __tmBuildThemeAppearanceDefaults(themeConfig, isDark) {
+        const palette = __tmBuildThemePalette(themeConfig, isDark);
+        const topbarStart = __tmMixThemeColors(palette.background, palette.primary, isDark ? 0.24 : 0.14);
+        const topbarEnd = __tmMixThemeColors(palette.background, palette.accent, isDark ? 0.34 : 0.28);
+        const topbarMid = __tmMixThemeColors(topbarStart, topbarEnd, 0.5);
+        const topbarText = __tmGetReadableTextColor(topbarMid, palette.foreground, '#ffffff');
+        const controlBg = __tmMixThemeColors(topbarMid, palette.background, isDark ? 0.42 : 0.56);
+        const controlText = __tmGetReadableTextColor(controlBg, palette.foreground, '#ffffff');
+        const controlBorder = __tmWithAlpha(controlText, isDark ? 0.26 : 0.18);
+        const controlHover = __tmMixThemeColors(controlBg, palette.accent, isDark ? 0.34 : 0.22);
+        const controlSegBg = __tmMixThemeColors(controlBg, palette.background, isDark ? 0.16 : 0.24);
+        const controlSegActive = __tmMixThemeColors(palette.primary, controlBg, isDark ? 0.26 : 0.18);
+        const shadowColor = isDark ? 'rgba(2, 6, 23, 0.38)' : 'rgba(15, 23, 42, 0.12)';
+        return {
+            topbarGradientStart: topbarStart,
+            topbarGradientEnd: topbarEnd,
+            topbarTextColor: topbarText,
+            topbarControlBg: controlBg,
+            topbarControlText: controlText,
+            topbarControlBorder: controlBorder,
+            topbarControlHover: controlHover,
+            topbarControlSegmentBg: controlSegBg,
+            topbarControlSegmentActiveBg: controlSegActive,
+            topbarControlShadowColor: shadowColor,
+            taskContentColor: palette.foreground,
+            taskMetaColor: palette.mutedForeground,
+            groupDocLabelColor: palette.foreground,
+            timeGroupBaseColor: palette.primary,
+            timeGroupOverdueColor: palette.destructive,
+            timeGroupPendingTaskBgColor: palette.mutedForeground,
+            progressBarColor: palette.success,
+            calendarGridBorderColor: palette.border,
+            tableBorderColor: palette.border,
+        };
+    }
+
+    function __tmApplyThemeConfigToAppearanceFields(themeConfig) {
+        const config = __tmNormalizeThemeConfig(themeConfig || SettingsStore?.data?.themeConfig);
+        const light = __tmBuildThemeAppearanceDefaults(config, false);
+        const dark = __tmBuildThemeAppearanceDefaults(config, true);
+        SettingsStore.data.themeConfig = config;
+        SettingsStore.data.topbarGradientLightStart = light.topbarGradientStart;
+        SettingsStore.data.topbarGradientLightEnd = light.topbarGradientEnd;
+        SettingsStore.data.topbarGradientDarkStart = dark.topbarGradientStart;
+        SettingsStore.data.topbarGradientDarkEnd = dark.topbarGradientEnd;
+        SettingsStore.data.topbarTextColorLight = light.topbarTextColor;
+        SettingsStore.data.topbarTextColorDark = dark.topbarTextColor;
+        SettingsStore.data.topbarControlBgLight = light.topbarControlBg;
+        SettingsStore.data.topbarControlBgDark = dark.topbarControlBg;
+        SettingsStore.data.topbarControlTextLight = light.topbarControlText;
+        SettingsStore.data.topbarControlTextDark = dark.topbarControlText;
+        SettingsStore.data.topbarControlBorderLight = light.topbarControlBorder;
+        SettingsStore.data.topbarControlBorderDark = dark.topbarControlBorder;
+        SettingsStore.data.topbarControlHoverLight = light.topbarControlHover;
+        SettingsStore.data.topbarControlHoverDark = dark.topbarControlHover;
+        SettingsStore.data.topbarControlSegmentBgLight = light.topbarControlSegmentBg;
+        SettingsStore.data.topbarControlSegmentBgDark = dark.topbarControlSegmentBg;
+        SettingsStore.data.topbarControlSegmentActiveBgLight = light.topbarControlSegmentActiveBg;
+        SettingsStore.data.topbarControlSegmentActiveBgDark = dark.topbarControlSegmentActiveBg;
+        SettingsStore.data.topbarControlShadowColorLight = light.topbarControlShadowColor;
+        SettingsStore.data.topbarControlShadowColorDark = dark.topbarControlShadowColor;
+        SettingsStore.data.taskContentColorLight = light.taskContentColor;
+        SettingsStore.data.taskContentColorDark = dark.taskContentColor;
+        SettingsStore.data.taskMetaColorLight = light.taskMetaColor;
+        SettingsStore.data.taskMetaColorDark = dark.taskMetaColor;
+        SettingsStore.data.groupDocLabelColorLight = light.groupDocLabelColor;
+        SettingsStore.data.groupDocLabelColorDark = dark.groupDocLabelColor;
+        SettingsStore.data.timeGroupBaseColorLight = light.timeGroupBaseColor;
+        SettingsStore.data.timeGroupBaseColorDark = dark.timeGroupBaseColor;
+        SettingsStore.data.timeGroupOverdueColorLight = light.timeGroupOverdueColor;
+        SettingsStore.data.timeGroupOverdueColorDark = dark.timeGroupOverdueColor;
+        SettingsStore.data.timeGroupPendingTaskBgColorLight = light.timeGroupPendingTaskBgColor;
+        SettingsStore.data.timeGroupPendingTaskBgColorDark = dark.timeGroupPendingTaskBgColor;
+        SettingsStore.data.progressBarColorLight = light.progressBarColor;
+        SettingsStore.data.progressBarColorDark = dark.progressBarColor;
+        SettingsStore.data.calendarGridBorderColorLight = light.calendarGridBorderColor;
+        SettingsStore.data.calendarGridBorderColorDark = dark.calendarGridBorderColor;
+        SettingsStore.data.tableBorderColorLight = light.tableBorderColor;
+        SettingsStore.data.tableBorderColorDark = dark.tableBorderColor;
+        SettingsStore.data.calendarColorFocus = 'var(--tm-primary-color)';
+        SettingsStore.data.calendarColorBreak = 'var(--tm-success-color)';
+        SettingsStore.data.calendarColorStopwatch = 'var(--tm-warning-color, #f9ab00)';
+        SettingsStore.data.calendarColorIdle = 'var(--tm-secondary-text)';
+        SettingsStore.data.calendarScheduleColor = 'var(--tm-primary-color)';
+        SettingsStore.data.calendarTaskDatesColor = 'var(--tm-secondary-text)';
+    }
+
+    function __tmParseThemeCssVariables(input) {
+        const source = String(input || '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
+        if (!source) return null;
+        const light = {};
+        const dark = {};
+        let matched = false;
+        const assignBlock = (target, body) => {
+            const blockRegex = /--([a-zA-Z0-9\-_]+)\s*:\s*([^;]+);/g;
+            let match;
+            while ((match = blockRegex.exec(body))) {
+                const key = __tmNormalizeThemeTokenKey(match[1]);
+                if (!key) continue;
+                const value = __tmNormalizeThemeSemanticColorValue(match[2]);
+                if (!value) continue;
+                target[key] = value;
+            }
+        };
+        const selectorRegex = /([^{}]+)\{([^{}]+)\}/g;
+        let match;
+        while ((match = selectorRegex.exec(source))) {
+            const selectors = String(match[1] || '').toLowerCase();
+            const body = String(match[2] || '');
+            if (!body.includes('--')) continue;
+            if (/:root\b/.test(selectors) || /:host\b/.test(selectors) || /\.light\b/.test(selectors) || /\[data-theme(?:-mode)?=["']?light/.test(selectors)) {
+                assignBlock(light, body);
+                matched = true;
+            }
+            if (/\.dark\b/.test(selectors) || /\[data-theme(?:-mode)?=["']?dark/.test(selectors)) {
+                assignBlock(dark, body);
+                matched = true;
+            }
+        }
+        if (!matched && source.includes('--')) {
+            assignBlock(light, source);
+        }
+        const normalizedLight = __tmNormalizeThemeTokenMap(light);
+        const normalizedDark = __tmNormalizeThemeTokenMap(Object.keys(dark).length ? dark : light);
+        if (!Object.keys(normalizedLight).length && !Object.keys(normalizedDark).length) return null;
+        return {
+            light: normalizedLight,
+            dark: normalizedDark,
+        };
+    }
+
     function __tmBuildStatusChipStyle(color) {
         const darkMode = __tmIsDarkMode();
         const cacheKey = `${darkMode ? 1 : 0}|${String(color || '').trim()}`;
@@ -17060,6 +17987,11 @@ async function __tmRefreshAfterWake(reason) {
             if (leading) {
                 const collapsed = action === 'collapse';
                 leading.classList.toggle('tm-task-leading--collapsed', collapsed);
+                row?.querySelectorAll?.('.tm-tree-toggle-icon')?.forEach?.((icon) => {
+                    if (icon instanceof HTMLElement || icon instanceof SVGElement) {
+                        icon.style.transform = `rotate(${collapsed ? 0 : 90}deg)`;
+                    }
+                });
                 const ring = leading.querySelector('.tm-task-leading-ring');
                 if (collapsed && !ring) {
                     leading.insertAdjacentHTML('afterbegin', '<span class="tm-task-leading-ring" aria-hidden="true"></span>');
@@ -17075,8 +18007,44 @@ async function __tmRefreshAfterWake(reason) {
             if (t) {
                 const collapsed = action === 'collapse';
                 t.classList.toggle('tm-group-toggle--collapsed', collapsed);
+                row?.querySelectorAll?.('.tm-group-toggle-icon')?.forEach?.((icon) => {
+                    if (icon instanceof HTMLElement || icon instanceof SVGElement) {
+                        icon.style.transform = `rotate(${collapsed ? 0 : 90}deg)`;
+                    }
+                });
             }
         }
+    }
+
+    function __tmTryCollapseTaskBranchInList(modalEl, taskId) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!modal) return false;
+        if (String(state.viewMode || '').trim() !== 'list') return false;
+        const key = String(taskId || '').trim();
+        if (!key) return false;
+        const tbody = modal.querySelector('#tmTaskTable tbody');
+        if (!tbody) return false;
+        const anchor = tbody.querySelector(`tr[data-id="${CSS.escape(key)}"]`);
+        if (!anchor) return false;
+        const baseDepth = Number(anchor.getAttribute('data-depth')) || 0;
+        let changed = false;
+        let node = anchor.nextElementSibling;
+        while (node) {
+            if (!(node instanceof Element)) break;
+            if (node.matches('tr[data-group-key]')) break;
+            const depth = Number(node.getAttribute('data-depth'));
+            if (!Number.isFinite(depth) || depth <= baseDepth) break;
+            if (node.matches('tr[data-id]')) {
+                node.style.display = 'none';
+                node.style.visibility = '';
+                node.style.pointerEvents = '';
+                changed = true;
+            }
+            node = node.nextElementSibling;
+        }
+        if (!changed) return false;
+        try { modal.querySelector('.tm-body')?.__tmTableScrollUpdateThumb?.(); } catch (e) {}
+        return true;
     }
 
     function __tmScheduleCollapseRerender() {
@@ -17614,13 +18582,13 @@ async function __tmRefreshAfterWake(reason) {
 
             const renderGroupRow = (row) => {
                 const isCollapsed = !!row?.collapsed;
-                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;">${__tmRenderToggleIcon(16, 0, 'tm-group-toggle-icon')}</span>`;
+                const toggle = `<span class="tm-group-toggle${isCollapsed ? ' tm-group-toggle--collapsed' : ''}" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;">${__tmRenderToggleIcon(16, isCollapsed ? 0 : 90, 'tm-group-toggle-icon')}</span>`;
                 if (row.kind === 'pinned') {
                     return `<tr class="tm-group-row tm-timeline-row" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-checklist-group-pin-icon">${__tmRenderBadgeIcon('pin', 14)}</span><span class="tm-group-label" style="color:var(--tm-warning-color);">${esc(row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span></div></td></tr>`;
                 }
                 if (row.kind === 'doc') {
                     const labelColor = String(row.labelColor || 'var(--tm-group-doc-label-color)');
-                    return `<tr class="tm-group-row tm-timeline-row" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">${__tmRenderIconLabel('file-text', row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span></div></td></tr>`;
+                    return `<tr class="tm-group-row tm-timeline-row" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">${__tmRenderDocGroupLabel(row.docId || row.id, row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span></div></td></tr>`;
                 }
             // 按任务名分组：分组行使用 PHOSPHOR 风格图标
             if (row.kind === 'task') {
@@ -17634,7 +18602,8 @@ async function __tmRefreshAfterWake(reason) {
             }
                 if (row.kind === 'h2') {
                     const createBtnHtml = __tmBuildHeadingGroupCreateBtnHtml(row.docId, row.headingId, '在该标题下新建任务');
-                    return `<tr class="tm-group-row tm-timeline-row" data-group-kind="h2" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-secondary-text);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggle}<span class="tm-group-label">${__tmRenderIconLabel('puzzle', row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span>${createBtnHtml}</div></td></tr>`;
+                    const labelColor = String(row.labelColor || __tmGetHeadingSubgroupLabelColor('var(--tm-group-doc-label-color)', isDark));
+                    return `<tr class="tm-group-row tm-timeline-row" data-group-kind="h2" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggle}<span class="tm-group-label" style="color:${labelColor};">${__tmRenderIconLabel('puzzle', row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span>${createBtnHtml}</div></td></tr>`;
                 }
             if (row.kind === 'quadrant') {
                 const durationSum = String(row.durationSum || '').trim();
@@ -17663,7 +18632,7 @@ async function __tmRefreshAfterWake(reason) {
                 ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>'
                 : '';
             const toggle = row.hasChildren
-                ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${task.id}', event)">${__tmRenderToggleIcon(16, 0, 'tm-tree-toggle-icon')}</span>`
+                ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${task.id}', event)">${__tmRenderToggleIcon(16, row.collapsed ? 0 : 90, 'tm-tree-toggle-icon')}</span>`
                 : '';
             const tomatoFocusTaskId = SettingsStore.data.enableTomatoIntegration ? String(state.timerFocusTaskId || '').trim() : '';
             const tomatoFocusModeEnabled = __tmIsTomatoFocusModeEnabled();
@@ -18201,15 +19170,16 @@ async function __tmRefreshAfterWake(reason) {
 
     function __tmGetTopbarControlAppearance(isDark) {
         const d = SettingsStore.data || {};
+        const themeDefaults = __tmBuildThemeAppearanceDefaults(d.themeConfig, isDark);
         const topbarText = isDark
-            ? __tmNormalizeHexColor(d.topbarTextColorDark, '#FFFFFF')
-            : __tmNormalizeHexColor(d.topbarTextColorLight, '#003252');
-        const controlTextFallback = topbarText || (isDark ? '#FFFFFF' : '#003252');
-        const controlBgFallback = __tmWithAlpha('#ffffff', 0.12);
-        const controlHoverFallback = __tmWithAlpha('#000000', 0.12);
-        const segBgFallback = __tmWithAlpha('#ffffff', 0.18);
-        const segActiveFallback = __tmWithAlpha('#000000', 0.26);
-        const shadowColorFallback = isDark ? 'rgba(0, 0, 0, 0.34)' : 'rgba(15, 23, 42, 0.16)';
+            ? __tmNormalizeHexColor(d.topbarTextColorDark, themeDefaults.topbarTextColor)
+            : __tmNormalizeHexColor(d.topbarTextColorLight, themeDefaults.topbarTextColor);
+        const controlTextFallback = themeDefaults.topbarControlText || topbarText || (isDark ? '#FFFFFF' : '#003252');
+        const controlBgFallback = themeDefaults.topbarControlBg || __tmWithAlpha('#ffffff', 0.12);
+        const controlHoverFallback = themeDefaults.topbarControlHover || __tmWithAlpha('#000000', 0.12);
+        const segBgFallback = themeDefaults.topbarControlSegmentBg || __tmWithAlpha('#ffffff', 0.18);
+        const segActiveFallback = themeDefaults.topbarControlSegmentActiveBg || __tmWithAlpha('#000000', 0.26);
+        const shadowColorFallback = themeDefaults.topbarControlShadowColor || (isDark ? 'rgba(0, 0, 0, 0.34)' : 'rgba(15, 23, 42, 0.16)');
         const controlText = __tmNormalizeHexColor(
             isDark ? d.topbarControlTextDark : d.topbarControlTextLight,
             controlTextFallback
@@ -18268,36 +19238,39 @@ async function __tmRefreshAfterWake(reason) {
     function __tmApplyAppearanceThemeVars() {
         const isDark = __tmIsDarkMode();
         const root = document.documentElement;
+        const themeConfig = __tmNormalizeThemeConfig(SettingsStore.data?.themeConfig);
+        const palette = __tmBuildThemePalette(themeConfig, isDark);
+        const themeDefaults = __tmBuildThemeAppearanceDefaults(themeConfig, isDark);
 
         const start = isDark
-            ? __tmNormalizeHexColor(SettingsStore.data.topbarGradientDarkStart, '#2D2D2D')
-            : __tmNormalizeHexColor(SettingsStore.data.topbarGradientLightStart, '#E3ECF2');
+            ? __tmNormalizeHexColor(SettingsStore.data.topbarGradientDarkStart, themeDefaults.topbarGradientStart)
+            : __tmNormalizeHexColor(SettingsStore.data.topbarGradientLightStart, themeDefaults.topbarGradientStart);
         const end = isDark
-            ? __tmNormalizeHexColor(SettingsStore.data.topbarGradientDarkEnd, '#2D2D2D')
-            : __tmNormalizeHexColor(SettingsStore.data.topbarGradientLightEnd, '#E3ECF2');
+            ? __tmNormalizeHexColor(SettingsStore.data.topbarGradientDarkEnd, themeDefaults.topbarGradientEnd)
+            : __tmNormalizeHexColor(SettingsStore.data.topbarGradientLightEnd, themeDefaults.topbarGradientEnd);
         const topbarAppearance = __tmGetTopbarControlAppearance(isDark);
         const topbarText = topbarAppearance.topbarText;
         const taskColor = isDark
-            ? __tmNormalizeHexColor(SettingsStore.data.taskContentColorDark, '#e0e0e0')
-            : __tmNormalizeHexColor(SettingsStore.data.taskContentColorLight, '#333333');
+            ? __tmNormalizeHexColor(SettingsStore.data.taskContentColorDark, themeDefaults.taskContentColor)
+            : __tmNormalizeHexColor(SettingsStore.data.taskContentColorLight, themeDefaults.taskContentColor);
         const taskMetaColor = isDark
-            ? __tmNormalizeHexColor(SettingsStore.data.taskMetaColorDark, '#b0b8c4')
-            : __tmNormalizeHexColor(SettingsStore.data.taskMetaColorLight, '#5f6368');
+            ? __tmNormalizeHexColor(SettingsStore.data.taskMetaColorDark, themeDefaults.taskMetaColor)
+            : __tmNormalizeHexColor(SettingsStore.data.taskMetaColorLight, themeDefaults.taskMetaColor);
         const docGroupColor = isDark
-            ? __tmNormalizeHexColor(SettingsStore.data.groupDocLabelColorDark, '#e0e0e0')
-            : __tmNormalizeHexColor(SettingsStore.data.groupDocLabelColorLight, '#333333');
+            ? __tmNormalizeHexColor(SettingsStore.data.groupDocLabelColorDark, themeDefaults.groupDocLabelColor)
+            : __tmNormalizeHexColor(SettingsStore.data.groupDocLabelColorLight, themeDefaults.groupDocLabelColor);
         const timeBase = isDark
-            ? __tmNormalizeHexColor(SettingsStore.data.timeGroupBaseColorDark, '#6ba5ff')
-            : __tmNormalizeHexColor(SettingsStore.data.timeGroupBaseColorLight, '#1a73e8');
+            ? __tmNormalizeHexColor(SettingsStore.data.timeGroupBaseColorDark, themeDefaults.timeGroupBaseColor)
+            : __tmNormalizeHexColor(SettingsStore.data.timeGroupBaseColorLight, themeDefaults.timeGroupBaseColor);
         const timeOverdue = isDark
-            ? __tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorDark, '#ff6b6b')
-            : __tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorLight, '#d93025');
+            ? __tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorDark, themeDefaults.timeGroupOverdueColor)
+            : __tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorLight, themeDefaults.timeGroupOverdueColor);
         const calendarGridBorder = isDark
-            ? __tmNormalizeHexColor(SettingsStore.data.calendarGridBorderColorDark, '#333333')
-            : __tmNormalizeHexColor(SettingsStore.data.calendarGridBorderColorLight, '#E1E1E1');
+            ? __tmNormalizeHexColor(SettingsStore.data.calendarGridBorderColorDark, themeDefaults.calendarGridBorderColor)
+            : __tmNormalizeHexColor(SettingsStore.data.calendarGridBorderColorLight, themeDefaults.calendarGridBorderColor);
         const tableBorder = isDark
-            ? __tmNormalizeHexColor(SettingsStore.data.tableBorderColorDark, '#333333')
-            : __tmNormalizeHexColor(SettingsStore.data.tableBorderColorLight, '#e9ecef');
+            ? __tmNormalizeHexColor(SettingsStore.data.tableBorderColorDark, themeDefaults.tableBorderColor)
+            : __tmNormalizeHexColor(SettingsStore.data.tableBorderColorLight, themeDefaults.tableBorderColor);
         const controlText = topbarAppearance.controlText;
         const controlBg = topbarAppearance.controlBg;
         const controlBorder = topbarAppearance.controlBorder;
@@ -18309,11 +19282,100 @@ async function __tmRefreshAfterWake(reason) {
         const segHover = controlHover;
         const segActive = topbarAppearance.segActive;
         const segActiveHover = topbarAppearance.segActive;
-        const searchBg = __tmWithAlpha('#ffffff', 0.9);
-        const searchText = '#333333';
-        const searchBorder = __tmWithAlpha(controlText || topbarText || '#ffffff', 0.3);
+        const searchBg = __tmMixThemeColors(palette.popover, palette.background, isDark ? 0.18 : 0.22);
+        const searchText = palette.foreground;
+        const searchBorder = __tmWithAlpha(controlText || topbarText || palette.foreground, 0.3);
         const thumb = __tmWithAlpha(controlText || topbarText || '#ffffff', 0.25);
+        const hoverBg = __tmMixThemeColors(palette.background, palette.accent, isDark ? 0.34 : 0.22);
+        const sectionBg = __tmMixThemeColors(palette.secondary, palette.background, isDark ? 0.24 : 0.18);
+        const headerBg = __tmMixThemeColors(palette.background, palette.secondary, isDark ? 0.22 : 0.18);
+        const tableHeaderBg = palette.muted;
+        const inputBg = __tmMixThemeColors(palette.background, palette.card, isDark ? 0.22 : 0.12);
+        const docItemBg = __tmMixThemeColors(palette.card, palette.background, 0.12);
+        const docItemHover = __tmMixThemeColors(palette.background, palette.accent, isDark ? 0.44 : 0.28);
+        const docCountBg = __tmWithAlpha(palette.primary, isDark ? 0.24 : 0.14);
+        const infoBg = __tmMixThemeColors(palette.background, palette.primary, isDark ? 0.22 : 0.08);
+        const infoBorder = __tmMixThemeColors(palette.primary, palette.border, 0.18);
+        const subgroupBg = __tmMixThemeColors(palette.secondary, palette.background, isDark ? 0.34 : 0.42);
+        const emptyCellBg = __tmMixThemeColors(palette.secondary, palette.background, isDark ? 0.42 : 0.58);
+        const taskDoneColor = __tmMixThemeColors(palette.foreground, palette.background, isDark ? 0.56 : 0.62);
+        const whiteboardGridColor = __tmWithAlpha(palette.border, isDark ? 0.42 : 0.55);
+        const whiteboardStreamTreeLineColor = __tmWithAlpha(palette.border, isDark ? 0.5 : 0.62);
+        const taskLeadingRingBg = __tmMixThemeColors(palette.card, palette.background, 0.2, 0.95);
+        const taskLeadingRingBorder = __tmWithAlpha(palette.border, isDark ? 0.48 : 0.32);
+        const modalOverlay = isDark ? 'rgba(2, 6, 23, 0.72)' : 'rgba(15, 23, 42, 0.42)';
 
+        try { root.style.setProperty('--background', palette.background); } catch (e) {}
+        try { root.style.setProperty('--foreground', palette.foreground); } catch (e) {}
+        try { root.style.setProperty('--card', palette.card); } catch (e) {}
+        try { root.style.setProperty('--card-foreground', palette.cardForeground); } catch (e) {}
+        try { root.style.setProperty('--popover', palette.popover); } catch (e) {}
+        try { root.style.setProperty('--popover-foreground', palette.popoverForeground); } catch (e) {}
+        try { root.style.setProperty('--primary', palette.primary); } catch (e) {}
+        try { root.style.setProperty('--primary-foreground', palette.primaryForeground); } catch (e) {}
+        try { root.style.setProperty('--secondary', palette.secondary); } catch (e) {}
+        try { root.style.setProperty('--secondary-foreground', palette.secondaryForeground); } catch (e) {}
+        try { root.style.setProperty('--muted', palette.muted); } catch (e) {}
+        try { root.style.setProperty('--muted-foreground', palette.mutedForeground); } catch (e) {}
+        try { root.style.setProperty('--accent', palette.accent); } catch (e) {}
+        try { root.style.setProperty('--accent-foreground', palette.accentForeground); } catch (e) {}
+        try { root.style.setProperty('--destructive', palette.destructive); } catch (e) {}
+        try { root.style.setProperty('--destructive-foreground', palette.destructiveForeground); } catch (e) {}
+        try { root.style.setProperty('--border', palette.border); } catch (e) {}
+        try { root.style.setProperty('--input', palette.input); } catch (e) {}
+        try { root.style.setProperty('--ring', palette.ring); } catch (e) {}
+        try { root.style.setProperty('--tm-bg-color', palette.background); } catch (e) {}
+        try { root.style.setProperty('--tm-text-color', palette.foreground); } catch (e) {}
+        try { root.style.setProperty('--tm-border-color', palette.border); } catch (e) {}
+        try { root.style.setProperty('--tm-hover-bg', hoverBg); } catch (e) {}
+        try { root.style.setProperty('--tm-modal-overlay', modalOverlay); } catch (e) {}
+        try { root.style.setProperty('--tm-header-bg', headerBg); } catch (e) {}
+        try { root.style.setProperty('--tm-input-bg', inputBg); } catch (e) {}
+        try { root.style.setProperty('--tm-input-border', palette.input); } catch (e) {}
+        try { root.style.setProperty('--tm-table-header-bg', tableHeaderBg); } catch (e) {}
+        try { root.style.setProperty('--tm-table-border', palette.border); } catch (e) {}
+        try { root.style.setProperty('--tm-task-done-color', taskDoneColor); } catch (e) {}
+        try { root.style.setProperty('--tm-doc-item-bg', docItemBg); } catch (e) {}
+        try { root.style.setProperty('--tm-doc-item-hover', docItemHover); } catch (e) {}
+        try { root.style.setProperty('--tm-doc-count-bg', docCountBg); } catch (e) {}
+        try { root.style.setProperty('--tm-doc-count-color', palette.primary); } catch (e) {}
+        try { root.style.setProperty('--tm-rule-group-bg', sectionBg); } catch (e) {}
+        try { root.style.setProperty('--tm-rule-item-bg', docItemBg); } catch (e) {}
+        try { root.style.setProperty('--tm-subgroup-bg', subgroupBg); } catch (e) {}
+        try { root.style.setProperty('--tm-primary-color', palette.primary); } catch (e) {}
+        try { root.style.setProperty('--tm-success-color', palette.success); } catch (e) {}
+        try { root.style.setProperty('--tm-warning-color', palette.warning); } catch (e) {}
+        try { root.style.setProperty('--tm-info-color', palette.info); } catch (e) {}
+        try { root.style.setProperty('--tm-danger-color', palette.destructive); } catch (e) {}
+        try { root.style.setProperty('--tm-quadrant-red', palette.destructive); } catch (e) {}
+        try { root.style.setProperty('--tm-quadrant-yellow', palette.warning); } catch (e) {}
+        try { root.style.setProperty('--tm-quadrant-blue', palette.primary); } catch (e) {}
+        try { root.style.setProperty('--tm-quadrant-green', palette.success); } catch (e) {}
+        try { root.style.setProperty('--tm-info-bg', infoBg); } catch (e) {}
+        try { root.style.setProperty('--tm-info-border', infoBorder); } catch (e) {}
+        try { root.style.setProperty('--tm-section-bg', sectionBg); } catch (e) {}
+        try { root.style.setProperty('--tm-sidebar-bg', palette.sidebar); } catch (e) {}
+        try { root.style.setProperty('--tm-card-bg', palette.card); } catch (e) {}
+        try { root.style.setProperty('--tm-empty-cell-bg', emptyCellBg); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-background', palette.background); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-foreground', palette.foreground); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-card', palette.card); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-popover', palette.popover); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-primary', palette.primary); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-primary-foreground', palette.primaryForeground); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-secondary', palette.secondary); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-secondary-foreground', palette.secondaryForeground); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-muted', palette.muted); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-muted-foreground', palette.mutedForeground); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-accent', palette.accent); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-accent-foreground', palette.accentForeground); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-border', palette.border); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-input', palette.input); } catch (e) {}
+        try { root.style.setProperty('--tm-ui-ring', palette.ring); } catch (e) {}
+        try { root.style.setProperty('--tm-whiteboard-grid-color', whiteboardGridColor); } catch (e) {}
+        try { root.style.setProperty('--tm-whiteboard-stream-tree-line-color', whiteboardStreamTreeLineColor); } catch (e) {}
+        try { root.style.setProperty('--tm-task-leading-ring-bg', taskLeadingRingBg); } catch (e) {}
+        try { root.style.setProperty('--tm-task-leading-ring-border', taskLeadingRingBorder); } catch (e) {}
         try { if (start) root.style.setProperty('--tm-topbar-grad-start', start); } catch (e) {}
         try { if (end) root.style.setProperty('--tm-topbar-grad-end', end); } catch (e) {}
         try { if (topbarText) root.style.setProperty('--tm-topbar-text-color', topbarText); } catch (e) {}
@@ -18342,6 +19404,7 @@ async function __tmRefreshAfterWake(reason) {
         try { if (timeOverdue) root.style.setProperty('--tm-time-group-overdue-color', timeOverdue); } catch (e) {}
         try { if (calendarGridBorder) root.style.setProperty('--tm-calendar-grid-border-color', calendarGridBorder); } catch (e) {}
         try { if (tableBorder) root.style.setProperty('--tm-table-border-color', tableBorder); } catch (e) {}
+        try { window.dispatchEvent(new CustomEvent('tm:appearance-theme-updated', { detail: { ts: Date.now(), source: themeConfig.source, presetId: themeConfig.presetId } })); } catch (e) {}
     }
 
     function __tmDocHasUndoneTasks(doc) {
@@ -18375,7 +19438,7 @@ async function __tmRefreshAfterWake(reason) {
                 });
             }
         } catch (e) {}
-        const colors = { success: '#34a853', error: '#ea4335', info: '#4285f4', warning: '#f9ab00' };
+        const colors = { success: 'var(--tm-success-color)', error: 'var(--tm-danger-color)', info: 'var(--tm-primary-color)', warning: 'var(--tm-warning-color, #f9ab00)' };
         const el = document.createElement('div');
         el.className = 'tm-hint';
         el.style.background = colors[type] || '#666';
@@ -22584,9 +23647,7 @@ async function __tmRefreshAfterWake(reason) {
         const docName = kind === 'doc'
             ? (__tmIsOtherBlockTabId(targetId)
                 ? __TM_OTHER_BLOCK_TAB_NAME
-                : (state.taskTree?.find?.((d) => String(d?.id || '').trim() === targetId)?.name
-                    || state.allDocuments?.find?.((d) => String(d?.id || '').trim() === targetId)?.name
-                    || targetId))
+                : __tmGetDocDisplayName(targetId, targetId))
             : '';
         const storedProfile = kind === 'doc'
             ? __tmGetStoredDocViewProfile(targetId)
@@ -22691,13 +23752,76 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     function __tmHideDocTabMenu() {
-        const menu = document.getElementById('tm-doc-tab-menu');
-        if (menu) menu.remove();
+        ['tm-doc-tab-menu', 'tm-doc-tab-switcher-menu'].forEach((id) => {
+            const menu = document.getElementById(id);
+            if (menu) menu.remove();
+        });
         if (state.docTabMenuCloseHandler) {
-            try { document.removeEventListener('click', state.docTabMenuCloseHandler); } catch (e) {}
-            try { document.removeEventListener('contextmenu', state.docTabMenuCloseHandler); } catch (e) {}
+            __tmClearOutsideCloseHandler(state.docTabMenuCloseHandler);
             state.docTabMenuCloseHandler = null;
         }
+    }
+
+    function __tmUnbindOutsideCloseHandler(handler) {
+        if (typeof handler !== 'function') return;
+        try { document.removeEventListener('click', handler); } catch (e) {}
+        try { document.removeEventListener('contextmenu', handler); } catch (e) {}
+        try { document.removeEventListener('pointerdown', handler); } catch (e) {}
+        try { document.removeEventListener('touchstart', handler); } catch (e) {}
+    }
+
+    function __tmScheduleBindOutsideCloseHandler(handler, options = {}) {
+        if (typeof handler !== 'function') return;
+        const ignoreSelector = String(options.ignoreSelector || '').trim();
+        const wrapped = (ev) => {
+            const target = ev?.target instanceof Element ? ev.target : null;
+            if (ignoreSelector && target?.closest?.(ignoreSelector)) return;
+            handler(ev);
+        };
+        try { handler.__tmOutsideCloseWrapped = wrapped; } catch (e) {}
+        try {
+            if (handler.__tmOutsideCloseTimer) {
+                clearTimeout(handler.__tmOutsideCloseTimer);
+                handler.__tmOutsideCloseTimer = null;
+            }
+        } catch (e) {}
+        const timer = setTimeout(() => {
+            try { document.addEventListener('click', wrapped); } catch (e) {}
+            try { document.addEventListener('contextmenu', wrapped); } catch (e) {}
+            try { document.addEventListener('pointerdown', wrapped); } catch (e) {}
+            try { document.addEventListener('touchstart', wrapped, { passive: true }); } catch (e) {}
+            try { handler.__tmOutsideCloseTimer = null; } catch (e) {}
+        }, 0);
+        try { handler.__tmOutsideCloseTimer = timer; } catch (e) {}
+    }
+
+    function __tmClearOutsideCloseHandler(handler) {
+        if (typeof handler !== 'function') return;
+        try {
+            if (handler.__tmOutsideCloseTimer) {
+                clearTimeout(handler.__tmOutsideCloseTimer);
+                handler.__tmOutsideCloseTimer = null;
+            }
+        } catch (e) {}
+        const wrapped = handler.__tmOutsideCloseWrapped || handler;
+        __tmUnbindOutsideCloseHandler(wrapped);
+        try { handler.__tmOutsideCloseWrapped = null; } catch (e) {}
+    }
+
+    function __tmClampFloatingMenuToViewport(menu, x, y, options = {}) {
+        if (!(menu instanceof HTMLElement)) return;
+        const margin = Math.max(0, Number(options.margin) || 8);
+        const viewportWidth = Math.max(0, window.innerWidth || document.documentElement?.clientWidth || 0);
+        const viewportHeight = Math.max(0, window.innerHeight || document.documentElement?.clientHeight || 0);
+        const rect = menu.getBoundingClientRect();
+        let nextLeft = Number(x) || 0;
+        let nextTop = Number(y) || 0;
+        if (nextLeft + rect.width > viewportWidth - margin) nextLeft = viewportWidth - rect.width - margin;
+        if (nextTop + rect.height > viewportHeight - margin) nextTop = viewportHeight - rect.height - margin;
+        nextLeft = Math.max(margin, nextLeft);
+        nextTop = Math.max(margin, nextTop);
+        try { menu.style.left = `${Math.round(nextLeft)}px`; } catch (e) {}
+        try { menu.style.top = `${Math.round(nextTop)}px`; } catch (e) {}
     }
 
     function __tmGetDocPinnedIdsForGroup(groupId) {
@@ -22766,8 +23890,8 @@ async function __tmRefreshAfterWake(reason) {
             else normalPart.push(doc);
         });
         normalPart.sort((a, b) => {
-            const an = String(a?.name || '').trim();
-            const bn = String(b?.name || '').trim();
+            const an = __tmGetDocDisplayName(a, String(a?.name || '').trim() || '未命名文档');
+            const bn = __tmGetDocDisplayName(b, String(b?.name || '').trim() || '未命名文档');
             if (mode === 'name_asc') return an.localeCompare(bn, 'zh-Hans-CN');
             if (mode === 'name_desc') return bn.localeCompare(an, 'zh-Hans-CN');
             const at = __tmParseDocCreatedTs(a?.created);
@@ -22831,9 +23955,100 @@ async function __tmRefreshAfterWake(reason) {
             .map(doc => ({
                 id: String(doc?.id || '').trim(),
                 name: String(doc?.name || '').trim() || '未命名文档',
+                alias: __tmNormalizeDocAliasValue(doc?.alias),
                 created: String(doc?.created || '').trim(),
             }))
             .filter(doc => !!doc.id);
+    }
+
+    function __tmGetCurrentDocTabSwitcherItems() {
+        const currentGroupId = String(SettingsStore.data.currentGroupId || 'all').trim() || 'all';
+        const currentGroup = (Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [])
+            .find((group) => String(group?.id || '').trim() === currentGroupId);
+        const groupName = currentGroupId === 'all' ? '全部文档' : __tmResolveDocGroupName(currentGroup);
+        const activeDocId = String(state.activeDocId || 'all').trim() || 'all';
+        const items = [{
+            id: 'all',
+            label: '全部',
+            kind: 'all',
+            active: activeDocId === 'all',
+        }];
+
+        const globalNewTaskDocId = String(SettingsStore.data.newTaskDocId || '').trim();
+        if (globalNewTaskDocId && globalNewTaskDocId !== '__dailyNote__') {
+            items.push({
+                id: globalNewTaskDocId,
+                label: `📥 ${__tmGetDocDisplayName(globalNewTaskDocId, '未命名文档')}`,
+                kind: 'doc',
+                active: activeDocId === globalNewTaskDocId,
+            });
+        }
+
+        if (currentGroupId !== 'all' && Array.isArray(state.otherBlocks) && state.otherBlocks.length > 0) {
+            items.push({
+                id: __TM_OTHER_BLOCK_TAB_ID,
+                label: `🧩 ${__TM_OTHER_BLOCK_TAB_NAME}`,
+                kind: 'other',
+                active: __tmIsOtherBlockTabId(activeDocId),
+            });
+        }
+
+        __tmGetVisibleDocTabsForCurrentGroup().forEach((doc) => {
+            const id = String(doc?.id || '').trim();
+            if (!id) return;
+            items.push({
+                id,
+                label: __tmGetDocDisplayName(doc, String(doc?.name || '').trim() || '未命名文档'),
+                kind: 'doc',
+                active: activeDocId === id,
+            });
+        });
+
+        return {
+            currentGroupId,
+            groupName,
+            items,
+        };
+    }
+
+    function __tmGetAllDocTabTriggerElement(source) {
+        const target = source?.currentTarget instanceof Element
+            ? source.currentTarget
+            : (source?.target instanceof Element ? source.target : null);
+        if (target instanceof Element) {
+            const found = target.closest('.tm-doc-tab--all');
+            if (found instanceof HTMLElement) return found;
+        }
+        try {
+            const fallback = state.modal?.querySelector?.('.tm-doc-tab--all');
+            if (fallback instanceof HTMLElement) return fallback;
+        } catch (e) {}
+        return null;
+    }
+
+    function __tmClearAllDocTabLongPressTimer() {
+        try {
+            if (state.allDocTabLongPressTimer) {
+                clearTimeout(state.allDocTabLongPressTimer);
+                state.allDocTabLongPressTimer = null;
+            }
+        } catch (e) {}
+    }
+
+    function __tmFinishAllDocTabLongPress(event, options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const fired = !!state.allDocTabLongPressFired;
+        __tmClearAllDocTabLongPressTimer();
+        state.allDocTabLongPressMoved = false;
+        state.allDocTabLongPressTrigger = null;
+        state.allDocTabLongPressStartX = 0;
+        state.allDocTabLongPressStartY = 0;
+        if (fired && opts.suppressClick !== false) {
+            state.allDocTabSuppressClickUntil = Date.now() + 700;
+            try { event?.preventDefault?.(); } catch (e) {}
+            try { event?.stopPropagation?.(); } catch (e) {}
+        }
+        state.allDocTabLongPressFired = false;
     }
 
     async function __tmSetDocPinnedForGroup(docId, pinned, groupId) {
@@ -22863,25 +24078,34 @@ async function __tmRefreshAfterWake(reason) {
             left: ${Math.max(8, Number(x) || 0)}px;
             background: var(--b3-theme-background);
             border: 1px solid var(--b3-theme-surface-light);
-            border-radius: 6px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.22);
-            padding: 6px 0;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            padding: 4px 0;
             z-index: 200000;
             min-width: 160px;
+            max-width: calc(100vw - 16px);
+            box-sizing: border-box;
             user-select: none;
         `;
 
         const isOtherBlocksTab = __tmIsOtherBlockTabId(id);
-        const name = isOtherBlocksTab
+        const rawName = isOtherBlocksTab
             ? __TM_OTHER_BLOCK_TAB_NAME
-            : (state.taskTree?.find?.(d => d.id === id)?.name
-                || state.allDocuments?.find?.(d => d.id === id)?.name
-                || id);
+            : __tmGetDocRawName(id, id);
+        const alias = isOtherBlocksTab ? '' : __tmGetDocAliasValue(id);
+        const name = alias || rawName;
 
         const title = document.createElement('div');
         title.textContent = String(name || '文档');
-        title.style.cssText = 'padding: 6px 12px; font-size: 12px; opacity: 0.75; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+        title.style.cssText = 'padding: 6px 10px; font-size: 12px; opacity: 0.75; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
         menu.appendChild(title);
+
+        if (!isOtherBlocksTab && alias && alias !== rawName) {
+            const subtitle = document.createElement('div');
+            subtitle.textContent = `原名：${rawName}`;
+            subtitle.style.cssText = 'padding: 0 10px 6px; font-size: 12px; opacity: 0.58; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+            menu.appendChild(subtitle);
+        }
 
         const hr = document.createElement('hr');
         hr.style.cssText = 'margin: 4px 0; border: none; border-top: 1px solid var(--b3-theme-surface-light);';
@@ -22889,8 +24113,10 @@ async function __tmRefreshAfterWake(reason) {
 
         const item = (text, onClick) => {
             const el = document.createElement('div');
-            el.textContent = text;
-            el.style.cssText = 'padding: 8px 12px; cursor: pointer; font-size: 13px;';
+            const labelText = String(text || '');
+            if (/<[a-z][\s\S]*>/i.test(labelText)) el.innerHTML = labelText;
+            else el.textContent = labelText;
+            el.style.cssText = 'padding: 6px 10px; cursor: pointer; font-size: 13px; display:flex; align-items:center; gap:8px; white-space:nowrap; width:100%; box-sizing:border-box;';
             el.onmouseenter = () => el.style.backgroundColor = 'var(--b3-theme-surface-light)';
             el.onmouseleave = () => el.style.backgroundColor = 'transparent';
             el.onclick = (e) => {
@@ -22903,26 +24129,31 @@ async function __tmRefreshAfterWake(reason) {
 
         const submenuItem = (text, childrenBuilder) => {
             const el = document.createElement('div');
-            el.style.cssText = 'position:relative;padding: 8px 12px; cursor: pointer; font-size: 13px; display:flex; align-items:center; justify-content:space-between; gap:12px;';
+            el.style.cssText = 'position:relative;padding: 6px 10px; cursor: pointer; font-size: 13px; display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap; width:100%; box-sizing:border-box;';
             const label = document.createElement('span');
-            label.textContent = text;
+            const labelText = String(text || '');
+            if (/<[a-z][\s\S]*>/i.test(labelText)) label.innerHTML = labelText;
+            else label.textContent = labelText;
+            label.style.cssText = 'min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
             const arrow = document.createElement('span');
             arrow.textContent = '›';
-            arrow.style.opacity = '0.75';
+            arrow.style.cssText = 'opacity:0.75; flex:0 0 auto;';
             el.appendChild(label);
             el.appendChild(arrow);
 
             const submenu = document.createElement('div');
             submenu.style.cssText = `
                 position:absolute;
-                top:-6px;
+                top:-4px;
                 left:calc(100% - 4px);
                 background: var(--b3-theme-background);
                 border: 1px solid var(--b3-theme-surface-light);
-                border-radius: 6px;
-                box-shadow: 0 6px 18px rgba(0,0,0,0.22);
-                padding: 6px 0;
+                border-radius: 4px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                padding: 4px 0;
                 min-width: 160px;
+                max-width: min(220px, calc(100vw - 16px));
+                box-sizing: border-box;
                 display:none;
                 z-index: 200001;
             `;
@@ -22931,6 +24162,35 @@ async function __tmRefreshAfterWake(reason) {
             el.appendChild(submenu);
 
             let hideTimer = null;
+            const updateSubmenuPosition = () => {
+                try {
+                    submenu.style.left = 'calc(100% - 4px)';
+                    submenu.style.right = 'auto';
+                    submenu.style.top = '-4px';
+                    const viewportWidth = Math.max(0, window.innerWidth || document.documentElement?.clientWidth || 0);
+                    const viewportHeight = Math.max(0, window.innerHeight || document.documentElement?.clientHeight || 0);
+                    const margin = 8;
+                    let rect = submenu.getBoundingClientRect();
+                    if (rect.right > viewportWidth - margin) {
+                        submenu.style.left = 'auto';
+                        submenu.style.right = 'calc(100% - 4px)';
+                        rect = submenu.getBoundingClientRect();
+                    }
+                    if (rect.left < margin) {
+                        submenu.style.left = '0';
+                        submenu.style.right = 'auto';
+                        rect = submenu.getBoundingClientRect();
+                    }
+                    if (rect.bottom > viewportHeight - margin) {
+                        const overflow = rect.bottom - (viewportHeight - margin);
+                        submenu.style.top = `${Math.min(-4, -4 - Math.round(overflow))}px`;
+                        rect = submenu.getBoundingClientRect();
+                    }
+                    if (rect.top < margin) {
+                        submenu.style.top = `${Math.max(margin - (el.getBoundingClientRect().top || 0), -4)}px`;
+                    }
+                } catch (e) {}
+            };
             const showSubmenu = () => {
                 if (hideTimer) {
                     try { clearTimeout(hideTimer); } catch (e) {}
@@ -22938,6 +24198,7 @@ async function __tmRefreshAfterWake(reason) {
                 }
                 el.style.backgroundColor = 'var(--b3-theme-surface-light)';
                 submenu.style.display = 'block';
+                updateSubmenuPosition();
             };
             const hideSubmenu = () => {
                 if (hideTimer) {
@@ -22982,13 +24243,24 @@ async function __tmRefreshAfterWake(reason) {
         const deadlineLabel = expectedMeta.deadline ? `（${expectedMeta.deadline}）` : '';
 
         if (!isOtherBlocksTab) {
-            menu.appendChild(item('📖 打开文档', async () => {
+            menu.appendChild(item(__tmRenderContextMenuLabel('file-text', '打开文档'), async () => {
                 await window.tmOpenDocById?.(id);
             }));
-            menu.appendChild(item('➕ 新建任务', () => {
+            menu.appendChild(item(__tmRenderContextMenuLabel('plus', '新建任务'), () => {
                 try { window.tmQuickAddOpenForDoc?.(id); } catch (e) {}
             }));
-            menu.appendChild(item(`🗓 设置开始日期${startDateLabel}`, async () => {
+            menu.appendChild(item(__tmRenderContextMenuLabel('square-pen', '设置别名'), async () => {
+                const next = await showPrompt('设置文档别名', '留空清除，直接保存到思源原生 alias 属性', alias || '');
+                if (next === null) return;
+                try {
+                    await __tmSaveNativeDocAlias(id, next);
+                    hint(next ? '✅ 文档别名已更新' : '✅ 文档别名已清空', 'success');
+                    render();
+                } catch (e) {
+                    hint(`❌ 更新失败: ${e.message}`, 'error');
+                }
+            }));
+            menu.appendChild(item(__tmRenderContextMenuLabel('calendar-plus-2', `设置开始日期${startDateLabel}`), async () => {
                 const next = await showDatePrompt('设置文档开始日期', expectedMeta.startDate || '');
                 if (next === null) return;
                 try {
@@ -23003,7 +24275,7 @@ async function __tmRefreshAfterWake(reason) {
                     hint(`❌ 更新失败: ${e.message}`, 'error');
                 }
             }));
-            menu.appendChild(item(`⏳ 设置截止日期${deadlineLabel}`, async () => {
+            menu.appendChild(item(__tmRenderContextMenuLabel('calendar-check', `设置截止日期${deadlineLabel}`), async () => {
                 const next = await showDatePrompt('设置文档截止日期', expectedMeta.deadline || '');
                 if (next === null) return;
                 try {
@@ -23019,17 +24291,17 @@ async function __tmRefreshAfterWake(reason) {
                 }
             }));
         }
-        menu.appendChild(item('⚙ 规则和分组设置', () => {
+        menu.appendChild(item(__tmRenderContextMenuLabel('settings', '规则和分组设置'), () => {
             window.tmOpenViewProfileConfigModal?.('doc', id);
         }));
         if (!isOtherBlocksTab) {
-            menu.appendChild(item(pinnedInGroup ? '📌 取消钉住' : '📌 钉住到最左侧', async () => {
+            menu.appendChild(item(__tmRenderContextMenuLabel('pin', pinnedInGroup ? '取消钉住' : '钉住到最左侧'), async () => {
                 await __tmSetDocPinnedForGroup(id, !pinnedInGroup, pinGroupId);
                 await loadSelectedDocuments();
             }));
         }
 
-        menu.appendChild(item(`🎨 设置${isOtherBlocksTab ? '页签' : '颜色'}…`, () => {
+        menu.appendChild(item(__tmRenderContextMenuLabel('brush-cleaning', `设置${isOtherBlocksTab ? '页签' : '颜色'}…`), () => {
             const initial = existing || __tmGetDocColorHex(id, __tmIsDarkMode());
             __tmOpenColorPickerDialog(isOtherBlocksTab ? '其他块页签颜色' : '文档颜色', initial, async (next) => {
                 const v = __tmNormalizeHexColor(next, '');
@@ -23040,13 +24312,13 @@ async function __tmRefreshAfterWake(reason) {
             }, { defaultColor: initial });
         }));
 
-        menu.appendChild(item(`♻ 恢复自动${isOtherBlocksTab ? '页签' : '颜色'}`, async () => {
+        menu.appendChild(item(__tmRenderContextMenuLabel('arrow-clockwise', `恢复自动${isOtherBlocksTab ? '页签' : '颜色'}`), async () => {
             if (map[id]) delete map[id];
             try { await SettingsStore.save(); } catch (e) {}
             render();
         }));
 
-        menu.appendChild(item('🎲 重新随机未自定义颜色', async () => {
+        menu.appendChild(item(__tmRenderContextMenuLabel('dots-three', '重新随机未自定义颜色'), async () => {
             SettingsStore.data.docColorSeed = Math.floor(Math.random() * 1000000000) + 1;
             try { await SettingsStore.save(); } catch (e) {}
             render();
@@ -23056,8 +24328,8 @@ async function __tmRefreshAfterWake(reason) {
             const sortHr = document.createElement('hr');
             sortHr.style.cssText = 'margin: 4px 0; border: none; border-top: 1px solid var(--b3-theme-surface-light);';
             menu.appendChild(sortHr);
-            menu.appendChild(submenuItem('页签排序', () => docTabSortItems.map((opt) => {
-                return item(`${currentDocTabSort === opt.value ? '✓ ' : ''}${opt.label}`, async () => {
+            menu.appendChild(submenuItem(__tmRenderContextMenuLabel('chevrons-up-down', '页签排序'), () => docTabSortItems.map((opt) => {
+                return item(__tmRenderContextMenuLabel(currentDocTabSort === opt.value ? 'check-circle-2' : 'circle-dot', opt.label), async () => {
                     SettingsStore.data.docTabSortMode = opt.value;
                     try { await SettingsStore.save(); } catch (e) {}
                     render();
@@ -23066,11 +24338,14 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         const profileInfo = document.createElement('div');
-        profileInfo.style.cssText = 'padding: 6px 12px 2px; font-size: 12px; opacity: 0.75; line-height: 1.5;';
+        profileInfo.style.cssText = 'padding: 6px 10px 2px; font-size: 12px; opacity: 0.75; line-height: 1.5;';
         profileInfo.innerHTML = `当前规则：<div style="margin-top:2px;">${esc(__tmGetViewProfileSourceLabel(currentProfileSource))} / ${esc(__tmDescribeViewProfile(docCustomProfile || groupCustomProfile || defaultProfile))}</div>`;
         menu.appendChild(profileInfo);
 
         document.body.appendChild(menu);
+        requestAnimationFrame(() => {
+            try { __tmClampFloatingMenuToViewport(menu, x, y); } catch (e) {}
+        });
 
         const closeHandler = (ev) => {
             try {
@@ -23079,10 +24354,7 @@ async function __tmRefreshAfterWake(reason) {
             __tmHideDocTabMenu();
         };
         state.docTabMenuCloseHandler = closeHandler;
-        setTimeout(() => {
-            document.addEventListener('click', closeHandler);
-            document.addEventListener('contextmenu', closeHandler);
-        }, 0);
+        __tmScheduleBindOutsideCloseHandler(closeHandler);
     }
 
     window.tmShowDocTabContextMenu = function(event, docId) {
@@ -23092,84 +24364,423 @@ async function __tmRefreshAfterWake(reason) {
         __tmShowDocTabMenuAt(docId, event?.clientX, event?.clientY);
     };
 
-    window.tmShowAllDocTabContextMenu = function(event) {
-        try { event?.preventDefault?.(); } catch (e) {}
-        try { event?.stopPropagation?.(); } catch (e) {}
-        __tmHideDocTabMenu();
-
+    function __tmGetAllDocTabMenuContext() {
         const groupId = String(SettingsStore.data.currentGroupId || 'all').trim() || 'all';
-        const currentGroup = (SettingsStore.data.docGroups || []).find((g) => String(g?.id || '').trim() === groupId);
+        const currentGroup = (Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [])
+            .find((group) => String(group?.id || '').trim() === groupId);
         const groupName = groupId === 'all' ? '全部文档' : __tmResolveDocGroupName(currentGroup);
         const allTabsProfile = __tmGetStoredAllTabsViewProfile(groupId);
         const groupProfile = __tmGetStoredGroupViewProfile(groupId);
         const defaultProfile = __tmGetViewProfilesStore().global;
         const currentProfile = allTabsProfile || groupProfile || defaultProfile;
         const currentProfileSource = allTabsProfile ? 'allTabs' : (groupProfile ? 'group' : 'default');
+        return {
+            groupId,
+            groupName,
+            currentProfile,
+            currentProfileSource,
+        };
+    }
+
+    function __tmBuildAllDocTabMenuActionButton(labelHtml, onClick, options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tm-btn tm-btn-info bc-btn bc-btn--sm';
+        try {
+            if (opts.mainRow !== false) btn.dataset.tmAllDocMainRow = '1';
+        } catch (e) {}
+        btn.style.cssText = `
+            display:flex;
+            align-items:center;
+            justify-content:${opts.justifyContent || 'flex-start'};
+            gap:8px;
+            width:${opts.stretch === false ? 'auto' : '100%'};
+            min-width:0;
+            padding:${opts.compact ? '7px 10px' : '8px 10px'};
+            text-align:left;
+            white-space:nowrap;
+        `;
+        if (/<[a-z][\s\S]*>/i.test(String(labelHtml || ''))) btn.innerHTML = String(labelHtml || '');
+        else btn.textContent = String(labelHtml || '');
+        btn.onclick = (ev) => {
+            try { ev?.preventDefault?.(); } catch (e) {}
+            try { ev?.stopPropagation?.(); } catch (e) {}
+            __tmHideDocTabMenu();
+            try { onClick?.(); } catch (e) {}
+        };
+        return btn;
+    }
+
+    window.tmShowAllDocTabMenu = function(event) {
+        try { event?.preventDefault?.(); } catch (e) {}
+        try { event?.stopPropagation?.(); } catch (e) {}
+        try { if (state.__tmPluginIconLongPressing) return; } catch (e) {}
+        __tmHideDocTabMenu();
+
+        const { groupName, items } = __tmGetCurrentDocTabSwitcherItems();
+        const { groupId, currentProfile, currentProfileSource } = __tmGetAllDocTabMenuContext();
+        const trigger = __tmGetAllDocTabTriggerElement(event);
+        const rect = trigger instanceof HTMLElement ? trigger.getBoundingClientRect() : null;
+        const pointerX = Number(event?.clientX);
+        const pointerY = Number(event?.clientY);
+        const hasPointer = Number.isFinite(pointerX) && Number.isFinite(pointerY) && (pointerX > 0 || pointerY > 0);
+        const anchorX = hasPointer ? Math.round(pointerX) : (rect ? Math.round(rect.left) : 8);
+        const anchorY = hasPointer ? Math.round(pointerY) : (rect ? Math.round(rect.bottom + 8) : 8);
 
         const menu = document.createElement('div');
-        menu.id = 'tm-doc-tab-menu';
+        menu.id = 'tm-doc-tab-switcher-menu';
+        menu.className = 'tm-popup-menu bc-dropdown-menu';
         menu.style.cssText = `
             position: fixed;
-            top: ${Math.max(8, Number(event?.clientY) || 0)}px;
-            left: ${Math.max(8, Number(event?.clientX) || 0)}px;
-            background: var(--b3-theme-background);
-            border: 1px solid var(--b3-theme-surface-light);
-            border-radius: 6px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.22);
-            padding: 6px 0;
+            top: ${Math.max(8, anchorY)}px;
+            left: ${Math.max(8, anchorX)}px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: auto;
+            min-width: 0;
+            max-width: calc(100vw - 16px);
+            max-height: calc(100vh - 16px);
+            padding: 8px;
+            background: var(--tm-ui-popover, var(--b3-theme-background));
+            border: var(--tm-topbar-control-border-width, 1px) solid var(--tm-ui-border, var(--b3-theme-surface-light));
+            border-radius: calc(var(--tm-topbar-control-radius, 10px) + 2px);
+            box-shadow: 0 10px 26px rgba(15,23,42,0.16);
+            box-sizing: border-box;
             z-index: 200000;
-            min-width: 180px;
             user-select: none;
         `;
 
-        const title = document.createElement('div');
-        title.textContent = `${groupName} / 全部页签`;
-        title.style.cssText = 'padding: 6px 12px; font-size: 12px; opacity: 0.75; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
-        menu.appendChild(title);
+        const header = document.createElement('div');
+        header.style.cssText = 'padding:2px 2px 0; font-size:12px; color:var(--tm-secondary-text); line-height:1.5;';
+        header.textContent = `${groupName} / 全部页签`;
+        menu.appendChild(header);
 
-        const hr = document.createElement('hr');
-        hr.style.cssText = 'margin: 4px 0; border: none; border-top: 1px solid var(--b3-theme-surface-light);';
-        menu.appendChild(hr);
-
-        const item = (text, onClick) => {
-            const el = document.createElement('div');
-            el.textContent = text;
-            el.style.cssText = 'padding: 8px 12px; cursor: pointer; font-size: 13px;';
-            el.onmouseenter = () => el.style.backgroundColor = 'var(--b3-theme-surface-light)';
-            el.onmouseleave = () => el.style.backgroundColor = 'transparent';
-            el.onclick = (e2) => {
-                try { e2.stopPropagation(); } catch (e) {}
-                __tmHideDocTabMenu();
-                try { onClick?.(); } catch (e) {}
-            };
-            return el;
+        const createSettingsInfoRow = () => {
+            const info = document.createElement('div');
+            info.style.cssText = 'padding: 4px 10px 2px; font-size: 12px; color:var(--tm-secondary-text); line-height: 1.5; min-width:0; white-space:normal; overflow-wrap:anywhere;';
+            info.innerHTML = `当前规则：<div style="margin-top:2px;">${esc(__tmGetViewProfileSourceLabel(currentProfileSource))} / ${esc(__tmDescribeViewProfile(currentProfile))}</div>`;
+            return info;
         };
 
-        menu.appendChild(item('⚙ 规则和分组设置', () => {
-            window.tmOpenViewProfileConfigModal?.('allTabs', groupId);
-        }));
-        menu.appendChild(item('⚙ 当前文档分组默认设置', () => {
-            window.tmOpenViewProfileConfigModal?.('group', groupId);
+        const createSubmenuTrigger = (labelHtml, childrenBuilder) => {
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'position:relative;';
+
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'tm-btn tm-btn-info bc-btn bc-btn--sm';
+            try { trigger.dataset.tmAllDocMainRow = '1'; } catch (e) {}
+            trigger.style.cssText = `
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:10px;
+                width:auto;
+                min-width:0;
+                padding:8px 10px;
+                text-align:left;
+            `;
+
+            const label = document.createElement('span');
+            label.style.cssText = 'display:inline-flex; align-items:center; gap:8px; min-width:0; flex:1; white-space:nowrap;';
+            if (/<[a-z][\s\S]*>/i.test(String(labelHtml || ''))) label.innerHTML = String(labelHtml || '');
+            else label.textContent = String(labelHtml || '');
+            trigger.appendChild(label);
+
+            const arrow = document.createElement('span');
+            arrow.textContent = '›';
+            arrow.style.cssText = 'flex:0 0 auto; opacity:0.75;';
+            trigger.appendChild(arrow);
+
+            const submenu = document.createElement('div');
+            submenu.style.cssText = `
+                position:absolute;
+                top:-6px;
+                left:calc(100% - 4px);
+                width:auto;
+                min-width:156px;
+                max-width:calc(100vw - 16px);
+                padding:6px;
+                background: var(--tm-ui-popover, var(--b3-theme-background));
+                border: var(--tm-topbar-control-border-width, 1px) solid var(--tm-ui-border, var(--b3-theme-surface-light));
+                border-radius: calc(var(--tm-topbar-control-radius, 10px) + 2px);
+                box-shadow: 0 10px 26px rgba(15,23,42,0.16);
+                box-sizing:border-box;
+                display:none;
+                z-index:200001;
+            `;
+            const children = childrenBuilder?.() || [];
+            children.forEach((child) => submenu.appendChild(child));
+            wrap.appendChild(trigger);
+            wrap.appendChild(submenu);
+
+            let hideTimer = null;
+            const fitSubmenuWidth = () => {
+                try {
+                    const viewportWidth = Math.max(0, window.innerWidth || document.documentElement?.clientWidth || 0);
+                    const maxWidth = Math.max(156, viewportWidth - 16);
+                    const rows = Array.from(submenu.querySelectorAll('button'));
+                    rows.forEach((row) => {
+                        try { row.style.width = 'auto'; } catch (e) {}
+                    });
+                    try { submenu.style.width = 'auto'; } catch (e) {}
+                    let naturalWidth = 0;
+                    rows.forEach((row) => {
+                        try {
+                            naturalWidth = Math.max(
+                                naturalWidth,
+                                Math.ceil(row.scrollWidth || row.getBoundingClientRect().width || 0)
+                            );
+                        } catch (e) {}
+                    });
+                    const nextWidth = Math.min(maxWidth, Math.max(156, naturalWidth + 2));
+                    submenu.style.width = `${nextWidth}px`;
+                    rows.forEach((row) => {
+                        try { row.style.width = '100%'; } catch (e) {}
+                    });
+                } catch (e) {}
+            };
+            const updateSubmenuPosition = () => {
+                try {
+                    submenu.style.left = 'calc(100% - 4px)';
+                    submenu.style.right = 'auto';
+                    submenu.style.top = '-6px';
+                    const viewportWidth = Math.max(0, window.innerWidth || document.documentElement?.clientWidth || 0);
+                    const viewportHeight = Math.max(0, window.innerHeight || document.documentElement?.clientHeight || 0);
+                    const margin = 8;
+                    let rect = submenu.getBoundingClientRect();
+                    if (rect.right > viewportWidth - margin) {
+                        submenu.style.left = 'auto';
+                        submenu.style.right = 'calc(100% - 4px)';
+                        rect = submenu.getBoundingClientRect();
+                    }
+                    if (rect.left < margin) {
+                        submenu.style.left = '0';
+                        submenu.style.right = 'auto';
+                        rect = submenu.getBoundingClientRect();
+                    }
+                    if (rect.bottom > viewportHeight - margin) {
+                        const overflow = rect.bottom - (viewportHeight - margin);
+                        submenu.style.top = `${Math.min(-6, -6 - Math.round(overflow))}px`;
+                        rect = submenu.getBoundingClientRect();
+                    }
+                    if (rect.top < margin) {
+                        submenu.style.top = `${Math.max(margin - (wrap.getBoundingClientRect().top || 0), -6)}px`;
+                    }
+                } catch (e) {}
+            };
+            const showSubmenu = () => {
+                if (hideTimer) {
+                    try { clearTimeout(hideTimer); } catch (e) {}
+                    hideTimer = null;
+                }
+                try { trigger.style.backgroundColor = 'var(--b3-theme-surface-light)'; } catch (e) {}
+                submenu.style.display = 'flex';
+                submenu.style.flexDirection = 'column';
+                submenu.style.gap = '4px';
+                fitSubmenuWidth();
+                updateSubmenuPosition();
+            };
+            const hideSubmenu = () => {
+                if (hideTimer) {
+                    try { clearTimeout(hideTimer); } catch (e) {}
+                }
+                hideTimer = setTimeout(() => {
+                    submenu.style.display = 'none';
+                    try { trigger.style.backgroundColor = 'transparent'; } catch (e) {}
+                    hideTimer = null;
+                }, 120);
+            };
+
+            trigger.onmouseenter = showSubmenu;
+            wrap.onmouseleave = hideSubmenu;
+            submenu.onmouseenter = showSubmenu;
+            submenu.onmouseleave = hideSubmenu;
+            trigger.onclick = (ev) => {
+                try { ev?.preventDefault?.(); } catch (e) {}
+                try { ev?.stopPropagation?.(); } catch (e) {}
+                if (submenu.style.display === 'flex') hideSubmenu();
+                else showSubmenu();
+            };
+            return wrap;
+        };
+
+        menu.appendChild(createSubmenuTrigger(__tmRenderContextMenuLabel('settings', '设置'), () => {
+            const children = [];
+            children.push(__tmBuildAllDocTabMenuActionButton(__tmRenderContextMenuLabel('settings', '规则和分组设置'), () => {
+                window.tmOpenViewProfileConfigModal?.('allTabs', groupId);
+            }, { compact: true, stretch: false, mainRow: false }));
+            children.push(__tmBuildAllDocTabMenuActionButton(__tmRenderContextMenuLabel('settings', '当前文档分组默认设置'), () => {
+                window.tmOpenViewProfileConfigModal?.('group', groupId);
+            }, { compact: true, stretch: false, mainRow: false }));
+            const divider = document.createElement('hr');
+            divider.style.cssText = 'margin: 2px 0; border: none; border-top: 1px solid var(--b3-theme-surface-light);';
+            children.push(divider);
+            children.push(createSettingsInfoRow());
+            return children;
         }));
 
-        const info = document.createElement('div');
-        info.style.cssText = 'padding: 6px 12px 2px; font-size: 12px; opacity: 0.75; line-height: 1.5;';
-        info.innerHTML = `当前规则：<div style="margin-top:2px;">${esc(__tmGetViewProfileSourceLabel(currentProfileSource))} / ${esc(__tmDescribeViewProfile(currentProfile))}</div>`;
-        menu.appendChild(info);
+        const topDivider = document.createElement('hr');
+        topDivider.style.cssText = 'margin: 2px 0; border: none; border-top: 1px solid var(--b3-theme-surface-light);';
+        menu.appendChild(topDivider);
+
+        const list = document.createElement('div');
+        list.style.cssText = 'display:flex; flex-direction:column; gap:4px; min-width:0; max-height:min(360px, calc(100vh - 88px)); overflow:auto; padding:2px 0 0;';
+
+        (Array.isArray(items) ? items : []).forEach((item) => {
+            const id = String(item?.id || '').trim();
+            if (!id) return;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tm-btn tm-btn-info bc-btn bc-btn--sm';
+            try { btn.dataset.tmAllDocMainRow = '1'; } catch (e) {}
+            btn.style.cssText = `
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:10px;
+                width:auto;
+                min-width:0;
+                padding:8px 10px;
+                text-align:left;
+                ${item?.active ? 'border-color: var(--tm-primary-color); background: var(--tm-selected-bg, rgba(64, 158, 255, 0.12));' : ''}
+            `;
+
+            const label = document.createElement('span');
+            label.style.cssText = 'min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+            label.textContent = String(item?.label || '').trim() || '未命名页签';
+            btn.appendChild(label);
+
+            if (item?.active) {
+                const badge = document.createElement('span');
+                badge.style.cssText = 'flex:0 0 auto; font-size:12px; color:var(--tm-secondary-text);';
+                badge.textContent = '当前';
+                btn.appendChild(badge);
+            }
+
+            btn.onclick = async (ev) => {
+                try { ev?.preventDefault?.(); } catch (e) {}
+                try { ev?.stopPropagation?.(); } catch (e) {}
+                __tmHideDocTabMenu();
+                try { await window.tmSwitchDoc?.(id); } catch (e) {}
+            };
+            list.appendChild(btn);
+        });
+
+        menu.appendChild(list);
 
         document.body.appendChild(menu);
+
+        try {
+            const viewportWidth = Math.max(0, window.innerWidth || document.documentElement?.clientWidth || 0);
+            const maxWidth = Math.max(160, viewportWidth - 16);
+            const rows = Array.from(menu.querySelectorAll('[data-tm-all-doc-main-row="1"]'));
+            let naturalWidth = Math.max(
+                Math.ceil(menu.scrollWidth || 0),
+                Math.ceil(header.scrollWidth || 0) + 8
+            );
+            rows.forEach((row) => {
+                try {
+                    row.style.width = 'auto';
+                    naturalWidth = Math.max(naturalWidth, Math.ceil(row.scrollWidth || 0));
+                } catch (e) {}
+            });
+            const nextWidth = Math.min(maxWidth, Math.max(156, naturalWidth + 2));
+            menu.style.width = `${nextWidth}px`;
+            rows.forEach((row) => {
+                try { row.style.width = '100%'; } catch (e) {}
+            });
+        } catch (e) {}
+
+        try { __tmClampFloatingMenuToViewport(menu, anchorX, anchorY); } catch (e) {}
+        try { __tmAnimatePopupIn(menu, { origin: 'top-left' }); } catch (e) {}
 
         const closeHandler = (ev) => {
             try {
                 if (menu.contains(ev.target)) return;
             } catch (e) {}
+            try {
+                if (trigger instanceof Element && trigger.contains(ev.target)) return;
+            } catch (e) {}
             __tmHideDocTabMenu();
         };
         state.docTabMenuCloseHandler = closeHandler;
-        setTimeout(() => {
-            document.addEventListener('click', closeHandler);
-            document.addEventListener('contextmenu', closeHandler);
-        }, 0);
+        __tmScheduleBindOutsideCloseHandler(closeHandler);
+    };
+
+    window.tmShowAllDocTabContextMenu = function(event) {
+        if (Number(state.allDocTabIgnoreContextMenuUntil || 0) > Date.now()) {
+            try { event?.preventDefault?.(); } catch (e) {}
+            try { event?.stopPropagation?.(); } catch (e) {}
+            return;
+        }
+        return window.tmShowAllDocTabMenu?.(event);
+    };
+
+    window.tmShowAllDocTabLongPressMenu = function(event) {
+        return window.tmShowAllDocTabMenu?.(event);
+    };
+
+    window.tmAllDocTabPressStart = function(event) {
+        const type = String(event?.type || '').trim();
+        const isTouch = type.startsWith('touch');
+        if (!isTouch) return;
+        try { if (state.__tmPluginIconLongPressing) return; } catch (e) {}
+        __tmClearAllDocTabLongPressTimer();
+        state.allDocTabLongPressFired = false;
+        state.allDocTabLongPressMoved = false;
+        state.allDocTabSuppressClickUntil = 0;
+        const point = event?.touches?.[0];
+        state.allDocTabLongPressStartX = Number(point?.clientX) || 0;
+        state.allDocTabLongPressStartY = Number(point?.clientY) || 0;
+        state.allDocTabLongPressTrigger = __tmGetAllDocTabTriggerElement(event);
+        state.allDocTabLongPressTimer = setTimeout(() => {
+            if (state.allDocTabLongPressMoved) return;
+            state.allDocTabLongPressFired = true;
+            state.allDocTabSuppressClickUntil = Date.now() + 700;
+            state.allDocTabIgnoreContextMenuUntil = Date.now() + 1200;
+            const trigger = state.allDocTabLongPressTrigger;
+            const clientX = Number(state.allDocTabLongPressStartX) || 0;
+            const clientY = Number(state.allDocTabLongPressStartY) || 0;
+            __tmClearAllDocTabLongPressTimer();
+            window.tmShowAllDocTabMenu?.({
+                currentTarget: trigger,
+                target: trigger,
+                clientX,
+                clientY,
+                preventDefault() {},
+                stopPropagation() {},
+            });
+        }, 460);
+    };
+
+    window.tmAllDocTabPressMove = function(event) {
+        if (!state.allDocTabLongPressTimer) return;
+        const t = event?.touches?.[0];
+        const x = Number(t?.clientX) || 0;
+        const y = Number(t?.clientY) || 0;
+        const dx = x - (Number(state.allDocTabLongPressStartX) || 0);
+        const dy = y - (Number(state.allDocTabLongPressStartY) || 0);
+        if (Math.abs(dx) + Math.abs(dy) > 10) {
+            state.allDocTabLongPressMoved = true;
+            __tmClearAllDocTabLongPressTimer();
+        }
+    };
+
+    window.tmAllDocTabPressEnd = function(event) {
+        __tmFinishAllDocTabLongPress(event);
+    };
+
+    window.tmHandleAllDocTabClick = function(event) {
+        if (Number(state.allDocTabSuppressClickUntil || 0) > Date.now()) {
+            state.allDocTabSuppressClickUntil = 0;
+            try { event?.preventDefault?.(); } catch (e) {}
+            try { event?.stopPropagation?.(); } catch (e) {}
+            return;
+        }
+        window.tmSwitchDoc?.('all');
     };
 
     window.tmDocTabTouchStart = function(event, docId) {
@@ -23186,7 +24797,7 @@ async function __tmRefreshAfterWake(reason) {
         state.docTabLongPressTimer = setTimeout(() => {
             if (state.docTabTouchMoved) return;
             if (String(docId || '').trim() === 'all') {
-                window.tmShowAllDocTabContextMenu?.({
+                window.tmShowAllDocTabLongPressMenu?.({
                     clientX: x,
                     clientY: y,
                     preventDefault() {},
@@ -24632,7 +26243,7 @@ async function __tmRefreshAfterWake(reason) {
                     const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
                     labelColor = colorMap[String(row.color || '')] || 'var(--tm-text-color)';
                 } else if (row.kind === 'h2') {
-                    labelColor = 'var(--tm-secondary-text)';
+                    labelColor = String(row.labelColor || __tmGetHeadingSubgroupLabelColor('var(--tm-group-doc-label-color)', isDark));
                 }
                 if (row.kind === 'task' && row.groupDocColor) {
                     currentGroupBg = enableGroupBg ? (__tmGroupBgFromLabelColor(row.groupDocColor, isDark) || '') : '';
@@ -24652,11 +26263,16 @@ async function __tmRefreshAfterWake(reason) {
                 const createBtnHtml = (row.kind === 'h2' && state.groupByDocName)
                     ? __tmBuildHeadingGroupCreateBtnHtml(row.docId, row.headingId, '在该标题下新建任务')
                     : '';
+                const labelHtml = row.kind === 'doc'
+                    ? __tmRenderDocGroupLabel(row.docId || row.id, row.label || '')
+                    : (row.kind === 'h2'
+                        ? __tmRenderIconLabel('puzzle', row.label || '')
+                        : esc(String(row.label || '')));
                 return `
                     <div class="tm-checklist-group ${row.kind === 'doc' ? 'tm-checklist-group--doc' : ''} ${row.kind === 'pinned' ? 'tm-checklist-group--pinned' : ''} ${row.kind === 'task' ? 'tm-checklist-group--task' : ''} ${row.kind === 'h2' ? 'tm-checklist-group--h2' : ''} ${row.kind === 'time' ? 'tm-checklist-group--time' : ''} ${row.kind === 'quadrant' ? 'tm-checklist-group--quadrant' : ''} ${isCollapsed ? 'tm-checklist-group--collapsed' : ''}" data-group-key="${esc(String(row.key || ''))}" onclick="tmToggleGroupCollapse('${escSq(String(row.key || ''))}', event)">
                         ${toggle}
                         ${pinnedIconHtml}
-                        <span class="tm-checklist-group-label" style="color:${labelColor};">${esc(String(row.label || ''))}</span>
+                        <span class="tm-checklist-group-label" style="color:${labelColor};">${labelHtml}</span>
                         ${createBtnHtml}
                         ${countHtml}
                         ${durationHtml}
@@ -24806,7 +26422,7 @@ async function __tmRefreshAfterWake(reason) {
             return `
                 <div class="tm-body${bodyAnimClass} tm-body--checklist">
                     <div class="tm-checklist-layout">
-                        <div class="tm-checklist-pane${checklistCompact ? ' tm-checklist-pane--compact' : ''}${wrapCfg.enabled ? ' tm-checklist-pane--wrap' : ''}">
+                        <div class="tm-checklist-pane${checklistCompact ? ' tm-checklist-pane--compact' : ''}${wrapCfg.enabled ? ' tm-checklist-pane--wrap' : ''}${state.groupByDocName ? ' tm-checklist-pane--group-doc' : ''}">
                             <div class="tm-checklist-scroll">
                                 <div class="tm-checklist-items">${itemsHtml || `<div class="tm-checklist-empty-detail">暂无任务</div>`}${checklistLoadMoreHtml}</div>
                             </div>
@@ -24910,13 +26526,13 @@ async function __tmRefreshAfterWake(reason) {
 
             const renderGroupRow = (row) => {
                 const isCollapsed = !!row?.collapsed;
-                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;">${__tmRenderToggleIcon(16, 0, 'tm-group-toggle-icon')}</span>`;
+                const toggle = `<span class="tm-group-toggle${isCollapsed ? ' tm-group-toggle--collapsed' : ''}" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;">${__tmRenderToggleIcon(16, isCollapsed ? 0 : 90, 'tm-group-toggle-icon')}</span>`;
                 if (row.kind === 'pinned') {
                     return `<tr class="tm-group-row tm-timeline-row" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-checklist-group-pin-icon">${__tmRenderBadgeIcon('pin', 14)}</span><span class="tm-group-label" style="color:var(--tm-warning-color);">${esc(row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span></div></td></tr>`;
                 }
                 if (row.kind === 'doc') {
                     const labelColor = String(row.labelColor || 'var(--tm-group-doc-label-color)');
-                    return `<tr class="tm-group-row tm-timeline-row" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">${__tmRenderIconLabel('file-text', row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span></div></td></tr>`;
+                    return `<tr class="tm-group-row tm-timeline-row" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">${__tmRenderDocGroupLabel(row.docId || row.id, row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span></div></td></tr>`;
                 }
                 // 按任务名分组：分组行使用 PHOSPHOR 风格图标
                 if (row.kind === 'task') {
@@ -24931,7 +26547,8 @@ async function __tmRefreshAfterWake(reason) {
                 }
                 if (row.kind === 'h2') {
                     const createBtnHtml = __tmBuildHeadingGroupCreateBtnHtml(row.docId, row.headingId, '在该标题下新建任务');
-                    return `<tr class="tm-group-row tm-timeline-row" data-group-kind="h2" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-secondary-text);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggle}<span class="tm-group-label">${__tmRenderIconLabel('puzzle', row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span>${createBtnHtml}</div></td></tr>`;
+                    const labelColor = String(row.labelColor || __tmGetHeadingSubgroupLabelColor('var(--tm-group-doc-label-color)', isDark));
+                    return `<tr class="tm-group-row tm-timeline-row" data-group-kind="h2" data-group-key="${esc(row.key)}"><td colspan="3" onclick="tmToggleGroupCollapse('${row.key}', event)" style="cursor:pointer;font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggle}<span class="tm-group-label" style="color:${labelColor};">${__tmRenderIconLabel('puzzle', row.label || '')}</span><span class="tm-badge tm-badge--count">${Number(row.count) || 0}</span>${createBtnHtml}</div></td></tr>`;
                 }
                 if (row.kind === 'quadrant') {
                     const durationSum = String(row.durationSum || '').trim();
@@ -24960,7 +26577,7 @@ async function __tmRefreshAfterWake(reason) {
                     ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>'
                     : '';
                 const toggle = row.hasChildren
-                    ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${task.id}', event)">${__tmRenderToggleIcon(16, 0, 'tm-tree-toggle-icon')}</span>`
+                    ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${task.id}', event)">${__tmRenderToggleIcon(16, row.collapsed ? 0 : 90, 'tm-tree-toggle-icon')}</span>`
                     : '';
                 const tomatoFocusTaskId = SettingsStore.data.enableTomatoIntegration ? String(state.timerFocusTaskId || '').trim() : '';
                 const tomatoFocusModeEnabled = __tmIsTomatoFocusModeEnabled();
@@ -25014,7 +26631,7 @@ async function __tmRefreshAfterWake(reason) {
                     if (r.kind === 'doc') labelColor = String(r.labelColor || 'var(--tm-group-doc-label-color)');
                     else if (r.kind === 'task') labelColor = String(r.labelColor || 'var(--tm-primary-color)');
                     else if (r.kind === 'time') labelColor = String(r.labelColor || 'var(--tm-text-color)');
-                    else if (r.kind === 'h2') labelColor = 'var(--tm-secondary-text)';
+                    else if (r.kind === 'h2') labelColor = String(r.labelColor || __tmGetHeadingSubgroupLabelColor('var(--tm-group-doc-label-color)', isDark));
                     else if (r.kind === 'quadrant') {
                         const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
                         labelColor = colorMap[String(r.color || '')] || 'var(--tm-text-color)';
@@ -25461,11 +27078,12 @@ async function __tmRefreshAfterWake(reason) {
                 tasksByStatus.get(key).push(task);
             });
 
-                const renderCard = (task, depthInCol, isSub, isChildRoot, parentTxt, childrenHtml, toggleHtml, isParent) => {
+            const renderCard = (task, depthInCol, isSub, isChildRoot, parentTxt, childrenHtml, toggleHtml, isParent) => {
                 const id = String(task?.id || '').trim();
                 if (!id) return '';
                 const content = String(task?.content || '').trim();
-                const docName = docNameById.get(String(task?.root_id || '').trim()) || '';
+                const docId = String(task?.root_id || '').trim();
+                const docName = docNameById.get(docId) || '';
                 const st = String(task?.customStatus || '').trim() || 'todo';
                 const opt = statusOptionById.get(st) || (st === 'todo' ? todoOpt : { id: st, name: st, color: '#757575' });
                 const timeTxt = String(task?.completionTime || '').trim() || String(task?.startDate || '').trim();
@@ -25494,7 +27112,7 @@ async function __tmRefreshAfterWake(reason) {
                             </div>
                             <button class="tm-kanban-more" onclick="tmOpenTaskDetail('${id}', event)" title="任务详情">${__tmRenderLucideIcon('dots-three')}</button>
                         </div>
-                        ${parentTxt ? `<div class="tm-kanban-parent-line" style="font-size:12px;color:var(--tm-secondary-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:6px;" title="${esc(parentTxt)}"><span>父任务：</span><span style="font-weight:800;color:var(--tm-text-color);">${esc(parentTxt)}</span></div>` : ''}
+                        ${parentTxt ? `<div class="tm-kanban-parent-line" style="font-size:12px;color:var(--tm-secondary-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:6px;" title="${esc(parentTxt)}"><span>父任务：</span><span style="font-weight:800;color:var(--card-foreground);">${esc(parentTxt)}</span></div>` : ''}
                         ${remarkHtml}
                         ${metaParts.length ? `<div class="tm-kanban-card-meta">${metaParts.join('')}</div>` : ''}
                         ${(isAllTabsView && docName) ? `<div style="font-size:12px;color:var(--tm-secondary-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${__tmRenderIconLabel('file-text', docName)}</div>` : ''}
@@ -25699,7 +27317,7 @@ async function __tmRefreshAfterWake(reason) {
                         const isCollapsed = state.collapsedGroups?.has(groupKey);
                         const docName = docNameById.get(docId) || '未知文档';
                         const labelColor = docId === '__unknown__' ? 'var(--tm-secondary-text)' : (__tmGetDocColorHex(docId, isDark) || 'var(--tm-group-doc-label-color)');
-                        const title = `<span style="color:${labelColor};">📄 ${esc(docName)}</span>`;
+                        const title = `<span style="display:inline-flex;align-items:center;gap:6px;color:${labelColor};">${__tmRenderDocIcon(docId, { fallbackText: '📄', size: 14 })}<span>${esc(docName)}</span></span>`;
                         let body = '';
                         if (!isCollapsed) {
                             // 在标题看板模式下，即使设置中没有启用 docH2SubgroupEnabled，也启用二级标题分组
@@ -26127,10 +27745,18 @@ async function __tmRefreshAfterWake(reason) {
                 const colStyle = kanbanFillColumns
                     ? `flex:1 0 ${kanbanColW}px;min-width:${kanbanColW}px;max-width:none;`
                     : `width:${kanbanColW}px;min-width:${kanbanColW}px;max-width:${kanbanColW}px;`;
+                const docIdForTitle = String(c?.docId || c?.id || '').trim();
+                const canOpenDocFromTitle = headingMode && !isDoneCol && kind === 'doc' && docIdForTitle && docIdForTitle !== '__unknown__';
+                const titleContentHtml = headingMode && !isDoneCol && kind === 'doc'
+                    ? `${__tmRenderDocIcon(docIdForTitle, { fallbackText: '📄', size: 14 })}<span>${esc(String(c?.name || ''))}</span>`
+                    : esc(title);
+                const titleHtml = canOpenDocFromTitle
+                    ? `<button type="button" class="tm-kanban-col-title tm-kanban-col-title--link" style="color:${esc(colTitleColor)};" title="点击跳转至文档：${esc(c.name)}" onclick="event.preventDefault();event.stopPropagation();tmOpenDocById('${escSq(docIdForTitle)}');">${titleContentHtml}</button>`
+                    : `<div class="tm-kanban-col-title" style="color:${esc(colTitleColor)};" title="${esc(c.name)}">${titleContentHtml}</div>`;
                 return `
                     <div class="tm-kanban-col" ${dataAttrs} style="${colStyle}">
                         <div class="tm-kanban-col-header" style="${colHeaderBg ? `background:${colHeaderBg};` : ''}">
-                            <div class="tm-kanban-col-title" style="color:${esc(colTitleColor)};" title="${esc(c.name)}">${esc(title)}</div>
+                            ${titleHtml}
                             <span class="tm-badge tm-badge--count">${count}</span>
                         </div>
                         <div class="tm-kanban-col-body" ondragover="tmKanbanDragOver(event)" ondragleave="tmKanbanDragLeave(event)" ondrop="tmKanbanDrop(event)">
@@ -26427,11 +28053,21 @@ async function __tmRefreshAfterWake(reason) {
                         <section class="tm-whiteboard-stream-doc" data-doc-id="${esc(docId)}" data-doc-order="${idx}" style="--tm-whiteboard-stream-doc-accent:${docAccent};--tm-whiteboard-stream-doc-title-color:${docAccent};${docHeadBg ? `--tm-whiteboard-stream-doc-head-bg:${docHeadBg};` : ''}" ondragover="tmWhiteboardAllTabsDocDragOver(event, '${escSq(docId)}')" ondrop="tmWhiteboardAllTabsDocDrop(event, '${escSq(docId)}')">
                             <header class="tm-whiteboard-stream-doc-head">
                                 <div class="tm-whiteboard-stream-doc-meta">
-                                    <span class="tm-whiteboard-stream-doc-icon" aria-hidden="true">📄</span>
-                                    <span class="tm-whiteboard-stream-doc-title" onclick="tmSwitchDoc('${escSq(docId)}')" title="切换到该文档页签">${esc(docNameById.get(docId) || '未知文档')}</span>
+                                    ${__tmRenderDocIcon(docId, { fallbackText: '📄', className: 'tm-whiteboard-stream-doc-icon', size: 14 })}
+                                    <span class="tm-whiteboard-stream-doc-title" onclick="event.preventDefault(); event.stopPropagation(); tmOpenDocById('${escSq(docId)}');" title="打开文档">${esc(docNameById.get(docId) || '未知文档')}</span>
                                     <span class="tm-badge tm-badge--count">${docTasks.length}</span>
                                 </div>
-                                <span class="tm-whiteboard-stream-doc-grip" draggable="true" ondragstart="tmWhiteboardAllTabsDocDragStart(event, '${escSq(docId)}')" ondragend="tmWhiteboardAllTabsDocDragEnd(event)" title="拖拽调整文档卡片顺序">⋮⋮</span>
+                                <div class="tm-whiteboard-stream-doc-actions" onclick="event.stopPropagation()">
+                                    <button class="tm-group-create-btn tm-whiteboard-stream-doc-add-btn"
+                                            type="button"
+                                            title="新建任务"
+                                            aria-label="新建任务"
+                                            onpointerdown="event.stopPropagation()"
+                                            onclick="event.preventDefault(); event.stopPropagation(); tmQuickAddOpenForDoc('${escSq(docId)}');">
+                                        ${__tmRenderLucideIcon('plus')}
+                                    </button>
+                                    <span class="tm-whiteboard-stream-doc-grip" draggable="true" ondragstart="tmWhiteboardAllTabsDocDragStart(event, '${escSq(docId)}')" ondragend="tmWhiteboardAllTabsDocDragEnd(event)" title="拖拽调整文档卡片顺序">⋮⋮</span>
+                                </div>
                             </header>
                             <div class="tm-whiteboard-stream-doc-list">
                                 ${headingSectionsHtml || `<div class="tm-whiteboard-stream-empty">当前文档没有任务</div>`}
@@ -26780,7 +28416,7 @@ async function __tmRefreshAfterWake(reason) {
                 return `
                     <section class="tm-whiteboard-doc" data-doc-id="${esc(docId)}" style="width:${Math.round(boardW)}px;min-width:${Math.round(boardW)}px;">
                         <header class="tm-whiteboard-doc-head" onclick="tmSwitchDoc('${escSq(docId)}')" title="切换到该文档页签" style="cursor:pointer;">
-                            <span>📄 ${esc(docNameById.get(docId) || '未知文档')}</span>
+                            <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;">${__tmRenderDocIcon(docId, { fallbackText: '📄', size: 14 })}<span>${esc(docNameById.get(docId) || '未知文档')}</span></span>
                             <span class="tm-badge tm-badge--count">${docTasks.length}</span>
                         </header>
                         <div class="tm-whiteboard-doc-body" data-doc-id="${esc(docId)}" data-frame-offset-x="${allView ? Math.round(framePlan.offsetX) : 0}" data-frame-offset-y="${allView ? Math.round(framePlan.offsetY) : 0}" style="height:${Math.round(boardH)}px;min-height:${Math.round(boardH)}px;width:${Math.round(boardW)}px;min-width:${Math.round(boardW)}px;" ondragover="tmWhiteboardBoardDragOver(event)" ondrop="tmWhiteboardBoardDrop(event, '${escSq(docId)}')">
@@ -26930,7 +28566,7 @@ async function __tmRefreshAfterWake(reason) {
                 );
                 return `
                     <section class="tm-whiteboard-pool-doc">
-                        <header class="tm-whiteboard-pool-doc-head">📄 ${esc(docNameById.get(docId) || '未知文档')} · ${list.length}</header>
+                        <header class="tm-whiteboard-pool-doc-head"><span style="display:inline-flex;align-items:center;gap:6px;min-width:0;">${__tmRenderDocIcon(docId, { fallbackText: '📄', size: 14 })}<span>${esc(docNameById.get(docId) || '未知文档')}</span></span> · ${list.length}</header>
                         <div class="tm-whiteboard-pool-list">
                             ${groupKeys.map((gk) => {
                                 const g = groups.get(gk) || { label: noHeadingLabel, items: [] };
@@ -27365,13 +29001,13 @@ async function __tmRefreshAfterWake(reason) {
                      ondragover="tmDocTabDragOver(event)" 
                      ondrop="tmDocTabDrop(event, '')">
                     <div class="tm-doc-tabs-scroll" style="display:flex; gap:8px; overflow-x:auto; flex:1; align-items:center; padding: ${isMobile ? '4px 0 4px 0' : '4px 0 4px 0'};" ondragover="tmDocTabDragOver(event)" ondrop="tmDocTabDrop(event, '')">
-                        <div class="tm-doc-tab tm-doc-tab--all ${state.activeDocId === 'all' ? 'active' : ''}" onclick="tmSwitchDoc('all')" oncontextmenu="tmShowAllDocTabContextMenu(event)" title="${esc(__tmGetViewProfileSourceLabel(__tmGetEffectiveViewProfileForContext('all', currentGroupId).source))}: ${esc(__tmDescribeViewProfile(__tmGetEffectiveViewProfileForContext('all', currentGroupId).profile))}">全部</div>
+                        <div class="tm-doc-tab tm-doc-tab--all ${state.activeDocId === 'all' ? 'active' : ''}" onclick="tmHandleAllDocTabClick(event)" oncontextmenu="tmShowAllDocTabContextMenu(event)" ontouchstart="tmAllDocTabPressStart(event)" ontouchmove="tmAllDocTabPressMove(event)" ontouchend="tmAllDocTabPressEnd(event)" ontouchcancel="tmAllDocTabPressEnd(event)" title="${esc(__tmGetViewProfileSourceLabel(__tmGetEffectiveViewProfileForContext('all', currentGroupId).source))}: ${esc(__tmDescribeViewProfile(__tmGetEffectiveViewProfileForContext('all', currentGroupId).profile))}&#10;右键或长按查看当前分组全部页签">全部</div>
                         ${(() => {
                             const id = String(SettingsStore.data.newTaskDocId || '').trim();
                             if (!id || id === '__dailyNote__') return '';
-                            const docName = state.taskTree.find(d => d.id === id)?.name
-                                || state.allDocuments.find(d => d.id === id)?.name
-                                || '未命名文档';
+                            const docName = __tmGetDocDisplayName(id, '未命名文档');
+                            const rawName = __tmGetDocRawName(id, '未命名文档');
+                            const alias = __tmGetDocAliasValue(id);
                             const isActive = state.activeDocId === id;
                             const c = __tmGetDocColorHex(id, __tmIsDarkMode());
                             const p = __tmGetStoredDocViewProfile(id) || __tmGetStoredGroupViewProfile(currentGroupId) || __tmGetViewProfilesStore().global;
@@ -27380,9 +29016,10 @@ async function __tmRefreshAfterWake(reason) {
                             const expectedPercent = __tmComputeDocExpectedProgressPercent(expectedMeta);
                             const expectedTip = __tmFormatDocExpectedProgressTip(expectedMeta);
                             const expectedPid = `tm-doc-expected-special-${id}`;
-                            const title = `全局新建文档&#10;${esc(source)}: ${esc(__tmDescribeViewProfile(p))}${expectedTip ? `&#10;预期进度: ${esc(expectedTip)}` : ''}`;
+                            const nameTip = alias && alias !== rawName ? `别名: ${esc(alias)}&#10;原名: ${esc(rawName)}&#10;` : '';
+                            const title = `${nameTip}全局新建文档&#10;${esc(source)}: ${esc(__tmDescribeViewProfile(p))}${expectedTip ? `&#10;预期进度: ${esc(expectedTip)}` : ''}`;
                             setTimeout(() => __tmUpdateDocTabProgress(id, '', expectedPid), 0);
-                            return `<div class="tm-doc-tab ${isActive ? 'active' : ''}" data-tm-doc-id="${esc(id)}" style="--tm-doc-color:${esc(c)}" oncontextmenu="tmShowDocTabContextMenu(event, '${id}')" onclick="tmSwitchDoc('${id}')" title="${title}"><div class="tm-doc-tab-expected${expectedPercent == null ? '' : ' is-visible'}" id="${expectedPid}" style="width:${expectedPercent || 0}%"></div><div class="tm-doc-tab-text">📥 ${esc(docName)}</div></div>`;
+                            return `<div class="tm-doc-tab ${isActive ? 'active' : ''}" data-tm-doc-id="${esc(id)}" style="--tm-doc-color:${esc(c)}" oncontextmenu="tmShowDocTabContextMenu(event, '${id}')" onclick="tmSwitchDoc('${id}')" title="${title}"><div class="tm-doc-tab-expected${expectedPercent == null ? '' : ' is-visible'}" id="${expectedPid}" style="width:${expectedPercent || 0}%"></div><div class="tm-doc-tab-text">${__tmRenderDocIcon(id, { fallbackText: '📥', size: 14 })}<span>${esc(docName)}</span></div></div>`;
                         })()}
                         ${showOtherBlocksTab ? (() => {
                             const isActive = __tmIsOtherBlockTabId(state.activeDocId);
@@ -27397,18 +29034,22 @@ async function __tmRefreshAfterWake(reason) {
                             const c = __tmGetDocColorHex(doc.id, __tmIsDarkMode());
                             const pid = `tm-doc-prog-${doc.id}`;
                             const expectedPid = `tm-doc-expected-${doc.id}`;
+                            const docName = __tmGetDocDisplayName(doc, doc.name || '未命名文档');
+                            const rawDocName = __tmGetDocRawName(doc, doc.name || '未命名文档');
+                            const alias = __tmGetDocAliasValue(doc);
                             const docProfile = __tmGetStoredDocViewProfile(doc.id);
                             const groupProfile = __tmGetStoredGroupViewProfile(currentGroupId);
                             const profileSource = docProfile ? '页签自定义' : (groupProfile ? '分组默认' : '全局默认');
                             const expectedMeta = __tmGetCachedDocExpectedMeta(doc.id);
                             const expectedPercent = __tmComputeDocExpectedProgressPercent(expectedMeta);
                             const expectedTip = __tmFormatDocExpectedProgressTip(expectedMeta);
-                            const profileTip = `${profileSource}: ${__tmDescribeViewProfile(docProfile || groupProfile || __tmGetViewProfilesStore().global)}${expectedTip ? `\n预期进度: ${expectedTip}` : ''}`;
+                            const profileTip = `${alias && alias !== rawDocName ? `别名: ${alias}\n原名: ${rawDocName}\n` : ''}${profileSource}: ${__tmDescribeViewProfile(docProfile || groupProfile || __tmGetViewProfilesStore().global)}${expectedTip ? `\n预期进度: ${expectedTip}` : ''}`;
                             const profileTitle = esc(profileTip).replace(/\n/g, '&#10;');
                             // 预设宽度（如果缓存有值，直接渲染，减少闪烁）
                             const cachedPercent = __tmDocProgressCache?.get(doc.id) || 0;
                             // 调度异步更新
                             setTimeout(() => __tmUpdateDocTabProgress(doc.id, pid, expectedPid), 0);
+                            const iconHtml = __tmRenderDocIcon(doc, { size: 14 });
                             return `<div class="tm-doc-tab ${isActive ? 'active' : ''}" 
                                 data-tm-doc-id="${esc(doc.id)}" 
                                 style="--tm-doc-color:${esc(c)}" 
@@ -27421,7 +29062,7 @@ async function __tmRefreshAfterWake(reason) {
                                 title="${profileTitle}">
                                 <div class="tm-doc-tab-expected${expectedPercent == null ? '' : ' is-visible'}" id="${expectedPid}" style="width:${expectedPercent || 0}%"></div>
                                 <div class="tm-doc-tab-bg" id="${pid}" style="width:${cachedPercent}%"></div>
-                                <div class="tm-doc-tab-text">${esc(doc.name)}</div>
+                                <div class="tm-doc-tab-text">${iconHtml}<span>${esc(docName)}</span></div>
                             </div>`;
                         }).join('')}
                     </div>
@@ -27535,6 +29176,10 @@ async function __tmRefreshAfterWake(reason) {
                     .tm-doc-tab-text {
                         position: relative;
                         z-index: 3;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        min-width: 0;
                     }
                     .tm-doc-tab::after {
                         content: '';
@@ -31822,10 +33467,10 @@ async function __tmRefreshAfterWake(reason) {
             const defs = `
                 <defs>
                     <marker id="${esc(markerIdOut)}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
-                        <path d="M0,0 L8,3 L0,6 Z" fill="#2f6fed"></path>
+                        <path d="M0,0 L8,3 L0,6 Z" fill="var(--tm-primary-color)"></path>
                     </marker>
                     <marker id="${esc(markerIdIn)}" markerWidth="8" markerHeight="6" refX="1" refY="3" orient="auto-start-reverse" markerUnits="strokeWidth">
-                        <path d="M8,0 L0,3 L8,6 Z" fill="#2f6fed"></path>
+                        <path d="M8,0 L0,3 L8,6 Z" fill="var(--tm-primary-color)"></path>
                     </marker>
                 </defs>
             `;
@@ -34574,8 +36219,7 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
         try {
             if (state.taskContextMenuCloseHandler) {
-                document.removeEventListener('click', state.taskContextMenuCloseHandler);
-                document.removeEventListener('contextmenu', state.taskContextMenuCloseHandler);
+                __tmClearOutsideCloseHandler(state.taskContextMenuCloseHandler);
                 state.taskContextMenuCloseHandler = null;
             }
             document.getElementById('tm-task-context-menu')?.remove?.();
@@ -35444,8 +37088,7 @@ async function __tmRefreshAfterWake(reason) {
         const existingMenu = document.getElementById('tm-task-context-menu');
         if (existingMenu) existingMenu.remove();
         if (state.taskContextMenuCloseHandler) {
-            try { document.removeEventListener('click', state.taskContextMenuCloseHandler); } catch (e) {}
-            try { document.removeEventListener('contextmenu', state.taskContextMenuCloseHandler); } catch (e) {}
+            try { __tmClearOutsideCloseHandler(state.taskContextMenuCloseHandler); } catch (e) {}
             state.taskContextMenuCloseHandler = null;
         }
         __contextMenuUnstack?.();
@@ -35630,20 +37273,19 @@ async function __tmRefreshAfterWake(reason) {
                 menu.style.top = `${Math.round(y)}px`;
             } catch (e) {}
         });
-        const closeHandler = () => {
+        const closeHandler = (ev) => {
+            try {
+                if (menu.contains(ev?.target)) return;
+            } catch (e) {}
             __contextMenuUnstack?.();
             __contextMenuUnstack = null;
             try { menu.remove(); } catch (e) {}
-            try { document.removeEventListener('click', closeHandler); } catch (e) {}
-            try { document.removeEventListener('contextmenu', closeHandler); } catch (e) {}
+            try { __tmClearOutsideCloseHandler(closeHandler); } catch (e) {}
             if (state.taskContextMenuCloseHandler === closeHandler) state.taskContextMenuCloseHandler = null;
         };
         state.taskContextMenuCloseHandler = closeHandler;
         __contextMenuUnstack = __tmModalStackBind(closeHandler);
-        setTimeout(() => {
-            try { document.addEventListener('click', closeHandler); } catch (e) {}
-            try { document.addEventListener('contextmenu', closeHandler); } catch (e) {}
-        }, 0);
+        __tmScheduleBindOutsideCloseHandler(closeHandler);
     }
 
     function __tmMergeVisibleDateFieldsFromPrevTask(task, prevTask) {
@@ -38365,6 +40007,7 @@ async function __tmRefreshAfterWake(reason) {
                     type: 'group',
                     kind: 'doc',
                     key: groupKey,
+                    docId: String(docId || '').trim(),
                     label: String(docName),
                     count: docTasks.length,
                     labelColor,
@@ -38401,6 +40044,7 @@ async function __tmRefreshAfterWake(reason) {
                             label: String(g.label || ''),
                             docId: String(docId || '').trim(),
                             headingId: String(g.id || bucket.id || '').trim(),
+                            labelColor: __tmGetHeadingSubgroupLabelColor(labelColor, isDark),
                             count: Array.isArray(items) ? items.length : 0,
                             collapsed: !!h2Collapsed,
                         });
@@ -39180,6 +40824,7 @@ async function __tmRefreshAfterWake(reason) {
             const showHint = !!opts.showHint;
             const closeAfterSave = !!opts.closeAfterSave;
             const preserveFocus = opts.preserveFocus !== false;
+            const skipRerender = !!opts.skipRerender;
             const {
                 task,
                 nextContent,
@@ -39204,6 +40849,21 @@ async function __tmRefreshAfterWake(reason) {
             if (saving) return false;
             saving = true;
 
+            const rerenderCurrentViewDeferred = () => {
+                const run = () => {
+                    try {
+                        if (state.modal && document.body.contains(state.modal)) {
+                            if (!__tmRerenderCurrentViewInPlace(state.modal)) render();
+                        } else {
+                            render();
+                        }
+                    } catch (e) {
+                        try { render(); } catch (e2) {}
+                    }
+                };
+                try { setTimeout(run, 0); } catch (e) { run(); }
+            };
+
             try {
                 if (!__tmIsCollectedOtherBlockTask(task) && nextContent !== String(task.content || '')) {
                     await __tmUpdateTaskContentBlock(task, nextContent, { background: true });
@@ -39224,15 +40884,21 @@ async function __tmRefreshAfterWake(reason) {
                 task.completionTime = nextEnd;
                 task.duration = nextDuration;
                 task.remark = nextRemark;
+                task.content = nextContent;
+                task.raw_content = nextContent;
                 try { root.__tmTaskDetailTask = task; } catch (e) {}
                 await __tmPersistMetaAndAttrsAsync(task.id, patch, { background: true, skipFlush: true });
                 try { __tmInvalidateTasksQueryCacheByDocId(task.root_id || task.docId); } catch (e) {}
                 lastSerialized = serialized;
                 try { applyFilters(); } catch (e) {}
                 try { root.__tmTaskDetailCloseInlinePopover?.(); } catch (e) {}
-                if (showHint || closeAfterSave || !preserveFocus || !isDetailEditorFocused()) {
+                if (skipRerender) {
+                    rerenderCurrentViewDeferred();
+                } else if (showHint || closeAfterSave || !preserveFocus || !isDetailEditorFocused()) {
                     if (String(state.viewMode || '').trim() === 'checklist' && embedded) {
                         rerenderChecklistPreserveScroll();
+                    } else if (state.modal && document.body.contains(state.modal)) {
+                        if (!__tmRerenderCurrentViewInPlace(state.modal)) render();
                     } else {
                         render();
                     }
@@ -39264,6 +40930,14 @@ async function __tmRefreshAfterWake(reason) {
                 doSave({ showHint: false, closeAfterSave: false, preserveFocus: true }).catch(() => null);
             }, 1600);
         };
+        const flushAutoSaveNow = async (saveOptions = {}) => {
+            if (autoSaveTimer) {
+                try { clearTimeout(autoSaveTimer); } catch (e) {}
+                autoSaveTimer = null;
+            }
+            return await doSave(saveOptions);
+        };
+        try { root.__tmTaskDetailFlushSave = flushAutoSaveNow; } catch (e) {}
         let activeInlinePopover = null;
         let activeInlinePopoverTrigger = null;
         const subtaskSaveTimers = new Map();
@@ -39871,6 +41545,15 @@ async function __tmRefreshAfterWake(reason) {
         if (titleTextarea instanceof HTMLTextAreaElement) {
             syncAutoHeight(titleTextarea, 36);
             on(titleTextarea, 'input', () => syncAutoHeight(titleTextarea, 36));
+            on(titleTextarea, 'blur', () => {
+                if (titleTextarea.readOnly) return;
+                flushAutoSaveNow({
+                    showHint: false,
+                    closeAfterSave: false,
+                    preserveFocus: true,
+                    skipRerender: true,
+                }).catch(() => null);
+            });
             try {
                 requestAnimationFrame(() => syncAutoHeight(titleTextarea, 36));
             } catch (e) {}
@@ -39905,7 +41588,7 @@ async function __tmRefreshAfterWake(reason) {
                     on(el, 'input', scheduleAutoSave);
                 }
                 on(el, 'change', scheduleAutoSave);
-                on(el, 'blur', scheduleAutoSave);
+                if (field !== 'content') on(el, 'blur', scheduleAutoSave);
             } else if (el.matches('input[type="checkbox"]')) {
                 on(el, 'change', scheduleAutoSave);
             }
@@ -40722,7 +42405,7 @@ async function __tmRefreshAfterWake(reason) {
                 const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                 const labelColor = __tmGetDocColorHex(docId, isDark) || 'var(--tm-group-doc-label-color)';
 
-                allRows.push(`<tr class="tm-group-row" data-group-key="${groupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">📄 ${esc(docName)}</span><span class="tm-badge tm-badge--count">${docTasks.length}</span></div></td></tr>`);
+                allRows.push(`<tr class="tm-group-row" data-group-key="${groupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">${__tmRenderDocGroupLabel(docId, docName)}</span><span class="tm-badge tm-badge--count">${docTasks.length}</span></div></td></tr>`);
 
                 // 渲染该文档的任务（如果未折叠）
                 if (!isCollapsed) {
@@ -40755,7 +42438,8 @@ async function __tmRefreshAfterWake(reason) {
                             const h2Collapsed = state.collapsedGroups?.has(h2Key);
                             const toggleH2 = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                             const createBtnHtml = __tmBuildHeadingGroupCreateBtnHtml(docId, String(g.id || bucket.id || '').trim(), '在该标题下新建任务');
-                            allRows.push(`<tr class="tm-group-row" data-group-kind="h2" data-group-key="${esc(h2Key)}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-secondary-text);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggleH2}<span class="tm-group-label">🧩 ${esc(g.label || '')}</span><span class="tm-badge tm-badge--count">${Array.isArray(items) ? items.length : 0}</span>${createBtnHtml}</div></td></tr>`);
+                            const h2LabelColor = __tmGetHeadingSubgroupLabelColor(labelColor, isDark);
+                            allRows.push(`<tr class="tm-group-row" data-group-kind="h2" data-group-key="${esc(h2Key)}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggleH2}<span class="tm-group-label" style="color:${h2LabelColor};">${__tmRenderIconLabel('puzzle', g.label || '')}</span><span class="tm-badge tm-badge--count">${Array.isArray(items) ? items.length : 0}</span>${createBtnHtml}</div></td></tr>`);
                             if (!h2Collapsed) {
                                 items.forEach(task => {
                                     if (!hasTaskRowBudget()) return;
@@ -42039,6 +43723,9 @@ async function __tmRefreshAfterWake(reason) {
         const newDoc = {
             id: docId,
             name: docInfo?.name || (docIndex >= 0 ? state.taskTree[docIndex].name : '未知文档'),
+            alias: __tmNormalizeDocAliasValue(docInfo?.alias || (docIndex >= 0 ? state.taskTree[docIndex]?.alias : '')),
+            icon: __tmNormalizeDocIconValue(docInfo?.icon || (docIndex >= 0 ? state.taskTree[docIndex]?.icon : '')),
+            created: String(docInfo?.created || (docIndex >= 0 ? state.taskTree[docIndex]?.created : '') || '').trim(),
             tasks: rootTasks
         };
 
@@ -42268,14 +43955,21 @@ async function __tmRefreshAfterWake(reason) {
             if (e.key !== 'Escape') return;
             try { e.preventDefault(); } catch (err) {}
             try { e.stopPropagation(); } catch (err) {}
-            close();
+            close().catch(() => null);
         };
-        const close = () => {
+        const close = async () => {
+            try {
+                await overlay.__tmTaskDetailFlushSave?.({
+                    showHint: false,
+                    closeAfterSave: false,
+                    preserveFocus: false,
+                });
+            } catch (e) {}
             try { document.removeEventListener('keydown', onKeydown, true); } catch (e) {}
             try { overlay.remove(); } catch (e) {}
         };
         overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) close();
+            if (e.target === overlay) close().catch(() => null);
         });
         document.body.appendChild(overlay);
         __tmBindTaskDetailEditor(overlay, tid, { embedded: false, onClose: close, task });
@@ -42691,8 +44385,7 @@ async function __tmRefreshAfterWake(reason) {
         const existingMenu = document.getElementById('tm-task-context-menu');
         if (existingMenu) existingMenu.remove();
         if (state.taskContextMenuCloseHandler) {
-            try { document.removeEventListener('click', state.taskContextMenuCloseHandler); } catch (e) {}
-            try { document.removeEventListener('contextmenu', state.taskContextMenuCloseHandler); } catch (e) {}
+            try { __tmClearOutsideCloseHandler(state.taskContextMenuCloseHandler); } catch (e) {}
             state.taskContextMenuCloseHandler = null;
         }
 
@@ -42983,17 +44676,16 @@ async function __tmRefreshAfterWake(reason) {
         });
 
         // Click outside to close
-        const closeHandler = () => {
+        const closeHandler = (ev) => {
+            try {
+                if (menu.contains(ev?.target)) return;
+            } catch (e) {}
             menu.remove();
-            try { document.removeEventListener('click', closeHandler); } catch (e) {}
-            try { document.removeEventListener('contextmenu', closeHandler); } catch (e) {}
+            try { __tmClearOutsideCloseHandler(closeHandler); } catch (e) {}
             if (state.taskContextMenuCloseHandler === closeHandler) state.taskContextMenuCloseHandler = null;
         };
         state.taskContextMenuCloseHandler = closeHandler;
-        setTimeout(() => {
-            document.addEventListener('click', closeHandler);
-            document.addEventListener('contextmenu', closeHandler);
-        }, 0);
+        __tmScheduleBindOutsideCloseHandler(closeHandler);
     };
 
     function __tmResolveConfiguredQuickAddDocId() {
@@ -44009,9 +45701,9 @@ async function __tmRefreshAfterWake(reason) {
         
         // 优先级配置
         const prConfig = {
-            'high': { label: '高', color: '#ea4335', bg: 'rgba(234, 67, 53, 0.1)' },
-            'medium': { label: '中', color: '#f9ab00', bg: 'rgba(249, 171, 0, 0.1)' },
-            'low': { label: '低', color: '#4285f4', bg: 'rgba(66, 133, 244, 0.1)' },
+            'high': { label: '高', color: 'var(--tm-danger-color)', bg: 'color-mix(in srgb, var(--tm-danger-color) 10%, transparent)' },
+            'medium': { label: '中', color: 'var(--tm-warning-color, #f9ab00)', bg: 'color-mix(in srgb, var(--tm-warning-color, #f9ab00) 10%, transparent)' },
+            'low': { label: '低', color: 'var(--tm-primary-color)', bg: 'color-mix(in srgb, var(--tm-primary-color) 10%, transparent)' },
             'none': { label: '无', color: 'var(--tm-text-color)', bg: 'transparent' }
         };
 
@@ -45374,6 +47066,8 @@ async function __tmRefreshAfterWake(reason) {
                          nextTaskTree.push({
                             id: docId,
                             name: docName,
+                            alias: __tmNormalizeDocAliasValue(cachedDoc?.alias),
+                            icon: __tmNormalizeDocIconValue(cachedDoc?.icon),
                             created: String(cachedDoc?.created || '').trim(),
                             tasks: rootTasks
                         });
@@ -45701,7 +47395,7 @@ async function __tmRefreshAfterWake(reason) {
                     const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
                     labelColor = colorMap[String(row.color || '')] || 'var(--tm-text-color)';
                 } else if (row.kind === 'h2') {
-                    labelColor = 'var(--tm-secondary-text)';
+                    labelColor = String(row.labelColor || __tmGetHeadingSubgroupLabelColor('var(--tm-group-doc-label-color)', isDark));
                 }
                 if (row.kind === 'task' && row.groupDocColor) {
                     currentGroupBg = enableGroupBg ? (__tmGroupBgFromLabelColor(row.groupDocColor, isDark) || '') : '';
@@ -45721,11 +47415,16 @@ async function __tmRefreshAfterWake(reason) {
                 const createBtnHtml = (row.kind === 'h2' && state.groupByDocName)
                     ? __tmBuildHeadingGroupCreateBtnHtml(row.docId, row.headingId, '在该标题下新建任务')
                     : '';
+                const labelHtml = row.kind === 'doc'
+                    ? __tmRenderDocGroupLabel(row.docId || row.id, row.label || '')
+                    : (row.kind === 'h2'
+                        ? __tmRenderIconLabel('puzzle', row.label || '')
+                        : esc(String(row.label || '')));
                 return `
                     <div class="tm-checklist-group ${row.kind === 'doc' ? 'tm-checklist-group--doc' : ''} ${row.kind === 'pinned' ? 'tm-checklist-group--pinned' : ''} ${row.kind === 'task' ? 'tm-checklist-group--task' : ''} ${row.kind === 'h2' ? 'tm-checklist-group--h2' : ''} ${row.kind === 'time' ? 'tm-checklist-group--time' : ''} ${row.kind === 'quadrant' ? 'tm-checklist-group--quadrant' : ''} ${isCollapsed ? 'tm-checklist-group--collapsed' : ''}" data-group-key="${esc(String(row.key || ''))}" onclick="tmToggleGroupCollapse('${escSq(String(row.key || ''))}', event)">
                         ${toggle}
                         ${pinnedIconHtml}
-                        <span class="tm-checklist-group-label" style="color:${labelColor};">${esc(String(row.label || ''))}</span>
+                        <span class="tm-checklist-group-label" style="color:${labelColor};">${labelHtml}</span>
                         ${createBtnHtml}
                         ${countHtml}
                         ${durationHtml}
@@ -45855,7 +47554,7 @@ async function __tmRefreshAfterWake(reason) {
             return `
                 <div class="tm-body${bodyAnimClass} tm-body--checklist">
                     <div class="tm-checklist-layout">
-                        <div class="tm-checklist-pane${checklistCompact ? ' tm-checklist-pane--compact' : ''}${wrapCfg.enabled ? ' tm-checklist-pane--wrap' : ''}">
+                        <div class="tm-checklist-pane${checklistCompact ? ' tm-checklist-pane--compact' : ''}${wrapCfg.enabled ? ' tm-checklist-pane--wrap' : ''}${state.groupByDocName ? ' tm-checklist-pane--group-doc' : ''}">
                             <div class="tm-checklist-scroll">
                                 <div class="tm-checklist-items">${itemsHtml || `<div class="tm-checklist-empty-detail">暂无任务</div>`}</div>
                             </div>
@@ -46977,18 +48676,25 @@ async function __tmRefreshAfterWake(reason) {
 
     function renderAppearanceColorSettings() {
         const d = SettingsStore.data || {};
+        const themeConfig = __tmNormalizeThemeConfig(d.themeConfig);
+        const themeDefaultsLight = __tmBuildThemeAppearanceDefaults(themeConfig, false);
+        const themeDefaultsDark = __tmBuildThemeAppearanceDefaults(themeConfig, true);
+        const themePaletteLight = __tmBuildThemePalette(themeConfig, false);
+        const themePaletteDark = __tmBuildThemePalette(themeConfig, true);
+        const hasImportedTheme = Object.keys(themeConfig.importLight || {}).length > 0;
+        const themeSelectValue = themeConfig.source === 'imported' && hasImportedTheme ? '__imported__' : themeConfig.presetId;
         const topbarLight = __tmGetTopbarControlAppearance(false);
         const topbarDark = __tmGetTopbarControlAppearance(true);
         const items = [
             {
                 title: '插件顶栏渐变',
                 rows: [
-                    { label: '亮色 起始', key: 'topbarGradientLightStart', value: d.topbarGradientLightStart || '#E3ECF2' },
-                    { label: '亮色 结束', key: 'topbarGradientLightEnd', value: d.topbarGradientLightEnd || '#E3ECF2' },
-                    { label: '夜间 起始', key: 'topbarGradientDarkStart', value: d.topbarGradientDarkStart || '#2D2D2D' },
-                    { label: '夜间 结束', key: 'topbarGradientDarkEnd', value: d.topbarGradientDarkEnd || '#2D2D2D' },
-                    { label: '顶栏文字 亮色', key: 'topbarTextColorLight', value: d.topbarTextColorLight || '#003252' },
-                    { label: '顶栏文字 夜间', key: 'topbarTextColorDark', value: d.topbarTextColorDark || '#FFFFFF' }
+                    { label: '亮色 起始', key: 'topbarGradientLightStart', value: d.topbarGradientLightStart || themeDefaultsLight.topbarGradientStart },
+                    { label: '亮色 结束', key: 'topbarGradientLightEnd', value: d.topbarGradientLightEnd || themeDefaultsLight.topbarGradientEnd },
+                    { label: '夜间 起始', key: 'topbarGradientDarkStart', value: d.topbarGradientDarkStart || themeDefaultsDark.topbarGradientStart },
+                    { label: '夜间 结束', key: 'topbarGradientDarkEnd', value: d.topbarGradientDarkEnd || themeDefaultsDark.topbarGradientEnd },
+                    { label: '顶栏文字 亮色', key: 'topbarTextColorLight', value: d.topbarTextColorLight || themeDefaultsLight.topbarTextColor },
+                    { label: '顶栏文字 夜间', key: 'topbarTextColorDark', value: d.topbarTextColorDark || themeDefaultsDark.topbarTextColor }
                 ]
             },
             {
@@ -47013,59 +48719,59 @@ async function __tmRefreshAfterWake(reason) {
             {
                 title: '任务内容列字体颜色',
                 rows: [
-                    { label: '亮色', key: 'taskContentColorLight', value: d.taskContentColorLight || '#333333' },
-                    { label: '夜间', key: 'taskContentColorDark', value: d.taskContentColorDark || '#e0e0e0' }
+                    { label: '亮色', key: 'taskContentColorLight', value: d.taskContentColorLight || themeDefaultsLight.taskContentColor },
+                    { label: '夜间', key: 'taskContentColorDark', value: d.taskContentColorDark || themeDefaultsDark.taskContentColor }
                 ]
             },
             {
                 title: '任务其它列字体颜色',
                 rows: [
-                    { label: '亮色', key: 'taskMetaColorLight', value: d.taskMetaColorLight || '#5f6368' },
-                    { label: '夜间', key: 'taskMetaColorDark', value: d.taskMetaColorDark || '#b0b8c4' }
+                    { label: '亮色', key: 'taskMetaColorLight', value: d.taskMetaColorLight || themeDefaultsLight.taskMetaColor },
+                    { label: '夜间', key: 'taskMetaColorDark', value: d.taskMetaColorDark || themeDefaultsDark.taskMetaColor }
                 ]
             },
             {
                 title: '子任务进度条背景',
                 rows: [
-                    { label: '亮色', key: 'progressBarColorLight', value: d.progressBarColorLight || '#4caf50' },
-                    { label: '夜间', key: 'progressBarColorDark', value: d.progressBarColorDark || '#81c784' }
+                    { label: '亮色', key: 'progressBarColorLight', value: d.progressBarColorLight || themeDefaultsLight.progressBarColor },
+                    { label: '夜间', key: 'progressBarColorDark', value: d.progressBarColorDark || themeDefaultsDark.progressBarColor }
                 ]
             },
             {
                 title: '日历边框线颜色',
                 rows: [
-                    { label: '亮色', key: 'calendarGridBorderColorLight', value: d.calendarGridBorderColorLight || '#E1E1E1' },
-                    { label: '夜间', key: 'calendarGridBorderColorDark', value: d.calendarGridBorderColorDark || '#333333' }
+                    { label: '亮色', key: 'calendarGridBorderColorLight', value: d.calendarGridBorderColorLight || themeDefaultsLight.calendarGridBorderColor },
+                    { label: '夜间', key: 'calendarGridBorderColorDark', value: d.calendarGridBorderColorDark || themeDefaultsDark.calendarGridBorderColor }
                 ]
             },
             {
                 title: '表格边框线颜色',
                 rows: [
-                    { label: '亮色', key: 'tableBorderColorLight', value: d.tableBorderColorLight || '#e9ecef' },
-                    { label: '夜间', key: 'tableBorderColorDark', value: d.tableBorderColorDark || '#333333' }
+                    { label: '亮色', key: 'tableBorderColorLight', value: d.tableBorderColorLight || themeDefaultsLight.tableBorderColor },
+                    { label: '夜间', key: 'tableBorderColorDark', value: d.tableBorderColorDark || themeDefaultsDark.tableBorderColor }
                 ]
             },
             {
                 title: '分组名称（按文档分组）',
                 rows: [
-                    { label: '亮色', key: 'groupDocLabelColorLight', value: d.groupDocLabelColorLight || '#333333' },
-                    { label: '夜间', key: 'groupDocLabelColorDark', value: d.groupDocLabelColorDark || '#e0e0e0' }
+                    { label: '亮色', key: 'groupDocLabelColorLight', value: d.groupDocLabelColorLight || themeDefaultsLight.groupDocLabelColor },
+                    { label: '夜间', key: 'groupDocLabelColorDark', value: d.groupDocLabelColorDark || themeDefaultsDark.groupDocLabelColor }
                 ]
             },
             {
                 title: '分组名称（按时间分组）',
                 rows: [
-                    { label: '未来基础色 亮色', key: 'timeGroupBaseColorLight', value: d.timeGroupBaseColorLight || '#1a73e8' },
-                    { label: '未来基础色 夜间', key: 'timeGroupBaseColorDark', value: d.timeGroupBaseColorDark || '#6ba5ff' },
-                    { label: '已过期 亮色', key: 'timeGroupOverdueColorLight', value: d.timeGroupOverdueColorLight || '#d93025' },
-                    { label: '已过期 夜间', key: 'timeGroupOverdueColorDark', value: d.timeGroupOverdueColorDark || '#ff6b6b' }
+                    { label: '未来基础色 亮色', key: 'timeGroupBaseColorLight', value: d.timeGroupBaseColorLight || themeDefaultsLight.timeGroupBaseColor },
+                    { label: '未来基础色 夜间', key: 'timeGroupBaseColorDark', value: d.timeGroupBaseColorDark || themeDefaultsDark.timeGroupBaseColor },
+                    { label: '已过期 亮色', key: 'timeGroupOverdueColorLight', value: d.timeGroupOverdueColorLight || themeDefaultsLight.timeGroupOverdueColor },
+                    { label: '已过期 夜间', key: 'timeGroupOverdueColorDark', value: d.timeGroupOverdueColorDark || themeDefaultsDark.timeGroupOverdueColor }
                 ]
             },
             {
                 title: '表格视图待定分组任务行背景',
                 rows: [
-                    { label: '亮色', key: 'timeGroupPendingTaskBgColorLight', value: d.timeGroupPendingTaskBgColorLight || '#9aa0a6' },
-                    { label: '夜间', key: 'timeGroupPendingTaskBgColorDark', value: d.timeGroupPendingTaskBgColorDark || '#8ab4f8' }
+                    { label: '亮色', key: 'timeGroupPendingTaskBgColorLight', value: d.timeGroupPendingTaskBgColorLight || themeDefaultsLight.timeGroupPendingTaskBgColor },
+                    { label: '夜间', key: 'timeGroupPendingTaskBgColorDark', value: d.timeGroupPendingTaskBgColorDark || themeDefaultsDark.timeGroupPendingTaskBgColor }
                 ]
             }
         ];
@@ -47119,10 +48825,95 @@ async function __tmRefreshAfterWake(reason) {
             </div>
         `).join('');
 
-        const previewLight = `linear-gradient(135deg, ${esc(__tmNormalizeHexColor(d.topbarGradientLightStart, '#E3ECF2') || '#E3ECF2')} 0%, ${esc(__tmNormalizeHexColor(d.topbarGradientLightEnd, '#E3ECF2') || '#E3ECF2')} 100%)`;
-        const previewDark = `linear-gradient(135deg, ${esc(__tmNormalizeHexColor(d.topbarGradientDarkStart, '#2D2D2D') || '#2D2D2D')} 0%, ${esc(__tmNormalizeHexColor(d.topbarGradientDarkEnd, '#2D2D2D') || '#2D2D2D')} 100%)`;
+        const previewLight = `linear-gradient(135deg, ${esc(__tmNormalizeHexColor(d.topbarGradientLightStart, themeDefaultsLight.topbarGradientStart) || themeDefaultsLight.topbarGradientStart)} 0%, ${esc(__tmNormalizeHexColor(d.topbarGradientLightEnd, themeDefaultsLight.topbarGradientEnd) || themeDefaultsLight.topbarGradientEnd)} 100%)`;
+        const previewDark = `linear-gradient(135deg, ${esc(__tmNormalizeHexColor(d.topbarGradientDarkStart, themeDefaultsDark.topbarGradientStart) || themeDefaultsDark.topbarGradientStart)} 0%, ${esc(__tmNormalizeHexColor(d.topbarGradientDarkEnd, themeDefaultsDark.topbarGradientEnd) || themeDefaultsDark.topbarGradientEnd)} 100%)`;
+        const themeOptions = __TM_THEME_PRESETS.map((preset) => `<option value="${esc(preset.id)}" ${themeSelectValue === preset.id ? 'selected' : ''}>${esc(preset.name)}</option>`).join('');
+        const activeThemeName = themeConfig.source === 'imported' && hasImportedTheme ? (themeConfig.importName || 'Custom') : __tmGetThemePresetById(themeConfig.presetId).name;
+        const editableThemeTokens = [
+            { key: 'background', label: '背景' },
+            { key: 'sidebar', label: '侧栏' },
+            { key: 'card', label: '卡片' },
+            { key: 'primary', label: '主色' },
+            { key: 'accent', label: '强调' },
+            { key: 'destructive', label: '危险' },
+        ];
+        const renderThemeTokenEditor = (token) => {
+            const lightValue = __tmNormalizeHexColor(themePaletteLight[token.key], '#000000') || '#000000';
+            const darkValue = __tmNormalizeHexColor(themePaletteDark[token.key], '#000000') || '#000000';
+            const lightOverridden = !!String(themeConfig.overrideLight?.[token.key] || '').trim();
+            const darkOverridden = !!String(themeConfig.overrideDark?.[token.key] || '').trim();
+            return `
+                <div style="padding:10px;border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-bg-color);display:flex;flex-direction:column;gap:8px;">
+                    <div style="font-size:12px;font-weight:600;color:var(--tm-text-color);">${esc(token.label)}</div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+                        <span style="font-size:12px;color:var(--tm-secondary-text);">亮色${lightOverridden ? ' · 已覆盖' : ''}</span>
+                        <span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <button type="button" class="tm-color-btn" onclick="tmOpenThemeTokenPicker('${esc(token.key)}','light')" style="min-width:128px;">
+                                <span class="tm-color-swatch" style="background:${esc(lightValue)}"></span>
+                                <span class="tm-color-text">${esc(__tmFormatColorDisplayValue(lightValue))}</span>
+                            </button>
+                            ${lightOverridden ? `<button class="tm-btn tm-btn-gray" onclick="tmClearThemeTokenOverride('${esc(token.key)}','light')" style="padding:4px 8px;font-size:12px;">清除</button>` : ''}
+                        </span>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+                        <span style="font-size:12px;color:var(--tm-secondary-text);">夜间${darkOverridden ? ' · 已覆盖' : ''}</span>
+                        <span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <button type="button" class="tm-color-btn" onclick="tmOpenThemeTokenPicker('${esc(token.key)}','dark')" style="min-width:128px;">
+                                <span class="tm-color-swatch" style="background:${esc(darkValue)}"></span>
+                                <span class="tm-color-text">${esc(__tmFormatColorDisplayValue(darkValue))}</span>
+                            </button>
+                            ${darkOverridden ? `<button class="tm-btn tm-btn-gray" onclick="tmClearThemeTokenOverride('${esc(token.key)}','dark')" style="padding:4px 8px;font-size:12px;">清除</button>` : ''}
+                        </span>
+                    </div>
+                </div>
+            `;
+        };
+        const renderThemeSwatches = (palette, label) => `
+            <div style="padding:10px;border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-card-bg);display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                    <span style="font-size:12px;color:var(--tm-secondary-text);">${esc(label)}</span>
+                    <span style="font-size:11px;color:var(--tm-secondary-text);">${esc(activeThemeName)}</span>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <span title="背景" style="width:24px;height:24px;border-radius:8px;background:${esc(palette.background)};border:1px solid var(--tm-border-color);"></span>
+                    <span title="卡片" style="width:24px;height:24px;border-radius:8px;background:${esc(palette.card)};border:1px solid var(--tm-border-color);"></span>
+                    <span title="主色" style="width:24px;height:24px;border-radius:8px;background:${esc(palette.primary)};border:1px solid var(--tm-border-color);"></span>
+                    <span title="强调" style="width:24px;height:24px;border-radius:8px;background:${esc(palette.accent)};border:1px solid var(--tm-border-color);"></span>
+                    <span title="危险" style="width:24px;height:24px;border-radius:8px;background:${esc(palette.destructive)};border:1px solid var(--tm-border-color);"></span>
+                </div>
+            </div>
+        `;
+        const themeSection = `
+            <div style="padding:12px;border:1px solid var(--tm-border-color);border-radius:12px;background:var(--tm-card-bg);margin-bottom:12px;display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                    <div>
+                        <div style="font-weight:600;">主题方案</div>
+                        <div style="margin-top:4px;font-size:12px;color:var(--tm-secondary-text);line-height:1.5;">支持内置预设与 TweakCN / shadcn CSS 变量导入。切换方案时，会同步刷新插件背景、Basecoat 控件和下面的外观微调项。<a href="${esc(__TM_TWEAKCN_URL)}" target="_blank" rel="noopener noreferrer" style="margin-left:6px;color:var(--tm-primary-color);text-decoration:none;">打开 TweakCN ↗</a></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <select class="tm-rule-select" onchange="tmSelectAppearanceTheme(this.value)" style="min-width:180px;">
+                            ${themeOptions}
+                            ${hasImportedTheme ? `<option value="__imported__" ${themeSelectValue === '__imported__' ? 'selected' : ''}>导入主题 · ${esc(themeConfig.importName || 'Custom')}</option>` : ''}
+                        </select>
+                        <button class="tm-btn tm-btn-gray" type="button" onclick="window.open('${esc(__TM_TWEAKCN_URL)}', '_blank', 'noopener,noreferrer')" style="padding:4px 10px;font-size:12px;">访问 TweakCN</button>
+                        <button class="tm-btn tm-btn-info" onclick="tmOpenThemeImportDialog()" style="padding:4px 10px;font-size:12px;">导入 TweakCN</button>
+                        ${hasImportedTheme ? `<button class="tm-btn tm-btn-gray" onclick="tmClearImportedTheme()" style="padding:4px 10px;font-size:12px;">移除导入</button>` : ''}
+                        <button class="tm-btn tm-btn-gray" onclick="tmResetThemeOverrides()" style="padding:4px 10px;font-size:12px;">还原当前主题</button>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+                    ${renderThemeSwatches(themePaletteLight, '亮色预览')}
+                    ${renderThemeSwatches(themePaletteDark, '夜间预览')}
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;">
+                    ${editableThemeTokens.map(renderThemeTokenEditor).join('')}
+                </div>
+                <div style="font-size:12px;color:var(--tm-secondary-text);line-height:1.5;">当前来源：${esc(themeConfig.source === 'imported' && hasImportedTheme ? `导入主题「${themeConfig.importName || 'Custom'}」` : `预设「${__tmGetThemePresetById(themeConfig.presetId).name}」`)}</div>
+            </div>
+        `;
 
         return `
+            ${themeSection}
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                     <span style="font-size:12px;color:var(--tm-secondary-text);">预览(亮色):</span>
@@ -47151,7 +48942,7 @@ async function __tmRefreshAfterWake(reason) {
                 ${cards}
             </div>
             <div style="margin-top:10px;font-size:12px;color:var(--tm-secondary-text);line-height:1.5;">
-                顶栏控件颜色默认会自动跟随当前顶栏主题，恢复默认即可回到自动推导；按时间分组的分组名称会根据“距离今天的天数”自动变淡，已过期固定使用“已过期颜色”，以保证可读性并适配夜间模式。
+                上面的颜色按钮会作为当前主题的微调覆盖项；按时间分组的分组名称会根据“距离今天的天数”自动变淡，已过期固定使用“已过期颜色”，以保证可读性并适配夜间模式。
             </div>
         `;
     }
@@ -47161,15 +48952,17 @@ async function __tmRefreshAfterWake(reason) {
         const k = String(btn?.dataset?.tmColorKey || '').trim();
         const label = String(btn?.dataset?.tmColorLabel || '选择颜色').trim() || '选择颜色';
         if (!k) return;
+        const themeDefaultsLight = __tmBuildThemeAppearanceDefaults(SettingsStore.data?.themeConfig, false);
+        const themeDefaultsDark = __tmBuildThemeAppearanceDefaults(SettingsStore.data?.themeConfig, true);
         const topbarLight = __tmGetTopbarControlAppearance(false);
         const topbarDark = __tmGetTopbarControlAppearance(true);
         const defaults = {
-            topbarGradientLightStart: '#E3ECF2',
-            topbarGradientLightEnd: '#E3ECF2',
-            topbarGradientDarkStart: '#2D2D2D',
-            topbarGradientDarkEnd: '#2D2D2D',
-            topbarTextColorLight: '#003252',
-            topbarTextColorDark: '#FFFFFF',
+            topbarGradientLightStart: themeDefaultsLight.topbarGradientStart,
+            topbarGradientLightEnd: themeDefaultsLight.topbarGradientEnd,
+            topbarGradientDarkStart: themeDefaultsDark.topbarGradientStart,
+            topbarGradientDarkEnd: themeDefaultsDark.topbarGradientEnd,
+            topbarTextColorLight: themeDefaultsLight.topbarTextColor,
+            topbarTextColorDark: themeDefaultsDark.topbarTextColor,
             topbarControlBgLight: topbarLight.controlBg,
             topbarControlBgDark: topbarDark.controlBg,
             topbarControlTextLight: topbarLight.controlText,
@@ -47184,24 +48977,24 @@ async function __tmRefreshAfterWake(reason) {
             topbarControlSegmentActiveBgDark: topbarDark.segActive,
             topbarControlShadowColorLight: topbarLight.shadowColor,
             topbarControlShadowColorDark: topbarDark.shadowColor,
-            taskContentColorLight: '#333333',
-            taskContentColorDark: '#e0e0e0',
-            taskMetaColorLight: '#5f6368',
-            taskMetaColorDark: '#b0b8c4',
-            groupDocLabelColorLight: '#333333',
-            groupDocLabelColorDark: '#e0e0e0',
-            timeGroupBaseColorLight: '#1a73e8',
-            timeGroupBaseColorDark: '#6ba5ff',
-            timeGroupOverdueColorLight: '#d93025',
-            timeGroupOverdueColorDark: '#ff6b6b',
-            timeGroupPendingTaskBgColorLight: '#9aa0a6',
-            timeGroupPendingTaskBgColorDark: '#8ab4f8',
-            progressBarColorLight: '#4caf50',
-            progressBarColorDark: '#81c784',
-            calendarGridBorderColorLight: '#E1E1E1',
-            calendarGridBorderColorDark: '#333333',
-            tableBorderColorLight: '#e9ecef',
-            tableBorderColorDark: '#333333'
+            taskContentColorLight: themeDefaultsLight.taskContentColor,
+            taskContentColorDark: themeDefaultsDark.taskContentColor,
+            taskMetaColorLight: themeDefaultsLight.taskMetaColor,
+            taskMetaColorDark: themeDefaultsDark.taskMetaColor,
+            groupDocLabelColorLight: themeDefaultsLight.groupDocLabelColor,
+            groupDocLabelColorDark: themeDefaultsDark.groupDocLabelColor,
+            timeGroupBaseColorLight: themeDefaultsLight.timeGroupBaseColor,
+            timeGroupBaseColorDark: themeDefaultsDark.timeGroupBaseColor,
+            timeGroupOverdueColorLight: themeDefaultsLight.timeGroupOverdueColor,
+            timeGroupOverdueColorDark: themeDefaultsDark.timeGroupOverdueColor,
+            timeGroupPendingTaskBgColorLight: themeDefaultsLight.timeGroupPendingTaskBgColor,
+            timeGroupPendingTaskBgColorDark: themeDefaultsDark.timeGroupPendingTaskBgColor,
+            progressBarColorLight: themeDefaultsLight.progressBarColor,
+            progressBarColorDark: themeDefaultsDark.progressBarColor,
+            calendarGridBorderColorLight: themeDefaultsLight.calendarGridBorderColor,
+            calendarGridBorderColorDark: themeDefaultsDark.calendarGridBorderColor,
+            tableBorderColorLight: themeDefaultsLight.tableBorderColor,
+            tableBorderColorDark: themeDefaultsDark.tableBorderColor
         };
         const initial = __tmNormalizeHexColor(SettingsStore.data[k], defaults[k] || '#f44336') || (defaults[k] || '#f44336');
         __tmOpenColorPickerDialog(label, initial, (next) => {
@@ -47248,10 +49041,12 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
         try {
             const d = SettingsStore.data || {};
+            const themeDefaultsLight = __tmBuildThemeAppearanceDefaults(d.themeConfig, false);
+            const themeDefaultsDark = __tmBuildThemeAppearanceDefaults(d.themeConfig, true);
             const p1 = document.getElementById('tmAppearancePreviewLight');
             const p2 = document.getElementById('tmAppearancePreviewDark');
-            const previewLight = `linear-gradient(135deg, ${__tmNormalizeHexColor(d.topbarGradientLightStart, '#E3ECF2') || '#E3ECF2'} 0%, ${__tmNormalizeHexColor(d.topbarGradientLightEnd, '#E3ECF2') || '#E3ECF2'} 100%)`;
-            const previewDark = `linear-gradient(135deg, ${__tmNormalizeHexColor(d.topbarGradientDarkStart, '#2D2D2D') || '#2D2D2D'} 0%, ${__tmNormalizeHexColor(d.topbarGradientDarkEnd, '#2D2D2D') || '#2D2D2D'} 100%)`;
+            const previewLight = `linear-gradient(135deg, ${__tmNormalizeHexColor(d.topbarGradientLightStart, themeDefaultsLight.topbarGradientStart) || themeDefaultsLight.topbarGradientStart} 0%, ${__tmNormalizeHexColor(d.topbarGradientLightEnd, themeDefaultsLight.topbarGradientEnd) || themeDefaultsLight.topbarGradientEnd} 100%)`;
+            const previewDark = `linear-gradient(135deg, ${__tmNormalizeHexColor(d.topbarGradientDarkStart, themeDefaultsDark.topbarGradientStart) || themeDefaultsDark.topbarGradientStart} 0%, ${__tmNormalizeHexColor(d.topbarGradientDarkEnd, themeDefaultsDark.topbarGradientEnd) || themeDefaultsDark.topbarGradientEnd} 100%)`;
             if (p1) p1.style.background = previewLight;
             if (p2) p2.style.background = previewDark;
         } catch (e) {}
@@ -47307,53 +49102,255 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmResetAppearanceColors = async function() {
-        SettingsStore.data.topbarGradientLightStart = '#E3ECF2';
-        SettingsStore.data.topbarGradientLightEnd = '#E3ECF2';
-        SettingsStore.data.topbarGradientDarkStart = '#2D2D2D';
-        SettingsStore.data.topbarGradientDarkEnd = '#2D2D2D';
-        SettingsStore.data.topbarTextColorLight = '#003252';
-        SettingsStore.data.topbarTextColorDark = '#FFFFFF';
-        SettingsStore.data.topbarControlBgLight = '';
-        SettingsStore.data.topbarControlBgDark = '';
-        SettingsStore.data.topbarControlTextLight = '';
-        SettingsStore.data.topbarControlTextDark = '';
-        SettingsStore.data.topbarControlBorderLight = '';
-        SettingsStore.data.topbarControlBorderDark = '';
-        SettingsStore.data.topbarControlHoverLight = '';
-        SettingsStore.data.topbarControlHoverDark = '';
-        SettingsStore.data.topbarControlSegmentBgLight = '';
-        SettingsStore.data.topbarControlSegmentBgDark = '';
-        SettingsStore.data.topbarControlSegmentActiveBgLight = '';
-        SettingsStore.data.topbarControlSegmentActiveBgDark = '';
-        SettingsStore.data.topbarControlShadowColorLight = '';
-        SettingsStore.data.topbarControlShadowColorDark = '';
+        SettingsStore.data.themeConfig = __tmGetDefaultThemeConfig();
         SettingsStore.data.topbarControlRadiusPx = 10;
         SettingsStore.data.topbarControlBorderWidthPx = 1;
         SettingsStore.data.topbarControlShadowYOffsetPx = 0;
         SettingsStore.data.topbarControlShadowBlurPx = 0;
         SettingsStore.data.topbarControlShadowStrengthPct = 100;
-        SettingsStore.data.taskContentColorLight = '#333333';
-        SettingsStore.data.taskContentColorDark = '#e0e0e0';
-        SettingsStore.data.taskMetaColorLight = '#5f6368';
-        SettingsStore.data.taskMetaColorDark = '#b0b8c4';
-        SettingsStore.data.groupDocLabelColorLight = '#333333';
-        SettingsStore.data.groupDocLabelColorDark = '#e0e0e0';
-        SettingsStore.data.timeGroupBaseColorLight = '#1a73e8';
-        SettingsStore.data.timeGroupBaseColorDark = '#6ba5ff';
-        SettingsStore.data.timeGroupOverdueColorLight = '#d93025';
-        SettingsStore.data.timeGroupOverdueColorDark = '#ff6b6b';
-        SettingsStore.data.timeGroupPendingTaskBgColorLight = '#9aa0a6';
-        SettingsStore.data.timeGroupPendingTaskBgColorDark = '#8ab4f8';
-        SettingsStore.data.progressBarColorLight = '#4caf50';
-        SettingsStore.data.progressBarColorDark = '#81c784';
-        SettingsStore.data.calendarGridBorderColorLight = '#E1E1E1';
-        SettingsStore.data.calendarGridBorderColorDark = '#333333';
-        SettingsStore.data.tableBorderColorLight = '#e9ecef';
-        SettingsStore.data.tableBorderColorDark = '#333333';
+        __tmApplyThemeConfigToAppearanceFields(SettingsStore.data.themeConfig);
         await SettingsStore.save();
         try { __tmApplyAppearanceThemeVars(); } catch (e) {}
         showSettings();
         render();
+    };
+
+    window.tmSelectAppearanceTheme = async function(value) {
+        const next = String(value || '').trim();
+        const current = __tmNormalizeThemeConfig(SettingsStore.data?.themeConfig);
+        if (next === '__imported__') {
+            if (!Object.keys(current.importLight || {}).length) return;
+            current.source = 'imported';
+        } else {
+            current.source = 'preset';
+            current.presetId = __tmGetThemePresetById(next).id;
+        }
+        SettingsStore.data.themeConfig = current;
+        __tmApplyThemeConfigToAppearanceFields(current);
+        await SettingsStore.save();
+        try { __tmApplyAppearanceThemeVars(); } catch (e) {}
+        showSettings();
+        render();
+    };
+
+    window.tmOpenThemeTokenPicker = function(tokenKey, mode) {
+        const key = __tmNormalizeThemeTokenKey(tokenKey);
+        const resolvedMode = String(mode || '').trim() === 'dark' ? 'dark' : 'light';
+        if (!key) return;
+        const config = __tmNormalizeThemeConfig(SettingsStore.data?.themeConfig);
+        const palette = __tmBuildThemePalette(config, resolvedMode === 'dark');
+        const current = __tmNormalizeHexColor(palette[key], '#000000') || '#000000';
+        const label = `${key} ${resolvedMode === 'dark' ? '夜间' : '亮色'}`;
+        __tmOpenColorPickerDialog(label, current, (next) => {
+            tmUpdateThemeTokenOverride(key, resolvedMode, next);
+        }, { defaultColor: current });
+    };
+
+    window.tmUpdateThemeTokenOverride = async function(tokenKey, mode, value) {
+        const key = __tmNormalizeThemeTokenKey(tokenKey);
+        const resolvedMode = String(mode || '').trim() === 'dark' ? 'dark' : 'light';
+        const nextValue = __tmNormalizeHexColor(value, '');
+        if (!key || !nextValue) return;
+        const config = __tmNormalizeThemeConfig(SettingsStore.data?.themeConfig);
+        const targetKey = resolvedMode === 'dark' ? 'overrideDark' : 'overrideLight';
+        const target = { ...(config[targetKey] || {}) };
+        target[key] = nextValue;
+        config[targetKey] = __tmNormalizeThemeTokenMap(target);
+        SettingsStore.data.themeConfig = config;
+        __tmApplyThemeConfigToAppearanceFields(config);
+        await SettingsStore.save();
+        try { __tmApplyAppearanceThemeVars(); } catch (e) {}
+        showSettings();
+        render();
+    };
+
+    window.tmClearThemeTokenOverride = async function(tokenKey, mode) {
+        const key = __tmNormalizeThemeTokenKey(tokenKey);
+        const resolvedMode = String(mode || '').trim() === 'dark' ? 'dark' : 'light';
+        if (!key) return;
+        const config = __tmNormalizeThemeConfig(SettingsStore.data?.themeConfig);
+        const targetKey = resolvedMode === 'dark' ? 'overrideDark' : 'overrideLight';
+        const target = { ...(config[targetKey] || {}) };
+        delete target[key];
+        config[targetKey] = __tmNormalizeThemeTokenMap(target);
+        SettingsStore.data.themeConfig = config;
+        __tmApplyThemeConfigToAppearanceFields(config);
+        await SettingsStore.save();
+        try { __tmApplyAppearanceThemeVars(); } catch (e) {}
+        showSettings();
+        render();
+    };
+
+    window.tmResetThemeOverrides = async function() {
+        const config = __tmNormalizeThemeConfig(SettingsStore.data?.themeConfig);
+        config.overrideLight = {};
+        config.overrideDark = {};
+        SettingsStore.data.themeConfig = config;
+        __tmApplyThemeConfigToAppearanceFields(config);
+        await SettingsStore.save();
+        try { __tmApplyAppearanceThemeVars(); } catch (e) {}
+        showSettings();
+        render();
+    };
+
+    window.tmClearImportedTheme = async function() {
+        const next = __tmNormalizeThemeConfig(SettingsStore.data?.themeConfig);
+        next.source = 'preset';
+        next.importName = '';
+        next.importLight = {};
+        next.importDark = {};
+        next.overrideLight = {};
+        next.overrideDark = {};
+        SettingsStore.data.themeConfig = next;
+        __tmApplyThemeConfigToAppearanceFields(next);
+        await SettingsStore.save();
+        try { __tmApplyAppearanceThemeVars(); } catch (e) {}
+        showSettings();
+        render();
+    };
+
+    window.tmOpenThemeImportDialog = function() {
+        __tmRemoveElementsById('tm-theme-import-backdrop');
+        const currentConfig = __tmNormalizeThemeConfig(SettingsStore.data?.themeConfig);
+        const backdrop = document.createElement('div');
+        backdrop.id = 'tm-theme-import-backdrop';
+        backdrop.className = 'tm-theme-import-backdrop';
+
+        const dialog = document.createElement('div');
+        dialog.className = 'tm-theme-import-dialog';
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+
+        const content = document.createElement('div');
+        content.className = 'tm-theme-import-content';
+
+        const title = document.createElement('div');
+        title.className = 'tm-theme-import-title';
+        title.textContent = '导入 TweakCN / shadcn 主题';
+        content.appendChild(title);
+
+        const desc = document.createElement('div');
+        desc.className = 'tm-theme-import-desc';
+        desc.innerHTML = `粘贴 TweakCN 导出的 :root / .dark CSS 变量，或导入 .css 文件。系统会读取 shadcn 语义色并同步到插件与 Basecoat 控件。<br>在 TweakCN 编辑好主题后，点击右上角的 Code，再选择 RGB，复制主题代码粘贴到这里即可导入。<a href="${__TM_TWEAKCN_URL}" target="_blank" rel="noopener noreferrer" style="margin-left:6px;color:var(--tm-primary-color);text-decoration:none;">打开 TweakCN ↗</a>`;
+        content.appendChild(desc);
+
+        const nameRow = document.createElement('label');
+        nameRow.className = 'tm-theme-import-name';
+        nameRow.innerHTML = '<span class="tm-theme-import-name-label">主题名称</span>';
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.value = String(currentConfig.importName || '').trim();
+        nameInput.placeholder = '例如：TweakCN Slate';
+        nameInput.className = 'tm-theme-import-name-input';
+        nameRow.appendChild(nameInput);
+        content.appendChild(nameRow);
+
+        const textarea = document.createElement('textarea');
+        textarea.className = 'tm-theme-import-textarea';
+        textarea.value = '';
+        textarea.placeholder = ':root { --background: 210 20% 98%; ... }\n.dark { --background: 222 47% 11%; ... }';
+        content.appendChild(textarea);
+
+        const helper = document.createElement('div');
+        helper.className = 'tm-theme-import-helper';
+        helper.textContent = hasImportedTokens(currentConfig) ? `当前已导入：${currentConfig.importName || 'Custom theme'}` : '支持直接粘贴 TweakCN 主题 CSS。';
+        content.appendChild(helper);
+
+        const actions = document.createElement('div');
+        actions.className = 'tm-color-actions tm-theme-import-actions';
+
+        const fileBtn = document.createElement('button');
+        fileBtn.type = 'button';
+        fileBtn.className = 'tm-btn tm-btn-gray';
+        fileBtn.textContent = '导入文件';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'tm-btn tm-btn-gray';
+        cancelBtn.textContent = '取消';
+
+        const okBtn = document.createElement('button');
+        okBtn.type = 'button';
+        okBtn.className = 'tm-btn tm-btn-primary';
+        okBtn.textContent = '应用主题';
+
+        const close = () => {
+            try { backdrop.remove(); } catch (e) {}
+        };
+
+        const applyTheme = async () => {
+            const parsed = __tmParseThemeCssVariables(textarea.value);
+            if (!parsed || !Object.keys(parsed.light || {}).length) {
+                helper.textContent = '未解析到可用的主题变量，请确认内容里包含 :root / .dark 的 shadcn 语义 token。';
+                helper.style.color = 'var(--tm-danger-color)';
+                try { textarea.style.borderColor = 'var(--tm-danger-color)'; } catch (e) {}
+                return;
+            }
+            const next = __tmNormalizeThemeConfig({
+                source: 'imported',
+                presetId: currentConfig.presetId,
+                importName: String(nameInput.value || '').trim() || 'Imported Theme',
+                importLight: parsed.light,
+                importDark: parsed.dark,
+            });
+            SettingsStore.data.themeConfig = next;
+            __tmApplyThemeConfigToAppearanceFields(next);
+            await SettingsStore.save();
+            try { __tmApplyAppearanceThemeVars(); } catch (e) {}
+            close();
+            showSettings();
+            render();
+        };
+
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.css,text/css,.txt';
+        fileInput.style.display = 'none';
+        fileInput.onchange = () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                textarea.value = String(reader.result || '');
+                if (!nameInput.value.trim()) {
+                    nameInput.value = String(file.name || '').replace(/\.[^.]+$/, '').trim();
+                }
+                helper.textContent = `已载入文件：${file.name}`;
+                helper.style.color = 'var(--tm-secondary-text)';
+                try { textarea.style.borderColor = 'var(--tm-input-border)'; } catch (e) {}
+            };
+            reader.readAsText(file);
+        };
+
+        fileBtn.onclick = () => fileInput.click();
+        cancelBtn.onclick = close;
+        okBtn.onclick = () => {
+            applyTheme().catch((e) => {
+                helper.textContent = String(e?.message || e || '导入失败');
+                helper.style.color = 'var(--tm-danger-color)';
+            });
+        };
+
+        backdrop.onclick = (event) => {
+            if (event.target === backdrop) close();
+        };
+
+        actions.appendChild(fileBtn);
+        actions.appendChild(cancelBtn);
+        actions.appendChild(okBtn);
+        dialog.appendChild(content);
+        dialog.appendChild(fileInput);
+        dialog.appendChild(actions);
+        backdrop.appendChild(dialog);
+        document.body.appendChild(backdrop);
+
+        function hasImportedTokens(config) {
+            try {
+                return Object.keys(config?.importLight || {}).length > 0;
+            } catch (e) {
+                return false;
+            }
+        }
     };
 
     window.toggleColumn = function(key, show) {
@@ -49407,9 +51404,9 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         // 尝试获取文档名称
-        fetchDocName(docId).then(docName => {
-            if (docName) {
-                state.allDocuments.push({ id: docId, name: docName, path: '', taskCount: 0 });
+        fetchDocMeta(docId).then((docMeta) => {
+            if (docMeta?.name) {
+                state.allDocuments.push({ id: docId, name: docMeta.name, alias: '', icon: __tmNormalizeDocIconValue(docMeta.icon), path: '', taskCount: 0 });
             }
             showSettings(); // 重新渲染设置界面
         });
@@ -49460,11 +51457,11 @@ async function __tmRefreshAfterWake(reason) {
         await SettingsStore.updateDocGroups(groups);
 
         await Promise.allSettled(docIds.map(async (docId) => {
-            const docName = await fetchDocName(docId);
-            if (!docName) return;
+            const docMeta = await fetchDocMeta(docId);
+            if (!docMeta?.name) return;
             if (!Array.isArray(state.allDocuments)) state.allDocuments = [];
             const exists = state.allDocuments.some((item) => String(item?.id || '').trim() === docId);
-            if (!exists) state.allDocuments.push({ id: docId, name: docName, path: '', taskCount: 0 });
+            if (!exists) state.allDocuments.push({ id: docId, name: docMeta.name, alias: '', icon: __tmNormalizeDocIconValue(docMeta.icon), path: '', taskCount: 0 });
         }));
 
         try {
@@ -49581,13 +51578,17 @@ async function __tmRefreshAfterWake(reason) {
         });
     };
 
-    // 根据ID获取文档名称
-    async function fetchDocName(docId) {
+    // 根据ID获取文档元数据
+    async function fetchDocMeta(docId) {
         try {
-            const sql = `SELECT content, hpath FROM blocks WHERE id = '${docId}' AND type = 'd' LIMIT 1`;
+            const sql = `SELECT content, hpath, ial FROM blocks WHERE id = '${docId}' AND type = 'd' LIMIT 1`;
             const res = await API.call('/api/query/sql', { stmt: sql });
             if (res.code === 0 && res.data && res.data.length > 0) {
-                return res.data[0].content || '未命名文档';
+                const row = res.data[0] || {};
+                return {
+                    name: row.content || '未命名文档',
+                    icon: __tmNormalizeDocIconValue(__tmReadIalAttrValue(row.ial, 'icon'))
+                };
             }
         } catch (e) {
         }
@@ -50473,19 +52474,23 @@ async function __tmRefreshAfterWake(reason) {
             ev?.preventDefault?.();
         } catch (e) {}
         const isChecklist = String(state.viewMode || '').trim() === 'checklist';
+        const isListView = String(state.viewMode || '').trim() === 'list';
         const key = String(id || '');
         if (!key) return;
 
         const action = state.collapsedTaskIds.has(key) ? 'expand' : 'collapse';
-        const mode = __tmGetCollapseAnimMode();
+        const useFastListCollapse = !isChecklist && isListView && action === 'collapse';
+        const mode = useFastListCollapse ? 'none' : __tmGetCollapseAnimMode();
         const flipOpts = { kind: 'task', key, action, lite: mode === 'lite' };
-        let skipAnim = mode === 'none';
-        try {
-            const tbody = __tmGetActiveTbody(state.modal);
-            const n = __tmCountAffectedRowsForCollapse(tbody, flipOpts, 161);
-            if (n > 240) skipAnim = true;
-            else if (n > 120 && !skipAnim) flipOpts.lite = true;
-        } catch (e) {}
+        let skipAnim = mode === 'none' || useFastListCollapse;
+        if (!useFastListCollapse) {
+            try {
+                const tbody = __tmGetActiveTbody(state.modal);
+                const n = __tmCountAffectedRowsForCollapse(tbody, flipOpts, 161);
+                if (n > 240) skipAnim = true;
+                else if (n > 120 && !skipAnim) flipOpts.lite = true;
+            } catch (e) {}
+        }
         if (!skipAnim) {
             try { __tmPrepareFlipAnimation(flipOpts); } catch (e) {}
         } else {
@@ -50505,6 +52510,7 @@ async function __tmRefreshAfterWake(reason) {
         }
         try { __tmUpdateToggleGlyphInDom({ kind: 'task', key, action }); } catch (e) {}
         if (action === 'collapse') {
+            if (useFastListCollapse && state.modal && __tmTryCollapseTaskBranchInList(state.modal, key)) return;
             if (state.modal && __tmApplyVisibilityFromState(state.modal)) {
                 if (!skipAnim) {
                     try { queueMicrotask(() => { try { __tmRunFlipAnimation(state.modal); } catch (e) {} }); } catch (e) {}
@@ -52476,8 +54482,7 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
         try {
             if (state.taskContextMenuCloseHandler) {
-                document.removeEventListener('click', state.taskContextMenuCloseHandler);
-                document.removeEventListener('contextmenu', state.taskContextMenuCloseHandler);
+                __tmClearOutsideCloseHandler(state.taskContextMenuCloseHandler);
                 state.taskContextMenuCloseHandler = null;
             }
         } catch (e) {}
@@ -52487,8 +54492,7 @@ async function __tmRefreshAfterWake(reason) {
                 state.ganttContextMenuCloseBindTimer = null;
             }
             if (state.ganttContextMenuCloseHandler) {
-                document.removeEventListener('click', state.ganttContextMenuCloseHandler);
-                document.removeEventListener('contextmenu', state.ganttContextMenuCloseHandler);
+                __tmClearOutsideCloseHandler(state.ganttContextMenuCloseHandler);
                 state.ganttContextMenuCloseHandler = null;
             }
         } catch (e) {}
@@ -52554,6 +54558,17 @@ async function __tmRefreshAfterWake(reason) {
                 state.docTabLongPressTimer = null;
             }
             state.docTabTouchMoved = false;
+        } catch (e) {}
+
+        try {
+            __tmClearAllDocTabLongPressTimer();
+            state.allDocTabLongPressFired = false;
+            state.allDocTabLongPressMoved = false;
+            state.allDocTabLongPressTrigger = null;
+            state.allDocTabLongPressStartX = 0;
+            state.allDocTabLongPressStartY = 0;
+            state.allDocTabSuppressClickUntil = 0;
+            state.allDocTabIgnoreContextMenuUntil = 0;
         } catch (e) {}
 
         try { __tmRemoveBreadcrumbButton({ destroy: true }); } catch (e) {}
@@ -53370,6 +55385,7 @@ async function __tmRefreshAfterWake(reason) {
                 'tm_time_group_overdue_color_dark',
                 'tm_table_border_color_light',
                 'tm_table_border_color_dark',
+                'tm_theme_config',
                 'tm_meta_cache',
                 'tm_whiteboard_data_cache',
                 'tm_whiteboard_all_tabs_layout_mode',
@@ -53635,7 +55651,7 @@ async function __tmRefreshAfterWake(reason) {
                     if (r.kind === 'doc') labelColor = String(r.labelColor || 'var(--tm-group-doc-label-color)');
                     else if (r.kind === 'task') labelColor = String(r.labelColor || 'var(--tm-primary-color)');
                     else if (r.kind === 'time') labelColor = String(r.labelColor || 'var(--tm-text-color)');
-                    else if (r.kind === 'h2') labelColor = 'var(--tm-secondary-text)';
+                    else if (r.kind === 'h2') labelColor = String(r.labelColor || __tmGetHeadingSubgroupLabelColor('var(--tm-group-doc-label-color)', isDark));
                     else if (r.kind === 'quadrant') {
                         const colorMap = { red: 'var(--tm-quadrant-red)', yellow: 'var(--tm-quadrant-yellow)', blue: 'var(--tm-quadrant-blue)', green: 'var(--tm-quadrant-green)' };
                         labelColor = colorMap[String(r.color || '')] || 'var(--tm-text-color)';
@@ -53757,10 +55773,10 @@ async function __tmRefreshAfterWake(reason) {
                 const defs = `
                     <defs>
                         <marker id="${markerIdOut}" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
-                            <path d="M0,0 L8,3 L0,6 Z" fill="#2f6fed"></path>
+                            <path d="M0,0 L8,3 L0,6 Z" fill="var(--tm-primary-color)"></path>
                         </marker>
                         <marker id="${markerIdIn}" markerWidth="8" markerHeight="6" refX="1" refY="3" orient="auto-start-reverse" markerUnits="strokeWidth">
-                            <path d="M8,0 L0,3 L8,6 Z" fill="#2f6fed"></path>
+                            <path d="M8,0 L0,3 L8,6 Z" fill="var(--tm-primary-color)"></path>
                         </marker>
                     </defs>
                 `;
@@ -54147,8 +56163,7 @@ async function __tmRefreshAfterWake(reason) {
                         state.ganttContextMenuCloseBindTimer = null;
                     }
                     if (state.ganttContextMenuCloseHandler) {
-                        document.removeEventListener('click', state.ganttContextMenuCloseHandler);
-                        document.removeEventListener('contextmenu', state.ganttContextMenuCloseHandler);
+                        __tmClearOutsideCloseHandler(state.ganttContextMenuCloseHandler);
                         state.ganttContextMenuCloseHandler = null;
                     }
                 } catch (e2) {}
@@ -54231,10 +56246,12 @@ async function __tmRefreshAfterWake(reason) {
 
                 document.body.appendChild(menu);
 
-                const closeHandler = () => {
+                const closeHandler = (ev) => {
+                    try {
+                        if (menu.contains(ev?.target)) return;
+                    } catch (e2) {}
                     try { menu.remove(); } catch (e2) {}
-                    try { document.removeEventListener('click', closeHandler); } catch (e2) {}
-                    try { document.removeEventListener('contextmenu', closeHandler); } catch (e2) {}
+                    try { __tmClearOutsideCloseHandler(closeHandler); } catch (e2) {}
                     if (state.ganttContextMenuCloseHandler === closeHandler) state.ganttContextMenuCloseHandler = null;
                     if (state.ganttContextMenuCloseBindTimer) {
                         try { clearTimeout(state.ganttContextMenuCloseBindTimer); } catch (e2) {}
@@ -54243,8 +56260,11 @@ async function __tmRefreshAfterWake(reason) {
                 };
                 state.ganttContextMenuCloseHandler = closeHandler;
                 state.ganttContextMenuCloseBindTimer = setTimeout(() => {
-                    document.addEventListener('click', closeHandler);
-                    document.addEventListener('contextmenu', closeHandler);
+                    __tmScheduleBindOutsideCloseHandler(closeHandler);
+                    if (state.ganttContextMenuCloseBindTimer) {
+                        try { clearTimeout(state.ganttContextMenuCloseBindTimer); } catch (e2) {}
+                        state.ganttContextMenuCloseBindTimer = null;
+                    }
                 }, 0);
             };
 
