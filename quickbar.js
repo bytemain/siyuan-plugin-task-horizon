@@ -421,8 +421,8 @@
                 position: absolute;
                 z-index: 3005;
                 display: none;
-                flex-direction: row;
-                align-items: center;
+                flex-direction: column;
+                align-items: stretch;
                 gap: 6px;
                 padding: 6px;
                 border-radius: 8px;
@@ -438,6 +438,16 @@
                 align-items: center;
                 gap: 6px;
                 flex-wrap: nowrap;
+                min-width: 0;
+                max-width: 100%;
+            }
+            .sy-custom-props-floatbar__row--main {
+                align-items: center;
+            }
+            .sy-custom-props-floatbar__row--remark {
+                max-width: 100%;
+                white-space: normal;
+                overflow: visible;
             }
             .sy-custom-props-floatbar__head {
                 display: flex;
@@ -493,6 +503,18 @@
             }
             .sy-custom-props-floatbar__prop--remark {
                 gap: 5px;
+                min-width: 0;
+                max-width: min(48vw, 280px);
+            }
+            .sy-custom-props-floatbar__row--remark .sy-custom-props-floatbar__prop--remark {
+                width: 100%;
+                max-width: none;
+                box-sizing: border-box;
+            }
+            .sy-custom-props-floatbar__prop--remark:not(.sy-custom-props-floatbar__prop--icon-only) {
+                height: auto;
+                min-height: 26px;
+                line-height: 1.35;
             }
             .sy-custom-props-floatbar__prop--core .sy-custom-props-floatbar__prop-value {
                 display: inline-block;
@@ -502,7 +524,12 @@
                 white-space: nowrap;
             }
             .sy-custom-props-floatbar__prop--remark .sy-custom-props-floatbar__prop-value {
-                max-width: 180px;
+                display: block;
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                line-height: 1.35;
             }
             .sy-custom-props-floatbar__prop--icon-only {
                 width: 26px;
@@ -759,6 +786,34 @@
             .sy-custom-props-floatbar__action:hover {
                 background: var(--b3-theme-background);
                 border-color: var(--b3-theme-primary);
+            }
+            @media (max-width: 640px) {
+                .sy-custom-props-floatbar {
+                    max-width: calc(100vw - 12px);
+                }
+                .sy-custom-props-floatbar__row--main {
+                    overflow-x: auto;
+                    overflow-y: hidden;
+                    -webkit-overflow-scrolling: touch;
+                    scrollbar-width: thin;
+                }
+                .sy-custom-props-floatbar__prop--remark {
+                    max-width: min(72vw, 360px);
+                }
+                .sy-custom-props-floatbar__prop--remark:not(.sy-custom-props-floatbar__prop--icon-only) {
+                    align-items: flex-start;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                }
+                .sy-custom-props-floatbar__prop--remark .sy-custom-props-floatbar__prop-value {
+                    white-space: normal;
+                    overflow-wrap: anywhere;
+                    word-break: break-word;
+                    text-overflow: clip;
+                }
+                .sy-custom-props-floatbar__prop--remark:not(.sy-custom-props-floatbar__prop--icon-only) .sy-custom-props-floatbar__prop-icon {
+                    margin-top: 1px;
+                }
             }
             .sy-custom-props-inline-host {
                 position: absolute;
@@ -1177,7 +1232,7 @@
             const rawValue = String(value ?? '').trim();
             if (!rawValue) return '';
             if (config?.type === 'date') return formatDate(rawValue);
-            if (attrKey === 'custom-remark') return truncateInlineValue(rawValue, 18);
+            if (attrKey === 'custom-remark') return rawValue;
             if (attrKey === 'custom-duration') return truncateInlineValue(rawValue, 12);
             return truncateInlineValue(rawValue, 15);
         }
@@ -1369,24 +1424,48 @@
             currentProps = await getTaskCustomProps(currentBlockId, true);
         }
 
+        function shouldSplitRemarkIntoOwnRow(visibleSet) {
+            const visible = visibleSet instanceof Set ? visibleSet : new Set();
+            if (!visible.has('custom-remark')) return false;
+            const remark = String(currentProps?.['custom-remark'] || '').trim();
+            if (!remark) return false;
+            return (window.innerWidth || 0) <= 640;
+        }
+
         // 渲染悬浮条
         function renderFloatBar() {
             const rows = [];
             const visibleSettings = getQuickbarVisibleSettings();
             const visibleSet = new Set(visibleSettings.items);
-            const allProps = [...customPropsConfig.firstRow, ...customPropsConfig.secondRow]
+            const splitRemarkRow = shouldSplitRemarkIntoOwnRow(visibleSet);
+            const mainConfigs = [
+                ...customPropsConfig.firstRow,
+                ...(splitRemarkRow ? [] : customPropsConfig.secondRow)
+            ];
+            const mainProps = mainConfigs
                 .filter(config => visibleSet.has(String(config?.attrKey || '').trim()))
                 .map(config => renderPropElement(config, currentProps[config.attrKey]));
             if (isAiFeatureEnabled() && visibleSet.has('action-ai-title')) {
-                allProps.push(`<button class="sy-custom-props-floatbar__action" data-action="ai-title"${buildTooltipAttrs('AI 优化任务名称')}><span class="qb-icon">${renderPhosphorBoldIcon('sparkle')}</span></button>`);
+                mainProps.push(`<button class="sy-custom-props-floatbar__action" data-action="ai-title"${buildTooltipAttrs('AI 优化任务名称')}><span class="qb-icon">${renderPhosphorBoldIcon('sparkle')}</span></button>`);
             }
             if (visibleSet.has('action-reminder')) {
-                allProps.push(`<button class="sy-custom-props-floatbar__action" data-action="reminder"${buildTooltipAttrs('添加提醒')}><span class="qb-icon">${renderPhosphorBoldIcon('alarm-clock')}</span></button>`);
+                mainProps.push(`<button class="sy-custom-props-floatbar__action" data-action="reminder"${buildTooltipAttrs('添加提醒')}><span class="qb-icon">${renderPhosphorBoldIcon('alarm-clock')}</span></button>`);
             }
             if (visibleSet.has('action-more')) {
-                allProps.push(`<button class="sy-custom-props-floatbar__action" data-action="more"${buildTooltipAttrs('更多')}><span class="qb-icon">${renderPhosphorBoldIcon('dots-three')}</span></button>`);
+                mainProps.push(`<button class="sy-custom-props-floatbar__action" data-action="more"${buildTooltipAttrs('更多')}><span class="qb-icon">${renderPhosphorBoldIcon('dots-three')}</span></button>`);
             }
-            rows.push(`<div class="sy-custom-props-floatbar__row">${allProps.join('')}</div>`);
+            if (mainProps.length) {
+                rows.push(`<div class="sy-custom-props-floatbar__row sy-custom-props-floatbar__row--main">${mainProps.join('')}</div>`);
+            }
+            if (splitRemarkRow) {
+                const remarkProps = customPropsConfig.secondRow
+                    .filter(config => visibleSet.has(String(config?.attrKey || '').trim()))
+                    .map(config => renderPropElement(config, currentProps[config.attrKey]))
+                    .filter(Boolean);
+                if (remarkProps.length) {
+                    rows.push(`<div class="sy-custom-props-floatbar__row sy-custom-props-floatbar__row--remark">${remarkProps.join('')}</div>`);
+                }
+            }
 
             floatBar.innerHTML = rows.join('');
 

@@ -371,7 +371,8 @@
                 if (!MAIN_CALENDAR_ALLOWED_VIEWS.has(nextView)) return;
                 try {
                     const currentDate = cal.getDate?.();
-                    if (currentDate instanceof Date && !Number.isNaN(currentDate.getTime())) cal.changeView(nextView, currentDate);
+                    const targetDate = resolveMainCalendarAnchorDate(currentDate, nextView, getSettings());
+                    if (targetDate instanceof Date) cal.changeView(nextView, targetDate);
                     else cal.changeView(nextView);
                 } catch (e) {}
             });
@@ -791,6 +792,65 @@
         if (!(d instanceof Date)) return '';
         if (Number.isNaN(d.getTime())) return '';
         return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    }
+
+    function normalizeDateOnly(value) {
+        if (!(value instanceof Date)) return null;
+        if (Number.isNaN(value.getTime())) return null;
+        return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+    }
+
+    function normalizeCalendar3DayTodayPosition(value) {
+        const num = Number(value);
+        return (num === 2 || num === 3) ? num : 1;
+    }
+
+    function getAligned3DayTodayStart(settings) {
+        const today = normalizeDateOnly(new Date());
+        if (!(today instanceof Date)) return null;
+        const pos = normalizeCalendar3DayTodayPosition(settings?.threeDayTodayPosition || settings?.calendar3DayTodayPosition);
+        if (pos <= 1) return today;
+        const start = new Date(today.getTime());
+        start.setDate(start.getDate() - (pos - 1));
+        return start;
+    }
+
+    function resolveMainCalendarAnchorDate(date, viewType, settings) {
+        const base = normalizeDateOnly(date);
+        if (!(base instanceof Date)) return null;
+        if (String(viewType || '').trim() !== 'timeGrid3Day') return base;
+        const today = normalizeDateOnly(new Date());
+        if (!(today instanceof Date)) return base;
+        if (formatDateKey(base) !== formatDateKey(today)) return base;
+        return getAligned3DayTodayStart(settings) || base;
+    }
+
+    function realignMainCalendar3DayTodayRange(calendar, settings) {
+        const cal = calendar || state.calendar;
+        if (!cal) return false;
+        const viewType = String(cal?.view?.type || '').trim();
+        if (viewType !== 'timeGrid3Day') return false;
+        const today = normalizeDateOnly(new Date());
+        const currentStart = normalizeDateOnly(cal?.view?.currentStart || cal?.view?.activeStart || cal?.getDate?.());
+        const currentEnd = normalizeDateOnly(cal?.view?.currentEnd || cal?.view?.activeEnd);
+        const expectedStart = getAligned3DayTodayStart(settings || getSettings());
+        if (!(today instanceof Date) || !(currentStart instanceof Date) || !(currentEnd instanceof Date) || !(expectedStart instanceof Date)) return false;
+        if (today.getTime() < currentStart.getTime() || today.getTime() >= currentEnd.getTime()) return false;
+        if (formatDateKey(currentStart) === formatDateKey(expectedStart)) return false;
+        try {
+            cal.gotoDate(expectedStart);
+            return true;
+        } catch (e) {}
+        return false;
+    }
+
+    function alignMainCalendar3DayTodayPosition(calendar, settings) {
+        const cal = calendar || state.calendar;
+        const currentStart = normalizeDateOnly(cal?.view?.currentStart || cal?.view?.activeStart || cal?.getDate?.());
+        const today = normalizeDateOnly(new Date());
+        if (!(currentStart instanceof Date) || !(today instanceof Date)) return false;
+        if (formatDateKey(currentStart) !== formatDateKey(today)) return false;
+        return realignMainCalendar3DayTodayRange(cal, settings);
     }
 
     function formatMonthDayZh(date, options = {}) {
@@ -1240,7 +1300,8 @@
         const visibleRange = getCalendarVisibleSlotRange(settings || getSettings());
         return {
             slotDuration: '00:30:00',
-            slotLabelInterval: '00:30:00',
+            // Keep 30-minute slots marked as minor so CSS can render them dashed.
+            slotLabelInterval: '01:00:00',
             slotMinTime: visibleRange.slotMinTime,
             slotMaxTime: visibleRange.slotMaxTime,
             slotLabelContent: (arg) => {
@@ -1658,10 +1719,12 @@
         const hourSlotHeightMode0 = normalizeCalendarHourSlotHeightMode(readStoredString('tm_calendar_hour_slot_height_mode', s.calendarHourSlotHeightMode).trim() || 'normal');
         const visibleStartTime0 = normalizeCalendarVisibleTime(readStoredString('tm_calendar_visible_start_time', s.calendarVisibleStartTime).trim() || '00:00', '00:00', false);
         const visibleEndTime0 = normalizeCalendarVisibleTime(readStoredString('tm_calendar_visible_end_time', s.calendarVisibleEndTime).trim() || '24:00', '24:00', true);
+        const threeDayTodayPosition0 = normalizeCalendar3DayTodayPosition(readStoredString('tm_calendar_3day_today_position', s.calendar3DayTodayPosition).trim() || '1');
         return {
             enabled: !!s.calendarEnabled,
             linkDockTomato: !!s.calendarLinkDockTomato,
             firstDay: Number(s.calendarFirstDay) === 0 ? 0 : 1,
+            threeDayTodayPosition: threeDayTodayPosition0,
             monthAggregate: !!s.calendarMonthAggregate,
             showSchedule: s.calendarShowSchedule !== false,
             scheduleReminderEnabled: readStoredBool('tm_calendar_schedule_reminder_enabled', typeof s.calendarScheduleReminderEnabled === 'boolean' ? !!s.calendarScheduleReminderEnabled : undefined),
@@ -2387,7 +2450,7 @@
             if (!d) return;
             try {
                 const curView = String(calendar?.view?.type || 'timeGridWeek');
-                calendar.gotoDate(d);
+                calendar.gotoDate(resolveMainCalendarAnchorDate(d, curView, getSettings()) || d);
                 if (curView === 'dayGridMonth') calendar.changeView('timeGridDay', d);
             } catch (e2) {}
             renderMiniCalendar(wrap);
@@ -8573,10 +8636,10 @@
         })();
         const preferredInitialDate = (() => {
             const explicit = parseDateOnly(state.opts?.date || state.opts?.initialDate);
-            if (explicit) return explicit;
+            if (explicit) return resolveMainCalendarAnchorDate(explicit, preferredInitialView, s) || explicit;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            return today;
+            return resolveMainCalendarAnchorDate(today, preferredInitialView, s) || today;
         })();
         const slotLayout = getTimeGridSlotLayoutOptions(s);
         calendar = new FullCalendar.Calendar(host, {
@@ -9227,6 +9290,9 @@
                 openScheduleModal({ start, end, allDay: info?.allDay === true, calendarId: pickDefaultCalendarId(getSettings()) });
             },
             datesSet: () => {
+                try {
+                    if (alignMainCalendar3DayTodayPosition(calendar, getSettings())) return;
+                } catch (e) {}
                 try { syncMainCalendarViewSelect(wrap, calendar, { compact: !!(isMobileDevice || isDockHost) }); } catch (e) {}
                 try { syncMainCalendarToolbarTitle(wrap, calendar); } catch (e) {}
                 try { scheduleSyncTimeGridAllDayCollapseUi(host, calendar); } catch (e) {}
@@ -9421,7 +9487,10 @@
                 } catch (e2) {}
             }
             if (action === 'today') {
-                try { calendar.today(); } catch (e2) {}
+                try {
+                    const currentView = String(calendar?.view?.type || '').trim();
+                    calendar.gotoDate(resolveMainCalendarAnchorDate(new Date(), currentView, getSettings()) || new Date());
+                } catch (e2) {}
             }
         };
         wrap.addEventListener('click', onToolbarClick);
@@ -10031,6 +10100,14 @@
                     </select>
                 </div>
                 <div class="tm-calendar-settings-row">
+                    <div class="tm-calendar-settings-label">3日视图今天位置</div>
+                    <select class="tm-calendar-settings-select" data-tm-cal-setting="calendar3DayTodayPosition">
+                        <option value="1" ${Number(s.threeDayTodayPosition) === 1 ? 'selected' : ''}>第1日</option>
+                        <option value="2" ${Number(s.threeDayTodayPosition) === 2 ? 'selected' : ''}>第2日</option>
+                        <option value="3" ${Number(s.threeDayTodayPosition) === 3 ? 'selected' : ''}>第3日</option>
+                    </select>
+                </div>
+                <div class="tm-calendar-settings-row">
                     <div class="tm-calendar-settings-label">默认折叠桌面端日历左侧侧边栏</div>
                     <input class="b3-switch fn__flex-center" type="checkbox" data-tm-cal-setting="calendarSidebarCollapsedDesktopDefault" ${s.collapseDesktopSidebarDefault ? 'checked' : ''}>
                 </div>
@@ -10135,6 +10212,8 @@
             if (!store || !store.data) return;
             if (key === 'calendarFirstDay') {
                 store.data[key] = String(el.value || '').trim() === '0' ? 0 : 1;
+            } else if (key === 'calendar3DayTodayPosition') {
+                store.data[key] = normalizeCalendar3DayTodayPosition(el.value);
             } else if (key === 'calendarNewScheduleMaxDurationMin') {
                 const allowed = new Set([60, 120, 180, 240]);
                 const num = Number(el.value);
@@ -10180,6 +10259,9 @@
                     try { applyCalendarVisibleSlotRange(state.sideDay?.calendar, settings); } catch (e2) {}
                     try { state.calendar?.updateSize?.(); } catch (e2) {}
                     try { syncSideDayLayout(state.sideDay?.rootEl, state.sideDay?.calendar, settings); } catch (e2) {}
+                } else if (key === 'calendar3DayTodayPosition') {
+                    const settings = getSettings();
+                    try { realignMainCalendar3DayTodayRange(state.calendar, settings); } catch (e2) {}
                 } else if (key === 'calendarSidebarCollapsedDesktopDefault') {
                     try {
                         const root = state.wrapEl;

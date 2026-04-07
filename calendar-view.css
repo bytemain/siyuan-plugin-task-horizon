@@ -783,7 +783,9 @@
 }
 
 .tm-calendar-wrap .fc td.fc-timegrid-slot-label::before,
-.tm-calendar-wrap .fc td.fc-timegrid-slot-lane::before {
+.tm-calendar-wrap .fc td.fc-timegrid-slot-lane::before,
+#tmCalendarSideDockTimeline .fc td.fc-timegrid-slot-label::before,
+#tmCalendarSideDockTimeline .fc td.fc-timegrid-slot-lane::before {
     content: '';
     position: absolute;
     left: 0;
@@ -797,11 +799,11 @@
 }
 
 .tm-calendar-wrap .fc td.fc-timegrid-slot-label.fc-timegrid-slot-minor::before,
-.tm-calendar-wrap .fc td.fc-timegrid-slot-lane.fc-timegrid-slot-minor::before {
+.tm-calendar-wrap .fc td.fc-timegrid-slot-lane.fc-timegrid-slot-minor::before,
+#tmCalendarSideDockTimeline .fc td.fc-timegrid-slot-label.fc-timegrid-slot-minor::before,
+#tmCalendarSideDockTimeline .fc td.fc-timegrid-slot-lane.fc-timegrid-slot-minor::before {
     background-color: transparent;
-    background-image: linear-gradient(to right, var(--fc-border-color) 0%, var(--fc-border-color) 45%, transparent 45%);
-    background-size: 5px 1px;
-    background-repeat: repeat-x;
+    background-image: repeating-linear-gradient(to right, var(--fc-border-color) 0, var(--fc-border-color) 4px, transparent 4px, transparent 8px);
     z-index: 3;
     opacity: 0.55;
 }
@@ -809,12 +811,16 @@
 /* Force hide 4-hour slot lines */
 .tm-calendar-wrap .fc tr,
 .tm-calendar-wrap .fc .fc-scrollgrid-section > td,
-.tm-calendar-wrap .fc .fc-scrollgrid-section > th {
+.tm-calendar-wrap .fc .fc-scrollgrid-section > th,
+#tmCalendarSideDockTimeline .fc tr,
+#tmCalendarSideDockTimeline .fc .fc-scrollgrid-section > td,
+#tmCalendarSideDockTimeline .fc .fc-scrollgrid-section > th {
     border-bottom: 0 !important;
     border-top: 0 !important;
 }
 
-.tm-calendar-wrap .fc .fc-timegrid-slot-lane {
+.tm-calendar-wrap .fc .fc-timegrid-slot-lane,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-slot-lane {
     border-bottom: 0 !important;
 }
 
@@ -827,7 +833,10 @@
 
 .tm-calendar-wrap .fc .fc-timegrid-slot-minor,
 .tm-calendar-wrap .fc td.fc-timegrid-slot-minor,
-.tm-calendar-wrap .fc .fc-timegrid-slot.fc-timegrid-slot-lane.fc-timegrid-slot-minor {
+.tm-calendar-wrap .fc .fc-timegrid-slot.fc-timegrid-slot-lane.fc-timegrid-slot-minor,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-slot-minor,
+#tmCalendarSideDockTimeline .fc td.fc-timegrid-slot-minor,
+#tmCalendarSideDockTimeline .fc .fc-timegrid-slot.fc-timegrid-slot-lane.fc-timegrid-slot-minor {
     border-top-style: hidden !important;
     border-top-width: 0 !important;
     border-top-color: transparent !important;

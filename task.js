@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.0.8
+// @version      2.0.9
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -762,6 +762,48 @@
 
         .tm-status-option-btn .tm-status-tag {
             pointer-events: none;
+        }
+
+        .tm-custom-field-cell,
+        .tm-task-detail-custom-fields,
+        .tm-task-detail-custom-field-value {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            min-height: 28px;
+        }
+
+        .tm-custom-field-cell .tm-status-tag,
+        .tm-task-detail-custom-field-value .tm-status-tag {
+            font-size: 12px;
+        }
+
+        .tm-task-detail-custom-fields {
+            margin-top: 8px;
+            padding-top: 2px;
+        }
+
+        .tm-task-detail-custom-field {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex-wrap: wrap;
+        }
+
+        .tm-task-detail-custom-field-label {
+            font-size: 12px;
+            color: var(--tm-secondary-text);
+            white-space: nowrap;
+        }
+
+        .tm-task-detail-custom-field-btn {
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
         }
 
         .tm-status-dot {
@@ -2817,6 +2859,7 @@
             height: 100%;
             min-height: 0;
             overscroll-behavior: contain;
+            touch-action: pan-y;
             scrollbar-width: none;
             -ms-overflow-style: none;
             position: relative;
@@ -4153,6 +4196,8 @@
             text-align: left;
             cursor: pointer;
             font: inherit;
+            flex: 0 1 auto;
+            max-width: calc(100% - 40px);
         }
 
         .tm-kanban-col-title.tm-kanban-col-title--link:hover {
@@ -4328,6 +4373,7 @@
             color: var(--card-foreground);
             box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
             transition: box-shadow 0.16s ease, border-color 0.16s ease;
+            touch-action: none;
         }
 
         @supports (content-visibility: auto) {
@@ -4584,6 +4630,13 @@
         }
 
         .tm-kanban-detail-float {
+            border: 1px solid var(--tm-border-color);
+            border-radius: 16px;
+            background: var(--card);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+        }
+
+        .tm-kanban-detail-float {
             position: fixed;
             top: 24px;
             left: 24px;
@@ -4594,10 +4647,6 @@
             pointer-events: auto;
             display: flex;
             flex-direction: column;
-            border: 1px solid var(--tm-border-color);
-            border-radius: 16px;
-            background: var(--card);
-            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
             overflow: hidden;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -5288,7 +5337,8 @@
             background: color-mix(in srgb, var(--tm-section-bg) 90%, var(--tm-bg-color));
         }
 
-        .tm-task-detail .tm-task-detail-section {
+        .tm-task-detail .tm-task-detail-section,
+        .tm-checklist-detail-card .tm-task-detail-section {
             padding: 10px 0 0;
             border: none;
             border-radius: 0;
@@ -6361,6 +6411,7 @@
 
         .tm-modal:not(.tm-modal--mobile) .tm-checklist-side .tm-checklist-detail-wrap {
             padding: 0;
+            scrollbar-gutter: stable;
         }
 
         .tm-checklist-empty-detail {
@@ -6392,6 +6443,8 @@
             border-radius: 0;
             background: transparent;
             box-shadow: none;
+            padding: 16px 16px 18px;
+            box-sizing: border-box;
         }
 
         .tm-checklist-side .tm-checklist-detail-head {
@@ -6501,13 +6554,6 @@
             background: transparent;
             box-shadow: none;
             padding: 0;
-        }
-
-        .tm-checklist-sheet .tm-task-detail-section {
-            padding: 10px 0 0;
-            border: none;
-            border-radius: 0;
-            background: transparent;
         }
 
         .tm-checklist-sheet .tm-task-detail-actions {
@@ -7993,7 +8039,19 @@
         }
 
         /* 提示框样式 */
-        .tm-prompt-modal,
+        .tm-prompt-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--tm-modal-overlay);
+            z-index: 200060;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .tm-quick-add-modal {
             position: fixed;
             top: 0;
@@ -8583,6 +8641,472 @@
     const __TM_OTHER_BLOCK_TAB_ID = '__tm_other_blocks__';
     const __TM_OTHER_BLOCK_TAB_NAME = '其他块';
     const WHITEBOARD_DATA_CACHE_KEY = 'tm_whiteboard_data_cache';
+    const __TM_BUILTIN_COLUMN_DEFAULT_ORDER = ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark'];
+    const __TM_BUILTIN_COLUMN_WIDTHS = {
+        pinned: 48,
+        content: 360,
+        status: 96,
+        score: 96,
+        doc: 180,
+        h2: 180,
+        priority: 96,
+        startDate: 90,
+        completionTime: 170,
+        duration: 96,
+        spent: 96,
+        remark: 240,
+    };
+    const __TM_BUILTIN_COLUMN_PERCENT_WIDTHS = {
+        pinned: 5,
+        content: 35,
+        status: 8,
+        score: 8,
+        doc: 12,
+        h2: 12,
+        priority: 8,
+        startDate: 7,
+        completionTime: 18,
+        duration: 8,
+        spent: 8,
+        remark: 19,
+    };
+    const __TM_CUSTOM_FIELD_ATTR_PREFIX = 'custom-tm-';
+    const __TM_CUSTOM_FIELD_COLUMN_PREFIX = 'cf:';
+    const __TM_CUSTOM_FIELD_COLOR_PRESETS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
+    const __tmCustomFieldAttrBackfillInFlight = new Set();
+
+    function __tmGetTaskHeadingColumnLabel() {
+        const level = String(SettingsStore?.data?.taskHeadingLevel || 'h2').trim() || 'h2';
+        const labels = { h1: '一级标题', h2: '二级标题', h3: '三级标题', h4: '四级标题', h5: '五级标题', h6: '六级标题' };
+        return labels[level] || '标题';
+    }
+
+    function __tmNormalizeCustomFieldId(raw, fallback = '') {
+        const normalizeToken = (value) => String(value || '').trim().toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9_-]/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^[-_]+|[-_]+$/g, '');
+        const fallbackToken = normalizeToken(fallback || '');
+        const base = normalizeToken(raw || '');
+        return base || fallbackToken || `field_${Date.now().toString(36)}`;
+    }
+
+    function __tmNormalizeCustomFieldAttrName(raw, fallback = '') {
+        const fallbackToken = __tmNormalizeCustomFieldId(fallback || '', 'field');
+        let base = String(raw || '').trim();
+        if (!base) base = String(fallback || '').trim();
+        if (base.startsWith(__TM_CUSTOM_FIELD_ATTR_PREFIX)) {
+            base = String(base.slice(__TM_CUSTOM_FIELD_ATTR_PREFIX.length) || '').trim();
+        }
+        return __tmNormalizeCustomFieldId(base, fallbackToken);
+    }
+
+    function __tmBuildCustomFieldAttrStorageKey(attrName, fallback = 'field') {
+        const fallbackToken = __tmNormalizeCustomFieldAttrName(fallback || '', 'field');
+        const name = __tmNormalizeCustomFieldAttrName(attrName, fallbackToken || 'field');
+        const safeFallback = `${__TM_CUSTOM_FIELD_ATTR_PREFIX}${fallbackToken || 'field'}`;
+        return __tmSafeAttrName(`${__TM_CUSTOM_FIELD_ATTR_PREFIX}${name}`, safeFallback);
+    }
+
+    function __tmBuildCustomFieldColumnKey(fieldId) {
+        const id = __tmNormalizeCustomFieldId(fieldId);
+        return id ? `${__TM_CUSTOM_FIELD_COLUMN_PREFIX}${id}` : '';
+    }
+
+    function __tmParseCustomFieldColumnKey(key) {
+        const raw = String(key || '').trim();
+        if (!raw.startsWith(__TM_CUSTOM_FIELD_COLUMN_PREFIX)) return '';
+        return __tmNormalizeCustomFieldId(raw.slice(__TM_CUSTOM_FIELD_COLUMN_PREFIX.length));
+    }
+
+    function __tmBuildCustomFieldAttrKey(fieldId) {
+        const id = __tmNormalizeCustomFieldId(fieldId);
+        if (!id) return '';
+        const field = __tmGetCustomFieldDefMap().get(id);
+        return __tmBuildCustomFieldAttrStorageKey(field?.attrKey || field?.id || field?.name || id, id);
+    }
+
+    function __tmParseCustomFieldAttrKey(attrKey) {
+        const raw = String(attrKey || '').trim();
+        if (!raw.startsWith(__TM_CUSTOM_FIELD_ATTR_PREFIX)) return '';
+        return __tmNormalizeCustomFieldAttrName(raw.slice(__TM_CUSTOM_FIELD_ATTR_PREFIX.length));
+    }
+
+    function __tmGetCustomFieldPresetColor(index = 0) {
+        const palette = Array.isArray(__TM_CUSTOM_FIELD_COLOR_PRESETS) && __TM_CUSTOM_FIELD_COLOR_PRESETS.length
+            ? __TM_CUSTOM_FIELD_COLOR_PRESETS
+            : ['#3b82f6'];
+        const idx = Math.abs(Number(index) || 0) % palette.length;
+        return String(palette[idx] || '#3b82f6').trim() || '#3b82f6';
+    }
+
+    function __tmNormalizeCustomFieldOption(option, index = 0, seenIds = null) {
+        const source = (option && typeof option === 'object') ? option : {};
+        const baseName = String(source.name || source.label || '').trim() || `选项${index + 1}`;
+        let id = __tmNormalizeCustomFieldId(source.id || baseName, `option_${index + 1}`);
+        const seen = seenIds instanceof Set ? seenIds : new Set();
+        let dedupe = 2;
+        while (seen.has(id)) {
+            id = `${__tmNormalizeCustomFieldId(source.id || baseName, `option_${index + 1}`)}_${dedupe}`;
+            dedupe += 1;
+        }
+        seen.add(id);
+        const color = __tmNormalizeHexColor(source.color, __tmGetCustomFieldPresetColor(index)) || __tmGetCustomFieldPresetColor(index);
+        return {
+            id,
+            name: baseName,
+            color,
+        };
+    }
+
+    function __tmNormalizeCustomFieldDef(field, index = 0, seenIds = null, seenAttrKeys = null) {
+        const source = (field && typeof field === 'object') ? field : {};
+        const name = String(source.name || source.label || '').trim() || `自定义列${index + 1}`;
+        let id = __tmNormalizeCustomFieldId(source.id || name, `field_${index + 1}`);
+        const seen = seenIds instanceof Set ? seenIds : new Set();
+        let dedupe = 2;
+        while (seen.has(id)) {
+            id = `${__tmNormalizeCustomFieldId(source.id || name, `field_${index + 1}`)}_${dedupe}`;
+            dedupe += 1;
+        }
+        seen.add(id);
+        let attrKey = __tmNormalizeCustomFieldAttrName(source.attrKey || name, id || `field_${index + 1}`);
+        const seenAttrs = seenAttrKeys instanceof Set ? seenAttrKeys : new Set();
+        const attrBase = attrKey;
+        let attrDedupe = 2;
+        while (seenAttrs.has(attrKey)) {
+            attrKey = `${attrBase}_${attrDedupe}`;
+            attrDedupe += 1;
+        }
+        seenAttrs.add(attrKey);
+        const type = String(source.type || '').trim() === 'multi' ? 'multi' : 'single';
+        const optionSeen = new Set();
+        const options = (Array.isArray(source.options) ? source.options : [])
+            .map((item, optionIndex) => __tmNormalizeCustomFieldOption(item, optionIndex, optionSeen))
+            .filter(Boolean);
+        return {
+            id,
+            name,
+            attrKey,
+            type,
+            options,
+            enabled: source.enabled !== false,
+        };
+    }
+
+    function __tmNormalizeCustomFieldDefs(input) {
+        const source = Array.isArray(input) ? input : [];
+        const seen = new Set();
+        const seenAttrKeys = new Set();
+        return source.map((item, index) => __tmNormalizeCustomFieldDef(item, index, seen, seenAttrKeys)).filter(Boolean);
+    }
+
+    function __tmGetCustomFieldDefs() {
+        return __tmNormalizeCustomFieldDefs(SettingsStore?.data?.customFieldDefs);
+    }
+
+    function __tmGetCustomFieldDefMap() {
+        const map = new Map();
+        __tmGetCustomFieldDefs().forEach((field) => {
+            const id = String(field?.id || '').trim();
+            if (!id) return;
+            map.set(id, field);
+        });
+        return map;
+    }
+
+    function __tmGetCustomFieldAttrKeyMap() {
+        const map = new Map();
+        __tmGetCustomFieldDefs().forEach((field) => {
+            const fieldId = __tmNormalizeCustomFieldId(field?.id, 'field');
+            const attrKey = __tmNormalizeCustomFieldAttrName(field?.attrKey || fieldId || field?.name || 'field', fieldId || 'field');
+            if (!attrKey) return;
+            map.set(attrKey, field);
+        });
+        return map;
+    }
+
+    function __tmGetCustomFieldDefByAttrStorageKey(attrKey) {
+        const attrName = __tmParseCustomFieldAttrKey(attrKey);
+        if (!attrName) return null;
+        return __tmGetCustomFieldAttrKeyMap().get(attrName) || null;
+    }
+
+    function __tmMaybeBackfillTaskCustomFieldAttrs(task, metaSource = null) {
+        const tid = String(task?.id || '').trim();
+        if (!tid || __tmCustomFieldAttrBackfillInFlight.has(tid)) return;
+        const meta = (metaSource && typeof metaSource === 'object') ? metaSource : (MetaStore.get(tid) || null);
+        const metaValues = (meta?.customFieldValues && typeof meta.customFieldValues === 'object' && !Array.isArray(meta.customFieldValues))
+            ? meta.customFieldValues
+            : null;
+        if (!metaValues || !Object.keys(metaValues).length) return;
+        const rawValues = (task?.__customFieldRawValues && typeof task.__customFieldRawValues === 'object' && !Array.isArray(task.__customFieldRawValues))
+            ? task.__customFieldRawValues
+            : {};
+        const patch = {};
+        Object.entries(metaValues).forEach(([fieldId, fieldValue]) => {
+            const fid = String(fieldId || '').trim();
+            if (!fid) return;
+            const field = __tmGetCustomFieldDefMap().get(fid);
+            if (!field) return;
+            const normalized = __tmNormalizeCustomFieldValue(field, fieldValue);
+            const serialized = __tmSerializeCustomFieldValue(field, normalized);
+            const currentRaw = Object.prototype.hasOwnProperty.call(rawValues, fid) ? String(rawValues[fid] ?? '') : '';
+            if (serialized === currentRaw) return;
+            if (!serialized && !currentRaw) return;
+            patch[fid] = normalized;
+        });
+        if (!Object.keys(patch).length) return;
+        __tmCustomFieldAttrBackfillInFlight.add(tid);
+        Promise.resolve().then(async () => {
+            try {
+                await __tmPersistMetaAndAttrsKernel(tid, { customFieldValues: patch }, {
+                    touchMetaStore: false,
+                    skipFlush: true,
+                });
+                if (!task.__customFieldRawValues || typeof task.__customFieldRawValues !== 'object' || Array.isArray(task.__customFieldRawValues)) {
+                    task.__customFieldRawValues = {};
+                }
+                Object.entries(patch).forEach(([fieldId, fieldValue]) => {
+                    const field = __tmGetCustomFieldDefMap().get(String(fieldId || '').trim());
+                    if (!field) return;
+                    const serialized = __tmSerializeCustomFieldValue(field, fieldValue);
+                    if (serialized) task.__customFieldRawValues[fieldId] = serialized;
+                    else delete task.__customFieldRawValues[fieldId];
+                });
+            } catch (e) {
+            } finally {
+                __tmCustomFieldAttrBackfillInFlight.delete(tid);
+            }
+        });
+    }
+
+    function __tmGetColumnWidthDefaults() {
+        const widths = { ...__TM_BUILTIN_COLUMN_WIDTHS };
+        __tmGetCustomFieldDefs().forEach((field) => {
+            const key = __tmBuildCustomFieldColumnKey(field?.id);
+            if (!key) return;
+            widths[key] = String(field?.type || '').trim() === 'multi' ? 180 : 140;
+        });
+        return widths;
+    }
+
+    function __tmGetColumnPercentDefaults() {
+        const widths = { ...__TM_BUILTIN_COLUMN_PERCENT_WIDTHS };
+        __tmGetCustomFieldDefs().forEach((field) => {
+            const key = __tmBuildCustomFieldColumnKey(field?.id);
+            if (!key) return;
+            widths[key] = String(field?.type || '').trim() === 'multi' ? 14 : 12;
+        });
+        return widths;
+    }
+
+    function __tmGetDefaultColumnOrder() {
+        const order = __TM_BUILTIN_COLUMN_DEFAULT_ORDER.slice();
+        __tmGetCustomFieldDefs().forEach((field) => {
+            if (field?.enabled === false) return;
+            const key = __tmBuildCustomFieldColumnKey(field?.id);
+            if (key && !order.includes(key)) order.push(key);
+        });
+        return order;
+    }
+
+    function __tmGetKnownColumnKeys() {
+        return new Set(__tmGetDefaultColumnOrder());
+    }
+
+    function __tmResolveColumnLabel(key) {
+        const raw = String(key || '').trim();
+        if (!raw) return '';
+        if (raw === 'pinned') return '置顶';
+        if (raw === 'content') return '任务内容';
+        if (raw === 'status') return '状态';
+        if (raw === 'score') return '优先级';
+        if (raw === 'doc') return '文档';
+        if (raw === 'h2') return __tmGetTaskHeadingColumnLabel();
+        if (raw === 'priority') return '重要性';
+        if (raw === 'startDate') return '开始日期';
+        if (raw === 'completionTime') return '完成日期';
+        if (raw === 'duration') return '时长';
+        if (raw === 'spent') return '耗时';
+        if (raw === 'remark') return '备注';
+        const fieldId = __tmParseCustomFieldColumnKey(raw);
+        if (!fieldId) return raw;
+        const field = __tmGetCustomFieldDefMap().get(fieldId);
+        return String(field?.name || fieldId).trim() || fieldId;
+    }
+
+    function __tmGetAllColumnDefs() {
+        const builtins = [
+            { key: 'pinned', label: '置顶', kind: 'builtin' },
+            { key: 'content', label: '任务内容', kind: 'builtin' },
+            { key: 'status', label: '状态', kind: 'builtin' },
+            { key: 'score', label: '优先级', kind: 'builtin' },
+            { key: 'doc', label: '文档', kind: 'builtin' },
+            { key: 'h2', label: __tmGetTaskHeadingColumnLabel(), kind: 'builtin' },
+            { key: 'priority', label: '重要性', kind: 'builtin' },
+            { key: 'startDate', label: '开始日期', kind: 'builtin' },
+            { key: 'completionTime', label: '完成日期', kind: 'builtin' },
+            { key: 'duration', label: '时长', kind: 'builtin' },
+            { key: 'spent', label: '耗时', kind: 'builtin' },
+            { key: 'remark', label: '备注', kind: 'builtin' },
+        ];
+        const customs = __tmGetCustomFieldDefs().map((field) => ({
+            key: __tmBuildCustomFieldColumnKey(field?.id),
+            label: String(field?.name || field?.id || '').trim(),
+            kind: 'custom',
+            fieldId: String(field?.id || '').trim(),
+            field,
+        })).filter((item) => item.key && item.fieldId);
+        return builtins.concat(customs);
+    }
+
+    function __tmGetColumnDefMap() {
+        const map = new Map();
+        __tmGetAllColumnDefs().forEach((def) => {
+            const key = String(def?.key || '').trim();
+            if (!key) return;
+            map.set(key, def);
+        });
+        return map;
+    }
+
+    function __tmFindCustomFieldOption(field, rawValue) {
+        const def = (field && typeof field === 'object') ? field : {};
+        const token = String(rawValue ?? '').trim();
+        if (!token) return null;
+        const options = Array.isArray(def.options) ? def.options : [];
+        let matchedByName = null;
+        for (const option of options) {
+            const optionId = String(option?.id || '').trim();
+            if (optionId && optionId === token) return option;
+            if (!matchedByName) {
+                const optionName = String(option?.name || '').trim();
+                if (optionName && optionName === token) matchedByName = option;
+            }
+        }
+        return matchedByName;
+    }
+
+    function __tmNormalizeCustomFieldValue(field, rawValue) {
+        const def = (field && typeof field === 'object') ? field : {};
+        const type = String(def.type || '').trim() === 'multi' ? 'multi' : 'single';
+        if (type === 'multi') {
+            let list = [];
+            if (Array.isArray(rawValue)) {
+                list = rawValue;
+            } else {
+                const raw = String(rawValue ?? '').trim();
+                if (!raw) return [];
+                try {
+                    const parsed = JSON.parse(raw);
+                    list = Array.isArray(parsed) ? parsed : [];
+                } catch (e) {
+                    list = raw.split(/\s*[,，、]\s*/).map((item) => String(item || '').trim()).filter(Boolean);
+                }
+            }
+            const out = [];
+            const seen = new Set();
+            list.forEach((item) => {
+                const rawToken = String(item || '').trim();
+                if (!rawToken) return;
+                const option = __tmFindCustomFieldOption(def, rawToken);
+                const normalizedToken = String(option?.id || rawToken).trim();
+                if (!normalizedToken || seen.has(normalizedToken)) return;
+                seen.add(normalizedToken);
+                out.push(normalizedToken);
+            });
+            return out;
+        }
+        const rawToken = String(rawValue ?? '').trim();
+        if (!rawToken) return '';
+        const option = __tmFindCustomFieldOption(def, rawToken);
+        return String(option?.id || rawToken).trim();
+    }
+
+    function __tmSerializeCustomFieldValue(field, value) {
+        const def = (field && typeof field === 'object') ? field : {};
+        const type = String(def.type || '').trim() === 'multi' ? 'multi' : 'single';
+        if (type === 'multi') {
+            const list = __tmNormalizeCustomFieldValue(def, value);
+            if (!list.length) return '';
+            return list
+                .map((item) => {
+                    const token = String(item || '').trim();
+                    if (!token) return '';
+                    const option = __tmFindCustomFieldOption(def, token);
+                    return String(option?.name || token).trim();
+                })
+                .filter(Boolean)
+                .join(', ');
+        }
+        const token = String(__tmNormalizeCustomFieldValue(def, value) || '').trim();
+        if (!token) return '';
+        const option = __tmFindCustomFieldOption(def, token);
+        return String(option?.name || token).trim();
+    }
+
+    function __tmNormalizeTaskCustomFieldValues(rawValues, metaValues = null) {
+        const source = (rawValues && typeof rawValues === 'object' && !Array.isArray(rawValues)) ? rawValues : {};
+        const meta = (metaValues && typeof metaValues === 'object' && !Array.isArray(metaValues)) ? metaValues : {};
+        const out = {};
+        __tmGetCustomFieldDefs().forEach((field) => {
+            const fieldId = String(field?.id || '').trim();
+            if (!fieldId) return;
+            const hasRaw = Object.prototype.hasOwnProperty.call(source, fieldId);
+            const hasMeta = Object.prototype.hasOwnProperty.call(meta, fieldId);
+            const normalized = __tmNormalizeCustomFieldValue(field, hasRaw ? source[fieldId] : (hasMeta ? meta[fieldId] : ''));
+            if (Array.isArray(normalized)) {
+                if (normalized.length) out[fieldId] = normalized;
+                return;
+            }
+            if (String(normalized || '').trim()) out[fieldId] = normalized;
+        });
+        return out;
+    }
+
+    function __tmGetTaskCustomFieldValue(task, fieldId) {
+        const values = (task?.customFieldValues && typeof task.customFieldValues === 'object' && !Array.isArray(task.customFieldValues))
+            ? task.customFieldValues
+            : {};
+        return values[String(fieldId || '').trim()];
+    }
+
+    function __tmResolveCustomFieldSelectedOptions(field, rawValue) {
+        const def = (field && typeof field === 'object') ? field : {};
+        const normalized = __tmNormalizeCustomFieldValue(def, rawValue);
+        const optionMap = new Map((Array.isArray(def.options) ? def.options : []).map((option) => [String(option?.id || '').trim(), option]));
+        const values = Array.isArray(normalized) ? normalized : (String(normalized || '').trim() ? [String(normalized || '').trim()] : []);
+        return values.map((value, index) => {
+            const id = String(value || '').trim();
+            const option = optionMap.get(id);
+            if (option) return option;
+            return {
+                id,
+                name: id || `未知选项${index + 1}`,
+                color: '#9ca3af',
+                missing: true,
+            };
+        });
+    }
+
+    function __tmBuildCustomFieldTagsHtml(field, rawValue, options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const selected = __tmResolveCustomFieldSelectedOptions(field, rawValue);
+        const max = Math.max(1, Number(opts.maxTags) || 3);
+        const shown = selected.slice(0, max);
+        const chips = shown.map((item) => `<span class="tm-status-tag${item?.missing ? ' is-missing' : ''}" style="${__tmBuildStatusChipStyle(item?.color || '#9ca3af')}">${esc(String(item?.name || item?.id || '').trim() || '未命名')}</span>`).join('');
+        const remain = selected.length - shown.length;
+        const remainHtml = remain > 0
+            ? `<span class="tm-status-tag tm-custom-field-tag--more" style="${__tmBuildStatusChipStyle('#9ca3af')}">+${remain}</span>`
+            : '';
+        const emptyText = String(opts.emptyText || '').trim() || '未设置';
+        if (!chips && !remainHtml) {
+            return opts.allowEmpty === false ? '' : `<span class="tm-status-tag tm-custom-field-tag--empty" style="${__tmBuildStatusChipStyle('#9ca3af')}">${esc(emptyText)}</span>`;
+        }
+        return `${chips}${remainHtml}`;
+    }
 
     const MetaStore = {
         data: Storage.get('tm_meta_cache', {}) || {},
@@ -8658,6 +9182,12 @@
             if (!dbHasCompletionTime && 'completionTime' in v && isValidValue(v.completionTime)) task.completionTime = v.completionTime;
             if (!dbHasCustomTime && 'customTime' in v && isValidValue(v.customTime)) task.customTime = v.customTime;
             if (!dbHasCustomStatus && 'customStatus' in v && isValidValue(v.customStatus)) task.customStatus = v.customStatus;
+            if (v.customFieldValues && typeof v.customFieldValues === 'object' && !Array.isArray(v.customFieldValues)) {
+                const current = (task.customFieldValues && typeof task.customFieldValues === 'object' && !Array.isArray(task.customFieldValues))
+                    ? task.customFieldValues
+                    : {};
+                task.customFieldValues = __tmNormalizeTaskCustomFieldValues(current, v.customFieldValues);
+            }
         },
 
         mergeFromTaskIfMissing(task) {
@@ -8673,6 +9203,9 @@
             if (task.completionTime) candidate.completionTime = task.completionTime;
             if (task.customTime) candidate.customTime = task.customTime;
             if (task.customStatus) candidate.customStatus = task.customStatus;
+            if (task.customFieldValues && typeof task.customFieldValues === 'object' && Object.keys(task.customFieldValues).length > 0) {
+                candidate.customFieldValues = { ...task.customFieldValues };
+            }
             if (Object.keys(candidate).length === 0) return;
             this.data[task.id] = candidate;
             this.scheduleSave();
@@ -8682,7 +9215,25 @@
             if (!id) return;
             if (!this.data || typeof this.data !== 'object') this.data = {};
             const prev = (this.data[id] && typeof this.data[id] === 'object') ? this.data[id] : {};
-            this.data[id] = { ...prev, ...(patch || {}) };
+            const nextPatch = (patch && typeof patch === 'object') ? { ...patch } : {};
+            if (nextPatch.customFieldValues && typeof nextPatch.customFieldValues === 'object' && !Array.isArray(nextPatch.customFieldValues)) {
+                const mergedCustomValues = {
+                    ...((prev.customFieldValues && typeof prev.customFieldValues === 'object' && !Array.isArray(prev.customFieldValues)) ? prev.customFieldValues : {})
+                };
+                Object.entries(nextPatch.customFieldValues).forEach(([fieldId, rawValue]) => {
+                    const field = __tmGetCustomFieldDefMap().get(String(fieldId || '').trim());
+                    const normalized = __tmNormalizeCustomFieldValue(field, rawValue);
+                    if (Array.isArray(normalized)) {
+                        if (normalized.length) mergedCustomValues[fieldId] = normalized;
+                        else delete mergedCustomValues[fieldId];
+                        return;
+                    }
+                    if (String(normalized || '').trim()) mergedCustomValues[fieldId] = normalized;
+                    else delete mergedCustomValues[fieldId];
+                });
+                nextPatch.customFieldValues = mergedCustomValues;
+            }
+            this.data[id] = { ...prev, ...nextPatch };
             this.scheduleSave();
         },
 
@@ -8833,6 +9384,7 @@
             calendarShowTaskDates: true,
             calendarShowOtherBlockCheckbox: true,
             calendarTaskDateColorMode: 'group',
+            calendar3DayTodayPosition: 1,
             calendarNewScheduleMaxDurationMin: 60,
             calendarHourSlotHeightMode: 'normal',
             calendarVisibleStartTime: '00:00',
@@ -8861,6 +9413,7 @@
                 { id: 'blocked', name: '阻塞', color: '#F44336' },
                 { id: 'review', name: '待审核', color: '#FF9800' }
             ],
+            customFieldDefs: [],
             // 文档分组配置
             // 结构: [{ id: 'uuid', name: '分组名', docs: [{ id: 'docId', recursive: boolean }] }]
             docGroups: [],
@@ -9020,22 +9573,11 @@
                 ]
             },
             // 列宽度设置（像素）
-            columnWidths: {
-                pinned: 48,             // 置顶
-                content: 360,           // 任务内容
-                status: 96,             // 状态
-                score: 96,              // 优先级
-                doc: 180,               // 文档
-                h2: 180,                // 二级标题
-                priority: 96,           // 重要性
-                completionTime: 170,    // 完成日期
-                startDate: 90,           // 开始日期
-                duration: 96,           // 时长
-                spent: 96,              // 耗时
-                remark: 240             // 备注
-            },
+            columnWidths: { ...__TM_BUILTIN_COLUMN_WIDTHS },
             // 列顺序设置（注意：startDate 在 completionTime 前面）
-            columnOrder: ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark']
+            columnOrder: __TM_BUILTIN_COLUMN_DEFAULT_ORDER.slice(),
+            // 隐藏列设置
+            hiddenColumns: null
         },
         loaded: false,
         saving: false,
@@ -9203,6 +9745,7 @@
                                 if (typeof cloudData.calendarShowTaskDates === 'boolean') this.data.calendarShowTaskDates = cloudData.calendarShowTaskDates;
                                 if (typeof cloudData.calendarShowOtherBlockCheckbox === 'boolean') this.data.calendarShowOtherBlockCheckbox = cloudData.calendarShowOtherBlockCheckbox;
                                 if (typeof cloudData.calendarTaskDateColorMode === 'string') this.data.calendarTaskDateColorMode = cloudData.calendarTaskDateColorMode;
+                                if (typeof cloudData.calendar3DayTodayPosition === 'number') this.data.calendar3DayTodayPosition = cloudData.calendar3DayTodayPosition;
                                 if (typeof cloudData.calendarNewScheduleMaxDurationMin === 'number') this.data.calendarNewScheduleMaxDurationMin = cloudData.calendarNewScheduleMaxDurationMin;
                                 if (typeof cloudData.calendarHourSlotHeightMode === 'string') this.data.calendarHourSlotHeightMode = cloudData.calendarHourSlotHeightMode;
                                 if (typeof cloudData.calendarVisibleStartTime === 'string') this.data.calendarVisibleStartTime = cloudData.calendarVisibleStartTime;
@@ -9273,6 +9816,7 @@
                                 if (typeof cloudData.tableBorderColorLight === 'string') this.data.tableBorderColorLight = cloudData.tableBorderColorLight;
                                 if (typeof cloudData.tableBorderColorDark === 'string') this.data.tableBorderColorDark = cloudData.tableBorderColorDark;
                                 if (Array.isArray(cloudData.customStatusOptions)) this.data.customStatusOptions = cloudData.customStatusOptions;
+                                if (Array.isArray(cloudData.customFieldDefs)) this.data.customFieldDefs = cloudData.customFieldDefs;
                                 if (cloudData.columnWidths && typeof cloudData.columnWidths === 'object') {
                                     // 旧版本兼容：如果有 customTime 配置，迁移到 completionTime
                                     if (cloudData.columnWidths.customTime && !cloudData.columnWidths.completionTime) {
@@ -9281,6 +9825,7 @@
                                     this.data.columnWidths = { ...this.data.columnWidths, ...cloudData.columnWidths };
                                 }
                                 if (Array.isArray(cloudData.columnOrder)) this.data.columnOrder = cloudData.columnOrder;
+                                if (Array.isArray(cloudData.hiddenColumns)) this.data.hiddenColumns = cloudData.hiddenColumns;
                                 
                                 // 新增字段处理
                                 if (typeof cloudData.durationFormat === 'string') this.data.durationFormat = cloudData.durationFormat;
@@ -9516,6 +10061,7 @@
             this.data.calendarShowTaskDates = Storage.get('tm_calendar_show_task_dates', this.data.calendarShowTaskDates);
             this.data.calendarShowOtherBlockCheckbox = Storage.get('tm_calendar_show_other_block_checkbox', this.data.calendarShowOtherBlockCheckbox);
             this.data.calendarTaskDateColorMode = Storage.get('tm_calendar_task_date_color_mode', this.data.calendarTaskDateColorMode);
+            this.data.calendar3DayTodayPosition = Number(Storage.get('tm_calendar_3day_today_position', this.data.calendar3DayTodayPosition));
             this.data.calendarNewScheduleMaxDurationMin = Number(Storage.get('tm_calendar_new_schedule_max_duration_min', this.data.calendarNewScheduleMaxDurationMin));
             this.data.calendarHourSlotHeightMode = Storage.get('tm_calendar_hour_slot_height_mode', this.data.calendarHourSlotHeightMode);
             this.data.calendarVisibleStartTime = String(Storage.get('tm_calendar_visible_start_time', this.data.calendarVisibleStartTime) || this.data.calendarVisibleStartTime || '00:00');
@@ -9558,8 +10104,10 @@
             this.data.docPinnedByGroup = Storage.get('tm_doc_pinned_by_group', this.data.docPinnedByGroup) || {};
             this.data.currentGroupId = Storage.get('tm_current_group_id', 'all');
             this.data.customStatusOptions = Storage.get('tm_custom_status_options', this.data.customStatusOptions);
+            this.data.customFieldDefs = Storage.get('tm_custom_field_defs', this.data.customFieldDefs) || this.data.customFieldDefs;
             this.data.taskHeadingLevel = Storage.get('tm_task_heading_level', this.data.taskHeadingLevel);
             this.data.columnOrder = Storage.get('tm_column_order', this.data.columnOrder);
+            this.data.hiddenColumns = Storage.get('tm_hidden_columns', this.data.hiddenColumns);
             this.data.durationFormat = Storage.get('tm_duration_format', this.data.durationFormat);
             this.data.excludeCompletedTasks = Storage.get('tm_exclude_completed_tasks', this.data.excludeCompletedTasks);
             this.data.startDate = Storage.get('tm_start_date', this.data.startDate);
@@ -9808,6 +10356,7 @@
             Storage.set('tm_calendar_show_task_dates', !!this.data.calendarShowTaskDates);
             Storage.set('tm_calendar_show_other_block_checkbox', !!this.data.calendarShowOtherBlockCheckbox);
             Storage.set('tm_calendar_task_date_color_mode', String(this.data.calendarTaskDateColorMode || 'group').trim() || 'group');
+            Storage.set('tm_calendar_3day_today_position', Number(this.data.calendar3DayTodayPosition) || 1);
             Storage.set('tm_calendar_new_schedule_max_duration_min', Number(this.data.calendarNewScheduleMaxDurationMin) || 60);
             Storage.set('tm_calendar_hour_slot_height_mode', String(this.data.calendarHourSlotHeightMode || 'normal').trim() || 'normal');
             Storage.set('tm_calendar_visible_start_time', String(this.data.calendarVisibleStartTime || '00:00').trim() || '00:00');
@@ -9852,9 +10401,11 @@
             Storage.set('tm_doc_pinned_by_group', this.data.docPinnedByGroup || {});
             Storage.set('tm_current_group_id', this.data.currentGroupId);
             Storage.set('tm_custom_status_options', this.data.customStatusOptions);
+            Storage.set('tm_custom_field_defs', Array.isArray(this.data.customFieldDefs) ? this.data.customFieldDefs : []);
             Storage.set('tm_task_heading_level', String(this.data.taskHeadingLevel || 'h2').trim() || 'h2');
             Storage.set('tm_column_widths', this.data.columnWidths);
             Storage.set('tm_column_order', this.data.columnOrder);
+            Storage.set('tm_hidden_columns', Array.isArray(this.data.hiddenColumns) ? this.data.hiddenColumns : []);
             Storage.set('tm_duration_format', String(this.data.durationFormat || 'hours').trim() === 'minutes' ? 'minutes' : 'hours');
             Storage.set('tm_exclude_completed_tasks', !!this.data.excludeCompletedTasks);
             Storage.set('tm_start_date', Number(this.data.startDate) || 90);
@@ -9901,14 +10452,42 @@
         },
 
         normalizeColumns() {
-            const defaultOrder = ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark'];
-            const known = new Set(defaultOrder);
-            if (!Array.isArray(this.data.columnOrder)) this.data.columnOrder = [...defaultOrder];
-            this.data.columnOrder = this.data.columnOrder.filter(k => known.has(k));
-            if (this.data.columnOrder.length === 0) this.data.columnOrder = [...defaultOrder];
+            this.data.customFieldDefs = __tmNormalizeCustomFieldDefs(this.data.customFieldDefs);
+            const defaultOrder = __tmGetDefaultColumnOrder();
+            const known = __tmGetKnownColumnKeys();
+            const normalizeKeyList = (list) => {
+                const out = [];
+                const seen = new Set();
+                (Array.isArray(list) ? list : []).forEach((item) => {
+                    const key = String(item || '').trim();
+                    if (!key || !known.has(key) || seen.has(key)) return;
+                    seen.add(key);
+                    out.push(key);
+                });
+                return out;
+            };
+            const hasHiddenColumnsConfig = Array.isArray(this.data.hiddenColumns);
+            let visibleOrder = normalizeKeyList(this.data.columnOrder);
+            let hiddenColumns = normalizeKeyList(this.data.hiddenColumns);
+            if (!visibleOrder.length && !hasHiddenColumnsConfig) {
+                visibleOrder = [...defaultOrder];
+                hiddenColumns = [];
+            } else {
+                if (!hasHiddenColumnsConfig) {
+                    hiddenColumns = defaultOrder.filter((key) => !visibleOrder.includes(key));
+                }
+                hiddenColumns = hiddenColumns.filter((key) => !visibleOrder.includes(key));
+                defaultOrder.forEach((key) => {
+                    if (visibleOrder.includes(key) || hiddenColumns.includes(key)) return;
+                    visibleOrder.push(key);
+                });
+                if (!visibleOrder.length && !hiddenColumns.length) visibleOrder = [...defaultOrder];
+            }
+            this.data.columnOrder = visibleOrder;
+            this.data.hiddenColumns = hiddenColumns;
 
-            const percentFallback = { pinned: 5, content: 35, status: 8, score: 8, doc: 12, h2: 12, priority: 8, startDate: 7, completionTime: 18, duration: 8, spent: 8, remark: 19 };
-            const pxDefault = { pinned: 48, content: 360, status: 96, score: 96, doc: 180, h2: 180, priority: 96, startDate: 90, completionTime: 170, duration: 96, spent: 96, remark: 240 };
+            const percentFallback = __tmGetColumnPercentDefaults();
+            const pxDefault = __tmGetColumnWidthDefaults();
 
             const widths = (this.data.columnWidths && typeof this.data.columnWidths === 'object') ? { ...this.data.columnWidths } : {};
             const vals = Object.values(widths).filter(v => typeof v === 'number' && Number.isFinite(v));
@@ -9968,6 +10547,10 @@
                 const validCalendarHourSlotHeightModes = new Set(['normal', 'high', 'higher', 'ultra']);
                 const calendarHourSlotHeightMode = String(this.data.calendarHourSlotHeightMode || '').trim();
                 this.data.calendarHourSlotHeightMode = validCalendarHourSlotHeightModes.has(calendarHourSlotHeightMode) ? calendarHourSlotHeightMode : 'normal';
+            }
+            {
+                const pos = Number(this.data.calendar3DayTodayPosition);
+                this.data.calendar3DayTodayPosition = (pos === 2 || pos === 3) ? pos : 1;
             }
             const wrapContentLines = Number(this.data.taskContentWrapMaxLines);
             this.data.taskContentWrapMaxLines = Number.isFinite(wrapContentLines) ? Math.max(1, Math.min(10, Math.round(wrapContentLines))) : 3;
@@ -10808,6 +11391,12 @@
         return Array.isArray(rows)
             ? rows.map((row) => {
                 const next = (row && typeof row === 'object') ? { ...row } : {};
+                if (next.__customFieldRawValues && typeof next.__customFieldRawValues === 'object') {
+                    next.__customFieldRawValues = { ...next.__customFieldRawValues };
+                }
+                if (next.customFieldValues && typeof next.customFieldValues === 'object') {
+                    next.customFieldValues = { ...next.customFieldValues };
+                }
                 try { delete next.children; } catch (e) {}
                 try { delete next.level; } catch (e) {}
                 try { delete next.priorityScore; } catch (e) {}
@@ -10823,6 +11412,94 @@
             ...src,
             tasks: __tmCloneTaskQueryRows(src.tasks),
         };
+    }
+
+    async function __tmQueryCustomFieldAttrRowsByTaskIds(taskIds) {
+        const defs = __tmGetCustomFieldDefs();
+        if (!defs.length) return [];
+        const safeTaskIds = Array.from(new Set((Array.isArray(taskIds) ? taskIds : [])
+            .map((id) => String(id || '').trim())
+            .filter((id) => /^[0-9]+-[a-zA-Z0-9]+$/.test(id))));
+        if (!safeTaskIds.length) return [];
+        const attrNames = defs.map((field) => __tmBuildCustomFieldAttrStorageKey(field?.attrKey || field?.id || field?.name || 'field', field?.id || 'field')).filter(Boolean);
+        if (!attrNames.length) return [];
+        const nameList = attrNames.map((name) => `'${name.replace(/'/g, "''")}'`).join(',');
+        const rows = [];
+        const chunkSize = 400;
+        for (let i = 0; i < safeTaskIds.length; i += chunkSize) {
+            const chunk = safeTaskIds.slice(i, i + chunkSize);
+            if (!chunk.length) continue;
+            const idList = chunk.map((id) => `'${id.replace(/'/g, "''")}'`).join(',');
+            const sql = `
+                SELECT block_id, name, value
+                FROM attributes
+                WHERE block_id IN (${idList})
+                  AND name IN (${nameList})
+            `;
+            const res = await API.call('/api/query/sql', { stmt: sql });
+            if (res.code === 0 && Array.isArray(res.data)) rows.push(...res.data);
+        }
+        return rows;
+    }
+
+    async function __tmAttachCustomFieldAttrsToTasks(tasks) {
+        const list = Array.isArray(tasks) ? tasks.filter((task) => task && typeof task === 'object') : [];
+        if (!list.length) return list;
+        const rows = await __tmQueryCustomFieldAttrRowsByTaskIds(list.map((task) => task.id));
+        if (!rows.length) {
+            list.forEach((task) => {
+                if (!task.__customFieldRawValues || typeof task.__customFieldRawValues !== 'object') task.__customFieldRawValues = {};
+            });
+            return list;
+        }
+        const byTask = new Map();
+        rows.forEach((row) => {
+            const taskId = String(row?.block_id || '').trim();
+            const field = __tmGetCustomFieldDefByAttrStorageKey(row?.name);
+            const fieldId = String(field?.id || '').trim();
+            if (!taskId || !fieldId) return;
+            if (!byTask.has(taskId)) byTask.set(taskId, {});
+            byTask.get(taskId)[fieldId] = String(row?.value ?? '');
+        });
+        list.forEach((task) => {
+            const tid = String(task?.id || '').trim();
+            task.__customFieldRawValues = tid && byTask.has(tid) ? { ...byTask.get(tid) } : {};
+        });
+        return list;
+    }
+
+    async function __tmQueryAttrRowsByName(attrName) {
+        const safeName = String(attrName || '').trim();
+        if (!safeName) return [];
+        const sql = `
+            SELECT block_id, value
+            FROM attributes
+            WHERE name = '${safeName.replace(/'/g, "''")}'
+        `;
+        const res = await API.call('/api/query/sql', { stmt: sql });
+        return (res.code === 0 && Array.isArray(res.data)) ? res.data : [];
+    }
+
+    async function __tmMigrateCustomFieldAttrStorageKey(prevAttrName, nextAttrName) {
+        const prevName = __tmNormalizeCustomFieldAttrName(prevAttrName);
+        const nextName = __tmNormalizeCustomFieldAttrName(nextAttrName);
+        const prevKey = __tmBuildCustomFieldAttrStorageKey(prevName);
+        const nextKey = __tmBuildCustomFieldAttrStorageKey(nextName);
+        if (!prevKey || !nextKey || prevKey === nextKey) return 0;
+        const rows = await __tmQueryAttrRowsByName(prevKey);
+        if (!rows.length) return 0;
+        let migrated = 0;
+        for (const row of rows) {
+            const blockId = String(row?.block_id || '').trim();
+            if (!blockId) continue;
+            await API.setAttrs(blockId, {
+                [nextKey]: String(row?.value ?? ''),
+                [prevKey]: '',
+            });
+            migrated += 1;
+        }
+        try { await API.call('/api/sqlite/flushTransaction', {}); } catch (e) {}
+        return migrated;
     }
 
     function __tmRunSqlQueued(fn) {
@@ -11900,6 +12577,7 @@
                 return { tasks: [], queryTime };
             }
             const tasks = Array.isArray(res.data) ? res.data : [];
+            try { await __tmAttachCustomFieldAttrsToTasks(tasks); } catch (e) {}
             // 注意：这里不能提前过滤已完成任务。
             // 子任务进度条、父子层级和“父任务未完成时显示已完成子任务”的规则，都依赖完整树结构。
             // 真正的显隐交给 applyFilters/filterVisibleTasks 统一处理。
@@ -12058,6 +12736,7 @@
                 }
             }
             const tasks = __tmCloneTaskQueryRows(Array.isArray(res.data) ? res.data : []);
+            try { await __tmAttachCustomFieldAttrsToTasks(tasks); } catch (e) {}
             // 注意：这里不能提前过滤已完成任务。
             // 子任务进度条、父子层级和“父任务未完成时显示已完成子任务”的规则，都依赖完整树结构。
             // 真正的显隐交给 applyFilters/filterVisibleTasks 统一处理。
@@ -12115,7 +12794,9 @@
             `;
             const res = await this.call('/api/query/sql', { stmt: sql });
             if (res.code === 0 && res.data && res.data.length > 0) {
-                return res.data[0];
+                const row = res.data[0];
+                try { await __tmAttachCustomFieldAttrsToTasks([row]); } catch (e) {}
+                return row;
             }
             return null;
         },
@@ -12955,8 +13636,18 @@
         const attrs = {};
         Object.entries(patch || {}).forEach(([key, val]) => {
             const attrKey = __tmMetaAttrMap[key];
-            if (!attrKey) return;
-            attrs[attrKey] = String(val ?? '');
+            if (attrKey) {
+                attrs[attrKey] = String(val ?? '');
+                return;
+            }
+            if (key === 'customFieldValues' && val && typeof val === 'object' && !Array.isArray(val)) {
+                Object.entries(val).forEach(([fieldId, fieldValue]) => {
+                    const field = __tmGetCustomFieldDefMap().get(String(fieldId || '').trim());
+                    const nextAttrKey = __tmBuildCustomFieldAttrStorageKey(field?.attrKey || field?.id || field?.name || fieldId, field?.id || fieldId);
+                    if (!nextAttrKey) return;
+                    attrs[nextAttrKey] = __tmSerializeCustomFieldValue(field, fieldValue);
+                });
+            }
         });
         return attrs;
     }
@@ -13187,6 +13878,20 @@
         const key = String(field || '').trim();
         if (key === 'pinned') return !!(value === true || value === '1' || value === 1);
         if (key === 'milestone') return (value === true || value === '1' || value === 1) ? '1' : '';
+        if (key === 'customFieldValues') {
+            const input = (value && typeof value === 'object' && !Array.isArray(value)) ? value : {};
+            const out = {};
+            Object.entries(input).forEach(([fieldId, rawValue]) => {
+                const field = __tmGetCustomFieldDefMap().get(String(fieldId || '').trim());
+                const normalized = __tmNormalizeCustomFieldValue(field, rawValue);
+                if (Array.isArray(normalized)) {
+                    if (normalized.length) out[fieldId] = normalized;
+                    return;
+                }
+                if (String(normalized || '').trim()) out[fieldId] = normalized;
+            });
+            return out;
+        }
         if (key === 'priority' || key === 'customStatus' || key === 'duration' || key === 'remark' || key === 'startDate' || key === 'completionTime' || key === 'customTime') {
             return String(value ?? '').trim();
         }
@@ -13285,6 +13990,19 @@
         const meta = MetaStore.get(tid) || {};
         const inverse = {};
         Object.keys(nextPatch).forEach((key) => {
+            if (key === 'customFieldValues') {
+                const currentTaskValues = (task?.customFieldValues && typeof task.customFieldValues === 'object') ? task.customFieldValues : {};
+                const currentMetaValues = (meta?.customFieldValues && typeof meta.customFieldValues === 'object') ? meta.customFieldValues : {};
+                const source = (nextPatch.customFieldValues && typeof nextPatch.customFieldValues === 'object') ? nextPatch.customFieldValues : {};
+                const inverseValues = {};
+                Object.keys(source).forEach((fieldId) => {
+                    if (Object.prototype.hasOwnProperty.call(currentTaskValues, fieldId)) inverseValues[fieldId] = currentTaskValues[fieldId];
+                    else if (Object.prototype.hasOwnProperty.call(currentMetaValues, fieldId)) inverseValues[fieldId] = currentMetaValues[fieldId];
+                    else inverseValues[fieldId] = '';
+                });
+                inverse[key] = inverseValues;
+                return;
+            }
             if (task && Object.prototype.hasOwnProperty.call(task, key)) inverse[key] = task[key];
             else if (Object.prototype.hasOwnProperty.call(meta, key)) inverse[key] = meta[key];
             else inverse[key] = '';
@@ -13300,6 +14018,37 @@
         const pending = state.pendingInsertedTasks?.[tid] || null;
         Object.entries(nextPatch).forEach(([key, rawValue]) => {
             const value = __tmNormalizeQueueTaskValue(key, rawValue);
+            if (key === 'customFieldValues') {
+                const applyCustomValues = (target) => {
+                    if (!(target && typeof target === 'object')) return;
+                    const nextValues = {
+                        ...((target.customFieldValues && typeof target.customFieldValues === 'object' && !Array.isArray(target.customFieldValues)) ? target.customFieldValues : {})
+                    };
+                    const nextRawValues = {
+                        ...((target.__customFieldRawValues && typeof target.__customFieldRawValues === 'object' && !Array.isArray(target.__customFieldRawValues)) ? target.__customFieldRawValues : {})
+                    };
+                    Object.entries(value || {}).forEach(([fieldId, fieldValue]) => {
+                        const field = __tmGetCustomFieldDefMap().get(String(fieldId || '').trim());
+                        const normalized = __tmNormalizeCustomFieldValue(field, fieldValue);
+                        const serialized = __tmSerializeCustomFieldValue(field, normalized);
+                        if (Array.isArray(normalized)) {
+                            if (normalized.length) nextValues[fieldId] = normalized;
+                            else delete nextValues[fieldId];
+                        } else if (String(normalized || '').trim()) {
+                            nextValues[fieldId] = normalized;
+                        } else {
+                            delete nextValues[fieldId];
+                        }
+                        if (serialized) nextRawValues[fieldId] = serialized;
+                        else delete nextRawValues[fieldId];
+                    });
+                    target.customFieldValues = nextValues;
+                    target.__customFieldRawValues = nextRawValues;
+                };
+                applyCustomValues(task);
+                applyCustomValues(pending);
+                return;
+            }
             if (task && typeof task === 'object') task[key] = value;
             if (pending && typeof pending === 'object') pending[key] = value;
         });
@@ -13318,6 +14067,37 @@
         const pending = state.pendingInsertedTasks?.[tid] || null;
         Object.entries(prevPatch).forEach(([key, rawValue]) => {
             const value = __tmNormalizeQueueTaskValue(key, rawValue);
+            if (key === 'customFieldValues') {
+                const applyCustomValues = (target) => {
+                    if (!(target && typeof target === 'object')) return;
+                    const nextValues = {
+                        ...((target.customFieldValues && typeof target.customFieldValues === 'object' && !Array.isArray(target.customFieldValues)) ? target.customFieldValues : {})
+                    };
+                    const nextRawValues = {
+                        ...((target.__customFieldRawValues && typeof target.__customFieldRawValues === 'object' && !Array.isArray(target.__customFieldRawValues)) ? target.__customFieldRawValues : {})
+                    };
+                    Object.entries(value || {}).forEach(([fieldId, fieldValue]) => {
+                        const field = __tmGetCustomFieldDefMap().get(String(fieldId || '').trim());
+                        const normalized = __tmNormalizeCustomFieldValue(field, fieldValue);
+                        const serialized = __tmSerializeCustomFieldValue(field, normalized);
+                        if (Array.isArray(normalized)) {
+                            if (normalized.length) nextValues[fieldId] = normalized;
+                            else delete nextValues[fieldId];
+                        } else if (String(normalized || '').trim()) {
+                            nextValues[fieldId] = normalized;
+                        } else {
+                            delete nextValues[fieldId];
+                        }
+                        if (serialized) nextRawValues[fieldId] = serialized;
+                        else delete nextRawValues[fieldId];
+                    });
+                    target.customFieldValues = nextValues;
+                    target.__customFieldRawValues = nextRawValues;
+                };
+                applyCustomValues(task);
+                applyCustomValues(pending);
+                return;
+            }
             if (task && typeof task === 'object') task[key] = value;
             if (pending && typeof pending === 'object') pending[key] = value;
         });
@@ -26051,40 +26831,35 @@ async function __tmRefreshAfterWake(reason) {
             }] : [])
         ];
 
+    function __tmBuildTableHeaderCellHtml(colKey, tableLayout) {
+        const key = String(colKey || '').trim();
+        if (!key) return '';
+        const label = __tmResolveColumnLabel(key);
+        const escapedKey = key.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const align = (key === 'pinned' || key === 'score' || key === 'priority' || key === 'status')
+            ? 'text-align: center;'
+            : '';
+        const labelHtml = key === 'pinned'
+            ? __tmRenderInlineIcon('pin')
+            : esc(label || key);
+        return `<th data-col="${esc(key)}" title="${esc(label || key)}" oncontextmenu="tmShowColumnHeaderContextMenu(event, '${escapedKey}'); return false;" style="${tableLayout.cellStyle(key, `${align} white-space: nowrap; overflow: hidden;`)}">${labelHtml}<span class="tm-col-resize" onmousedown="startColResize(event, '${escapedKey}')"></span></th>`;
+    }
+
     const __tmRenderListBodyHtml = () => `
                 <div class="tm-list-pane">
                     <div class="tm-body tm-body--list${bodyAnimClass}">
                     <table class="tm-table" id="tmTaskTable" style="${(() => {
-                        const colOrder = SettingsStore.data.columnOrder || ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark'];
+                        const colOrder = SettingsStore.data.columnOrder || __tmGetDefaultColumnOrder();
                         const widths = SettingsStore.data.columnWidths || {};
                         return __tmGetTableWidthLayout(colOrder, widths, tableAvailableWidth).tableStyle;
                     })()}">
                         <thead>
                             <tr>
                                 ${(() => {
-                                    const colOrder = SettingsStore.data.columnOrder || ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark'];
+                                    const colOrder = SettingsStore.data.columnOrder || __tmGetDefaultColumnOrder();
                                     const widths = SettingsStore.data.columnWidths || {};
                                     const tableLayout = __tmGetTableWidthLayout(colOrder, widths, tableAvailableWidth);
-                                    const headers = {
-                                        pinned: `<th data-col="pinned" style="${tableLayout.cellStyle('pinned', 'text-align: center; white-space: nowrap; overflow: hidden;')}">${__tmRenderInlineIcon('pin')}<span class="tm-col-resize" onmousedown="startColResize(event, 'pinned')"></span></th>`,
-                                        content: `<th data-col="content" style="${tableLayout.cellStyle('content', 'white-space: nowrap; overflow: hidden;')}">任务内容<span class="tm-col-resize" onmousedown="startColResize(event, 'content')"></span></th>`,
-                                        score: `<th data-col="score" style="${tableLayout.cellStyle('score', 'text-align: center; white-space: nowrap; overflow: hidden;')}">优先级<span class="tm-col-resize" onmousedown="startColResize(event, 'score')"></span></th>`,
-                                        doc: `<th data-col="doc" style="${tableLayout.cellStyle('doc', 'white-space: nowrap; overflow: hidden;')}">文档<span class="tm-col-resize" onmousedown="startColResize(event, 'doc')"></span></th>`,
-                                        h2: (() => {
-                                            const level = SettingsStore.data.taskHeadingLevel || 'h2';
-                                            const labels = { h1: '一级标题', h2: '二级标题', h3: '三级标题', h4: '四级标题', h5: '五级标题', h6: '六级标题' };
-                                            const label = labels[level] || '标题';
-                                            return `<th data-col="h2" style="${tableLayout.cellStyle('h2', 'white-space: nowrap; overflow: hidden;')}">${label}<span class="tm-col-resize" onmousedown="startColResize(event, 'h2')"></span></th>`;
-                                        })(),
-                                        priority: `<th data-col="priority" style="${tableLayout.cellStyle('priority', 'text-align: center; white-space: nowrap; overflow: hidden;')}">重要性<span class="tm-col-resize" onmousedown="startColResize(event, 'priority')"></span></th>`,
-                                        startDate: `<th data-col="startDate" style="${tableLayout.cellStyle('startDate', 'white-space: nowrap; overflow: hidden;')}">开始日期<span class="tm-col-resize" onmousedown="startColResize(event, 'startDate')"></span></th>`,
-                                        completionTime: `<th data-col="completionTime" style="${tableLayout.cellStyle('completionTime', 'white-space: nowrap; overflow: hidden;')}">完成日期<span class="tm-col-resize" onmousedown="startColResize(event, 'completionTime')"></span></th>`,
-                                        duration: `<th data-col="duration" style="${tableLayout.cellStyle('duration', 'white-space: nowrap; overflow: hidden;')}">时长<span class="tm-col-resize" onmousedown="startColResize(event, 'duration')"></span></th>`,
-                                        spent: `<th data-col="spent" style="${tableLayout.cellStyle('spent', 'white-space: nowrap; overflow: hidden;')}">耗时<span class="tm-col-resize" onmousedown="startColResize(event, 'spent')"></span></th>`,
-                                        remark: `<th data-col="remark" style="${tableLayout.cellStyle('remark', 'white-space: nowrap; overflow: hidden;')}">备注<span class="tm-col-resize" onmousedown="startColResize(event, 'remark')"></span></th>`,
-                                        status: `<th data-col="status" style="${tableLayout.cellStyle('status', 'text-align: center; white-space: nowrap; overflow: hidden;')}">状态<span class="tm-col-resize" onmousedown="startColResize(event, 'status')"></span></th>`
-                                    };
-                                    return colOrder.map(col => headers[col] || '').join('');
+                                    return colOrder.map((col) => __tmBuildTableHeaderCellHtml(col, tableLayout)).join('');
                                 })()}
                             </tr>
                         </thead>
@@ -27115,9 +27890,16 @@ async function __tmRefreshAfterWake(reason) {
                 if (kanbanCardFields.has('status')) metaParts.push(statusChip);
                 if (kanbanCardFields.has('date')) metaParts.push(`<span class="tm-kanban-chip tm-kanban-chip--muted" onclick="tmKanbanPickDate('${id}', event)" title="点击选择日期">${esc(dateTxt || '日期')}</span>`);
                 const remarkHtml = kanbanCardFields.has('remark') ? __tmRenderTaskCardRemark(task) : '';
+                const cardDragAttrs = __tmIsRuntimeMobileClient()
+                    ? 'draggable="false"'
+                    : `draggable="true" ondragstart="tmKanbanDragStart(event, '${id}')" ondragend="tmKanbanDragEnd(event, '${id}')"`; 
+                const cardPointerDownAttr = `onpointerdown="tmKanbanCardPointerDown(event, '${id}')"`;
+                const cardContextMenuAttr = __tmIsRuntimeMobileClient()
+                    ? 'oncontextmenu="event.preventDefault();event.stopPropagation();return false;"'
+                    : `oncontextmenu="tmShowTaskContextMenu(event, '${id}')"`;
 
                 return `
-                    <div class="tm-kanban-card${isSub ? ' tm-kanban-card--sub' : ''}${isChildRoot ? ' tm-kanban-card--childroot' : ''}${isParent ? ' tm-kanban-card--parent' : ''}${task?.done ? ' tm-kanban-card--done' : ''}${remarkHtml ? ' tm-kanban-card--has-remark' : ''}" data-id="${id}" draggable="true" ondragstart="tmKanbanDragStart(event, '${id}')" ondragend="tmKanbanDragEnd(event, '${id}')" ondblclick="tmKanbanCardDblClick('${id}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${id}')" style="${isSub ? '' : ''}">
+                    <div class="tm-kanban-card${isSub ? ' tm-kanban-card--sub' : ''}${isChildRoot ? ' tm-kanban-card--childroot' : ''}${isParent ? ' tm-kanban-card--parent' : ''}${task?.done ? ' tm-kanban-card--done' : ''}${remarkHtml ? ' tm-kanban-card--has-remark' : ''}" data-id="${id}" ${cardDragAttrs} ${cardPointerDownAttr} ${cardContextMenuAttr} ondblclick="tmKanbanCardDblClick('${id}', event)" style="${isSub ? '' : ''}">
                         <div class="tm-kanban-card-top">
                             <div class="tm-kanban-card-head">
                                 ${toggleHtml || ''}
@@ -34451,26 +35233,7 @@ async function __tmRefreshAfterWake(reason) {
             })() : 0;
             state.tableAvailableWidth = tableAvailableWidth;
             const tableLayout = __tmGetTableWidthLayout(colOrder, widths, tableAvailableWidth);
-            const headers = {
-                pinned: `<th data-col="pinned" style="${tableLayout.cellStyle('pinned', 'text-align: center; white-space: nowrap; overflow: hidden;')}">${__tmRenderInlineIcon('pin')}<span class="tm-col-resize" onmousedown="startColResize(event, 'pinned')"></span></th>`,
-                content: `<th data-col="content" style="${tableLayout.cellStyle('content', 'white-space: nowrap; overflow: hidden;')}">任务内容<span class="tm-col-resize" onmousedown="startColResize(event, 'content')"></span></th>`,
-                score: `<th data-col="score" style="${tableLayout.cellStyle('score', 'text-align: center; white-space: nowrap; overflow: hidden;')}">优先级<span class="tm-col-resize" onmousedown="startColResize(event, 'score')"></span></th>`,
-                doc: `<th data-col="doc" style="${tableLayout.cellStyle('doc', 'white-space: nowrap; overflow: hidden;')}">文档<span class="tm-col-resize" onmousedown="startColResize(event, 'doc')"></span></th>`,
-                h2: (() => {
-                    const level = SettingsStore.data.taskHeadingLevel || 'h2';
-                    const labels = { h1: '一级标题', h2: '二级标题', h3: '三级标题', h4: '四级标题', h5: '五级标题', h6: '六级标题' };
-                    const label = labels[level] || '标题';
-                    return `<th data-col="h2" style="${tableLayout.cellStyle('h2', 'white-space: nowrap; overflow: hidden;')}">${label}<span class="tm-col-resize" onmousedown="startColResize(event, 'h2')"></span></th>`;
-                })(),
-                priority: `<th data-col="priority" style="${tableLayout.cellStyle('priority', 'text-align: center; white-space: nowrap; overflow: hidden;')}">重要性<span class="tm-col-resize" onmousedown="startColResize(event, 'priority')"></span></th>`,
-                startDate: `<th data-col="startDate" style="${tableLayout.cellStyle('startDate', 'white-space: nowrap; overflow: hidden;')}">开始日期<span class="tm-col-resize" onmousedown="startColResize(event, 'startDate')"></span></th>`,
-                completionTime: `<th data-col="completionTime" style="${tableLayout.cellStyle('completionTime', 'white-space: nowrap; overflow: hidden;')}">完成日期<span class="tm-col-resize" onmousedown="startColResize(event, 'completionTime')"></span></th>`,
-                duration: `<th data-col="duration" style="${tableLayout.cellStyle('duration', 'white-space: nowrap; overflow: hidden;')}">时长<span class="tm-col-resize" onmousedown="startColResize(event, 'duration')"></span></th>`,
-                spent: `<th data-col="spent" style="${tableLayout.cellStyle('spent', 'white-space: nowrap; overflow: hidden;')}">耗时<span class="tm-col-resize" onmousedown="startColResize(event, 'spent')"></span></th>`,
-                remark: `<th data-col="remark" style="${tableLayout.cellStyle('remark', 'white-space: nowrap; overflow: hidden;')}">备注<span class="tm-col-resize" onmousedown="startColResize(event, 'remark')"></span></th>`,
-                status: `<th data-col="status" style="${tableLayout.cellStyle('status', 'text-align: center; white-space: nowrap; overflow: hidden;')}">状态<span class="tm-col-resize" onmousedown="startColResize(event, 'status')"></span></th>`
-            };
-            const thead = colOrder.map(col => headers[col] || '').join('');
+            const thead = colOrder.map((col) => __tmBuildTableHeaderCellHtml(col, tableLayout)).join('');
             return `
                 <div class="tm-calendar-task-list" style="height:100%; display:flex; flex-direction:column;">
                     <table class="tm-table" id="tmTaskTable" data-tm-table="calendar" style="${tableLayout.tableStyle}">
@@ -35161,6 +35924,384 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
     };
 
+    function __tmIsKanbanTouchPointer(ev) {
+        const pType = String(ev?.pointerType || '').trim().toLowerCase();
+        return pType === 'touch' || pType === 'pen' || (!pType && __tmIsRuntimeMobileClient());
+    }
+
+    function __tmResolveKanbanPointTarget(x, y) {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+        try {
+            const el = document.elementFromPoint(x, y);
+            return el instanceof Element ? el : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function __tmApplyKanbanDragHoverFromTarget(target) {
+        __tmKanbanClearDragOver();
+        if (!(target instanceof Element)) return;
+        const groupHost = target.closest('.tm-kanban-group-title, .tm-kanban-group');
+        const groupTitle = groupHost?.classList?.contains?.('tm-kanban-group-title')
+            ? groupHost
+            : (groupHost?.querySelector?.('.tm-kanban-group-title') || null);
+        if (groupTitle instanceof Element) {
+            try { groupTitle.classList.add('tm-kanban-group-title--dragover'); } catch (e) {}
+            return;
+        }
+        const col = target.closest('.tm-kanban-col');
+        if (col instanceof Element) {
+            try { col.classList.add('tm-kanban-col--dragover'); } catch (e) {}
+        }
+    }
+
+    function __tmBuildKanbanTouchDragGhost(cardEl, x, y) {
+        if (!(cardEl instanceof HTMLElement)) return null;
+        const rect = cardEl.getBoundingClientRect();
+        const ghost = cardEl.cloneNode(true);
+        if (!(ghost instanceof HTMLElement)) return null;
+        ghost.removeAttribute('draggable');
+        ghost.classList.add('tm-kanban-card--dragging');
+        ghost.style.position = 'fixed';
+        ghost.style.left = '0';
+        ghost.style.top = '0';
+        ghost.style.margin = '0';
+        ghost.style.width = `${Math.max(180, Math.round(rect.width || cardEl.offsetWidth || 280))}px`;
+        ghost.style.maxWidth = ghost.style.width;
+        ghost.style.zIndex = '200030';
+        ghost.style.pointerEvents = 'none';
+        ghost.style.opacity = '0.96';
+        ghost.style.transform = `translate(${Math.round(rect.left)}px, ${Math.round(rect.top)}px)`;
+        ghost.style.boxShadow = '0 12px 30px rgba(0,0,0,0.18)';
+        ghost.style.contain = 'none';
+        ghost.style.contentVisibility = 'visible';
+        try { document.body.appendChild(ghost); } catch (e) { return null; }
+        return {
+            ghost,
+            offsetX: x - rect.left,
+            offsetY: y - rect.top,
+        };
+    }
+
+    function __tmPlaceKanbanTouchDragGhost(meta, x, y) {
+        if (!meta?.ghost || !Number.isFinite(x) || !Number.isFinite(y)) return;
+        const left = Math.round(x - (Number(meta.offsetX) || 0));
+        const top = Math.round(y - (Number(meta.offsetY) || 0));
+        try { meta.ghost.style.transform = `translate(${left}px, ${top}px)`; } catch (e) {}
+    }
+
+    function __tmStopKanbanMomentum() {
+        const rafId = Number(state.__tmKanbanMomentumRaf) || 0;
+        if (rafId) {
+            try { cancelAnimationFrame(rafId); } catch (e) {}
+        }
+        state.__tmKanbanMomentumRaf = 0;
+    }
+
+    function __tmStartKanbanMomentum(bodyEl, initialVelocity) {
+        if (!(bodyEl instanceof HTMLElement)) return;
+        __tmStopKanbanMomentum();
+        let velocity = Number(initialVelocity) || 0;
+        if (!Number.isFinite(velocity) || Math.abs(velocity) < 0.08) return;
+        const frictionPerFrame = 0.90;
+        const stopVelocity = 0.02;
+        let lastTs = 0;
+        const step = (ts) => {
+            const now = Number(ts) || Date.now();
+            if (!lastTs) {
+                lastTs = now;
+                state.__tmKanbanMomentumRaf = requestAnimationFrame(step);
+                return;
+            }
+            const dt = Math.max(8, Math.min(34, now - lastTs));
+            lastTs = now;
+            const prev = Number(bodyEl.scrollLeft || 0);
+            const maxLeft = Math.max(0, bodyEl.scrollWidth - bodyEl.clientWidth);
+            const next = Math.max(0, Math.min(maxLeft, prev + velocity * dt));
+            bodyEl.scrollLeft = next;
+            const hitEdge = (next <= 0 && velocity < 0) || (next >= maxLeft && velocity > 0) || Math.abs(next - prev) < 0.1;
+            velocity *= Math.pow(frictionPerFrame, dt / 16);
+            if (hitEdge || Math.abs(velocity) < stopVelocity) {
+                __tmStopKanbanMomentum();
+                return;
+            }
+            state.__tmKanbanMomentumRaf = requestAnimationFrame(step);
+        };
+        state.__tmKanbanMomentumRaf = requestAnimationFrame(step);
+    }
+
+    function __tmClearKanbanCardGesture() {
+        const cleanup = state.__tmKanbanCardGestureCleanup;
+        if (typeof cleanup !== 'function') return;
+        try { cleanup(); } catch (e) {}
+    }
+
+    window.tmKanbanCardPointerDown = function(ev, id) {
+        if (state.viewMode !== 'kanban') return;
+        if (!__tmIsKanbanTouchPointer(ev)) return;
+        if (ev && typeof ev.button === 'number' && ev.button !== 0) return;
+        const cardEl = ev?.currentTarget instanceof HTMLElement
+            ? ev.currentTarget
+            : (ev?.target instanceof Element ? ev.target.closest('.tm-kanban-card[data-id]') : null);
+        if (!(cardEl instanceof HTMLElement)) return;
+        const bodyEl = state.modal?.querySelector?.('.tm-body.tm-body--kanban');
+        if (!(bodyEl instanceof HTMLElement)) return;
+        const colBodyEl = cardEl.closest('.tm-kanban-col')?.querySelector?.('.tm-kanban-col-body');
+        const taskId = String(id || cardEl.getAttribute('data-id') || '').trim();
+        if (!taskId) return;
+
+        __tmClearKanbanCardGesture();
+        __tmStopKanbanMomentum();
+
+        const clamp0 = (n, min, max) => Math.max(min, Math.min(max, n));
+        const suppressClickMs = 260;
+        const panThreshold = 2;
+        const scrollThreshold = 4;
+        const axisLockRatio = 0.85;
+        const longPressMs = 420;
+        const longPressMoveTolerance = 8;
+        const pointerId = Number.isFinite(Number(ev?.pointerId)) ? Number(ev.pointerId) : null;
+        const startX = Number(ev?.clientX) || 0;
+        const startY = Number(ev?.clientY) || 0;
+        const baseScrollLeft = Number(bodyEl.scrollLeft || 0);
+        const baseColScrollTop = colBodyEl instanceof HTMLElement ? Number(colBodyEl.scrollTop || 0) : 0;
+        let lastX = startX;
+        let lastY = startY;
+        let mode = 'pending';
+        let ended = false;
+        let captured = false;
+        let longPressTimer = null;
+        let ghostMeta = null;
+        let colBodyUserSelectTouched = false;
+        let panVelocity = 0;
+        let lastPanScrollLeft = baseScrollLeft;
+        let lastPanTs = 0;
+
+        const samePointer = (e2) => {
+            if (!Number.isFinite(pointerId)) return true;
+            const cur = Number(e2?.pointerId);
+            if (!Number.isFinite(cur)) return true;
+            return cur === pointerId;
+        };
+
+        const getGestureTs = (e2) => {
+            const ts = Number(e2?.timeStamp);
+            return Number.isFinite(ts) && ts > 0 ? ts : Date.now();
+        };
+
+        const canPan = () => (bodyEl.scrollWidth - bodyEl.clientWidth) > 2;
+        const canScrollCol = () => (
+            colBodyEl instanceof HTMLElement
+            && (colBodyEl.scrollHeight - colBodyEl.clientHeight) > 2
+        );
+
+        const cancelLongPress = () => {
+            if (!longPressTimer) return;
+            try { clearTimeout(longPressTimer); } catch (e2) {}
+            longPressTimer = null;
+        };
+
+        const capturePointer = () => {
+            if (captured || !Number.isFinite(pointerId) || typeof cardEl.setPointerCapture !== 'function') return;
+            try {
+                cardEl.setPointerCapture(pointerId);
+                captured = true;
+            } catch (e2) {}
+        };
+
+        const setGestureActiveStyles = () => {
+            try { bodyEl.style.cursor = 'grabbing'; } catch (e2) {}
+            try { bodyEl.style.userSelect = 'none'; } catch (e2) {}
+            if (colBodyEl instanceof HTMLElement) {
+                try {
+                    colBodyEl.style.userSelect = 'none';
+                    colBodyUserSelectTouched = true;
+                } catch (e2) {}
+            }
+        };
+
+        const updateDragFeedback = (x, y) => {
+            if (mode !== 'drag') return;
+            __tmPlaceKanbanTouchDragGhost(ghostMeta, x, y);
+            let pointTarget = __tmResolveKanbanPointTarget(x, y);
+            try {
+                window.tmKanbanAutoScroll?.({
+                    preventDefault() {},
+                    clientX: x,
+                    clientY: y,
+                    target: pointTarget || cardEl,
+                });
+            } catch (e2) {}
+            pointTarget = __tmResolveKanbanPointTarget(x, y) || pointTarget;
+            __tmApplyKanbanDragHoverFromTarget(pointTarget);
+        };
+
+        capturePointer();
+
+        const startPan = () => {
+            if (mode !== 'pending' || ended) return;
+            mode = 'pan';
+            cancelLongPress();
+            panVelocity = 0;
+            lastPanScrollLeft = Number(bodyEl.scrollLeft || 0);
+            lastPanTs = 0;
+            setGestureActiveStyles();
+        };
+
+        const startScroll = () => {
+            if (mode !== 'pending' || ended) return;
+            mode = 'scroll';
+            cancelLongPress();
+            setGestureActiveStyles();
+        };
+
+        const startDrag = () => {
+            if (mode !== 'pending' || ended) return;
+            mode = 'drag';
+            cancelLongPress();
+            setGestureActiveStyles();
+            state.draggingTaskId = taskId;
+            state.__tmKanbanDragId = taskId;
+            state.__tmKanbanDragIds = [taskId];
+            try { __tmSetCalendarSideDockDragHidden(true); } catch (e2) {}
+            try { cardEl.classList.add('tm-kanban-card--dragging'); } catch (e2) {}
+            ghostMeta = __tmBuildKanbanTouchDragGhost(cardEl, lastX, lastY);
+            state.__tmKanbanPanSuppressClickUntil = Date.now() + suppressClickMs;
+            updateDragFeedback(lastX, lastY);
+        };
+
+        const finishDrag = () => {
+            if (mode !== 'drag') return;
+            const pointTarget = __tmResolveKanbanPointTarget(lastX, lastY);
+            const dropHost = pointTarget?.closest?.('.tm-kanban-group-title, .tm-kanban-group, .tm-kanban-col') || null;
+            if (!(dropHost instanceof Element)) return;
+            try {
+                const ret = window.tmKanbanDrop?.({
+                    preventDefault() {},
+                    stopPropagation() {},
+                    target: dropHost,
+                    dataTransfer: {
+                        dropEffect: 'move',
+                        getData(type) {
+                            const t = String(type || '').trim();
+                            if (t === 'text/plain' || t === 'application/x-tm-task-id') return taskId;
+                            return '';
+                        },
+                    },
+                });
+                if (ret && typeof ret.catch === 'function') ret.catch(() => null);
+            } catch (e2) {}
+        };
+
+        const cleanup = () => {
+            if (ended) return;
+            ended = true;
+            cancelLongPress();
+            try { document.removeEventListener('pointermove', onMove, true); } catch (e2) {}
+            try { document.removeEventListener('pointerup', onUp, true); } catch (e2) {}
+            try { document.removeEventListener('pointercancel', onUp, true); } catch (e2) {}
+            try { window.removeEventListener('blur', onUp, true); } catch (e2) {}
+            if (captured && Number.isFinite(pointerId) && typeof cardEl.releasePointerCapture === 'function') {
+                try { cardEl.releasePointerCapture(pointerId); } catch (e2) {}
+            }
+            if (ghostMeta?.ghost) {
+                try { ghostMeta.ghost.remove(); } catch (e2) {}
+            }
+            try { cardEl.classList.remove('tm-kanban-card--dragging'); } catch (e2) {}
+            try { __tmKanbanClearDragOver(); } catch (e2) {}
+            try { __tmSetCalendarSideDockDragHidden(false); } catch (e2) {}
+            if (String(state.draggingTaskId || '').trim() === taskId) state.draggingTaskId = '';
+            try { delete state.__tmKanbanDragId; } catch (e2) {}
+            try { delete state.__tmKanbanDragIds; } catch (e2) {}
+            if (mode === 'pan' || mode === 'scroll' || mode === 'drag') {
+                state.__tmKanbanPanSuppressClickUntil = Date.now() + suppressClickMs;
+            }
+            try { bodyEl.style.cursor = ''; } catch (e2) {}
+            try { bodyEl.style.userSelect = ''; } catch (e2) {}
+            if (colBodyUserSelectTouched && colBodyEl instanceof HTMLElement) {
+                try { colBodyEl.style.userSelect = ''; } catch (e2) {}
+            }
+            if (state.__tmKanbanCardGestureCleanup === cleanup) state.__tmKanbanCardGestureCleanup = null;
+        };
+
+        const onMove = (e2) => {
+            if (ended || !samePointer(e2)) return;
+            lastX = Number(e2?.clientX) || lastX;
+            lastY = Number(e2?.clientY) || lastY;
+            const dx = lastX - startX;
+            const dy = lastY - startY;
+            if (mode === 'drag') {
+                updateDragFeedback(lastX, lastY);
+                try { e2.preventDefault(); } catch (e3) {}
+                return;
+            }
+            if (mode === 'pan') {
+                const maxLeft = Math.max(0, bodyEl.scrollWidth - bodyEl.clientWidth);
+                const nextLeft = clamp0(baseScrollLeft - dx, 0, maxLeft);
+                bodyEl.scrollLeft = nextLeft;
+                const nowTs = getGestureTs(e2);
+                if (lastPanTs > 0) {
+                    const dt = Math.max(1, Math.min(48, nowTs - lastPanTs));
+                    panVelocity = (nextLeft - lastPanScrollLeft) / dt;
+                }
+                lastPanTs = nowTs;
+                lastPanScrollLeft = nextLeft;
+                try { e2.preventDefault(); } catch (e3) {}
+                return;
+            }
+            if (mode === 'scroll') {
+                if (!(colBodyEl instanceof HTMLElement)) return;
+                const maxTop = Math.max(0, colBodyEl.scrollHeight - colBodyEl.clientHeight);
+                colBodyEl.scrollTop = clamp0(baseColScrollTop - dy, 0, maxTop);
+                try { e2.preventDefault(); } catch (e3) {}
+                return;
+            }
+            const absX = Math.abs(dx);
+            const absY = Math.abs(dy);
+            const horizontalIntent = absX >= panThreshold && (absY <= 0.5 || absX >= (absY * axisLockRatio));
+            const verticalIntent = absY >= scrollThreshold && (absX <= 0.5 || absY >= (absX * axisLockRatio));
+            if (horizontalIntent && canPan()) {
+                startPan();
+                const maxLeft = Math.max(0, bodyEl.scrollWidth - bodyEl.clientWidth);
+                const nextLeft = clamp0(baseScrollLeft - dx, 0, maxLeft);
+                bodyEl.scrollLeft = nextLeft;
+                lastPanTs = getGestureTs(e2);
+                lastPanScrollLeft = nextLeft;
+                try { e2.preventDefault(); } catch (e3) {}
+                return;
+            }
+            if (verticalIntent && canScrollCol()) {
+                startScroll();
+                if (colBodyEl instanceof HTMLElement) {
+                    const maxTop = Math.max(0, colBodyEl.scrollHeight - colBodyEl.clientHeight);
+                    colBodyEl.scrollTop = clamp0(baseColScrollTop - dy, 0, maxTop);
+                }
+                try { e2.preventDefault(); } catch (e3) {}
+                return;
+            }
+            if ((dx * dx + dy * dy) >= (longPressMoveTolerance * longPressMoveTolerance)) {
+                cancelLongPress();
+            }
+        };
+
+        const onUp = (e2) => {
+            if (!samePointer(e2)) return;
+            const finalMode = mode;
+            const finalPanVelocity = panVelocity;
+            if (mode === 'drag') finishDrag();
+            cleanup();
+            if (finalMode === 'pan') __tmStartKanbanMomentum(bodyEl, finalPanVelocity);
+        };
+
+        longPressTimer = setTimeout(() => startDrag(), longPressMs);
+        state.__tmKanbanCardGestureCleanup = cleanup;
+        try { document.addEventListener('pointermove', onMove, true); } catch (e2) {}
+        try { document.addEventListener('pointerup', onUp, true); } catch (e2) {}
+        try { document.addEventListener('pointercancel', onUp, true); } catch (e2) {}
+        try { window.addEventListener('blur', onUp, true); } catch (e2) {}
+    };
+
     function __tmBindKanbanPan(modalEl) {
         const modal = modalEl instanceof Element ? modalEl : state.modal;
         if (!modal) return;
@@ -35169,32 +36310,51 @@ async function __tmRefreshAfterWake(reason) {
         if (String(bodyEl.dataset?.tmKanbanPanBound || '') === '1') return;
         bodyEl.dataset.tmKanbanPanBound = '1';
         const clamp0 = (n, min, max) => Math.max(min, Math.min(max, n));
+        const suppressClickMs = 260;
+
+        const onPanClickCapture = (ev) => {
+            if (Number(state.__tmKanbanPanSuppressClickUntil || 0) <= Date.now()) return;
+            state.__tmKanbanPanSuppressClickUntil = 0;
+            try { ev.preventDefault(); } catch (e) {}
+            try { ev.stopPropagation(); } catch (e) {}
+        };
 
         const onPanPointerDown = (e) => {
             const target = e?.target;
             if (!(target instanceof Element)) return;
             if (e && typeof e.button === 'number' && e.button !== 0) return;
-            if (target.closest('input,button,select,textarea,a')) return;
-            if (target.closest('.tm-kanban-card,.tm-kanban-chip,.tm-status-tag,.tm-priority-jira,.tm-kanban-priority-chip,.tm-kanban-more,.tm-kanban-toggle,.tm-task-checkbox,.tm-task-content-clickable')) return;
+            if (target.closest('.tm-kanban-card')) return;
+            if (target.closest('input,button,select,textarea,a,[contenteditable="true"]')) return;
             if ((bodyEl.scrollWidth - bodyEl.clientWidth) <= 2) return;
+            __tmClearKanbanCardGesture();
+            __tmStopKanbanMomentum();
 
             const startX = e.clientX;
             const startY = e.clientY;
             const baseScrollLeft = bodyEl.scrollLeft;
             let active = false;
             let ended = false;
-            let winMoveBound = false;
+            let captured = false;
+            let panVelocity = 0;
+            let lastPanScrollLeft = baseScrollLeft;
+            let lastPanTs = 0;
             const threshold = 6;
+            const getGestureTs = (ev) => {
+                const ts = Number(ev?.timeStamp);
+                return Number.isFinite(ts) && ts > 0 ? ts : Date.now();
+            };
 
             const cleanup = () => {
                 if (ended) return;
                 ended = true;
-                if (winMoveBound) {
-                    try { window.removeEventListener('pointermove', onWinMove, true); } catch (e2) {}
-                    try { window.removeEventListener('pointerup', onWinUp, true); } catch (e2) {}
-                    try { window.removeEventListener('pointercancel', onWinUp, true); } catch (e2) {}
-                    try { window.removeEventListener('blur', onWinUp, true); } catch (e2) {}
+                try { window.removeEventListener('pointermove', onWinMove, true); } catch (e2) {}
+                try { window.removeEventListener('pointerup', onWinUp, true); } catch (e2) {}
+                try { window.removeEventListener('pointercancel', onWinUp, true); } catch (e2) {}
+                try { window.removeEventListener('blur', onWinUp, true); } catch (e2) {}
+                if (captured && Number.isFinite(Number(e?.pointerId)) && typeof bodyEl.releasePointerCapture === 'function') {
+                    try { bodyEl.releasePointerCapture(e.pointerId); } catch (e2) {}
                 }
+                if (active) state.__tmKanbanPanSuppressClickUntil = Date.now() + suppressClickMs;
                 try { bodyEl.style.cursor = ''; } catch (e2) {}
                 try { bodyEl.style.userSelect = ''; } catch (e2) {}
             };
@@ -35207,18 +36367,35 @@ async function __tmRefreshAfterWake(reason) {
                     if (Math.abs(dx) < threshold) return;
                     if (Math.abs(dx) <= Math.abs(dy)) return;
                     active = true;
-                    try { bodyEl.setPointerCapture?.(e.pointerId); } catch (e2) {}
+                    if (Number.isFinite(Number(e?.pointerId)) && typeof bodyEl.setPointerCapture === 'function') {
+                        try {
+                            bodyEl.setPointerCapture(e.pointerId);
+                            captured = true;
+                        } catch (e2) {}
+                    }
                     try { bodyEl.style.cursor = 'grabbing'; } catch (e2) {}
                     try { bodyEl.style.userSelect = 'none'; } catch (e2) {}
                 }
                 const maxLeft = Math.max(0, bodyEl.scrollWidth - bodyEl.clientWidth);
-                bodyEl.scrollLeft = clamp0(baseScrollLeft - dx, 0, maxLeft);
+                const nextLeft = clamp0(baseScrollLeft - dx, 0, maxLeft);
+                bodyEl.scrollLeft = nextLeft;
+                const nowTs = getGestureTs(ev);
+                if (lastPanTs > 0) {
+                    const dt = Math.max(1, Math.min(48, nowTs - lastPanTs));
+                    panVelocity = (nextLeft - lastPanScrollLeft) / dt;
+                }
+                lastPanTs = nowTs;
+                lastPanScrollLeft = nextLeft;
                 try { ev.preventDefault(); } catch (e2) {}
             };
 
-            const onWinUp = () => cleanup();
+            const onWinUp = () => {
+                const shouldMomentum = active;
+                const finalPanVelocity = panVelocity;
+                cleanup();
+                if (shouldMomentum) __tmStartKanbanMomentum(bodyEl, finalPanVelocity);
+            };
 
-            winMoveBound = true;
             window.addEventListener('pointermove', onWinMove, true);
             window.addEventListener('pointerup', onWinUp, true);
             window.addEventListener('pointercancel', onWinUp, true);
@@ -35226,6 +36403,7 @@ async function __tmRefreshAfterWake(reason) {
         };
 
         bodyEl.addEventListener('pointerdown', onPanPointerDown, { passive: false });
+        bodyEl.addEventListener('click', onPanClickCapture, true);
     }
 
     async function __tmKanbanMoveIdsToStatus(taskIds, targetStatus, options) {
@@ -35336,6 +36514,29 @@ async function __tmRefreshAfterWake(reason) {
             }
             return true;
         };
+        const isSameDocTask = (task, docId) => {
+            if (!task || !docId) return false;
+            return String(task?.root_id || task?.docId || '').trim() === String(docId || '').trim();
+        };
+        const isNoHeadingTarget = (headingId) => {
+            const hid = String(headingId || '').trim();
+            return !hid || hid === '__none__';
+        };
+        const isKanbanDropNoopForTask = (task, dropKind, docId, headingId) => {
+            if (!task || !dropKind) return false;
+            if (dropKind === 'doc') {
+                return isSameDocTask(task, docId);
+            }
+            if (dropKind === 'doc-top') {
+                return isSameDocTask(task, docId) && !__tmTaskHasResolvedHeading(task);
+            }
+            if (dropKind === 'heading') {
+                if (!isSameDocTask(task, docId)) return false;
+                if (isNoHeadingTarget(headingId)) return !__tmTaskHasResolvedHeading(task);
+                return String(task?.h2Id || '').trim() === String(headingId || '').trim();
+            }
+            return false;
+        };
         if (kind === 'status') {
             if (!st) return;
             let ids = baseIds.slice();
@@ -35356,10 +36557,12 @@ async function __tmRefreshAfterWake(reason) {
         }
         if (kind === 'doc') {
             if (!targetDocId || targetDocId === '__unknown__') return;
+            const ids = baseIds.filter((tid) => !isKanbanDropNoopForTask(state.flatTasks?.[String(tid || '').trim()], kind, targetDocId, targetHeadingId));
+            if (!ids.length) return;
             try {
-                const ok = await restoreIdsFromDoneBoard(baseIds);
+                const ok = await restoreIdsFromDoneBoard(ids);
                 if (!ok) return;
-                for (const tid of baseIds.slice().reverse()) {
+                for (const tid of ids.slice().reverse()) {
                     await __tmQueueMoveTask(tid, { targetDocId, mode: 'docTop' });
                 }
             } catch (e) {
@@ -35372,10 +36575,12 @@ async function __tmRefreshAfterWake(reason) {
         // 处理 doc-top 情况：移动到文档顶部（无二级标题）
         if (kind === 'doc-top') {
             if (!targetDocId || targetDocId === '__unknown__') return;
+            const ids = baseIds.filter((tid) => !isKanbanDropNoopForTask(state.flatTasks?.[String(tid || '').trim()], kind, targetDocId, targetHeadingId));
+            if (!ids.length) return;
             try {
-                const ok = await restoreIdsFromDoneBoard(baseIds);
+                const ok = await restoreIdsFromDoneBoard(ids);
                 if (!ok) return;
-                for (const tid of baseIds.slice().reverse()) {
+                for (const tid of ids.slice().reverse()) {
                     await __tmQueueMoveTask(tid, { targetDocId, mode: 'docTop' });
                 }
             } catch (e) {
@@ -35387,14 +36592,16 @@ async function __tmRefreshAfterWake(reason) {
         }
         if (kind === 'heading') {
             if (!targetDocId) return;
+            const ids = baseIds.filter((tid) => !isKanbanDropNoopForTask(state.flatTasks?.[String(tid || '').trim()], kind, targetDocId, targetHeadingId));
+            if (!ids.length) return;
             
             // 只移动最顶层的任务（父任务），子任务会自动跟随父任务移动
             // 不需要单独移动子任务，否则会破坏父子关系
             
             try {
-                const ok = await restoreIdsFromDoneBoard(baseIds);
+                const ok = await restoreIdsFromDoneBoard(ids);
                 if (!ok) return;
-                for (const tid of baseIds.reverse()) {
+                for (const tid of ids.slice().reverse()) {
                     if (targetHeadingId && targetHeadingId !== '__none__') {
                         await __tmQueueMoveTask(tid, { targetDocId, headingId: targetHeadingId, mode: 'heading' });
                     } else {
@@ -36667,6 +37874,11 @@ async function __tmRefreshAfterWake(reason) {
         task.bookmark = isValidValue(task.bookmark) ? String(task.bookmark) : '';
         task.tomatoMinutes = isValidValue(task.tomatoMinutes) ? String(task.tomatoMinutes) : (isValidValue(task.tomato_minutes) ? String(task.tomato_minutes) : '');
         task.tomatoHours = isValidValue(task.tomatoHours) ? String(task.tomatoHours) : (isValidValue(task.tomato_hours) ? String(task.tomato_hours) : '');
+        const rawCustomFieldValues = (task.__customFieldRawValues && typeof task.__customFieldRawValues === 'object' && !Array.isArray(task.__customFieldRawValues))
+            ? task.__customFieldRawValues
+            : ((task.customFieldValues && typeof task.customFieldValues === 'object' && !Array.isArray(task.customFieldValues))
+                ? task.customFieldValues
+                : {});
         const pin0 = task.custom_pinned ?? task.customPinned ?? task.pinned ?? '';
         if (typeof pin0 === 'boolean') {
             task.pinned = pin0;
@@ -36705,6 +37917,8 @@ async function __tmRefreshAfterWake(reason) {
                 task.done = doneRaw === true || doneRaw === 1 || String(doneRaw || '').trim().toLowerCase() === 'true' || String(doneRaw || '').trim() === '1';
             }
         }
+        task.customFieldValues = __tmNormalizeTaskCustomFieldValues(rawCustomFieldValues, meta?.customFieldValues);
+        try { __tmMaybeBackfillTaskCustomFieldAttrs(task, meta); } catch (e) {}
 
         task.docName = task.docName || task.doc_name || docNameFallback || '未知文档';
         task.parentTaskId = task.parentTaskId || task.parent_task_id || null;
@@ -37392,8 +38606,8 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     function __tmGetTableWidthLayout(columnOrder, widthMap, availableWidth = 0) {
-        const defaultOrder = ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark'];
-        const defaultWidths = { pinned: 48, content: 360, status: 96, score: 96, doc: 180, h2: 180, priority: 96, startDate: 90, completionTime: 170, duration: 96, spent: 96, remark: 240 };
+        const defaultOrder = __tmGetDefaultColumnOrder();
+        const defaultWidths = __tmGetColumnWidthDefaults();
         const order = Array.isArray(columnOrder) ? columnOrder.filter((col) => Object.prototype.hasOwnProperty.call(defaultWidths, col)) : defaultOrder;
         const baseWidths = {};
         let total = 0;
@@ -40396,12 +41610,31 @@ async function __tmRefreshAfterWake(reason) {
             || __tmDocHasAnyHeading(docId);
         const children = Array.isArray(task?.children) ? task.children : [];
         const completedChildren = children.filter((child) => child?.done).length;
+        const customFieldDefs = __tmGetCustomFieldDefs();
         const priorityOptions = [
             { value: '', label: '无' },
             { value: 'low', label: '低' },
             { value: 'medium', label: '中' },
             { value: 'high', label: '高' },
         ];
+        const customFieldsHtml = customFieldDefs.length
+            ? `
+                <div class="tm-task-detail-custom-fields">
+                    ${customFieldDefs.map((field) => {
+                        const fieldId = String(field?.id || '').trim();
+                        if (!fieldId) return '';
+                        return `
+                            <div class="tm-task-detail-custom-field">
+                                <span class="tm-task-detail-custom-field-label">${esc(String(field?.name || fieldId).trim() || fieldId)}</span>
+                                <button type="button" class="tm-task-detail-custom-field-btn" data-tm-custom-field-anchor data-tm-detail-custom-field="${esc(fieldId)}">
+                                    <span class="tm-task-detail-custom-field-value">${__tmBuildCustomFieldTagsHtml(field, __tmGetTaskCustomFieldValue(task, fieldId), { emptyText: '未设置', maxTags: String(field?.type || '').trim() === 'multi' ? 3 : 1 })}</span>
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `
+            : '';
         const locationHtml = (docName || showHeadingLocation)
             ? `
                 <div class="tm-task-detail-location">
@@ -40476,6 +41709,7 @@ async function __tmRefreshAfterWake(reason) {
                             <span class="tm-task-detail-core-chip__face" data-tm-detail-chip-face="pinned">${__tmBuildTaskDetailCoreChipFace('pinned', curPinned ? '1' : '')}</span>
                         </button>
                     </div>
+                    ${customFieldsHtml}
                 </div>
 
                 <section class="tm-task-detail-section tm-task-detail-section--subtasks">
@@ -40776,7 +42010,25 @@ async function __tmRefreshAfterWake(reason) {
                     syncMetaChipFaces();
                     break;
                 default:
-                    handled = false;
+                    {
+                        const customField = __tmGetCustomFieldDefByAttrStorageKey(key);
+                        const customFieldId = String(customField?.id || '').trim();
+                        if (customField) {
+                            __tmApplyTaskCustomFieldValueLocally(nextTask, customField, value);
+                            nextTask = __tmCacheTaskInState(nextTask, {
+                                docNameFallback: nextTask.doc_name || nextTask.docName || '未命名文档'
+                            }) || nextTask;
+                            const valueWrap = root.querySelector(`[data-tm-detail-custom-field="${customFieldId}"] .tm-task-detail-custom-field-value`);
+                            if (valueWrap instanceof HTMLElement) {
+                                valueWrap.innerHTML = __tmBuildCustomFieldTagsHtml(customField, __tmGetTaskCustomFieldValue(nextTask, customFieldId), {
+                                    emptyText: '未设置',
+                                    maxTags: String(customField?.type || '').trim() === 'multi' ? 3 : 1
+                                });
+                            }
+                            break;
+                        }
+                        handled = false;
+                    }
                     break;
             }
             if (!handled) return false;
@@ -41338,6 +42590,30 @@ async function __tmRefreshAfterWake(reason) {
                 });
             });
         };
+        const bindCustomFieldEditors = () => {
+            root.querySelectorAll('[data-tm-detail-custom-field]').forEach((button) => {
+                if (!(button instanceof HTMLButtonElement)) return;
+                on(button, 'click', (ev) => {
+                    try { ev.preventDefault(); } catch (e) {}
+                    try { ev.stopPropagation(); } catch (e) {}
+                    const fieldId = String(button.getAttribute('data-tm-detail-custom-field') || '').trim();
+                    const currentTask = getBoundTask();
+                    const currentTaskId = String(currentTask?.id || taskId || '').trim();
+                    if (!fieldId || !currentTaskId) return;
+                    window.tmOpenCustomFieldSelect(currentTaskId, fieldId, ev, button, {
+                        refresh: false,
+                        onAfterSave: () => {
+                            if (embedded) {
+                                refreshBoundDetail(currentTaskId);
+                                return;
+                            }
+                            try { __tmRefreshMainViewInPlace({ withFilters: true }); } catch (e) {}
+                            refreshBoundDetail(currentTaskId);
+                        }
+                    });
+                });
+            });
+        };
         const bindStatusSelect = () => {
             const selectRoot = root.querySelector('[data-tm-detail-status-select]');
             if (!(selectRoot instanceof HTMLElement)) return;
@@ -41580,6 +42856,7 @@ async function __tmRefreshAfterWake(reason) {
         bindStatusSelect();
         bindPrioritySelect();
         bindCoreMetaControls();
+        bindCustomFieldEditors();
         bindSubtaskEditors();
         try { __tmBindFloatingTooltips(root); } catch (e) {}
         on(window, 'tm-task-attr-updated', async (ev) => {
@@ -42070,9 +43347,8 @@ async function __tmRefreshAfterWake(reason) {
             const toggle = hasChildren
                 ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${task.id}', event)"><svg class="tm-tree-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
                 : '';
-            const colOrder = SettingsStore.data.columnOrder || ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark'];
+            const colOrder = SettingsStore.data.columnOrder || __tmGetDefaultColumnOrder();
             const tableLayout = __tmGetTableWidthLayout(colOrder, SettingsStore.data.columnWidths || {}, Number(state.tableAvailableWidth) || 0);
-            const widths = tableLayout.widths;
 
             const cells = {
                 pinned: () => `
@@ -42150,6 +43426,22 @@ async function __tmRefreshAfterWake(reason) {
                      `;
                 }
             };
+            __tmGetCustomFieldDefs().forEach((field) => {
+                const fieldId = String(field?.id || '').trim();
+                const colKey = __tmBuildCustomFieldColumnKey(fieldId);
+                if (!fieldId || !colKey) return;
+                cells[colKey] = () => {
+                    const tagsHtml = __tmBuildCustomFieldTagsHtml(field, __tmGetTaskCustomFieldValue(task, fieldId), {
+                        allowEmpty: false,
+                        maxTags: String(field?.type || '').trim() === 'multi' ? 2 : 1,
+                    });
+                    return `
+                        <td class="tm-cell-editable tm-task-meta-cell" style="${tableLayout.cellStyle(colKey)}" onclick="tmOpenCustomFieldSelect('${task.id}', '${fieldId}', event, this)">
+                            <div class="tm-custom-field-cell">${tagsHtml}</div>
+                        </td>
+                    `;
+                };
+            });
 
             const tomatoFocusTaskId = SettingsStore.data.enableTomatoIntegration ? String(state.timerFocusTaskId || '').trim() : '';
             const tomatoFocusModeEnabled = __tmIsTomatoFocusModeEnabled();
@@ -42859,6 +44151,10 @@ async function __tmRefreshAfterWake(reason) {
         if (!task.remark && saved.remark) task.remark = saved.remark;
         if (!task.completionTime && saved.completionTime) task.completionTime = saved.completionTime;
         if (!task.customTime && saved.customTime) task.customTime = saved.customTime;
+        if (saved.customFieldValues && typeof saved.customFieldValues === 'object') {
+            const current = (task.customFieldValues && typeof task.customFieldValues === 'object') ? task.customFieldValues : {};
+            task.customFieldValues = __tmNormalizeTaskCustomFieldValues(current, saved.customFieldValues);
+        }
 
         return task;
     }
@@ -43872,6 +45168,229 @@ async function __tmRefreshAfterWake(reason) {
             
             editor.appendChild(wrap);
         });
+    };
+
+    function __tmApplyTaskCustomFieldValueLocally(task, field, nextValue) {
+        if (!(task && typeof task === 'object')) return;
+        const def = (field && typeof field === 'object') ? field : {};
+        const fieldId = String(def.id || '').trim();
+        if (!fieldId) return;
+        const normalized = __tmNormalizeCustomFieldValue(def, nextValue);
+        const serialized = __tmSerializeCustomFieldValue(def, normalized);
+        const nextValues = {
+            ...((task.customFieldValues && typeof task.customFieldValues === 'object' && !Array.isArray(task.customFieldValues)) ? task.customFieldValues : {})
+        };
+        const nextRawValues = {
+            ...((task.__customFieldRawValues && typeof task.__customFieldRawValues === 'object' && !Array.isArray(task.__customFieldRawValues)) ? task.__customFieldRawValues : {})
+        };
+        if (Array.isArray(normalized)) {
+            if (normalized.length) nextValues[fieldId] = normalized;
+            else delete nextValues[fieldId];
+        } else if (String(normalized || '').trim()) {
+            nextValues[fieldId] = normalized;
+        } else {
+            delete nextValues[fieldId];
+        }
+        if (serialized) nextRawValues[fieldId] = serialized;
+        else delete nextRawValues[fieldId];
+        task.customFieldValues = nextValues;
+        task.__customFieldRawValues = nextRawValues;
+    }
+
+    async function __tmPersistTaskCustomFieldValue(taskId, fieldId, nextValue, options = {}) {
+        const tid = String(taskId || '').trim();
+        const fid = String(fieldId || '').trim();
+        const task = state.flatTasks?.[tid];
+        const field = __tmGetCustomFieldDefMap().get(fid);
+        if (!tid || !task || !field) return false;
+        const normalized = __tmNormalizeCustomFieldValue(field, nextValue);
+        const prevValueRaw = __tmGetTaskCustomFieldValue(task, fid);
+        const prevValue = __tmNormalizeCustomFieldValue(field, Array.isArray(prevValueRaw) ? [...prevValueRaw] : prevValueRaw);
+        __tmApplyTaskCustomFieldValueLocally(task, field, normalized);
+        try {
+            const pending = state.pendingInsertedTasks?.[tid];
+            if (pending && typeof pending === 'object') __tmApplyTaskCustomFieldValueLocally(pending, field, normalized);
+        } catch (e) {}
+        try { MetaStore.set(tid, { customFieldValues: { [fid]: normalized } }); } catch (e) {}
+        const opts = (options && typeof options === 'object') ? options : {};
+        try {
+            await __tmPersistMetaAndAttrsAsync(tid, { customFieldValues: { [fid]: normalized } }, {
+                queued: false,
+                skipFlush: false,
+                touchMetaStore: false,
+            });
+        } catch (e) {
+            try { __tmApplyTaskCustomFieldValueLocally(task, field, prevValue); } catch (err) {}
+            try {
+                const pending = state.pendingInsertedTasks?.[tid];
+                if (pending && typeof pending === 'object') __tmApplyTaskCustomFieldValueLocally(pending, field, prevValue);
+            } catch (err) {}
+            try { MetaStore.set(tid, { customFieldValues: { [fid]: prevValue } }); } catch (err) {}
+            throw e;
+        }
+        if (typeof opts.onAfterSave === 'function') {
+            try { opts.onAfterSave(normalized, field); } catch (e) {}
+        } else if (opts.refresh !== false) {
+            try { __tmRefreshMainViewInPlace({ withFilters: opts.withFilters !== false }); } catch (e) {}
+        }
+        return true;
+    }
+
+    function __tmOpenCustomFieldInlineEditor(taskId, fieldId, anchorEl, options = {}) {
+        const tid = String(taskId || '').trim();
+        const fid = String(fieldId || '').trim();
+        const field = __tmGetCustomFieldDefMap().get(fid);
+        const task = state.flatTasks?.[tid];
+        if (!(anchorEl instanceof Element) || !field || !task) return;
+        const selected = __tmNormalizeCustomFieldValue(field, __tmGetTaskCustomFieldValue(task, fid));
+        const isMulti = String(field.type || '').trim() === 'multi';
+        __tmOpenInlineEditor(anchorEl, ({ editor, close }) => {
+            const viewportWidth = Math.max(240, window.innerWidth || document.documentElement.clientWidth || 0);
+            const minEditorWidth = isMulti ? 112 : 96;
+            const maxEditorWidth = Math.max(minEditorWidth, Math.min(420, viewportWidth - 24));
+            editor.style.minWidth = '0';
+            editor.style.width = 'auto';
+            editor.style.maxWidth = `${maxEditorWidth}px`;
+            editor.style.padding = '8px';
+            const wrap = document.createElement('div');
+            wrap.style.display = 'inline-flex';
+            wrap.style.flexDirection = 'column';
+            wrap.style.gap = '6px';
+            wrap.style.alignItems = 'flex-start';
+            wrap.style.width = 'auto';
+            wrap.style.maxWidth = '100%';
+
+            const title = document.createElement('div');
+            title.style.fontSize = '12px';
+            title.style.color = 'var(--tm-secondary-text)';
+            title.style.maxWidth = '100%';
+            title.style.whiteSpace = 'nowrap';
+            title.style.overflow = 'hidden';
+            title.style.textOverflow = 'ellipsis';
+            title.textContent = String(field.name || field.id || '自定义列').trim() || '自定义列';
+            wrap.appendChild(title);
+
+            const list = document.createElement('div');
+            list.style.display = 'inline-flex';
+            list.style.flexDirection = 'column';
+            list.style.gap = '4px';
+            list.style.alignItems = 'flex-start';
+            list.style.width = 'auto';
+            list.style.maxWidth = '100%';
+            wrap.appendChild(list);
+
+            let actions = null;
+            const syncEditorWidth = () => {
+                try {
+                    editor.style.width = 'auto';
+                    const naturalWidth = Math.max(
+                        minEditorWidth,
+                        Math.ceil(title.scrollWidth || 0),
+                        Math.ceil(list.scrollWidth || 0),
+                        Math.ceil(actions?.scrollWidth || 0)
+                    );
+                    editor.style.width = `${Math.min(maxEditorWidth, naturalWidth)}px`;
+                } catch (e) {}
+            };
+
+            const draft = new Set(Array.isArray(selected) ? selected : (String(selected || '').trim() ? [String(selected || '').trim()] : []));
+            const renderOptions = () => {
+                list.innerHTML = '';
+                const optionsList = Array.isArray(field.options) ? field.options : [];
+                if (!optionsList.length) {
+                    const empty = document.createElement('div');
+                    empty.style.fontSize = '12px';
+                    empty.style.color = 'var(--tm-secondary-text)';
+                    empty.textContent = '当前字段还没有配置选项';
+                    list.appendChild(empty);
+                    return;
+                }
+                optionsList.forEach((opt) => {
+                    const optionId = String(opt?.id || '').trim();
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'tm-status-option-btn';
+                    button.style.fontSize = '12px';
+                    button.style.textAlign = 'left';
+                    button.style.width = 'fit-content';
+                    button.style.maxWidth = '100%';
+                    button.setAttribute('data-selected', draft.has(optionId) ? 'true' : 'false');
+                    const chip = document.createElement('span');
+                    chip.className = 'tm-status-tag';
+                    chip.style.cssText = __tmBuildStatusChipStyle(opt?.color || '#9ca3af');
+                    chip.textContent = String(opt?.name || optionId || '').trim() || optionId;
+                    if (draft.has(optionId)) chip.textContent += isMulti ? '  ✓' : '';
+                    button.appendChild(chip);
+                    button.onclick = async () => {
+                        if (isMulti) {
+                            if (draft.has(optionId)) draft.delete(optionId);
+                            else draft.add(optionId);
+                            renderOptions();
+                            return;
+                        }
+                        try {
+                            await __tmPersistTaskCustomFieldValue(tid, fid, optionId, options);
+                            close();
+                        } catch (e) {
+                            hint(`❌ 更新失败: ${e.message}`, 'error');
+                        }
+                    };
+                    list.appendChild(button);
+                });
+                syncEditorWidth();
+            };
+            renderOptions();
+
+            actions = document.createElement('div');
+            actions.className = 'tm-inline-editor-actions';
+            actions.style.display = 'inline-flex';
+            actions.style.justifyContent = 'flex-start';
+            actions.style.width = 'auto';
+            actions.style.alignSelf = 'flex-start';
+            const clearBtn = document.createElement('button');
+            clearBtn.type = 'button';
+            clearBtn.className = 'tm-btn tm-btn-secondary';
+            clearBtn.style.padding = '6px 10px';
+            clearBtn.textContent = '清空';
+            clearBtn.onclick = async () => {
+                try {
+                    await __tmPersistTaskCustomFieldValue(tid, fid, isMulti ? [] : '', options);
+                    close();
+                } catch (e) {
+                    hint(`❌ 更新失败: ${e.message}`, 'error');
+                }
+            };
+            actions.appendChild(clearBtn);
+            if (isMulti) {
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.className = 'tm-btn tm-btn-primary';
+                saveBtn.style.padding = '6px 10px';
+                saveBtn.textContent = '确定';
+                saveBtn.onclick = async () => {
+                    try {
+                        await __tmPersistTaskCustomFieldValue(tid, fid, Array.from(draft), options);
+                        close();
+                    } catch (e) {
+                        hint(`❌ 更新失败: ${e.message}`, 'error');
+                    }
+                };
+                actions.appendChild(saveBtn);
+            }
+            wrap.appendChild(actions);
+            editor.appendChild(wrap);
+            syncEditorWidth();
+        });
+    }
+
+    window.tmOpenCustomFieldSelect = function(id, fieldId, ev, anchorEl = null, options = {}) {
+        try {
+            ev?.stopPropagation?.();
+            ev?.preventDefault?.();
+        } catch (e) {}
+        const anchor = anchorEl instanceof Element ? anchorEl : ev?.target?.closest?.('td,button,[data-tm-custom-field-anchor]');
+        if (!(anchor instanceof Element)) return;
+        __tmOpenCustomFieldInlineEditor(id, fieldId, anchor, options);
     };
 
     window.tmKanbanOpenStatusSelect = function(id, el, ev) {
@@ -48632,39 +50151,28 @@ async function __tmRefreshAfterWake(reason) {
 
     // 渲染列设置（显示/排序/宽度）
     function renderColumnWidthSettings() {
-        const availableCols = [
-            { key: 'pinned', label: '置顶' },
-            { key: 'content', label: '任务内容' },
-            { key: 'status', label: '状态' },
-            { key: 'score', label: '优先级' },
-            { key: 'doc', label: '文档' },
-            { key: 'h2', label: (() => {
-                const level = SettingsStore.data.taskHeadingLevel || 'h2';
-                const labels = { h1: '一级标题', h2: '二级标题', h3: '三级标题', h4: '四级标题', h5: '五级标题', h6: '六级标题' };
-                return labels[level] || '标题';
-            })() },
-            { key: 'priority', label: '重要性' },
-            { key: 'startDate', label: '开始日期' },
-            { key: 'completionTime', label: '完成日期' },
-            { key: 'duration', label: '时长' },
-            { key: 'spent', label: '耗时' },
-            { key: 'remark', label: '备注' }
-        ];
-
-        const currentOrder = SettingsStore.data.columnOrder || ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark'];
+        const availableCols = __tmGetAllColumnDefs();
+        const currentOrder = Array.isArray(SettingsStore.data.columnOrder) ? SettingsStore.data.columnOrder : __tmGetDefaultColumnOrder();
         const widths = SettingsStore.data.columnWidths || {};
+        const defaultWidths = __tmGetColumnWidthDefaults();
 
-        let html = '<div class="tm-column-list">';
+        let html = `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+                <div style="font-size:12px;color:var(--tm-secondary-text);">自定义列也可在这里参与显示、排序和宽度调整。</div>
+                <button class="tm-btn tm-btn-secondary" onclick="tmOpenCustomFieldDialog('', { manager: true })" style="padding:4px 10px;font-size:12px;">管理自定义列</button>
+            </div>
+            <div class="tm-column-list">
+        `;
         
         // Visible columns
         currentOrder.forEach((key, index) => {
             const colDef = availableCols.find(c => c.key === key) || { key, label: key };
-            const width = widths[key] || 120;
+            const width = widths[key] || defaultWidths[key] || 120;
             
             html += `
                 <div class="tm-column-item" style="display: flex; align-items: center; gap: 8px; padding: 6px; background: var(--tm-input-bg); margin-bottom: 4px; border-radius: 4px;">
                     <input type="checkbox" checked onchange="toggleColumn('${key}', false)" title="显示/隐藏">
-                    <span style="width: 70px; font-weight: bold; font-size: 13px;">${colDef.label}</span>
+                    <span style="width: 110px; font-weight: bold; font-size: 13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(colDef.label || key)}">${esc(colDef.label || key)}</span>
                     <div style="display: flex; gap: 2px;">
                         <button class="tm-btn" onclick="moveColumn('${key}', -1)" ${index === 0 ? 'disabled' : ''} style="padding: 2px 6px; font-size: 10px;">↑</button>
                         <button class="tm-btn" onclick="moveColumn('${key}', 1)" ${index === currentOrder.length - 1 ? 'disabled' : ''} style="padding: 2px 6px; font-size: 10px;">↓</button>
@@ -48683,7 +50191,7 @@ async function __tmRefreshAfterWake(reason) {
                 html += `
                     <div class="tm-column-item" style="display: flex; align-items: center; gap: 8px; padding: 6px; opacity: 0.7;">
                         <input type="checkbox" onchange="toggleColumn('${col.key}', true)">
-                        <span style="font-size: 13px;">${col.label}</span>
+                        <span style="font-size: 13px;">${esc(col.label || col.key)}</span>
                     </div>
                 `;
             });
@@ -49373,18 +50881,35 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.toggleColumn = function(key, show) {
-        let order = SettingsStore.data.columnOrder || [];
+        const options = arguments.length >= 3 ? arguments[2] : {};
+        const opts = (options && typeof options === 'object') ? options : {};
+        const colKey = String(key || '').trim();
+        let order = Array.isArray(SettingsStore.data.columnOrder) ? [...SettingsStore.data.columnOrder] : [];
+        let hiddenColumns = Array.isArray(SettingsStore.data.hiddenColumns) ? [...SettingsStore.data.hiddenColumns] : [];
+        order = order.filter((item, index) => item && order.indexOf(item) === index);
+        hiddenColumns = hiddenColumns.filter((item, index) => item && hiddenColumns.indexOf(item) === index);
+        if (!colKey) return;
         if (show) {
-            if (!order.includes(key)) {
-                order.push(key);
-            }
+            hiddenColumns = hiddenColumns.filter((item) => item !== colKey);
+            if (!order.includes(colKey)) order.push(colKey);
         } else {
-            order = order.filter(k => k !== key);
+            if (order.length <= 1 && order.includes(colKey)) {
+                hint('⚠️ 至少保留一列', 'warning');
+                return;
+            }
+            order = order.filter((item) => item !== colKey);
+            if (!hiddenColumns.includes(colKey)) hiddenColumns.push(colKey);
         }
         SettingsStore.data.columnOrder = order;
-        SettingsStore.save();
-        showSettings(); 
-        render(); 
+        SettingsStore.data.hiddenColumns = hiddenColumns;
+        SettingsStore.normalizeColumns();
+        try { SettingsStore.syncToLocal(); } catch (e) {}
+        try { SettingsStore.save().catch(() => null); } catch (e) {}
+        try { SettingsStore.flushSave().catch(() => null); } catch (e) {}
+        if (opts.refreshSettings !== false && state.settingsModal instanceof Element && document.body.contains(state.settingsModal)) {
+            showSettings();
+        }
+        render();
     };
 
     window.moveColumn = function(key, direction) {
@@ -49650,6 +51175,424 @@ async function __tmRefreshAfterWake(reason) {
         render(); // 刷新主界面
         try { window.tmQuickAddRefreshStatusSelect?.(); } catch (e) {}
         try { window.tmQuickAddRenderMeta?.(); } catch (e) {}
+    };
+
+    window.tmDeleteCustomFieldById = async function(fieldId) {
+        const currentFieldId = String(fieldId || '').trim();
+        if (!currentFieldId) return false;
+        const field = __tmGetCustomFieldDefs().find((item) => String(item?.id || '').trim() === currentFieldId) || null;
+        if (!field) return false;
+        const ok = await showConfirm('删除自定义列', `确定删除“${String(field?.name || currentFieldId).trim() || currentFieldId}”吗？已有任务上的历史值不会被立即清理，但会停止显示。`);
+        if (!ok) return false;
+        const nextDefs = __tmGetCustomFieldDefs().filter((item) => String(item?.id || '').trim() !== currentFieldId);
+        const colKey = __tmBuildCustomFieldColumnKey(currentFieldId);
+        SettingsStore.data.customFieldDefs = nextDefs;
+        SettingsStore.data.columnOrder = (Array.isArray(SettingsStore.data.columnOrder) ? SettingsStore.data.columnOrder : []).filter((key) => key !== colKey);
+        SettingsStore.data.hiddenColumns = (Array.isArray(SettingsStore.data.hiddenColumns) ? SettingsStore.data.hiddenColumns : []).filter((key) => key !== colKey);
+        if (SettingsStore.data.columnWidths && typeof SettingsStore.data.columnWidths === 'object') {
+            delete SettingsStore.data.columnWidths[colKey];
+        }
+        SettingsStore.normalizeColumns();
+        await SettingsStore.save();
+        hint('✅ 自定义列已删除', 'success');
+        if (state.settingsModal) showSettings();
+        render();
+        return true;
+    };
+
+    window.tmOpenCustomFieldDialog = function(fieldId = '', options = {}) {
+        __tmRemoveElementsById('tm-custom-field-dialog-backdrop');
+        const opts = (options && typeof options === 'object') ? options : {};
+        const defs = __tmGetCustomFieldDefs();
+        const resolveDraft = (sourceField = null, type = '') => {
+            const source = sourceField && typeof sourceField === 'object' ? sourceField : null;
+            const normalized = source
+                ? __tmNormalizeCustomFieldDef(source, 0, new Set(), new Set())
+                : __tmNormalizeCustomFieldDef({
+                    id: '',
+                    name: '',
+                    attrKey: '',
+                    type: type === 'multi' ? 'multi' : 'single',
+                    options: [
+                        { name: '选项1', color: __tmGetCustomFieldPresetColor(0) },
+                        { name: '选项2', color: __tmGetCustomFieldPresetColor(1) },
+                    ],
+                    enabled: true,
+                }, 0, new Set(), new Set());
+            if (!source) {
+                normalized.id = '';
+                normalized.attrKey = '';
+            }
+            return normalized;
+        };
+        let currentFieldId = String(fieldId || '').trim();
+        const currentField = defs.find((field) => String(field?.id || '').trim() === currentFieldId) || null;
+        let draft = resolveDraft(currentField, String(opts.type || '').trim());
+
+        const backdrop = document.createElement('div');
+        backdrop.id = 'tm-custom-field-dialog-backdrop';
+        backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200050;display:flex;align-items:center;justify-content:center;padding:24px;';
+
+        const dialog = document.createElement('div');
+        dialog.style.cssText = 'width:min(860px,96vw);max-height:min(88vh,860px);background:var(--tm-bg-color);color:var(--tm-text-color);border:1px solid var(--tm-border-color);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,0.2);display:flex;flex-direction:column;overflow:hidden;';
+        backdrop.appendChild(dialog);
+
+        const close = () => {
+            try { backdrop.remove(); } catch (e) {}
+        };
+
+        const renderDialog = () => {
+            const viewportWidth = Math.max(0, window.innerWidth || document.documentElement?.clientWidth || 0);
+            const isCompact = viewportWidth > 0 ? viewportWidth <= 720 : __tmIsMobileDevice();
+            const isPhone = viewportWidth > 0 ? viewportWidth <= 520 : isCompact;
+            const backdropPadding = isPhone ? 8 : (isCompact ? 12 : 24);
+            backdrop.style.padding = `${backdropPadding}px`;
+            backdrop.style.alignItems = isPhone ? 'stretch' : 'center';
+            dialog.style.cssText = [
+                'background:var(--tm-bg-color)',
+                'color:var(--tm-text-color)',
+                'border:1px solid var(--tm-border-color)',
+                `border-radius:${isPhone ? '12px' : '16px'}`,
+                'box-shadow:0 18px 48px rgba(0,0,0,0.2)',
+                'display:flex',
+                'flex-direction:column',
+                'overflow:hidden',
+                `width:${isCompact ? '100%' : 'min(860px,96vw)'}`,
+                `max-width:${isCompact ? '100%' : '96vw'}`,
+                `max-height:${isCompact ? `calc(100vh - ${backdropPadding * 2}px)` : 'min(88vh,860px)'}`,
+            ].join(';');
+            const defsNow = __tmGetCustomFieldDefs();
+            const listHtml = defsNow.map((field) => {
+                const id = String(field?.id || '').trim();
+                const active = id && id === currentFieldId;
+                return `
+                    <button type="button" data-tm-custom-field-open="${esc(id)}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid ${active ? 'var(--tm-primary-color)' : 'var(--tm-border-color)'};border-radius:10px;background:${active ? 'var(--tm-hover-bg)' : 'var(--tm-card-bg)'};color:var(--tm-text-color);cursor:pointer;text-align:left;">
+                        <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(String(field?.name || id || '未命名自定义列').trim() || '未命名自定义列')}</span>
+                        <span style="font-size:11px;color:var(--tm-secondary-text);flex:none;">${field?.type === 'multi' ? '多选' : '单选'}</span>
+                    </button>
+                `;
+            }).join('');
+            const optionRows = (Array.isArray(draft.options) ? draft.options : []).map((option, index) => `
+                <div data-tm-custom-field-option-row="${index}" style="display:grid;grid-template-columns:${isCompact ? '36px minmax(0,1fr) auto' : '36px 1fr 86px auto'};gap:8px;align-items:center;padding:${isCompact ? '10px' : '8px'};border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-card-bg);">
+                    <input data-tm-custom-field-option-color="${index}" type="color" value="${esc(String(option?.color || __tmGetCustomFieldPresetColor(index)).trim() || __tmGetCustomFieldPresetColor(index))}" style="width:28px;height:28px;border:none;padding:0;background:none;cursor:pointer;">
+                    <input data-tm-custom-field-option-name="${index}" type="text" value="${esc(String(option?.name || '').trim())}" placeholder="选项名称" style="width:100%;min-width:0;padding:6px 8px;border:1px solid var(--tm-input-border);border-radius:8px;background:var(--tm-input-bg);color:var(--tm-text-color);${isCompact ? 'grid-column:2 / span 2;' : ''}">
+                    <div style="display:flex;gap:4px;justify-content:${isCompact ? 'flex-start' : 'flex-end'};${isCompact ? 'grid-column:2;' : ''}">
+                        <button type="button" class="tm-btn tm-btn-secondary" data-tm-custom-field-option-move-up="${index}" ${index === 0 ? 'disabled' : ''} style="padding:${isCompact ? '6px 10px' : '4px 8px'};font-size:12px;min-height:${isCompact ? '36px' : 'auto'};">↑</button>
+                        <button type="button" class="tm-btn tm-btn-secondary" data-tm-custom-field-option-move-down="${index}" ${index === draft.options.length - 1 ? 'disabled' : ''} style="padding:${isCompact ? '6px 10px' : '4px 8px'};font-size:12px;min-height:${isCompact ? '36px' : 'auto'};">↓</button>
+                    </div>
+                    <button type="button" class="tm-btn tm-btn-danger" data-tm-custom-field-option-delete="${index}" style="padding:${isCompact ? '6px 10px' : '4px 8px'};font-size:12px;min-height:${isCompact ? '36px' : 'auto'};${isCompact ? 'grid-column:3;justify-self:end;' : ''}">删除</button>
+                </div>
+            `).join('');
+            dialog.innerHTML = `
+                <div style="padding:${isCompact ? '14px 14px 12px' : '16px 18px'};border-bottom:1px solid var(--tm-border-color);display:flex;align-items:${isCompact ? 'flex-start' : 'center'};justify-content:space-between;gap:${isCompact ? '8px' : '12px'};flex-wrap:${isCompact ? 'wrap' : 'nowrap'};">
+                    <div style="min-width:0;">
+                        <div style="font-size:18px;font-weight:700;">自定义单选 / 多选列</div>
+                        <div style="font-size:12px;color:var(--tm-secondary-text);margin-top:4px;line-height:1.5;">右击表头即可再次打开这里。自定义列会同步进入列设置、表格视图和任务详情页。</div>
+                    </div>
+                    <button type="button" class="tm-btn tm-btn-gray" data-tm-custom-field-close style="padding:${isCompact ? '8px 12px' : '6px 10px'};min-height:${isCompact ? '40px' : 'auto'};${isCompact ? 'margin-left:auto;' : ''}">关闭</button>
+                </div>
+                <div style="display:grid;grid-template-columns:${isCompact ? '1fr' : 'minmax(180px,220px) minmax(0,1fr)'};gap:${isCompact ? '12px' : '16px'};padding:${isCompact ? '14px' : '18px'};overflow:auto;">
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <div style="font-size:12px;font-weight:600;color:var(--tm-secondary-text);">已配置自定义列</div>
+                        <div style="display:${isCompact ? 'grid' : 'flex'};${isCompact ? `grid-template-columns:${isPhone ? '1fr' : 'repeat(auto-fit,minmax(132px,1fr))'};` : 'flex-direction:column;'}gap:8px;">${listHtml || '<div style="font-size:12px;color:var(--tm-secondary-text);padding:10px;border:1px dashed var(--tm-border-color);border-radius:10px;">还没有自定义列</div>'}</div>
+                        <div style="display:grid;grid-template-columns:${isPhone ? '1fr' : 'repeat(2,minmax(0,1fr))'};gap:8px;">
+                            <button type="button" class="tm-btn tm-btn-primary" data-tm-custom-field-new="single" style="padding:${isCompact ? '8px 12px' : '6px 10px'};font-size:12px;min-height:${isCompact ? '40px' : 'auto'};">+ 单选列</button>
+                            <button type="button" class="tm-btn tm-btn-secondary" data-tm-custom-field-new="multi" style="padding:${isCompact ? '8px 12px' : '6px 10px'};font-size:12px;min-height:${isCompact ? '40px' : 'auto'};">+ 多选列</button>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:14px;">
+                        <div style="display:grid;grid-template-columns:${isCompact ? '1fr' : 'minmax(0,1fr) 120px'};gap:12px;">
+                            <label style="display:flex;flex-direction:column;gap:6px;">
+                                <span style="font-size:12px;color:var(--tm-secondary-text);">自定义列名称</span>
+                                <input type="text" data-tm-custom-field-name value="${esc(String(draft.name || '').trim())}" placeholder="例如：负责人 / 渠道 / 标签" style="width:100%;padding:8px 10px;border:1px solid var(--tm-input-border);border-radius:10px;background:var(--tm-input-bg);color:var(--tm-text-color);">
+                            </label>
+                            <label style="display:flex;flex-direction:column;gap:6px;">
+                                <span style="font-size:12px;color:var(--tm-secondary-text);">自定义列类型</span>
+                                <select data-tm-custom-field-type style="width:100%;padding:8px 10px;border:1px solid var(--tm-input-border);border-radius:10px;background:var(--tm-input-bg);color:var(--tm-text-color);">
+                                    <option value="single" ${String(draft.type || 'single') === 'single' ? 'selected' : ''}>单选</option>
+                                    <option value="multi" ${String(draft.type || '') === 'multi' ? 'selected' : ''}>多选</option>
+                                </select>
+                            </label>
+                        </div>
+                        <label style="display:flex;flex-direction:column;gap:6px;">
+                            <span style="font-size:12px;color:var(--tm-secondary-text);">属性键名</span>
+                            <input type="text" data-tm-custom-field-attr-key value="${esc(String(draft.attrKey || '').trim())}" placeholder="例如 location / owner / channel" style="width:100%;padding:8px 10px;border:1px solid var(--tm-input-border);border-radius:10px;background:var(--tm-input-bg);color:var(--tm-text-color);">
+                            <span style="font-size:12px;color:var(--tm-secondary-text);">会写入思源块属性 custom-tm-属性键名。仅支持字母、数字、-、_；留空时会自动使用稳定的字段 ID。</span>
+                        </label>
+                        <div style="display:flex;align-items:${isCompact ? 'stretch' : 'center'};justify-content:space-between;gap:12px;flex-direction:${isCompact ? 'column' : 'row'};">
+                            <div style="min-width:0;">
+                                <div style="font-size:13px;font-weight:600;">选项配置</div>
+                                <div style="font-size:12px;color:var(--tm-secondary-text);margin-top:4px;">每个选项自带默认颜色，表格、详情页和导出会复用这些颜色与名称。</div>
+                            </div>
+                            <button type="button" class="tm-btn tm-btn-secondary" data-tm-custom-field-add-option style="padding:${isCompact ? '8px 12px' : '6px 10px'};font-size:12px;min-height:${isCompact ? '40px' : 'auto'};${isCompact ? 'width:100%;' : ''}">+ 添加选项</button>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px;">${optionRows || '<div style="font-size:12px;color:var(--tm-secondary-text);padding:10px;border:1px dashed var(--tm-border-color);border-radius:10px;">请至少添加一个选项</div>'}</div>
+                        <div style="display:flex;align-items:${isCompact ? 'stretch' : 'center'};justify-content:space-between;gap:10px;flex-wrap:wrap;flex-direction:${isCompact ? 'column' : 'row'};border-top:1px solid var(--tm-border-color);padding-top:14px;">
+                            <div style="font-size:12px;color:var(--tm-secondary-text);width:${isCompact ? '100%' : 'auto'};line-height:1.5;">${currentFieldId ? `当前编辑自定义列：${esc(String(draft.name || currentFieldId).trim() || currentFieldId)}` : '新的自定义列会自动加入列设置，可继续在外观里排序或隐藏'}</div>
+                            <div style="display:${isCompact ? 'grid' : 'flex'};gap:8px;flex-wrap:wrap;width:${isCompact ? '100%' : 'auto'};${isCompact ? `grid-template-columns:${isPhone ? '1fr' : `repeat(${currentFieldId ? 3 : 2}, minmax(0,1fr))`};` : ''}">
+                                ${currentFieldId ? `<button type="button" class="tm-btn tm-btn-danger" data-tm-custom-field-delete style="padding:${isCompact ? '8px 12px' : '6px 10px'};min-height:${isCompact ? '40px' : 'auto'};">删除自定义列</button>` : ''}
+                                <button type="button" class="tm-btn tm-btn-secondary" data-tm-custom-field-cancel style="padding:${isCompact ? '8px 12px' : '6px 10px'};min-height:${isCompact ? '40px' : 'auto'};">取消</button>
+                                <button type="button" class="tm-btn tm-btn-primary" data-tm-custom-field-save style="padding:${isCompact ? '8px 12px' : '6px 12px'};min-height:${isCompact ? '40px' : 'auto'};">保存自定义列</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const readDraftFromDom = () => {
+                const nameInput = dialog.querySelector('[data-tm-custom-field-name]');
+                const typeSelect = dialog.querySelector('[data-tm-custom-field-type]');
+                const attrKeyInput = dialog.querySelector('[data-tm-custom-field-attr-key]');
+                draft.name = String(nameInput?.value || '').trim();
+                draft.attrKey = String(attrKeyInput?.value || '').trim();
+                draft.type = String(typeSelect?.value || 'single').trim() === 'multi' ? 'multi' : 'single';
+                draft.options = (Array.isArray(draft.options) ? draft.options : []).map((option, index) => {
+                    const nameEl = dialog.querySelector(`[data-tm-custom-field-option-name="${index}"]`);
+                    const colorEl = dialog.querySelector(`[data-tm-custom-field-option-color="${index}"]`);
+                    return {
+                        ...option,
+                        name: String(nameEl?.value || option?.name || '').trim(),
+                        color: __tmNormalizeHexColor(colorEl?.value || option?.color || '', __tmGetCustomFieldPresetColor(index)) || __tmGetCustomFieldPresetColor(index),
+                    };
+                });
+            };
+            const saveField = async () => {
+                readDraftFromDom();
+                const name = String(draft.name || '').trim();
+                if (!name) {
+                    hint('⚠️ 自定义列名称不能为空', 'warning');
+                    return;
+                }
+                const currentDefs = __tmGetCustomFieldDefs();
+                const others = currentDefs.filter((field) => String(field?.id || '').trim() !== currentFieldId);
+                let nextId = String(currentFieldId || '').trim();
+                if (!nextId) {
+                    const fallbackId = `field_${Date.now().toString(36)}`;
+                    nextId = __tmNormalizeCustomFieldId(name, fallbackId);
+                    let dedupe = 2;
+                    const existingIds = new Set(others.map((field) => String(field?.id || '').trim()).filter(Boolean));
+                    while (existingIds.has(nextId)) {
+                        nextId = `${__tmNormalizeCustomFieldId(name, fallbackId)}_${dedupe}`;
+                        dedupe += 1;
+                    }
+                }
+                const attrKey = __tmNormalizeCustomFieldAttrName(draft.attrKey || nextId, nextId);
+                if (!attrKey) {
+                    hint('⚠️ 属性键名不能为空', 'warning');
+                    return;
+                }
+                const optionsList = (Array.isArray(draft.options) ? draft.options : []).map((option, index) => ({
+                    id: String(option?.id || '').trim() || `option_${index + 1}`,
+                    name: String(option?.name || '').trim(),
+                    color: String(option?.color || __tmGetCustomFieldPresetColor(index)).trim() || __tmGetCustomFieldPresetColor(index),
+                })).filter((option) => option.name);
+                if (!optionsList.length) {
+                    hint('⚠️ 请至少保留一个选项', 'warning');
+                    return;
+                }
+                const duplicateAttrField = others.find((field) => __tmNormalizeCustomFieldAttrName(field?.attrKey || field?.id || field?.name || 'field', field?.id || 'field') === attrKey);
+                if (duplicateAttrField) {
+                    hint('⚠️ 属性键名已存在，请换一个', 'warning');
+                    return;
+                }
+                const prevField = currentDefs.find((field) => String(field?.id || '').trim() === currentFieldId) || null;
+                const prevAttrKey = __tmNormalizeCustomFieldAttrName(prevField?.attrKey || prevField?.id || prevField?.name || 'field', prevField?.id || 'field');
+                const nextDefs = currentDefs.map((field) => {
+                    const id = String(field?.id || '').trim();
+                    if (id !== currentFieldId) return field;
+                    return {
+                        ...field,
+                        id: nextId,
+                        name,
+                        attrKey,
+                        type: draft.type === 'multi' ? 'multi' : 'single',
+                        options: optionsList,
+                        enabled: true,
+                    };
+                });
+                if (!currentFieldId) {
+                    nextDefs.push({
+                        id: nextId,
+                        name,
+                        attrKey,
+                        type: draft.type === 'multi' ? 'multi' : 'single',
+                        options: optionsList,
+                        enabled: true,
+                    });
+                }
+                if (currentFieldId && prevAttrKey && prevAttrKey !== attrKey) {
+                    await __tmMigrateCustomFieldAttrStorageKey(prevAttrKey, attrKey);
+                }
+                SettingsStore.data.customFieldDefs = nextDefs;
+                SettingsStore.normalizeColumns();
+                await SettingsStore.save();
+                currentFieldId = nextId;
+                draft = resolveDraft(__tmGetCustomFieldDefs().find((field) => String(field?.id || '').trim() === nextId) || null);
+                hint('✅ 自定义列已保存', 'success');
+                if (state.settingsModal) showSettings();
+                render();
+                renderDialog();
+            };
+            const deleteField = async () => {
+                if (!currentFieldId) return;
+                const deleted = await window.tmDeleteCustomFieldById(currentFieldId);
+                if (!deleted) return;
+                currentFieldId = '';
+                draft = resolveDraft(null, 'single');
+                renderDialog();
+            };
+
+            dialog.querySelector('[data-tm-custom-field-close]')?.addEventListener('click', close);
+            dialog.querySelector('[data-tm-custom-field-cancel]')?.addEventListener('click', close);
+            dialog.querySelector('[data-tm-custom-field-save]')?.addEventListener('click', () => {
+                saveField().catch((e) => {
+                    hint(`❌ 保存自定义列失败: ${e?.message || '未知错误'}`, 'error');
+                });
+            });
+            dialog.querySelector('[data-tm-custom-field-delete]')?.addEventListener('click', () => { deleteField().catch(() => null); });
+            dialog.querySelector('[data-tm-custom-field-add-option]')?.addEventListener('click', () => {
+                readDraftFromDom();
+                draft.options = [...(Array.isArray(draft.options) ? draft.options : []), {
+                    id: '',
+                    name: '',
+                    color: __tmGetCustomFieldPresetColor(draft.options.length),
+                }];
+                renderDialog();
+            });
+            dialog.querySelector('[data-tm-custom-field-type]')?.addEventListener('change', () => {
+                readDraftFromDom();
+                renderDialog();
+            });
+            dialog.querySelectorAll('[data-tm-custom-field-open]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    readDraftFromDom();
+                    currentFieldId = String(button.getAttribute('data-tm-custom-field-open') || '').trim();
+                    draft = resolveDraft(__tmGetCustomFieldDefs().find((field) => String(field?.id || '').trim() === currentFieldId) || null);
+                    renderDialog();
+                });
+            });
+            dialog.querySelectorAll('[data-tm-custom-field-new]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    readDraftFromDom();
+                    currentFieldId = '';
+                    draft = resolveDraft(null, String(button.getAttribute('data-tm-custom-field-new') || '').trim());
+                    renderDialog();
+                });
+            });
+            dialog.querySelectorAll('[data-tm-custom-field-option-delete]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    readDraftFromDom();
+                    const index = Number(button.getAttribute('data-tm-custom-field-option-delete'));
+                    draft.options = (Array.isArray(draft.options) ? draft.options : []).filter((_, optionIndex) => optionIndex !== index);
+                    renderDialog();
+                });
+            });
+            dialog.querySelectorAll('[data-tm-custom-field-option-move-up]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    readDraftFromDom();
+                    const index = Number(button.getAttribute('data-tm-custom-field-option-move-up'));
+                    if (index <= 0) return;
+                    const nextOptions = Array.isArray(draft.options) ? draft.options.slice() : [];
+                    [nextOptions[index - 1], nextOptions[index]] = [nextOptions[index], nextOptions[index - 1]];
+                    draft.options = nextOptions;
+                    renderDialog();
+                });
+            });
+            dialog.querySelectorAll('[data-tm-custom-field-option-move-down]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    readDraftFromDom();
+                    const index = Number(button.getAttribute('data-tm-custom-field-option-move-down'));
+                    const nextOptions = Array.isArray(draft.options) ? draft.options.slice() : [];
+                    if (index < 0 || index >= nextOptions.length - 1) return;
+                    [nextOptions[index + 1], nextOptions[index]] = [nextOptions[index], nextOptions[index + 1]];
+                    draft.options = nextOptions;
+                    renderDialog();
+                });
+            });
+        };
+
+        backdrop.addEventListener('click', (event) => {
+            if (event.target === backdrop) close();
+        });
+        document.body.appendChild(backdrop);
+        renderDialog();
+    };
+
+    window.tmShowColumnHeaderContextMenu = function(event, columnKey = '') {
+        try {
+            event?.preventDefault?.();
+            event?.stopPropagation?.();
+        } catch (e) {}
+        const key = String(columnKey || '').trim();
+        if (!key) return false;
+        const existingMenu = document.getElementById('tm-column-context-menu');
+        if (existingMenu) existingMenu.remove();
+        if (state.columnContextMenuCloseHandler) {
+            try { __tmClearOutsideCloseHandler(state.columnContextMenuCloseHandler); } catch (e) {}
+            state.columnContextMenuCloseHandler = null;
+        }
+        const menu = document.createElement('div');
+        menu.id = 'tm-column-context-menu';
+        menu.style.cssText = `
+            position: fixed;
+            top: ${event.clientY}px;
+            left: ${event.clientX}px;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: stretch;
+            background: var(--b3-theme-background);
+            border: 1px solid var(--b3-theme-surface-light);
+            border-radius: 8px;
+            box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+            padding: 6px 0;
+            z-index: 200021;
+            min-width: 180px;
+            box-sizing: border-box;
+        `;
+        const close = () => {
+            try { menu.remove(); } catch (e) {}
+            if (state.columnContextMenuCloseHandler) {
+                try { __tmClearOutsideCloseHandler(state.columnContextMenuCloseHandler); } catch (e) {}
+                state.columnContextMenuCloseHandler = null;
+            }
+        };
+        const createItem = (label, onClick, danger = false) => {
+            const item = document.createElement('div');
+            item.textContent = String(label || '');
+            item.style.cssText = `padding:7px 12px;cursor:pointer;font-size:13px;color:${danger ? 'var(--b3-theme-error)' : 'var(--b3-theme-on-background)'};white-space:nowrap;`;
+            item.onmouseenter = () => item.style.backgroundColor = 'var(--b3-theme-surface-light)';
+            item.onmouseleave = () => item.style.backgroundColor = 'transparent';
+            item.onclick = (ev) => {
+                try { ev.stopPropagation(); } catch (e) {}
+                close();
+                onClick();
+            };
+            menu.appendChild(item);
+        };
+        const fieldId = __tmParseCustomFieldColumnKey(key);
+        const field = fieldId ? __tmGetCustomFieldDefMap().get(fieldId) : null;
+        createItem('新增单选列', () => window.tmOpenCustomFieldDialog('', { type: 'single' }));
+        createItem('新增多选列', () => window.tmOpenCustomFieldDialog('', { type: 'multi' }));
+        createItem('管理自定义列', () => window.tmOpenCustomFieldDialog('', { manager: true }));
+        if (field) {
+            const divider = document.createElement('hr');
+            divider.style.cssText = 'margin:4px 0;border:none;border-top:1px solid var(--b3-theme-surface-light);';
+            menu.appendChild(divider);
+            createItem(`编辑“${field.name}”`, () => window.tmOpenCustomFieldDialog(fieldId));
+            createItem(`隐藏“${field.name}”`, () => window.toggleColumn(key, false, { refreshSettings: false }));
+            createItem(`删除“${field.name}”`, () => { window.tmDeleteCustomFieldById(fieldId).catch(() => null); }, true);
+        } else {
+            const divider = document.createElement('hr');
+            divider.style.cssText = 'margin:4px 0;border:none;border-top:1px solid var(--b3-theme-surface-light);';
+            menu.appendChild(divider);
+            createItem(`隐藏“${__tmResolveColumnLabel(key)}”`, () => window.toggleColumn(key, false, { refreshSettings: false }));
+        }
+        document.body.appendChild(menu);
+        __tmClampFloatingMenuToViewport(menu, event.clientX, event.clientY, { margin: 8 });
+        const closeHandler = () => close();
+        state.columnContextMenuCloseHandler = closeHandler;
+        __tmScheduleBindOutsideCloseHandler(closeHandler, { ignoreSelector: '#tm-column-context-menu' });
+        return false;
     };
 
     // 更新列宽度
@@ -50688,7 +52631,18 @@ async function __tmRefreshAfterWake(reason) {
     function __tmExcelGetExportColumnDefs() {
         const headingLevel = String(SettingsStore.data.taskHeadingLevel || 'h2').trim() || 'h2';
         const headingLabels = { h1: '一级标题', h2: '二级标题', h3: '三级标题', h4: '四级标题', h5: '五级标题', h6: '六级标题' };
-        const columnOrder = Array.isArray(SettingsStore.data.columnOrder) ? SettingsStore.data.columnOrder : ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark'];
+        const seenColumnKeys = new Set();
+        const columnOrder = [];
+        const appendColumnKeys = (keys) => {
+            (Array.isArray(keys) ? keys : []).forEach((key) => {
+                const colKey = String(key || '').trim();
+                if (!colKey || seenColumnKeys.has(colKey)) return;
+                seenColumnKeys.add(colKey);
+                columnOrder.push(colKey);
+            });
+        };
+        appendColumnKeys(Array.isArray(SettingsStore.data.columnOrder) ? SettingsStore.data.columnOrder : []);
+        appendColumnKeys(__tmGetDefaultColumnOrder());
         const widthMap = (SettingsStore.data.columnWidths && typeof SettingsStore.data.columnWidths === 'object') ? SettingsStore.data.columnWidths : {};
         const pxToWch = (px, fallback) => {
             const n = Number(px);
@@ -50785,6 +52739,20 @@ async function __tmRefreshAfterWake(reason) {
                 value: (task) => String(task?.remark || '').trim()
             }
         };
+        __tmGetCustomFieldDefs().forEach((field) => {
+            const fieldId = String(field?.id || '').trim();
+            const colKey = __tmBuildCustomFieldColumnKey(fieldId);
+            if (!fieldId || !colKey) return;
+            defs[colKey] = {
+                key: colKey,
+                label: String(field?.name || fieldId).trim() || fieldId,
+                wch: pxToWch(widthMap[colKey], String(field?.type || '').trim() === 'multi' ? 24 : 18),
+                value: (task) => __tmResolveCustomFieldSelectedOptions(field, __tmGetTaskCustomFieldValue(task, fieldId))
+                    .map((option) => String(option?.name || option?.id || '').trim())
+                    .filter(Boolean)
+                    .join(', ')
+            };
+        });
         return columnOrder.map((key) => defs[key]).filter(Boolean);
     }
 
