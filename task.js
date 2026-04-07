@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.0.9
+// @version      2.1.0
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -9425,6 +9425,8 @@
             docPinnedByGroup: {},
             // 文档页签排序：created_desc | created_asc | name_asc | name_desc
             docTabSortMode: 'created_desc',
+            // 文档显示名称：name | alias
+            docDisplayNameMode: 'name',
             // 当前选中的分组ID (UI显示用)
             currentGroupId: 'all', 
             // 任务标题级别 (h1-h6)
@@ -9857,6 +9859,7 @@
                                 if (cloudData.docColorMap && typeof cloudData.docColorMap === 'object') this.data.docColorMap = cloudData.docColorMap;
                                 if (typeof cloudData.docColorSeed === 'number') this.data.docColorSeed = cloudData.docColorSeed;
                                 if (typeof cloudData.docTabSortMode === 'string') this.data.docTabSortMode = cloudData.docTabSortMode;
+                                if (typeof cloudData.docDisplayNameMode === 'string') this.data.docDisplayNameMode = cloudData.docDisplayNameMode;
                                 if (typeof cloudData.aiEnabled === 'boolean') this.data.aiEnabled = cloudData.aiEnabled;
                                 if (typeof cloudData.aiProvider === 'string') this.data.aiProvider = cloudData.aiProvider;
                                 if (typeof cloudData.aiMiniMaxBaseUrl === 'string') this.data.aiMiniMaxBaseUrl = cloudData.aiMiniMaxBaseUrl;
@@ -10033,6 +10036,7 @@
             this.data.newTaskDocId = Storage.get('tm_new_task_doc_id', '');
             this.data.newTaskDailyNoteNotebookId = String(Storage.get('tm_new_task_daily_note_notebook_id', this.data.newTaskDailyNoteNotebookId) || '').trim();
             this.data.docTabSortMode = String(Storage.get('tm_doc_tab_sort_mode', this.data.docTabSortMode) || this.data.docTabSortMode || 'created_desc').trim() || 'created_desc';
+            this.data.docDisplayNameMode = String(Storage.get('tm_doc_display_name_mode', this.data.docDisplayNameMode) || this.data.docDisplayNameMode || 'name').trim() || 'name';
             this.data.taskAutoWrapEnabled = Storage.get('tm_task_auto_wrap_enabled', this.data.taskAutoWrapEnabled);
             this.data.taskContentWrapMaxLines = Number(Storage.get('tm_task_content_wrap_max_lines', this.data.taskContentWrapMaxLines));
             this.data.taskRemarkWrapMaxLines = Number(Storage.get('tm_task_remark_wrap_max_lines', this.data.taskRemarkWrapMaxLines));
@@ -10226,6 +10230,7 @@
                 // 注意：这里不再强制将 groupMode 设置为 'task'
                 // 因为用户可能选择了"不分组"或其他分组模式
             }
+            this.data.docDisplayNameMode = __tmNormalizeDocDisplayNameMode(this.data.docDisplayNameMode);
             this.normalizeColumns();
         },
 
@@ -10328,6 +10333,7 @@
             Storage.set('tm_new_task_daily_note_append_to_bottom', !!this.data.newTaskDailyNoteAppendToBottom);
             Storage.set('tm_heading_group_create_at_section_end', !!this.data.headingGroupCreateAtSectionEnd);
             Storage.set('tm_doc_tab_sort_mode', String(this.data.docTabSortMode || 'created_desc').trim() || 'created_desc');
+            Storage.set('tm_doc_display_name_mode', __tmNormalizeDocDisplayNameMode(this.data.docDisplayNameMode));
             Storage.set('tm_task_auto_wrap_enabled', !!this.data.taskAutoWrapEnabled);
             Storage.set('tm_task_content_wrap_max_lines', Number(this.data.taskContentWrapMaxLines) || 3);
             Storage.set('tm_task_remark_wrap_max_lines', Number(this.data.taskRemarkWrapMaxLines) || 2);
@@ -11052,12 +11058,62 @@
         
         // 获取可用字段
         getAvailableFields() {
+            const statusOptions = Array.isArray(SettingsStore.data.customStatusOptions)
+                ? SettingsStore.data.customStatusOptions
+                : [];
+            const statusOptionIds = statusOptions
+                .map((option) => String(option?.id || '').trim())
+                .filter(Boolean);
+            const statusOptionLabels = statusOptions.reduce((acc, option) => {
+                const id = String(option?.id || '').trim();
+                if (!id) return acc;
+                acc[id] = String(option?.name || id).trim() || id;
+                return acc;
+            }, {});
+            const customFieldRuleFields = __tmGetCustomFieldDefs().map((field) => {
+                const fieldId = String(field?.id || '').trim();
+                if (!fieldId) return null;
+                const optionIds = Array.isArray(field?.options)
+                    ? field.options.map((option) => String(option?.id || '').trim()).filter(Boolean)
+                    : [];
+                const optionLabels = (Array.isArray(field?.options) ? field.options : []).reduce((acc, option) => {
+                    const id = String(option?.id || '').trim();
+                    if (!id) return acc;
+                    acc[id] = String(option?.name || id).trim() || id;
+                    return acc;
+                }, {});
+                return {
+                    value: __tmBuildCustomFieldColumnKey(fieldId),
+                    label: `${String(field?.name || fieldId).trim() || fieldId}（自定义列）`,
+                    type: 'select',
+                    options: optionIds,
+                    optionLabels,
+                    customFieldId: fieldId,
+                    multi: String(field?.type || '').trim() === 'multi',
+                    allowEmpty: true,
+                    emptyLabel: '未设置',
+                };
+            }).filter(Boolean);
             return [
                 { value: 'content', label: '任务内容', type: 'text' },
                 { value: 'done', label: '完成状态', type: 'boolean' },
-                { value: 'priority', label: '优先级', type: 'select', options: ['high', 'medium', 'low', 'none'] },
+                {
+                    value: 'priority',
+                    label: '优先级',
+                    type: 'select',
+                    options: ['high', 'medium', 'low', 'none'],
+                    optionLabels: { high: '高', medium: '中', low: '低', none: '无' },
+                    emptyLabel: '无',
+                },
                 { value: 'priorityScore', label: '优先级数值', type: 'number' },
-                { value: 'customStatus', label: '状态', type: 'select' },
+                {
+                    value: 'customStatus',
+                    label: '状态',
+                    type: 'select',
+                    options: statusOptionIds,
+                    optionLabels: statusOptionLabels,
+                    emptyLabel: '未设置',
+                },
                 { value: 'completionTime', label: '完成日期', type: 'datetime' },
                 { value: 'created', label: '创建时间', type: 'datetime' },
                 { value: 'updated', label: '更新时间', type: 'datetime' },
@@ -11065,7 +11121,73 @@
                 { value: 'remark', label: '备注', type: 'text' },
                 { value: 'docName', label: '文档名称', type: 'text' },
                 { value: 'level', label: '任务层级', type: 'number' }
-            ];
+            ].concat(customFieldRuleFields);
+        },
+
+        getFieldInfo(fieldValue) {
+            const key = String(fieldValue || '').trim();
+            if (!key) return null;
+            return this.getAvailableFields().find((field) => String(field?.value || '').trim() === key) || null;
+        },
+
+        getTaskFieldValue(task, fieldValue) {
+            const fieldInfo = (fieldValue && typeof fieldValue === 'object') ? fieldValue : this.getFieldInfo(fieldValue);
+            const key = String(fieldInfo?.value || fieldValue || '').trim();
+            const customFieldId = String(fieldInfo?.customFieldId || __tmParseCustomFieldColumnKey(key) || '').trim();
+            if (customFieldId) return __tmGetTaskCustomFieldValue(task, customFieldId);
+            return task ? task[key] : undefined;
+        },
+
+        normalizeSelectFieldValues(fieldValue, rawValue) {
+            const fieldInfo = (fieldValue && typeof fieldValue === 'object') ? fieldValue : this.getFieldInfo(fieldValue);
+            const optionLabels = (fieldInfo?.optionLabels && typeof fieldInfo.optionLabels === 'object') ? fieldInfo.optionLabels : {};
+            const labelToValue = new Map();
+            Object.entries(optionLabels).forEach(([value, label]) => {
+                const text = String(label || '').trim();
+                const key = String(value || '').trim();
+                if (!text || !key || labelToValue.has(text)) return;
+                labelToValue.set(text, key);
+            });
+            const normalizeOne = (input) => {
+                const raw = String(input ?? '').trim();
+                if (!raw) return '';
+                if (Object.prototype.hasOwnProperty.call(optionLabels, raw)) return raw;
+                return labelToValue.get(raw) || raw;
+            };
+            let list = [];
+            if (Array.isArray(rawValue)) {
+                list = rawValue;
+            } else if (typeof rawValue === 'string' && rawValue.includes(',')) {
+                list = rawValue.split(',').map((item) => String(item || '').trim());
+            } else {
+                list = [rawValue];
+            }
+            const out = [];
+            const seen = new Set();
+            list.forEach((item) => {
+                const normalized = normalizeOne(item);
+                if (!normalized || seen.has(normalized)) return;
+                seen.add(normalized);
+                out.push(normalized);
+            });
+            return out;
+        },
+
+        getSelectFieldLabel(fieldValue, rawValue) {
+            const fieldInfo = (fieldValue && typeof fieldValue === 'object') ? fieldValue : this.getFieldInfo(fieldValue);
+            const emptyLabel = String(fieldInfo?.emptyLabel || '未设置').trim() || '未设置';
+            const normalized = this.normalizeSelectFieldValues(fieldInfo, rawValue);
+            const token = String((normalized[0] || rawValue || '') ?? '').trim();
+            if (!token) return emptyLabel;
+            const optionLabels = (fieldInfo?.optionLabels && typeof fieldInfo.optionLabels === 'object') ? fieldInfo.optionLabels : {};
+            return String(optionLabels[token] || token).trim() || token;
+        },
+
+        normalizeConditionMatchMode(condition, fieldValue = null) {
+            const fieldInfo = (fieldValue && typeof fieldValue === 'object')
+                ? fieldValue
+                : this.getFieldInfo(fieldValue || condition?.field);
+            return fieldInfo?.multi && String(condition?.matchMode || '').trim() === 'all' ? 'all' : 'any';
         },
         
         // 获取可用操作符
@@ -11114,7 +11236,7 @@
         
         // 获取排序字段
         getSortFields() {
-            return [
+            const sortFields = [
                 { value: 'priorityScore', label: '优先级数值' },
                 { value: 'priority', label: '优先级' },
                 { value: 'customStatus', label: '状态' },
@@ -11132,6 +11254,16 @@
                 })() },
                 { value: 'duration', label: '任务时长' }
             ];
+            __tmGetCustomFieldDefs().forEach((field) => {
+                const fieldId = String(field?.id || '').trim();
+                if (!fieldId) return;
+                sortFields.push({
+                    value: __tmBuildCustomFieldColumnKey(fieldId),
+                    label: `${String(field?.name || fieldId).trim() || fieldId}（自定义列）`,
+                    customFieldId: fieldId,
+                });
+            });
+            return sortFields;
         },
         
         // 应用规则筛选
@@ -11150,7 +11282,8 @@
         // 评估单个条件
         evaluateCondition(task, condition) {
             const { field, operator, value } = condition;
-            let taskValue = task[field];
+            const fieldInfo = this.getFieldInfo(field);
+            let taskValue = this.getTaskFieldValue(task, fieldInfo || field);
             if (field === 'customStatus') {
                 const raw = String(taskValue || '').trim();
                 if (raw) {
@@ -11161,6 +11294,8 @@
                     taskValue = fallback;
                 }
             }
+            const isSelectField = fieldInfo?.type === 'select';
+            const taskSelectValues = isSelectField ? this.normalizeSelectFieldValues(fieldInfo, taskValue) : [];
 
             // 处理布尔值
             if (field === 'done') {
@@ -11176,26 +11311,79 @@
             if (operator === 'in' || operator === 'not_in') {
                 // value 应该是数组格式 ['high', 'medium', 'low']
                 let values = [];
-                if (Array.isArray(value)) {
-                    values = value;
-                } else if (typeof value === 'string' && value.includes(',')) {
-                    values = value.split(',').map(v => v.trim());
+                if (isSelectField) {
+                    values = this.normalizeSelectFieldValues(fieldInfo, value);
                 } else {
-                    values = [value];
+                    if (Array.isArray(value)) {
+                        values = value;
+                    } else if (typeof value === 'string' && value.includes(',')) {
+                        values = value.split(',').map(v => v.trim());
+                    } else {
+                        values = [value];
+                    }
                 }
 
                 // 空值（无）也作为一个选项
-                const hasEmpty = values.includes('') || values.includes('无');
-                const nonEmptyValues = values.filter(v => v !== '' && v !== '无');
+                const rawValues = Array.isArray(value)
+                    ? value
+                    : (typeof value === 'string' && value.includes(','))
+                        ? value.split(',').map(v => v.trim())
+                        : [value];
+                const emptyTokens = new Set(['', '无', '未设置', String(fieldInfo?.emptyLabel || '').trim()].filter(Boolean));
+                const hasEmpty = rawValues.some((item) => {
+                    const token = String(item ?? '').trim();
+                    return emptyTokens.has(token);
+                });
+                const nonEmptyValues = values.filter((item) => !emptyTokens.has(String(item ?? '').trim()));
 
                 const taskValueStr = String(taskValue || '').trim();
-                const taskMatch = nonEmptyValues.includes(taskValueStr);
-                const hasEmptyMatch = (!taskValueStr || taskValueStr === '') && hasEmpty;
+                const taskMatch = isSelectField
+                    ? taskSelectValues.some((item) => nonEmptyValues.includes(item))
+                    : nonEmptyValues.includes(taskValueStr);
+                const hasEmptyMatch = isSelectField
+                    ? taskSelectValues.length === 0 && hasEmpty
+                    : (!taskValueStr || taskValueStr === '') && hasEmpty;
+
+                if (isSelectField && fieldInfo?.multi) {
+                    const matchMode = this.normalizeConditionMatchMode(condition, fieldInfo);
+                    const taskHasValue = taskSelectValues.length > 0;
+                    const hasAnySelectedValue = nonEmptyValues.length > 0;
+                    const anySelectedMatch = hasAnySelectedValue && taskSelectValues.some((item) => nonEmptyValues.includes(item));
+                    const allSelectedMatch = hasAnySelectedValue && nonEmptyValues.every((item) => taskSelectValues.includes(item));
+                    let positiveMatch = false;
+
+                    if (matchMode === 'all') {
+                        if (hasEmpty && hasAnySelectedValue) {
+                            positiveMatch = false;
+                        } else if (hasEmpty) {
+                            positiveMatch = !taskHasValue;
+                        } else {
+                            positiveMatch = allSelectedMatch;
+                        }
+                    } else {
+                        positiveMatch = anySelectedMatch || (hasEmpty && !taskHasValue);
+                    }
+
+                    return operator === 'in' ? positiveMatch : !positiveMatch;
+                }
 
                 if (operator === 'in') {
                     return taskMatch || hasEmptyMatch;
                 } else { // not_in
                     return !taskMatch && !hasEmptyMatch;
+                }
+            }
+
+            if (isSelectField) {
+                const targetValue = this.normalizeSelectFieldValues(fieldInfo, value)[0] || '';
+                const isEmptyTarget = !targetValue && (value === '' || value === null || typeof value === 'undefined');
+                switch (operator) {
+                    case '=':
+                    case 'contains':
+                        return isEmptyTarget ? taskSelectValues.length === 0 : taskSelectValues.includes(targetValue);
+                    case '!=':
+                    case 'not_contains':
+                        return isEmptyTarget ? taskSelectValues.length > 0 : !taskSelectValues.includes(targetValue);
                 }
             }
 
@@ -11302,7 +11490,10 @@
 
                 for (const sortRule of rule.sort) {
                     const { field, order } = sortRule;
-                    let result = this.compareValues(a[field], b[field], field);
+                    const fieldInfo = this.getFieldInfo(field);
+                    const valueA = this.getTaskFieldValue(a, fieldInfo || field);
+                    const valueB = this.getTaskFieldValue(b, fieldInfo || field);
+                    let result = this.compareValues(valueA, valueB, field, fieldInfo);
                     
                     if (result !== 0) {
                         return order === 'desc' ? -result : result;
@@ -11313,7 +11504,8 @@
         },
         
         // 比较值
-        compareValues(a, b, field) {
+        compareValues(a, b, field, fieldInfo = null) {
+            const info = (fieldInfo && typeof fieldInfo === 'object') ? fieldInfo : this.getFieldInfo(field);
             // 处理优先级特殊比较
             if (field === 'priority') {
                 const priorityOrder = { high: 3, medium: 2, low: 1 };
@@ -11349,6 +11541,29 @@
                 const valA = indexA === -1 ? 9999 : indexA;
                 const valB = indexB === -1 ? 9999 : indexB;
                 return valA - valB;
+            }
+            if (info?.customFieldId) {
+                const valuesA = this.normalizeSelectFieldValues(info, a);
+                const valuesB = this.normalizeSelectFieldValues(info, b);
+                if (!valuesA.length && !valuesB.length) return 0;
+                if (!valuesA.length) return 1;
+                if (!valuesB.length) return -1;
+                const optionOrder = new Map((Array.isArray(info.options) ? info.options : []).map((value, index) => [String(value || '').trim(), index]));
+                const rankList = (values) => values
+                    .map((value) => optionOrder.has(value) ? optionOrder.get(value) : 9999)
+                    .sort((x, y) => x - y);
+                const rankedA = rankList(valuesA);
+                const rankedB = rankList(valuesB);
+                const length = Math.max(rankedA.length, rankedB.length);
+                for (let i = 0; i < length; i += 1) {
+                    const va = Number.isFinite(rankedA[i]) ? rankedA[i] : 9999;
+                    const vb = Number.isFinite(rankedB[i]) ? rankedB[i] : 9999;
+                    if (va !== vb) return va - vb;
+                }
+                if (rankedA.length !== rankedB.length) return rankedA.length - rankedB.length;
+                const labelA = valuesA.map((value) => this.getSelectFieldLabel(info, value)).join('\u0001');
+                const labelB = valuesB.map((value) => this.getSelectFieldLabel(info, value)).join('\u0001');
+                return labelA.localeCompare(labelB, 'zh-CN');
             }
             
             // 处理时间比较
@@ -17727,6 +17942,14 @@ async function __tmRefreshAfterWake(reason) {
         return String(value ?? '').trim();
     }
 
+    function __tmNormalizeDocDisplayNameMode(value) {
+        return String(value || '').trim().toLowerCase() === 'alias' ? 'alias' : 'name';
+    }
+
+    function __tmGetDocDisplayNameMode() {
+        return __tmNormalizeDocDisplayNameMode(SettingsStore?.data?.docDisplayNameMode);
+    }
+
     function __tmFindDocMetaById(docId) {
         const id = String(docId || '').trim();
         if (!id) return null;
@@ -17749,8 +17972,37 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     function __tmGetDocDisplayName(docOrId, fallback = '未命名文档') {
+        const rawName = __tmGetDocRawName(docOrId, fallback);
         const alias = __tmGetDocAliasValue(docOrId);
-        return alias || __tmGetDocRawName(docOrId, fallback);
+        if (__tmGetDocDisplayNameMode() === 'alias') return alias || rawName;
+        return rawName || alias || String(fallback || '').trim() || '未命名文档';
+    }
+
+    function __tmRefreshTaskDocDisplayNames(options = {}) {
+        const targetDocId = String(options?.docId || '').trim();
+        const visited = new Set();
+        const visitTask = (task) => {
+            if (!task || typeof task !== 'object' || visited.has(task)) return;
+            visited.add(task);
+            const taskDocId = String(task.docId || task.root_id || '').trim();
+            if (!targetDocId || taskDocId === targetDocId) {
+                try {
+                    const fallbackName = String(task.rawDocName || task.raw_doc_name || task.doc_name || task.docName || '未命名文档').trim() || '未命名文档';
+                    normalizeTaskFields(task, fallbackName);
+                } catch (e) {}
+            }
+            if (Array.isArray(task.children)) task.children.forEach(visitTask);
+            if (Array.isArray(task.subtasks)) task.subtasks.forEach(visitTask);
+        };
+        if (state.flatTasks && typeof state.flatTasks === 'object') {
+            Object.values(state.flatTasks).forEach(visitTask);
+        }
+        if (Array.isArray(state.taskTree)) {
+            state.taskTree.forEach((doc) => {
+                if (Array.isArray(doc?.tasks)) doc.tasks.forEach(visitTask);
+                if (Array.isArray(doc?.children)) doc.children.forEach(visitTask);
+            });
+        }
     }
 
     function __tmDecodeHtmlEntities(value) {
@@ -17868,6 +18120,7 @@ async function __tmRefreshAfterWake(reason) {
         const normalizedAlias = __tmNormalizeDocAliasValue(alias);
         await API.setAttrs(id, { alias: normalizedAlias });
         __tmSyncDocAliasInState(id, normalizedAlias);
+        __tmRefreshTaskDocDisplayNames({ docId: id });
         return normalizedAlias;
     }
 
@@ -22013,6 +22266,7 @@ async function __tmRefreshAfterWake(reason) {
             if (changeType === 'toggleRuleEnabled') return window.toggleRuleEnabled?.(ruleId, !!target.checked);
             if (changeType === 'updateConditionField') return window.updateConditionField?.(index, target.value);
             if (changeType === 'updateConditionOperator') return window.updateConditionOperator?.(index, target.value);
+            if (changeType === 'updateConditionMatchMode') return window.updateConditionMatchMode?.(index, target.value);
             if (changeType === 'updateConditionValue') return window.updateConditionValue?.(index, target.value);
             if (changeType === 'toggleConditionMultiValue') return window.toggleConditionMultiValue?.(index, optionValue, !!target.checked);
             if (changeType === 'updateConditionValueRange') return window.updateConditionValueRange?.(index, rangeKey, target.value);
@@ -22072,33 +22326,21 @@ async function __tmRefreshAfterWake(reason) {
         
         const conditionText = rule.conditions.length > 0
             ? rule.conditions.map(c => {
-                const field = RuleManager.getAvailableFields().find(f => f.value === c.field);
+                const field = RuleManager.getFieldInfo(c.field);
                 let valueDisplay = c.value;
 
-                // 状态字段特殊显示
-                if (c.field === 'customStatus') {
-                    if (Array.isArray(c.value)) {
-                        valueDisplay = c.value.map(v => {
-                            const option = SettingsStore.data.customStatusOptions.find(o => o.id === v);
-                            return option ? option.name : v;
-                        }).join('、');
-                    } else {
-                        const option = SettingsStore.data.customStatusOptions.find(o => o.id === c.value);
-                        valueDisplay = option ? option.name : c.value;
-                    }
-                } else if (c.field === 'priority') {
-                    // 优先级显示
-                    const priorityMap = {
-                        'high': '高',
-                        'medium': '中',
-                        'low': '低',
-                        'none': '无'
-                    };
-                    if (Array.isArray(c.value)) {
-                        valueDisplay = c.value.map(v => priorityMap[v] || v).join('、');
-                    } else {
-                        valueDisplay = priorityMap[c.value] || c.value;
-                    }
+                if (field?.type === 'select') {
+                    const rawValues = Array.isArray(c.value)
+                        ? c.value
+                        : ((c.operator === 'in' || c.operator === 'not_in') && typeof c.value === 'string' && c.value.includes(','))
+                            ? c.value.split(',').map(v => v.trim())
+                            : [c.value];
+                    valueDisplay = rawValues.map((raw) => {
+                        const token = String(raw ?? '').trim();
+                        if (!token) return RuleManager.getSelectFieldLabel(field, '');
+                        return RuleManager.getSelectFieldLabel(field, token);
+                    }).filter(Boolean).join('、');
+                    if (!valueDisplay) valueDisplay = RuleManager.getSelectFieldLabel(field, '');
                 } else if (field?.type === 'boolean') {
                     if (c.value === true || c.value === 'true') valueDisplay = 'true';
                     else if (c.value === false || c.value === 'false') valueDisplay = 'false';
@@ -22106,20 +22348,23 @@ async function __tmRefreshAfterWake(reason) {
                 }
 
                 // 多值显示处理
-                if (Array.isArray(c.value) && c.field !== 'customStatus' && c.field !== 'priority') {
+                if (Array.isArray(c.value) && field?.type !== 'select') {
                     if (c.value.length > 1) {
                         valueDisplay = c.value.join('、');
                     } else {
                         valueDisplay = c.value[0] || '无';
                     }
-                } else if ((c.operator === 'in' || c.operator === 'not_in') && c.field !== 'customStatus' && c.field !== 'priority') {
+                } else if ((c.operator === 'in' || c.operator === 'not_in') && field?.type !== 'select') {
                     // 兼容旧格式（逗号分隔的字符串）
                     if (typeof c.value === 'string' && c.value.includes(',')) {
                         valueDisplay = c.value.split(',').join('、');
                     }
                 }
+                const matchModeText = (field?.multi && (c.operator === 'in' || c.operator === 'not_in'))
+                    ? `（${RuleManager.normalizeConditionMatchMode(c, field) === 'all' ? '全部匹配' : '匹配任一'}）`
+                    : '';
 
-                return `${field?.label || c.field} ${c.operator} ${valueDisplay}`;
+                return `${field?.label || c.field} ${c.operator}${matchModeText} ${valueDisplay}`;
             }).join('， ')
             : '无条件';
         
@@ -22224,7 +22469,7 @@ async function __tmRefreshAfterWake(reason) {
         const availableFields = RuleManager.getAvailableFields();
         
         return conditions.map((condition, index) => {
-            const field = availableFields.find(f => f.value === condition.field);
+            const field = availableFields.find(f => f.value === condition.field) || RuleManager.getFieldInfo(condition.field);
             const operators = RuleManager.getOperators(field?.type || 'text');
             
             return `
@@ -22243,7 +22488,7 @@ async function __tmRefreshAfterWake(reason) {
                             </option>`
                         ).join('')}
                     </select>
-                    ${renderConditionValue(condition, index, field?.type)}
+                    ${renderConditionValue(condition, index, field)}
                     <button class="tm-rule-btn tm-rule-btn-danger" data-tm-action="removeCondition" data-index="${index}">
                         ×
                     </button>
@@ -22253,7 +22498,8 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     // 渲染条件值输入
-    function renderConditionValue(condition, index, fieldType) {
+    function renderConditionValue(condition, index, fieldInfo) {
+        const fieldType = String(fieldInfo?.type || '').trim() || 'text';
         if (fieldType === 'boolean') {
             return `
                 <select class="tm-rule-condition-value" data-tm-change="updateConditionValue" data-index="${index}">
@@ -22265,44 +22511,74 @@ async function __tmRefreshAfterWake(reason) {
         }
         
         if (fieldType === 'select') {
-            const field = RuleManager.getAvailableFields().find(f => f.value === condition.field);
-            
             // 准备选项和显示标签
-            let allOptions = [];
-            let optionLabels = { 'high': '高', 'medium': '中', 'low': '低', 'none': '无' };
-
-            if (condition.field === 'customStatus') {
-                allOptions = SettingsStore.data.customStatusOptions.map(o => o.id);
-                optionLabels = SettingsStore.data.customStatusOptions.reduce((acc, cur) => {
-                    acc[cur.id] = cur.name;
-                    return acc;
-                }, {});
-            } else {
-                allOptions = [...(field.options || []), '无'];
-            }
+            const allOptions = Array.isArray(fieldInfo?.options) ? fieldInfo.options.slice() : [];
+            const optionLabels = (fieldInfo?.optionLabels && typeof fieldInfo.optionLabels === 'object')
+                ? fieldInfo.optionLabels
+                : {};
+            const multiOptions = fieldInfo?.allowEmpty ? [...allOptions, ''] : allOptions;
 
             // 如果操作符是 in 或 not_in，显示多选框组
             if (condition.operator === 'in' || condition.operator === 'not_in') {
-                // value 应该是数组
-                let selectedValues = [];
-                if (Array.isArray(condition.value)) {
-                    selectedValues = condition.value;
-                } else if (typeof condition.value === 'string' && condition.value.includes(',')) {
-                    selectedValues = condition.value.split(',').map(v => v.trim());
-                }
+                const rawSelectedValues = Array.isArray(condition.value)
+                    ? condition.value
+                    : (typeof condition.value === 'string' && condition.value.includes(','))
+                        ? condition.value.split(',').map(v => v.trim())
+                        : [condition.value];
+                const emptyTokenSet = new Set(['', '无', '未设置', String(fieldInfo?.emptyLabel || '').trim()].filter(Boolean));
+                const selectedValueSet = new Set();
+                rawSelectedValues.forEach((item) => {
+                    const raw = String(item ?? '').trim();
+                    if (emptyTokenSet.has(raw)) {
+                        selectedValueSet.add('');
+                        return;
+                    }
+                    const normalizedList = RuleManager.normalizeSelectFieldValues(fieldInfo, raw);
+                    if (normalizedList.length) {
+                        normalizedList.forEach((token) => selectedValueSet.add(token));
+                        return;
+                    }
+                    selectedValueSet.add(raw);
+                });
+                const matchMode = RuleManager.normalizeConditionMatchMode(condition, fieldInfo);
 
                 return `
-                    <div class="tm-multi-select" style="display: flex; flex-wrap: wrap; gap: 8px; min-width: 200px;">
-                        ${allOptions.map(opt => `
-                            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
-                                <input type="checkbox"
-                                       ${selectedValues.includes(opt) ? 'checked' : ''}
-                                       data-tm-change="toggleConditionMultiValue"
-                                       data-index="${index}"
-                                       data-option-value="${esc(String(opt))}">
-                                <span>${esc(optionLabels[opt] || opt)}</span>
-                            </label>
-                        `).join('')}
+                    <div style="display:flex; flex:1; min-width:200px; flex-direction:column; gap:8px;">
+                        ${fieldInfo?.multi ? `
+                            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:12px; color: var(--tm-secondary-text);">
+                                <span>匹配方式</span>
+                                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+                                    <input type="radio"
+                                           name="tm-condition-match-mode-${index}"
+                                           value="any"
+                                           ${matchMode !== 'all' ? 'checked' : ''}
+                                           data-tm-change="updateConditionMatchMode"
+                                           data-index="${index}">
+                                    <span>匹配任一（或）</span>
+                                </label>
+                                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+                                    <input type="radio"
+                                           name="tm-condition-match-mode-${index}"
+                                           value="all"
+                                           ${matchMode === 'all' ? 'checked' : ''}
+                                           data-tm-change="updateConditionMatchMode"
+                                           data-index="${index}">
+                                    <span>全部匹配（与）</span>
+                                </label>
+                            </div>
+                        ` : ''}
+                        <div class="tm-multi-select" style="display: flex; flex-wrap: wrap; gap: 8px; min-width: 200px;">
+                            ${multiOptions.map(opt => `
+                                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                    <input type="checkbox"
+                                           ${selectedValueSet.has(String(opt)) ? 'checked' : ''}
+                                           data-tm-change="toggleConditionMultiValue"
+                                           data-index="${index}"
+                                           data-option-value="${esc(String(opt))}">
+                                    <span>${esc(opt === '' ? RuleManager.getSelectFieldLabel(fieldInfo, '') : (optionLabels[opt] || opt))}</span>
+                                </label>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
             }
@@ -22315,7 +22591,7 @@ async function __tmRefreshAfterWake(reason) {
                     <option value="">-- 请选择 --</option>
                     ${allOptions.map(opt =>
                         `<option value="${esc(String(opt))}" ${singleValue === opt ? 'selected' : ''}>
-                            ${esc(optionLabels[opt] || opt)}
+                            ${esc(opt === '' ? RuleManager.getSelectFieldLabel(fieldInfo, '') : (optionLabels[opt] || opt))}
                         </option>`
                     ).join('')}
                 </select>
@@ -23434,13 +23710,18 @@ async function __tmRefreshAfterWake(reason) {
 
     window.updateConditionField = function(index, field) {
         if (state.editingRule && state.editingRule.conditions[index]) {
-            state.editingRule.conditions[index].field = field;
+            const condition = state.editingRule.conditions[index];
+            condition.field = field;
             // 重置操作符和值为新字段的默认值
-            const availableFields = RuleManager.getAvailableFields();
-            const fieldInfo = availableFields.find(f => f.value === field);
+            const fieldInfo = RuleManager.getFieldInfo(field);
             const operators = RuleManager.getOperators(fieldInfo?.type || 'text');
-            state.editingRule.conditions[index].operator = operators[0].value;
-            state.editingRule.conditions[index].value = (fieldInfo?.type === 'boolean') ? 'true' : '';
+            condition.operator = operators[0].value;
+            condition.value = (fieldInfo?.type === 'boolean') ? 'true' : '';
+            if (fieldInfo?.multi && (condition.operator === 'in' || condition.operator === 'not_in')) {
+                condition.matchMode = 'any';
+            } else {
+                delete condition.matchMode;
+            }
             
             if (state.rulesModal) {
                 const conditionsDiv = state.rulesModal.querySelector('.tm-rule-conditions');
@@ -23455,32 +23736,38 @@ async function __tmRefreshAfterWake(reason) {
 
     window.updateConditionOperator = function(index, operator) {
         if (state.editingRule && state.editingRule.conditions[index]) {
-            state.editingRule.conditions[index].operator = operator;
+            const condition = state.editingRule.conditions[index];
+            condition.operator = operator;
+            const fieldInfo = RuleManager.getFieldInfo(condition.field);
 
             // 如果操作符变为 between，初始化值对象
             if (operator === 'between') {
-                state.editingRule.conditions[index].value = { from: '', to: '' };
+                condition.value = { from: '', to: '' };
             }
             // 如果操作符变为 in/not_in，初始化为数组
             else if (operator === 'in' || operator === 'not_in') {
-                const fieldInfo = RuleManager.getAvailableFields().find(f => f.value === state.editingRule.conditions[index].field);
                 if (fieldInfo?.type === 'select') {
                     // 初始化为所有选项都选中，或者根据当前单值转换
-                    const currentValue = state.editingRule.conditions[index].value;
+                    const currentValue = condition.value;
                     if (typeof currentValue === 'string' && currentValue && !currentValue.includes(',')) {
-                        state.editingRule.conditions[index].value = [currentValue];
+                        condition.value = [currentValue];
                     } else if (!Array.isArray(currentValue)) {
-                        state.editingRule.conditions[index].value = [...(fieldInfo.options || [])];
+                        condition.value = [...(fieldInfo.options || [])];
                     }
+                }
+                if (fieldInfo?.multi) {
+                    condition.matchMode = condition.matchMode === 'all' ? 'all' : 'any';
+                } else {
+                    delete condition.matchMode;
                 }
             }
             // 如果操作符从 in/not_in 变为其他，重置为单值
             else {
-                const fieldInfo = RuleManager.getAvailableFields().find(f => f.value === state.editingRule.conditions[index].field);
-                if (fieldInfo?.type === 'select' && Array.isArray(state.editingRule.conditions[index].value)) {
+                if (fieldInfo?.type === 'select' && Array.isArray(condition.value)) {
                     // 取第一个值或空
-                    state.editingRule.conditions[index].value = state.editingRule.conditions[index].value[0] || '';
+                    condition.value = condition.value[0] || '';
                 }
+                delete condition.matchMode;
             }
             
             // 立即重新渲染条件区域，以更新值输入框的类型
@@ -23516,6 +23803,17 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         condition.value = currentValues;
+    };
+
+    window.updateConditionMatchMode = function(index, mode) {
+        if (!state.editingRule || !state.editingRule.conditions[index]) return;
+        const condition = state.editingRule.conditions[index];
+        const fieldInfo = RuleManager.getFieldInfo(condition.field);
+        if (!fieldInfo?.multi) {
+            delete condition.matchMode;
+            return;
+        }
+        condition.matchMode = String(mode || '').trim() === 'all' ? 'all' : 'any';
     };
 
     window.updateConditionValueRange = function(index, key, value) {
@@ -24893,7 +25191,7 @@ async function __tmRefreshAfterWake(reason) {
             ? __TM_OTHER_BLOCK_TAB_NAME
             : __tmGetDocRawName(id, id);
         const alias = isOtherBlocksTab ? '' : __tmGetDocAliasValue(id);
-        const name = alias || rawName;
+        const name = isOtherBlocksTab ? rawName : __tmGetDocDisplayName(id, rawName);
 
         const title = document.createElement('div');
         title.textContent = String(name || '文档');
@@ -24902,7 +25200,7 @@ async function __tmRefreshAfterWake(reason) {
 
         if (!isOtherBlocksTab && alias && alias !== rawName) {
             const subtitle = document.createElement('div');
-            subtitle.textContent = `原名：${rawName}`;
+            subtitle.textContent = name === alias ? `文档名：${rawName}` : `别名：${alias}`;
             subtitle.style.cssText = 'padding: 0 10px 6px; font-size: 12px; opacity: 0.58; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
             menu.appendChild(subtitle);
         }
@@ -37834,6 +38132,7 @@ async function __tmRefreshAfterWake(reason) {
         if (!task || typeof task !== 'object') return task;
 
         const isValidValue = (val) => val !== undefined && val !== null && val !== '' && val !== 'null';
+        const resolvedDocId = String(task.docId || task.root_id || '').trim();
 
         const normalizePriority = (raw) => {
             const s = String(raw ?? '').trim();
@@ -37920,9 +38219,11 @@ async function __tmRefreshAfterWake(reason) {
         task.customFieldValues = __tmNormalizeTaskCustomFieldValues(rawCustomFieldValues, meta?.customFieldValues);
         try { __tmMaybeBackfillTaskCustomFieldAttrs(task, meta); } catch (e) {}
 
-        task.docName = task.docName || task.doc_name || docNameFallback || '未知文档';
+        const rawDocName = String(task.rawDocName || task.raw_doc_name || task.doc_name || task.docName || docNameFallback || '未知文档').trim() || '未知文档';
+        task.rawDocName = rawDocName;
+        task.docName = __tmGetDocDisplayName(resolvedDocId ? { id: resolvedDocId, name: rawDocName } : { name: rawDocName }, rawDocName);
         task.parentTaskId = task.parentTaskId || task.parent_task_id || null;
-        task.docId = task.docId || task.root_id || null;
+        task.docId = resolvedDocId || null;
         task.docSeq = Number.isFinite(Number(task.docSeq ?? task.doc_seq)) ? Number(task.docSeq ?? task.doc_seq) : Number.POSITIVE_INFINITY;
         task.blockPath = String(task.blockPath || task.block_path || task.path || '').trim();
         task.blockSort = String(task.blockSort || task.block_sort || task.sort || '').trim();
@@ -40666,6 +40967,15 @@ async function __tmRefreshAfterWake(reason) {
         try { SettingsStore.syncToLocal(); } catch (e) {}
         await SettingsStore.save();
         await loadSelectedDocuments();
+    };
+
+    window.updateDocDisplayNameMode = async function(value) {
+        SettingsStore.data.docDisplayNameMode = __tmNormalizeDocDisplayNameMode(value);
+        __tmRefreshTaskDocDisplayNames();
+        try { SettingsStore.syncToLocal(); } catch (e) {}
+        await SettingsStore.save();
+        if (state.settingsModal) showSettings();
+        render();
     };
 
     // 导航功能
@@ -49139,7 +49449,7 @@ async function __tmRefreshAfterWake(reason) {
                 const docEntry = state.taskTree.find(d => d.id === docId);
                 if (docEntry) doc = { id: docId, name: docEntry.name };
             }
-            return doc?.name || '未知文档';
+            return doc ? __tmGetDocDisplayName(doc, doc.name || '未知文档') : '未知文档';
         };
 
         const defaultDocIdByGroup = (SettingsStore.data.defaultDocIdByGroup && typeof SettingsStore.data.defaultDocIdByGroup === 'object')
@@ -49508,6 +49818,14 @@ async function __tmRefreshAfterWake(reason) {
                                 <option value="h4" ${SettingsStore.data.taskHeadingLevel === 'h4' ? 'selected' : ''}>H4 四级标题</option>
                                 <option value="h5" ${SettingsStore.data.taskHeadingLevel === 'h5' ? 'selected' : ''}>H5 五级标题</option>
                                 <option value="h6" ${SettingsStore.data.taskHeadingLevel === 'h6' ? 'selected' : ''}>H6 六级标题</option>
+                            </select>`
+                        )}
+                        ${renderSingleFieldSetting(
+                            '文档名称显示',
+                            '控制插件默认显示文档原名还是思源别名；当首选项为空时会自动回退到另一项。',
+                            `<select class="b3-select" onchange="updateDocDisplayNameMode(this.value)" style="width:180px;">
+                                <option value="name" ${__tmGetDocDisplayNameMode() === 'name' ? 'selected' : ''}>优先文档名</option>
+                                <option value="alias" ${__tmGetDocDisplayNameMode() === 'alias' ? 'selected' : ''}>优先别名</option>
                             </select>`
                         )}
                     </div>
@@ -51192,6 +51510,25 @@ async function __tmRefreshAfterWake(reason) {
         if (SettingsStore.data.columnWidths && typeof SettingsStore.data.columnWidths === 'object') {
             delete SettingsStore.data.columnWidths[colKey];
         }
+        const patchRules = (rules) => {
+            if (!Array.isArray(rules)) return;
+            rules.forEach((rule) => {
+                if (!rule || typeof rule !== 'object') return;
+                if (Array.isArray(rule.conditions)) {
+                    rule.conditions = rule.conditions.filter((condition) => String(condition?.field || '').trim() !== colKey);
+                }
+                if (Array.isArray(rule.sort)) {
+                    rule.sort = rule.sort.filter((sortRule) => String(sortRule?.field || '').trim() !== colKey);
+                }
+            });
+        };
+        try {
+            patchRules(state.filterRules);
+            patchRules(SettingsStore.data.filterRules);
+            if (state.editingRule && typeof state.editingRule === 'object') {
+                patchRules([state.editingRule]);
+            }
+        } catch (e) {}
         SettingsStore.normalizeColumns();
         await SettingsStore.save();
         hint('✅ 自定义列已删除', 'success');
