@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.1.0
+// @version      2.1.1
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -6861,6 +6861,10 @@
             text-overflow: ellipsis;
         }
 
+        .tm-body--timeline .tm-group-row .tm-group-sticky {
+            box-shadow: none;
+        }
+
         .tm-gantt-header-inner {
             display: flex;
             flex-direction: column;
@@ -6905,6 +6909,145 @@
 
         .tm-gantt-body-inner {
             position: relative;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline {
+            overflow-x: auto;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-split {
+            width: max-content;
+            min-width: max-content;
+            flex: 0 0 auto;
+            align-items: flex-start;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-left {
+            width: max-content !important;
+            min-width: max-content;
+            max-width: none !important;
+            flex: 0 0 auto;
+            align-self: flex-start;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-left-body {
+            overflow-x: visible;
+            overflow-y: visible;
+            flex: 0 0 auto;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-splitter {
+            display: none;
+            width: 0;
+            pointer-events: none;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-right {
+            flex: 0 0 auto;
+            width: max-content;
+            min-width: max-content;
+            align-self: flex-start;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-right-header {
+            overflow: visible;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-right-body {
+            overflow: visible;
+            flex: 0 0 auto;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-group-row .tm-group-sticky {
+            position: static;
+            left: auto;
+        }
+
+        .tm-timeline-toolbar-btn .tm-lucide-emoji,
+        .tm-timeline-mobile-toolbar__btn .tm-lucide-emoji {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
+        }
+
+        .tm-timeline-toolbar-btn .tm-lucide-emoji svg {
+            width: 14px;
+            height: 14px;
+            display: block;
+        }
+
+        .tm-main-stage.tm-main-stage--timeline-mobile-toolbar > .tm-body.tm-body--timeline {
+            padding-bottom: calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 112px);
+            box-sizing: border-box;
+        }
+
+        .tm-timeline-mobile-toolbar {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 50px);
+            z-index: 44;
+            display: flex;
+            justify-content: center;
+            padding: 0 14px;
+            pointer-events: none;
+        }
+
+        .tm-timeline-mobile-toolbar__inner {
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+            max-width: min(calc(100% - 28px), 320px);
+            padding: 4px;
+            border-radius: 18px;
+            border: 1px solid color-mix(in srgb, var(--tm-border-color) 84%, transparent);
+            background: color-mix(in srgb, var(--tm-header-bg) 96%, rgba(255,255,255,0.12));
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .tm-timeline-mobile-toolbar__btn {
+            width: 36px;
+            min-width: 36px;
+            height: 36px;
+            min-height: 36px;
+            padding: 0;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+        }
+
+        .tm-timeline-mobile-toolbar__btn.tm-timeline-mobile-toolbar__btn--active,
+        .tm-timeline-mobile-toolbar__btn:focus-visible,
+        .tm-timeline-mobile-toolbar__btn:active {
+            background: var(--tm-topbar-seg-item-active-bg) !important;
+            border-color: color-mix(in srgb, var(--tm-topbar-control-border) 72%, transparent) !important;
+            box-shadow: 0 4px 12px color-mix(in srgb, var(--tm-primary-color) 16%, transparent) !important;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .tm-timeline-mobile-toolbar__btn:hover {
+                background: var(--tm-topbar-seg-item-active-bg) !important;
+                border-color: color-mix(in srgb, var(--tm-topbar-control-border) 72%, transparent) !important;
+                box-shadow: 0 4px 12px color-mix(in srgb, var(--tm-primary-color) 16%, transparent) !important;
+            }
+        }
+
+        .tm-timeline-mobile-toolbar__btn .tm-lucide-emoji svg {
+            width: 14px;
+            height: 14px;
+            display: block;
         }
 
         .tm-gantt-deps {
@@ -9339,6 +9482,7 @@
             aiScheduleWindows: ['09:00-18:00'],
             aiSideDockEnabled: true,
             pinNewTasksByDefault: false,
+            enableMoveBlockToDailyNote: false,
             taskDetailCompletedSubtasksVisibilityByTask: {},
             newTaskDocId: '',
             newTaskDailyNoteNotebookId: '',
@@ -9464,6 +9608,11 @@
             collapseAllIncludesGroups: false,
             docColorMap: {},
             docColorSeed: 1,
+            docDefaultColorScheme: {
+                palette: 'random',
+                seed: 1,
+                baseColor: '#3b82f6'
+            },
             themeConfig: {
                 source: 'preset',
                 presetId: 'task-horizon-slate',
@@ -9695,6 +9844,7 @@
                                 if (typeof cloudData.taskRemarkWrapMaxLines === 'number') this.data.taskRemarkWrapMaxLines = cloudData.taskRemarkWrapMaxLines;
                                 if (typeof cloudData.enableQuickbar === 'boolean') this.data.enableQuickbar = cloudData.enableQuickbar;
                                 if (typeof cloudData.enableQuickbarInlineMeta === 'boolean') this.data.enableQuickbarInlineMeta = cloudData.enableQuickbarInlineMeta;
+                                if (typeof cloudData.enableMoveBlockToDailyNote === 'boolean') this.data.enableMoveBlockToDailyNote = cloudData.enableMoveBlockToDailyNote;
                                 if (Array.isArray(cloudData.quickbarInlineFields)) this.data.quickbarInlineFields = cloudData.quickbarInlineFields;
                                 if (Array.isArray(cloudData.quickbarVisibleItems)) this.data.quickbarVisibleItems = cloudData.quickbarVisibleItems;
                                 if (typeof cloudData.quickbarInlineShowOnMobile === 'boolean') this.data.quickbarInlineShowOnMobile = cloudData.quickbarInlineShowOnMobile;
@@ -9858,6 +10008,7 @@
                                 if (typeof cloudData.whiteboardSequenceMode === 'boolean') this.data.whiteboardSequenceMode = cloudData.whiteboardSequenceMode;
                                 if (cloudData.docColorMap && typeof cloudData.docColorMap === 'object') this.data.docColorMap = cloudData.docColorMap;
                                 if (typeof cloudData.docColorSeed === 'number') this.data.docColorSeed = cloudData.docColorSeed;
+                                if (cloudData.docDefaultColorScheme && typeof cloudData.docDefaultColorScheme === 'object') this.data.docDefaultColorScheme = cloudData.docDefaultColorScheme;
                                 if (typeof cloudData.docTabSortMode === 'string') this.data.docTabSortMode = cloudData.docTabSortMode;
                                 if (typeof cloudData.docDisplayNameMode === 'string') this.data.docDisplayNameMode = cloudData.docDisplayNameMode;
                                 if (typeof cloudData.aiEnabled === 'boolean') this.data.aiEnabled = cloudData.aiEnabled;
@@ -10028,6 +10179,7 @@
             this.data.tableBorderColorDark = Storage.get('tm_table_border_color_dark', this.data.tableBorderColorDark);
             this.data.enableQuickbar = Storage.get('tm_enable_quickbar', true);
             this.data.enableQuickbarInlineMeta = !!Storage.get('tm_enable_quickbar_inline_meta', this.data.enableQuickbarInlineMeta);
+            this.data.enableMoveBlockToDailyNote = !!Storage.get('tm_enable_move_block_to_daily_note', this.data.enableMoveBlockToDailyNote);
             this.data.quickbarInlineFields = Storage.get('tm_quickbar_inline_fields', this.data.quickbarInlineFields) || this.data.quickbarInlineFields;
             this.data.quickbarVisibleItems = Storage.get('tm_quickbar_visible_items', this.data.quickbarVisibleItems) || this.data.quickbarVisibleItems;
             this.data.quickbarInlineShowOnMobile = !!Storage.get('tm_quickbar_inline_show_on_mobile', this.data.quickbarInlineShowOnMobile);
@@ -10139,6 +10291,7 @@
             this.data.whiteboardSequenceMode = Storage.get('tm_whiteboard_sequence_mode', this.data.whiteboardSequenceMode);
             this.data.docColorMap = Storage.get('tm_doc_color_map', this.data.docColorMap) || {};
             this.data.docColorSeed = Storage.get('tm_doc_color_seed', this.data.docColorSeed);
+            this.data.docDefaultColorScheme = Storage.get('tm_doc_default_color_scheme', this.data.docDefaultColorScheme) || this.data.docDefaultColorScheme;
             this.data.themeConfig = Storage.get('tm_theme_config', this.data.themeConfig) || this.data.themeConfig;
             this.data.enableGroupTaskBgByGroupColor = Storage.get('tm_enable_group_task_bg_by_group_color', this.data.enableGroupTaskBgByGroupColor);
             this.data.aiEnabled = !!Storage.get('tm_ai_enabled', this.data.aiEnabled);
@@ -10323,6 +10476,7 @@
             Storage.set('tm_table_border_color_dark', String(this.data.tableBorderColorDark || '').trim());
             Storage.set('tm_enable_quickbar', !!this.data.enableQuickbar);
             Storage.set('tm_enable_quickbar_inline_meta', !!this.data.enableQuickbarInlineMeta);
+            Storage.set('tm_enable_move_block_to_daily_note', !!this.data.enableMoveBlockToDailyNote);
             Storage.set('tm_quickbar_inline_fields', Array.isArray(this.data.quickbarInlineFields) ? this.data.quickbarInlineFields : ['custom-status', 'custom-completion-time']);
             Storage.set('tm_quickbar_visible_items', Array.isArray(this.data.quickbarVisibleItems) ? this.data.quickbarVisibleItems : ['custom-status', 'custom-priority', 'custom-start-date', 'custom-completion-time', 'custom-duration', 'custom-remark', 'action-ai-title', 'action-reminder', 'action-more']);
             Storage.set('tm_quickbar_inline_show_on_mobile', !!this.data.quickbarInlineShowOnMobile);
@@ -10439,6 +10593,7 @@
             Storage.set('tm_whiteboard_sequence_mode', !!this.data.whiteboardSequenceMode);
             Storage.set('tm_doc_color_map', this.data.docColorMap || {});
             Storage.set('tm_doc_color_seed', Number(this.data.docColorSeed) || 1);
+            Storage.set('tm_doc_default_color_scheme', this.data.docDefaultColorScheme || { palette: 'random', seed: Number(this.data.docColorSeed) || 1, baseColor: '#3b82f6' });
             Storage.set('tm_theme_config', __tmNormalizeThemeConfig(this.data.themeConfig));
             Storage.set('tm_enable_group_task_bg_by_group_color', !!this.data.enableGroupTaskBgByGroupColor);
             Storage.set('tm_ai_enabled', !!this.data.aiEnabled);
@@ -10518,8 +10673,12 @@
             const map = this.data.docColorMap;
             this.data.docColorMap = (map && typeof map === 'object' && !Array.isArray(map)) ? map : {};
             this.data.themeConfig = __tmNormalizeThemeConfig(this.data.themeConfig);
+            this.data.docDefaultColorScheme = __tmNormalizeDocColorSchemeConfig(this.data.docDefaultColorScheme, {
+                seedFallback: this.data.docColorSeed
+            });
+            this.data.docColorSeed = Number(this.data.docDefaultColorScheme.seed) || 1;
             const rawDocGroups = Array.isArray(this.data.docGroups) ? this.data.docGroups : [];
-            this.data.docGroups = rawDocGroups.map((group) => __tmNormalizeDocGroupConfig(group)).filter(Boolean);
+            this.data.docGroups = rawDocGroups.map((group) => __tmNormalizeDocGroupConfig(group, this.data.docDefaultColorScheme)).filter(Boolean);
             const pinMap0 = this.data.docPinnedByGroup;
             const pinMap = (pinMap0 && typeof pinMap0 === 'object' && !Array.isArray(pinMap0)) ? pinMap0 : {};
             const normalizedPinMap = {};
@@ -10539,6 +10698,7 @@
             this.data.docPinnedByGroup = normalizedPinMap;
             const seed = Number(this.data.docColorSeed);
             this.data.docColorSeed = (Number.isFinite(seed) && seed > 0) ? Math.floor(seed) : 1;
+            this.data.docDefaultColorScheme.seed = this.data.docColorSeed;
             const kw = Number(this.data.kanbanColumnWidth);
             this.data.kanbanColumnWidth = Number.isFinite(kw) ? Math.max(220, Math.min(520, Math.round(kw))) : 320;
             const wbStreamMinW = Number(this.data.whiteboardAllTabsCardMinWidth);
@@ -10562,6 +10722,7 @@
             this.data.taskContentWrapMaxLines = Number.isFinite(wrapContentLines) ? Math.max(1, Math.min(10, Math.round(wrapContentLines))) : 3;
             const wrapRemarkLines = Number(this.data.taskRemarkWrapMaxLines);
             this.data.taskRemarkWrapMaxLines = Number.isFinite(wrapRemarkLines) ? Math.max(1, Math.min(10, Math.round(wrapRemarkLines))) : 2;
+            this.data.enableMoveBlockToDailyNote = !!this.data.enableMoveBlockToDailyNote;
             this.data.newTaskDailyNoteAppendToBottom = !!this.data.newTaskDailyNoteAppendToBottom;
             this.data.headingGroupCreateAtSectionEnd = !!this.data.headingGroupCreateAtSectionEnd;
             this.data.taskDetailCompletedSubtasksVisibilityByTask = (this.data.taskDetailCompletedSubtasksVisibilityByTask && typeof this.data.taskDetailCompletedSubtasksVisibilityByTask === 'object' && !Array.isArray(this.data.taskDetailCompletedSubtasksVisibilityByTask))
@@ -10730,7 +10891,7 @@
 
         // 便捷方法：更新文档分组
         async updateDocGroups(groups) {
-            this.data.docGroups = (Array.isArray(groups) ? groups : []).map((group) => __tmNormalizeDocGroupConfig(group)).filter(Boolean);
+            this.data.docGroups = (Array.isArray(groups) ? groups : []).map((group) => __tmNormalizeDocGroupConfig(group, this.data.docDefaultColorScheme)).filter(Boolean);
             await this.save();
         },
 
@@ -11601,6 +11762,10 @@
     let __tmSqlCacheInvalidationHandler = null;
     let __tmSqlCacheEventBusHandler = null;
     let __tmCalendarTxRefreshTimer = null;
+    let __tmTxTaskRefreshTimer = null;
+    let __tmTxTaskRefreshInFlight = false;
+    const __tmTxTaskRefreshDocIds = new Set();
+    const __tmTxTaskRefreshBlockIds = new Set();
 
     function __tmCloneTaskQueryRows(rows) {
         return Array.isArray(rows)
@@ -12102,6 +12267,10 @@
         __tmAuxQueryCache.set(key, { t: Date.now(), v: value });
     }
 
+    function __tmIsLikelyBlockId(value) {
+        return /^[0-9]+-[a-zA-Z0-9]+$/.test(String(value || '').trim());
+    }
+
     function __tmExtractDocIdsFromTx(payload) {
         const out = new Set();
         const walk = (v, depth) => {
@@ -12121,6 +12290,246 @@
         };
         walk(payload, 0);
         return out;
+    }
+
+    function __tmExtractBlockIdsFromTx(payload) {
+        const out = new Set();
+        const walk = (v, depth) => {
+            if (depth > 6 || !v) return;
+            if (Array.isArray(v)) {
+                v.forEach((x) => walk(x, depth + 1));
+                return;
+            }
+            if (typeof v !== 'object') return;
+            [
+                v.id,
+                v.blockID,
+                v.blockId,
+                v.parentID,
+                v.parentId,
+                v.previousID,
+                v.previousId,
+                v.nextID,
+                v.nextId,
+                v.root_id,
+                v.rootId,
+                v.rootID,
+                v.root
+            ].forEach((x) => {
+                const s = String(x || '').trim();
+                if (__tmIsLikelyBlockId(s)) out.add(s);
+            });
+            [
+                v.data,
+                v.detail,
+                v.tx,
+                v.payload,
+                v.rows,
+                v.ops,
+                v.operations,
+                v.doOperations,
+                v.undoOperations,
+                v.children,
+                v.items,
+                v.srcs,
+                v.dsts
+            ].forEach((x) => walk(x, depth + 1));
+        };
+        walk(payload, 0);
+        return out;
+    }
+
+    async function __tmResolveDocIdsFromBlockIds(blockIds) {
+        const out = new Set();
+        const list = Array.from(new Set((Array.isArray(blockIds) ? blockIds : [])
+            .map((id) => String(id || '').trim())
+            .filter((id) => __tmIsLikelyBlockId(id))));
+        if (list.length === 0) return out;
+        const batchSize = 200;
+        for (let i = 0; i < list.length; i += batchSize) {
+            const chunk = list.slice(i, i + batchSize);
+            if (chunk.length === 0) continue;
+            let rows = [];
+            try {
+                rows = await API.getBlocksByIds(chunk);
+            } catch (e) {
+                rows = [];
+            }
+            (Array.isArray(rows) ? rows : []).forEach((row) => {
+                const docId = String(row?.root_id || '').trim();
+                if (__tmIsLikelyBlockId(docId)) {
+                    out.add(docId);
+                    return;
+                }
+                const blockId = String(row?.id || '').trim();
+                const type = String(row?.type || '').trim().toLowerCase();
+                if (type === 'd' && __tmIsLikelyBlockId(blockId)) {
+                    out.add(blockId);
+                }
+            });
+        }
+        return out;
+    }
+
+    async function __tmBuildInjectedTasksByDocFromBlockIds(blockIds) {
+        const out = new Map();
+        const list = Array.from(new Set((Array.isArray(blockIds) ? blockIds : [])
+            .map((id) => String(id || '').trim())
+            .filter((id) => __tmIsLikelyBlockId(id))));
+        if (list.length === 0) return out;
+
+        const taskIdSourceMap = new Map();
+        for (const blockId of list) {
+            let taskId = '';
+            try { taskId = await __tmResolveTaskIdFromAnyBlockId(blockId); } catch (e) { taskId = ''; }
+            const resolvedId = String(taskId || blockId || '').trim();
+            if (__tmIsLikelyBlockId(resolvedId) && !taskIdSourceMap.has(resolvedId)) {
+                taskIdSourceMap.set(resolvedId, blockId);
+            }
+        }
+        const taskIds = Array.from(taskIdSourceMap.keys());
+        if (taskIds.length === 0) return out;
+
+        const rows = await Promise.all(taskIds.map(async (taskId) => {
+            let row = null;
+            try { row = await API.getTaskById(taskId); } catch (e) { row = null; }
+            if (!row) {
+                try { row = await __tmBuildTaskLikeFromBlockId(taskId); } catch (e) { row = null; }
+            }
+            if (!row) {
+                const sourceId = String(taskIdSourceMap.get(taskId) || '').trim();
+                if (sourceId && sourceId !== taskId) {
+                    try { row = await __tmBuildTaskLikeFromBlockId(sourceId); } catch (e) { row = null; }
+                }
+            }
+            return row;
+        }));
+
+        rows.forEach((row) => {
+            if (!row || typeof row !== 'object') return;
+            const docId = String(row.root_id || row.docId || '').trim();
+            const taskId = String(row.id || '').trim();
+            if (!__tmIsLikelyBlockId(docId) || !__tmIsLikelyBlockId(taskId)) return;
+            if (!out.has(docId)) out.set(docId, []);
+            const list0 = out.get(docId);
+            if (!list0.find((item) => String(item?.id || '').trim() === taskId)) {
+                list0.push(row);
+            }
+        });
+
+        return out;
+    }
+
+    function __tmScheduleTaskIncrementalRefreshFromTx(payload) {
+        const docIds = __tmExtractDocIdsFromTx(payload);
+        const blockIds = __tmExtractBlockIdsFromTx(payload);
+        if ((!docIds || docIds.size === 0) && (!blockIds || blockIds.size === 0)) return;
+        if (docIds && docIds.size > 0) {
+            docIds.forEach((id) => {
+                if (__tmIsLikelyBlockId(id)) __tmTxTaskRefreshDocIds.add(id);
+            });
+        }
+        if (blockIds && blockIds.size > 0) {
+            blockIds.forEach((id) => {
+                if (__tmIsLikelyBlockId(id)) __tmTxTaskRefreshBlockIds.add(id);
+            });
+        }
+        try {
+            if (__tmTxTaskRefreshTimer) clearTimeout(__tmTxTaskRefreshTimer);
+        } catch (e) {}
+        __tmTxTaskRefreshTimer = setTimeout(() => {
+            __tmTxTaskRefreshTimer = null;
+            __tmFlushTaskIncrementalRefreshFromTx().catch(() => {});
+        }, 280);
+    }
+
+    async function __tmFlushTaskIncrementalRefreshFromTx() {
+        if (__tmTxTaskRefreshInFlight) {
+            try {
+                if (__tmTxTaskRefreshTimer) clearTimeout(__tmTxTaskRefreshTimer);
+            } catch (e) {}
+            __tmTxTaskRefreshTimer = setTimeout(() => {
+                __tmTxTaskRefreshTimer = null;
+                __tmFlushTaskIncrementalRefreshFromTx().catch(() => {});
+            }, 220);
+            return;
+        }
+
+        const pendingDocIds = Array.from(__tmTxTaskRefreshDocIds);
+        const pendingBlockIds = Array.from(__tmTxTaskRefreshBlockIds);
+        __tmTxTaskRefreshDocIds.clear();
+        __tmTxTaskRefreshBlockIds.clear();
+
+        if (pendingDocIds.length === 0 && pendingBlockIds.length === 0) return;
+
+        const loadedDocIds = new Set((Array.isArray(state.__tmLoadedDocIdsForTasks) ? state.__tmLoadedDocIdsForTasks : [])
+            .map((id) => String(id || '').trim())
+            .filter((id) => __tmIsLikelyBlockId(id)));
+        if (loadedDocIds.size === 0) return;
+
+        if (state.isRefreshing) {
+            pendingDocIds.forEach((id) => {
+                if (__tmIsLikelyBlockId(id)) __tmTxTaskRefreshDocIds.add(id);
+            });
+            pendingBlockIds.forEach((id) => {
+                if (__tmIsLikelyBlockId(id)) __tmTxTaskRefreshBlockIds.add(id);
+            });
+            try {
+                if (__tmTxTaskRefreshTimer) clearTimeout(__tmTxTaskRefreshTimer);
+            } catch (e) {}
+            __tmTxTaskRefreshTimer = setTimeout(() => {
+                __tmTxTaskRefreshTimer = null;
+                __tmFlushTaskIncrementalRefreshFromTx().catch(() => {});
+            }, 320);
+            return;
+        }
+
+        __tmTxTaskRefreshInFlight = true;
+        try {
+            const injectedTasksByDoc = await __tmBuildInjectedTasksByDocFromBlockIds(pendingBlockIds);
+            const docIdSet = new Set();
+            pendingDocIds.forEach((id) => {
+                if (loadedDocIds.has(id)) docIdSet.add(id);
+            });
+            const resolvedDocIds = await __tmResolveDocIdsFromBlockIds(pendingBlockIds);
+            resolvedDocIds.forEach((id) => {
+                if (loadedDocIds.has(id)) docIdSet.add(id);
+            });
+            injectedTasksByDoc.forEach((_, docId) => {
+                if (loadedDocIds.has(docId)) docIdSet.add(docId);
+            });
+            const docIds = Array.from(docIdSet);
+            if (docIds.length === 0) return;
+
+            docIds.forEach((docId) => {
+                try { __tmInvalidateTasksQueryCacheByDocId(docId); } catch (e) {}
+            });
+
+            for (const docId of docIds) {
+                try {
+                    await reloadDocTasksProtected(docId, null, null, injectedTasksByDoc.get(docId) || null);
+                } catch (e) {}
+            }
+
+            try { applyFilters(); } catch (e) {}
+            try {
+                if (__tmIsPluginVisibleNow()) {
+                    __tmRefreshMainViewInPlace({ withFilters: false });
+                }
+            } catch (e) {}
+            try { await MetaStore.saveNow(); } catch (e) {}
+        } finally {
+            __tmTxTaskRefreshInFlight = false;
+            if (__tmTxTaskRefreshDocIds.size > 0 || __tmTxTaskRefreshBlockIds.size > 0) {
+                try {
+                    if (__tmTxTaskRefreshTimer) clearTimeout(__tmTxTaskRefreshTimer);
+                } catch (e) {}
+                __tmTxTaskRefreshTimer = setTimeout(() => {
+                    __tmTxTaskRefreshTimer = null;
+                    __tmFlushTaskIncrementalRefreshFromTx().catch(() => {});
+                }, 180);
+            }
+        }
     }
 
     function __tmScheduleCalendarRefetchFromTx() {
@@ -12150,6 +12559,7 @@
                     const docIds = __tmExtractDocIdsFromTx(msg);
                     if (docIds && docIds.size > 0) docIds.forEach((d) => __tmInvalidateTasksQueryCacheByDocId(d));
                     else __tmInvalidateAllSqlCaches();
+                    __tmScheduleTaskIncrementalRefreshFromTx(msg);
                     __tmScheduleCalendarRefetchFromTx();
                 };
                 eb.on('ws-main', __tmSqlCacheEventBusHandler);
@@ -12297,6 +12707,14 @@
             const data = res.data;
             if (typeof data === 'string') return data;
             return data?.kramdown || data?.content || '';
+        },
+
+        async getBlockDOM(id) {
+            const res = await this.call('/api/block/getBlockDOM', { id });
+            if (res.code !== 0) throw new Error(res.msg || '获取块DOM失败');
+            const data = res.data;
+            if (typeof data === 'string') return data;
+            return data?.dom || data?.content || '';
         },
 
         async getDocEnhanceSnapshot(docId, headingLevel = 'h2') {
@@ -12683,6 +13101,7 @@
             const lim0 = Number(limit);
             const lim = Number.isFinite(lim0) ? Math.max(1, Math.min(5000, Math.round(lim0))) : 500;
             const ignoreExcludeCompleted = !!(options && options.ignoreExcludeCompleted === true);
+            const fullTree = !!(options && options.fullTree === true);
             const tomatoEnabled = !!SettingsStore.data.enableTomatoIntegration;
             const tomatoMinutesKey = __tmSafeAttrName(SettingsStore.data.tomatoSpentAttrKeyMinutes, 'custom-tomato-minutes');
             const tomatoHoursKey = __tmSafeAttrName(SettingsStore.data.tomatoSpentAttrKeyHours, 'custom-tomato-time');
@@ -12706,6 +13125,7 @@
             const doneOnlyCondition = (options && options.doneOnly === true)
                 ? ` AND (task.markdown LIKE '%[x]%' OR task.markdown LIKE '%[X]%')`
                 : '';
+            const limitClause = fullTree ? '' : `\n                LIMIT ${lim}`;
 
             const sql = `
                 SELECT 
@@ -12779,8 +13199,7 @@
                     AND task.markdown IS NOT NULL
                     AND task.markdown != ''${excludeCompletedCondition}${doneOnlyCondition}
                 
-                ORDER BY task.path, task.sort, task.created
-                LIMIT ${lim}
+                ORDER BY task.path, task.sort, task.created${limitClause}
             `;
             
             const startTime = Date.now();
@@ -13788,7 +14207,7 @@
             if (list.length === 0) return [];
             const quoted = list.map(id => `'${id.replace(/'/g, "''")}'`).join(',');
             const totalLimit = Math.max(1, Math.min(5000, list.length));
-            const sql = `SELECT id, parent_id, type, subtype FROM blocks WHERE id IN (${quoted}) LIMIT ${totalLimit}`;
+            const sql = `SELECT id, parent_id, root_id, type, subtype FROM blocks WHERE id IN (${quoted}) LIMIT ${totalLimit}`;
             const res = await this.call('/api/query/sql', { stmt: sql });
             if (res.code === 0 && Array.isArray(res.data)) return res.data;
             return [];
@@ -13968,6 +14387,9 @@
         calendarDockDate: '',
         docTabsHidden: false,
         docTabsScrollLeft: 0,
+        dockTaskPointerDragAbort: null,
+        dockTaskPointerGestureCleanup: null,
+        dockTaskPointerSuppressClickUntil: 0,
         mobileBottomViewbarActiveUntil: 0,
         mobileBottomViewbarTimer: 0,
         mobileViewportRefreshSig: '',
@@ -14807,6 +15229,7 @@
     }
 
     const __tmModalStack = [];
+    let __tmModalStackEscHandler = null;
 
     function __tmModalStackPush(entry) {
         if (!entry || typeof entry.close !== 'function') return __tmModalStack.length;
@@ -14837,14 +15260,17 @@
     }
 
     (function __tmInitModalStackEscHandler() {
-        const handler = (e) => {
+        if (__tmModalStackEscHandler) {
+            try { document.removeEventListener('keydown', __tmModalStackEscHandler, true); } catch (e) {}
+        }
+        __tmModalStackEscHandler = (e) => {
             if (e.key !== 'Escape') return;
             if (__tmModalStack.length === 0) return;
             try { e.preventDefault(); } catch (e2) {}
             try { e.stopPropagation(); } catch (e2) {}
             __tmModalStackPop();
         };
-        document.addEventListener('keydown', handler, true);
+        document.addEventListener('keydown', __tmModalStackEscHandler, true);
     })();
 
     function __tmGetTodayDateKey() {
@@ -16016,17 +16442,6 @@
             const fromBody = String(document.body?.dataset?.[key] || '').trim();
             if (fromBody) return fromBody;
         } catch (e) {}
-        try {
-            const fromFrame = String(window.frameElement?.dataset?.[key] || '').trim();
-            if (fromFrame) return fromFrame;
-        } catch (e) {}
-        try {
-            const globalKey = key === 'tmHostMode' ? '__taskHorizonHostMode' : (key === 'tmUiMode' ? '__taskHorizonHostUiMode' : '');
-            if (globalKey) {
-                const fromGlobal = String(globalThis?.[globalKey] || '').trim();
-                if (fromGlobal) return fromGlobal;
-            }
-        } catch (e) {}
         return '';
     }
 
@@ -16035,9 +16450,6 @@
     }
 
     function __tmHostUsesMobileUI() {
-        try {
-            if (globalThis.__taskHorizonForceMobileUI === true) return true;
-        } catch (e) {}
         return __tmReadHostMeta('tmUiMode') === 'mobile';
     }
 
@@ -16358,6 +16770,7 @@
     let __tmCalendarBootstrapRetryTimer = null;
     let __tmQuickbarTaskUpdateHandler = null;
     let __tmEditorTitleIconMenuHandler = null;
+    let __tmContentMenuHandler = null;
     const __TM_MOBILE_TOPBAR_REGISTERED_KEY = '__taskHorizonMobileTopBarRegistered';
     let __tmDocTreeMenuHandler = null;
     let __tmBlockIconMenuHandler = null;
@@ -17826,6 +18239,34 @@ async function __tmRefreshAfterWake(reason) {
             : `#${to2(r)}${to2(g)}${to2(b)}`.toLowerCase();
     }
 
+    function __tmRgbToHsl(rgb) {
+        const r = __tmClamp(Number(rgb?.r) || 0, 0, 255) / 255;
+        const g = __tmClamp(Number(rgb?.g) || 0, 0, 255) / 255;
+        const b = __tmClamp(Number(rgb?.b) || 0, 0, 255) / 255;
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const l = (max + min) / 2;
+        const d = max - min;
+        let h = 0;
+        let s = 0;
+        if (d !== 0) {
+            s = d / (1 - Math.abs(2 * l - 1));
+            switch (max) {
+                case r:
+                    h = 60 * (((g - b) / d) % 6);
+                    break;
+                case g:
+                    h = 60 * (((b - r) / d) + 2);
+                    break;
+                default:
+                    h = 60 * (((r - g) / d) + 4);
+                    break;
+            }
+        }
+        if (h < 0) h += 360;
+        return { h, s: s * 100, l: l * 100 };
+    }
+
     function __tmMixRgb(a, b, t) {
         const x = __tmClamp(t, 0, 1);
         const aAlpha = Number(a?.a);
@@ -17837,6 +18278,187 @@ async function __tmRefreshAfterWake(reason) {
             b: Math.round((a.b || 0) + ((b.b || 0) - (a.b || 0)) * x),
             ...(hasAlpha ? { a: __tmClamp((Number.isFinite(aAlpha) ? aAlpha : 1) + ((Number.isFinite(bAlpha) ? bAlpha : 1) - (Number.isFinite(aAlpha) ? aAlpha : 1)) * x, 0, 1) } : {}),
         };
+    }
+
+    const __TM_DOC_COLOR_SCHEME_PRESETS = [
+        { id: 'random', label: '随机', description: '保持较高区分度，适合通用场景。' },
+        { id: 'morandi', label: '莫兰迪', description: '低饱和灰调，更安静耐看。' },
+        { id: 'natural', label: '低饱和自然', description: '偏植物和土壤感，柔和但有层次。' },
+        { id: 'warm', label: '暖复古', description: '陶土、赭石、焦糖一类暖色调。' },
+        { id: 'mist', label: '冷雾灰蓝', description: '雾蓝、灰紫、石板蓝，偏冷静。' },
+        { id: 'vivid', label: '高饱和活力', description: '更明快跳脱，区分度最高。' },
+        { id: 'custom', label: '自定义主色调', description: '围绕主色自动扩展一组文档色。' }
+    ];
+    const __TM_DOC_COLOR_SCHEME_IDS = new Set(__TM_DOC_COLOR_SCHEME_PRESETS.map((item) => item.id));
+
+    function __tmGetDocColorSchemePreset(id) {
+        const key = String(id || '').trim();
+        return __TM_DOC_COLOR_SCHEME_PRESETS.find((item) => item.id === key) || __TM_DOC_COLOR_SCHEME_PRESETS[0];
+    }
+
+    function __tmGetDefaultDocColorSchemeConfig(seedFallback = 1) {
+        const seed = Number(seedFallback);
+        return {
+            palette: 'random',
+            seed: (Number.isFinite(seed) && seed > 0) ? Math.floor(seed) : 1,
+            baseColor: '#3b82f6'
+        };
+    }
+
+    function __tmNormalizeDocColorSchemePalette(input) {
+        const value = String(input || '').trim();
+        return __TM_DOC_COLOR_SCHEME_IDS.has(value) ? value : 'random';
+    }
+
+    function __tmNormalizeDocColorSchemeConfig(input, options = {}) {
+        const source = (input && typeof input === 'object' && !Array.isArray(input)) ? input : {};
+        const seedFallback = Number(options?.seedFallback);
+        const fallback = __tmGetDefaultDocColorSchemeConfig(Number.isFinite(seedFallback) ? seedFallback : 1);
+        const rawSeed = Number(source.seed);
+        const normalized = {
+            palette: __tmNormalizeDocColorSchemePalette(source.palette || source.mode),
+            seed: (Number.isFinite(rawSeed) && rawSeed > 0) ? Math.floor(rawSeed) : fallback.seed,
+            baseColor: __tmNormalizeHexColor(source.baseColor || source.primaryColor, fallback.baseColor) || fallback.baseColor
+        };
+        if (options?.allowInherit) normalized.inherit = source.inherit !== false;
+        return normalized;
+    }
+
+    function __tmGetGlobalDocColorSchemeConfig() {
+        return __tmNormalizeDocColorSchemeConfig(
+            SettingsStore?.data?.docDefaultColorScheme,
+            { seedFallback: Number(SettingsStore?.data?.docColorSeed) || 1 }
+        );
+    }
+
+    function __tmGetCurrentDocGroupForColorScheme(groupId) {
+        const gid = String(groupId || SettingsStore?.data?.currentGroupId || 'all').trim() || 'all';
+        if (gid === 'all') return null;
+        const groups = Array.isArray(SettingsStore?.data?.docGroups) ? SettingsStore.data.docGroups : [];
+        return groups.find((group) => String(group?.id || '').trim() === gid) || null;
+    }
+
+    function __tmGetEffectiveDocColorSchemeConfig(groupId) {
+        const globalConfig = __tmGetGlobalDocColorSchemeConfig();
+        const group = __tmGetCurrentDocGroupForColorScheme(groupId);
+        const groupConfig = __tmNormalizeDocColorSchemeConfig(group?.docColorConfig, {
+            allowInherit: true,
+            seedFallback: globalConfig.seed
+        });
+        if (!group || groupConfig.inherit !== false) {
+            return {
+                ...globalConfig,
+                scope: 'global',
+                inherit: true,
+                groupId: String(group?.id || '').trim() || ''
+            };
+        }
+        return {
+            ...groupConfig,
+            scope: 'group',
+            groupId: String(group?.id || '').trim() || ''
+        };
+    }
+
+    function __tmDescribeDocColorSchemeConfig(config, options = {}) {
+        const normalized = __tmNormalizeDocColorSchemeConfig(config, {
+            allowInherit: options?.allowInherit,
+            seedFallback: Number(config?.seed) || Number(SettingsStore?.data?.docColorSeed) || 1
+        });
+        const preset = __tmGetDocColorSchemePreset(normalized.palette);
+        if (options?.allowInherit && normalized.inherit !== false) return `继承全局 / ${preset.label}`;
+        if (normalized.palette === 'custom') return `${preset.label} · ${String(__tmFormatColorDisplayValue(normalized.baseColor) || '').trim() || '#3B82F6'}`;
+        return preset.label;
+    }
+
+    function __tmGetDocColorSchemeSummary(groupId) {
+        const group = __tmGetCurrentDocGroupForColorScheme(groupId);
+        const effective = __tmGetEffectiveDocColorSchemeConfig(groupId);
+        const preset = __tmGetDocColorSchemePreset(effective.palette);
+        if (!group) return `当前：${preset.label}`;
+        const groupConfig = __tmNormalizeDocColorSchemeConfig(group?.docColorConfig, {
+            allowInherit: true,
+            seedFallback: effective.seed
+        });
+        if (groupConfig.inherit !== false) return `当前：继承全局 / ${preset.label}`;
+        return `当前：${preset.label}`;
+    }
+
+    function __tmResolveHueFromBands(hash, bands) {
+        const list = Array.isArray(bands) ? bands.filter((band) => Array.isArray(band) && band.length >= 2) : [];
+        if (!list.length) return hash % 360;
+        const widths = list.map((band) => {
+            const start = Number(band[0]) || 0;
+            const end = Number(band[1]) || 0;
+            return Math.max(1, Math.round(((end - start) + 360) % 360) || Math.max(1, end - start));
+        });
+        const total = widths.reduce((sum, width) => sum + width, 0) || 360;
+        let cursor = hash % total;
+        for (let i = 0; i < list.length; i += 1) {
+            const width = widths[i];
+            if (cursor < width) {
+                const start = Number(list[i][0]) || 0;
+                return (start + cursor + 360) % 360;
+            }
+            cursor -= width;
+        }
+        return hash % 360;
+    }
+
+    function __tmBuildAutoDocColorFromScheme(docId, isDark, config) {
+        const palette = __tmNormalizeDocColorSchemePalette(config?.palette);
+        const seed = Number(config?.seed) || 1;
+        const hash = __tmHash32(`${String(docId || '')}:${String(seed)}`);
+        if (palette === 'custom') {
+            const baseHex = __tmNormalizeHexColor(config?.baseColor, '#3b82f6') || '#3b82f6';
+            const rgb = __tmHexToRgb(baseHex) || { r: 59, g: 130, b: 246 };
+            const hsl = __tmRgbToHsl(rgb);
+            const hueOffset = (((hash >>> 3) % 7) - 3) * (isDark ? 7 : 9);
+            const satOffset = ((hash >>> 11) % 15) - 7;
+            const lightOffset = ((hash >>> 17) % 15) - 7;
+            const hue = (hsl.h + hueOffset + 360) % 360;
+            const sat = __tmClamp((isDark ? Math.max(hsl.s, 42) : Math.max(hsl.s, 38)) + satOffset, isDark ? 38 : 30, isDark ? 76 : 72);
+            const light = __tmClamp((isDark ? Math.max(hsl.l, 58) : Math.min(hsl.l, 50)) + lightOffset, isDark ? 56 : 34, isDark ? 74 : 56);
+            return __tmRgbToHex(__tmHslToRgb(hue, sat, light));
+        }
+        const schemes = {
+            random: {
+                bands: [[0, 360]],
+                light: { satBase: 62, satSpan: 16, lightBase: 42, lightSpan: 14 },
+                dark: { satBase: 58, satSpan: 16, lightBase: 58, lightSpan: 12 }
+            },
+            morandi: {
+                bands: [[0, 360]],
+                light: { satBase: 22, satSpan: 14, lightBase: 42, lightSpan: 12 },
+                dark: { satBase: 24, satSpan: 12, lightBase: 60, lightSpan: 10 }
+            },
+            natural: {
+                bands: [[30, 90], [102, 164], [172, 212]],
+                light: { satBase: 28, satSpan: 18, lightBase: 40, lightSpan: 12 },
+                dark: { satBase: 30, satSpan: 16, lightBase: 58, lightSpan: 10 }
+            },
+            warm: {
+                bands: [[8, 60], [64, 86], [330, 356]],
+                light: { satBase: 40, satSpan: 18, lightBase: 40, lightSpan: 12 },
+                dark: { satBase: 38, satSpan: 18, lightBase: 58, lightSpan: 10 }
+            },
+            mist: {
+                bands: [[188, 220], [224, 254], [260, 292]],
+                light: { satBase: 26, satSpan: 16, lightBase: 42, lightSpan: 12 },
+                dark: { satBase: 28, satSpan: 16, lightBase: 60, lightSpan: 10 }
+            },
+            vivid: {
+                bands: [[0, 360]],
+                light: { satBase: 66, satSpan: 20, lightBase: 40, lightSpan: 12 },
+                dark: { satBase: 62, satSpan: 18, lightBase: 60, lightSpan: 10 }
+            }
+        };
+        const preset = schemes[palette] || schemes.random;
+        const range = isDark ? preset.dark : preset.light;
+        const hue = __tmResolveHueFromBands(hash, preset.bands);
+        const sat = range.satBase + ((hash >>> 8) % Math.max(1, range.satSpan));
+        const light = range.lightBase + ((hash >>> 16) % Math.max(1, range.lightSpan));
+        return __tmRgbToHex(__tmHslToRgb(hue, sat, light));
     }
 
     function __tmHslToRgb(h, s, l) {
@@ -17871,12 +18493,8 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     function __tmAutoDocColor(docId, isDark) {
-        const seed = Number(SettingsStore?.data?.docColorSeed) || 1;
-        const h0 = __tmHash32(`${String(docId || '')}:${String(seed)}`);
-        const hue = h0 % 360;
-        const sat = (isDark ? 58 : 62) + ((h0 >>> 8) % 16);
-        const light = (isDark ? 58 : 42) + ((h0 >>> 16) % (isDark ? 12 : 14));
-        return __tmRgbToHex(__tmHslToRgb(hue, sat, light));
+        const effective = __tmGetEffectiveDocColorSchemeConfig();
+        return __tmBuildAutoDocColorFromScheme(docId, isDark, effective);
     }
 
     const __tmCssColorRgbaCache = new Map();
@@ -18287,13 +18905,13 @@ async function __tmRefreshAfterWake(reason) {
 
     function __tmGetDocColorHex(docId, isDark) {
         const id = String(docId || '').trim();
-        const seed = Number(SettingsStore?.data?.docColorSeed) || 1;
         const map = (SettingsStore?.data?.docColorMap && typeof SettingsStore.data.docColorMap === 'object') ? SettingsStore.data.docColorMap : null;
         const rawInput = map ? String(map[id] || '').trim() : '';
-        const cacheKey = `${isDark ? 1 : 0}|${seed}|${id}|${rawInput}`;
+        const effective = __tmGetEffectiveDocColorSchemeConfig();
+        const cacheKey = `${isDark ? 1 : 0}|${id}|${rawInput}|${effective.groupId || 'all'}|${effective.scope}|${effective.palette}|${effective.seed}|${effective.baseColor || ''}`;
         if (__tmDocColorHexCache.has(cacheKey)) return __tmDocColorHexCache.get(cacheKey);
         const raw = rawInput ? __tmNormalizeHexColor(rawInput, '') : '';
-        const resolved = raw ? __tmThemeAdjustHex(raw, isDark) : __tmAutoDocColor(id, isDark);
+        const resolved = raw ? __tmThemeAdjustHex(raw, isDark) : __tmBuildAutoDocColorFromScheme(id, isDark, effective);
         return __tmRememberSmallCache(__tmDocColorHexCache, cacheKey, resolved, 1000);
     }
 
@@ -19605,6 +20223,33 @@ async function __tmRefreshAfterWake(reason) {
         return true;
     }
 
+    function __tmShouldUseGlobalTimelineScroll(modalEl) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) return false;
+        try {
+            return !!modal.classList.contains('tm-modal--mobile');
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function __tmGetTimelineGlobalScrollHost(modalEl) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!__tmShouldUseGlobalTimelineScroll(modal)) return null;
+        const body = modal?.querySelector?.('.tm-body.tm-body--timeline');
+        return body instanceof HTMLElement ? body : null;
+    }
+
+    function __tmGetTimelineLeftPaneWidth(modalEl) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        const leftEl = modal?.querySelector?.('.tm-timeline-left');
+        if (!(leftEl instanceof HTMLElement)) return 0;
+        const rectWidth = Number(leftEl.getBoundingClientRect?.().width);
+        if (Number.isFinite(rectWidth) && rectWidth > 0) return rectWidth;
+        const scrollWidth = Number(leftEl.scrollWidth);
+        return Number.isFinite(scrollWidth) && scrollWidth > 0 ? scrollWidth : 0;
+    }
+
     function __tmRerenderTimelineInPlace(modalEl) {
         const modal = modalEl instanceof Element ? modalEl : state.modal;
         if (!modal) return false;
@@ -19614,8 +20259,10 @@ async function __tmRefreshAfterWake(reason) {
         const tbody = modal.querySelector('#tmTimelineLeftTable tbody');
         if (!leftBody || !ganttBody || !tbody) return false;
 
-        const savedTop = Number(leftBody.scrollTop) || 0;
-        const savedLeft = Number(ganttBody.scrollLeft) || 0;
+        const globalScrollHost = __tmGetTimelineGlobalScrollHost(modal);
+        const useGlobalScroll = !!globalScrollHost;
+        const savedTop = useGlobalScroll ? (Number(globalScrollHost.scrollTop) || 0) : (Number(leftBody.scrollTop) || 0);
+        const savedLeft = useGlobalScroll ? (Number(globalScrollHost.scrollLeft) || 0) : (Number(ganttBody.scrollLeft) || 0);
 
         const widths = SettingsStore.data.columnWidths || {};
         const isGloballyLocked = GlobalLock.isLocked();
@@ -19820,13 +20467,25 @@ async function __tmRefreshAfterWake(reason) {
         }
         __tmScheduleTimelineTodayIndicatorRefresh();
 
-        try { leftBody.scrollTop = savedTop; } catch (e) {}
-        try { ganttBody.scrollTop = savedTop; } catch (e) {}
-        try { ganttBody.scrollLeft = savedLeft; } catch (e) {}
-        try {
-            const inner = ganttHeader?.querySelector?.('.tm-gantt-header-inner');
-            if (inner) inner.style.transform = `translateX(${-ganttBody.scrollLeft}px)`;
-        } catch (e) {}
+        if (useGlobalScroll) {
+            try { leftBody.scrollTop = 0; } catch (e) {}
+            try { ganttBody.scrollTop = 0; } catch (e) {}
+            try { ganttBody.scrollLeft = 0; } catch (e) {}
+            try { globalScrollHost.scrollTop = savedTop; } catch (e) {}
+            try { globalScrollHost.scrollLeft = savedLeft; } catch (e) {}
+            try {
+                const inner = ganttHeader?.querySelector?.('.tm-gantt-header-inner');
+                if (inner) inner.style.transform = '';
+            } catch (e) {}
+        } else {
+            try { leftBody.scrollTop = savedTop; } catch (e) {}
+            try { ganttBody.scrollTop = savedTop; } catch (e) {}
+            try { ganttBody.scrollLeft = savedLeft; } catch (e) {}
+            try {
+                const inner = ganttHeader?.querySelector?.('.tm-gantt-header-inner');
+                if (inner) inner.style.transform = `translateX(${-ganttBody.scrollLeft}px)`;
+            } catch (e) {}
+        }
 
         const syncRowHeights = () => {
             if (Date.now() - (Number(state.__tmFlipTs) || 0) < 320) return;
@@ -20212,6 +20871,291 @@ async function __tmRefreshAfterWake(reason) {
         __colorPickerUnstack = __tmModalStackBind(close);
     }
 
+    function __tmBuildDocColorSchemePreviewItems(groupId, limit = 6) {
+        const max = Math.max(3, Number(limit) || 6);
+        const items = [];
+        const seen = new Set();
+        const push = (id0, label0) => {
+            const id = String(id0 || '').trim();
+            const label = String(label0 || '').trim() || id;
+            if (!id || seen.has(id)) return;
+            seen.add(id);
+            items.push({ id, label });
+        };
+        try {
+            const visible = __tmGetVisibleDocTabsForCurrentGroup();
+            visible.forEach((item) => push(item?.id, item?.label || item?.name));
+        } catch (e) {}
+        if (items.length < max) {
+            const groups = Array.isArray(SettingsStore?.data?.docGroups) ? SettingsStore.data.docGroups : [];
+            const targetGroup = groups.find((group) => String(group?.id || '').trim() === String(groupId || '').trim());
+            const docs = Array.isArray(targetGroup?.docs) ? targetGroup.docs : [];
+            docs.forEach((doc) => {
+                const id = String((typeof doc === 'object' ? doc?.id : doc) || '').trim();
+                const name = __tmGetDocDisplayName(id, __tmGetDocRawName(id, '未命名文档'));
+                push(id, name);
+            });
+        }
+        if (items.length < max) {
+            const tree = Array.isArray(state?.taskTree) ? state.taskTree : [];
+            tree.forEach((doc) => push(doc?.id, __tmGetDocDisplayName(doc, doc?.name || '未命名文档')));
+        }
+        const fallbackLabels = ['项目总览', '产品规划', '会议纪要', '日常任务', '灵感收集', '学习笔记'];
+        while (items.length < max) {
+            const index = items.length;
+            push(`preview-doc-${index + 1}`, fallbackLabels[index] || `文档 ${index + 1}`);
+        }
+        return items.slice(0, max);
+    }
+
+    function __tmRefreshDocColorPresentation() {
+        try { __tmDocColorHexCache.clear(); } catch (e) {}
+        try { render(); } catch (e) {}
+        try { if (state.settingsModal && document.body.contains(state.settingsModal)) showSettings(); } catch (e) {}
+    }
+
+    async function __tmPersistDocColorSchemeConfig(scope, nextConfig) {
+        const kind = String(scope || 'default').trim();
+        if (kind === 'group') {
+            const currentGroupId = String(SettingsStore.data.currentGroupId || 'all').trim() || 'all';
+            if (currentGroupId === 'all') {
+                hint('⚠ 请先切换到具体文档分组后再配置分组色系', 'warning');
+                return false;
+            }
+            const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
+            const idx = groups.findIndex((group) => String(group?.id || '').trim() === currentGroupId);
+            if (idx < 0) {
+                hint('⚠ 当前分组不存在', 'warning');
+                return false;
+            }
+            groups[idx] = {
+                ...groups[idx],
+                docColorConfig: __tmNormalizeDocColorSchemeConfig(nextConfig, {
+                    allowInherit: true,
+                    seedFallback: Number(SettingsStore.data.docDefaultColorScheme?.seed) || Number(SettingsStore.data.docColorSeed) || 1
+                })
+            };
+            SettingsStore.data.docGroups = groups.map((group) => __tmNormalizeDocGroupConfig(group, SettingsStore.data.docDefaultColorScheme)).filter(Boolean);
+            await SettingsStore.save();
+            return true;
+        }
+        const normalized = __tmNormalizeDocColorSchemeConfig(nextConfig, {
+            seedFallback: Number(SettingsStore.data.docColorSeed) || 1
+        });
+        SettingsStore.data.docDefaultColorScheme = normalized;
+        SettingsStore.data.docColorSeed = Number(normalized.seed) || 1;
+        await SettingsStore.save();
+        return true;
+    }
+
+    function __tmOpenDocColorSchemeConfigDialog(scope = 'default') {
+        const kind = String(scope || 'default').trim() === 'group' ? 'group' : 'default';
+        const currentGroupId = String(SettingsStore.data.currentGroupId || 'all').trim() || 'all';
+        const currentGroup = __tmGetCurrentDocGroupForColorScheme(currentGroupId);
+        if (kind === 'group' && !currentGroup) {
+            hint('⚠ 请先切换到具体文档分组后再配置分组色系', 'warning');
+            return;
+        }
+        const globalConfig = __tmGetGlobalDocColorSchemeConfig();
+        const initial = kind === 'group'
+            ? __tmNormalizeDocColorSchemeConfig(currentGroup?.docColorConfig, { allowInherit: true, seedFallback: globalConfig.seed })
+            : globalConfig;
+        const draft = { ...initial };
+        const previewItems = __tmBuildDocColorSchemePreviewItems(kind === 'group' ? currentGroupId : '', 6);
+        const isDark = __tmIsDarkMode();
+
+        const existing = document.querySelector('.tm-prompt-modal.tm-doc-color-scheme-modal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.className = 'tm-prompt-modal tm-doc-color-scheme-modal';
+
+        const box = document.createElement('div');
+        box.className = 'tm-prompt-box';
+        box.style.cssText = 'width:min(92vw,640px);';
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'tm-prompt-title';
+        titleEl.textContent = kind === 'group'
+            ? `当前分组色系：${__tmResolveDocGroupName(currentGroup)}`
+            : '所有文档默认色系';
+        box.appendChild(titleEl);
+
+        const descEl = document.createElement('div');
+        descEl.style.cssText = 'font-size:12px;color:var(--tm-secondary-text);line-height:1.7;margin-bottom:12px;';
+        descEl.textContent = kind === 'group'
+            ? '当前分组可以继承所有文档默认色系，也可以单独指定一套自动配色。手动设置过颜色的文档不会被覆盖。'
+            : '控制所有未手动自定义颜色的文档自动配色。手动设置过颜色的文档仍然保持优先。';
+        box.appendChild(descEl);
+
+        const fieldWrap = document.createElement('div');
+        fieldWrap.style.cssText = 'display:flex;flex-direction:column;gap:12px;';
+
+        const inheritRow = document.createElement('label');
+        inheritRow.style.cssText = 'display:none;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-card-bg);';
+        inheritRow.innerHTML = `
+            <span>
+                <div style="font-weight:600;color:var(--tm-text-color);">继承所有文档默认色系</div>
+                <div style="font-size:12px;color:var(--tm-secondary-text);margin-top:4px;">开启后当前分组直接沿用全局设置，不单独维护自己的色系。</div>
+            </span>
+        `;
+        const inheritInput = document.createElement('input');
+        inheritInput.type = 'checkbox';
+        inheritInput.className = 'b3-switch fn__flex-center';
+        inheritInput.checked = draft.inherit !== false;
+        inheritRow.appendChild(inheritInput);
+        if (kind === 'group') inheritRow.style.display = 'flex';
+        fieldWrap.appendChild(inheritRow);
+
+        const paletteWrap = document.createElement('label');
+        paletteWrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-card-bg);';
+        const paletteTitle = document.createElement('div');
+        paletteTitle.style.cssText = 'font-weight:600;color:var(--tm-text-color);';
+        paletteTitle.textContent = '色系类型';
+        const paletteSelect = document.createElement('select');
+        paletteSelect.className = 'tm-prompt-input tm-prompt-select';
+        paletteSelect.style.cssText = 'margin-top:2px;';
+        paletteSelect.innerHTML = __TM_DOC_COLOR_SCHEME_PRESETS.map((item) => `
+            <option value="${esc(item.id)}" ${draft.palette === item.id ? 'selected' : ''}>${esc(item.label)}</option>
+        `).join('');
+        const paletteDesc = document.createElement('div');
+        paletteDesc.style.cssText = 'font-size:12px;color:var(--tm-secondary-text);line-height:1.6;';
+        paletteWrap.appendChild(paletteTitle);
+        paletteWrap.appendChild(paletteSelect);
+        paletteWrap.appendChild(paletteDesc);
+        fieldWrap.appendChild(paletteWrap);
+
+        const baseColorWrap = document.createElement('div');
+        baseColorWrap.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-card-bg);';
+        baseColorWrap.innerHTML = `
+            <span>
+                <div style="font-weight:600;color:var(--tm-text-color);">主色调</div>
+                <div style="font-size:12px;color:var(--tm-secondary-text);margin-top:4px;">仅在“自定义主色调”下生效，围绕主色自动扩展一组文档色。</div>
+            </span>
+        `;
+        const baseColorControls = document.createElement('div');
+        baseColorControls.style.cssText = 'display:flex;align-items:center;gap:8px;';
+        const baseColorPreview = document.createElement('span');
+        baseColorPreview.style.cssText = `width:28px;height:28px;border-radius:8px;border:1px solid var(--tm-border-color);background:${draft.baseColor};display:inline-flex;`;
+        const baseColorInput = document.createElement('input');
+        baseColorInput.type = 'color';
+        baseColorInput.value = __tmNormalizeLiteralHexColor(draft.baseColor) || '#3b82f6';
+        baseColorInput.style.cssText = 'width:42px;height:32px;padding:0;border:none;background:transparent;cursor:pointer;';
+        const baseColorValue = document.createElement('span');
+        baseColorValue.style.cssText = 'min-width:84px;font-family:monospace;font-size:12px;color:var(--tm-secondary-text);text-align:right;';
+        baseColorControls.appendChild(baseColorPreview);
+        baseColorControls.appendChild(baseColorInput);
+        baseColorControls.appendChild(baseColorValue);
+        baseColorWrap.appendChild(baseColorControls);
+        fieldWrap.appendChild(baseColorWrap);
+
+        const previewWrap = document.createElement('div');
+        previewWrap.style.cssText = 'padding:10px 12px;border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-card-bg);';
+        previewWrap.innerHTML = '<div style="font-weight:600;color:var(--tm-text-color);margin-bottom:8px;">预览</div><div style="font-size:12px;color:var(--tm-secondary-text);margin-bottom:8px;line-height:1.6;">以下仅预览自动配色效果，已手动指定颜色的文档不会被这里覆盖。</div>';
+        const previewGrid = document.createElement('div');
+        previewGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;';
+        previewWrap.appendChild(previewGrid);
+        fieldWrap.appendChild(previewWrap);
+
+        box.appendChild(fieldWrap);
+
+        const buttons = document.createElement('div');
+        buttons.className = 'tm-prompt-buttons';
+        buttons.style.cssText = 'justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px;';
+        const leftActions = document.createElement('div');
+        leftActions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+        const reshuffleBtn = document.createElement('button');
+        reshuffleBtn.className = 'tm-prompt-btn tm-prompt-btn-secondary';
+        reshuffleBtn.textContent = kind === 'group' ? '重排当前分组自动颜色' : '重排全局自动颜色';
+        leftActions.appendChild(reshuffleBtn);
+        buttons.appendChild(leftActions);
+        const rightActions = document.createElement('div');
+        rightActions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'tm-prompt-btn tm-prompt-btn-secondary';
+        cancelBtn.textContent = '取消';
+        const okBtn = document.createElement('button');
+        okBtn.className = 'tm-prompt-btn tm-prompt-btn-primary';
+        okBtn.textContent = '应用';
+        rightActions.appendChild(cancelBtn);
+        rightActions.appendChild(okBtn);
+        buttons.appendChild(rightActions);
+        box.appendChild(buttons);
+        modal.appendChild(box);
+        document.body.appendChild(modal);
+        __tmApplyPopupOpenAnimation(modal, box);
+
+        const removeFromStack = __tmModalStackBind(() => cancelBtn.click());
+        const close = () => {
+            removeFromStack();
+            try { modal.remove(); } catch (e) {}
+        };
+
+        const renderPreview = () => {
+            const preset = __tmGetDocColorSchemePreset(draft.palette);
+            paletteDesc.textContent = preset.description || '';
+            const disabledByInherit = kind === 'group' && draft.inherit !== false;
+            paletteSelect.disabled = disabledByInherit;
+            reshuffleBtn.disabled = disabledByInherit;
+            reshuffleBtn.style.opacity = disabledByInherit ? '0.55' : '1';
+            paletteWrap.style.opacity = disabledByInherit ? '0.6' : '1';
+            baseColorWrap.style.display = draft.palette === 'custom' ? 'flex' : 'none';
+            baseColorWrap.style.opacity = disabledByInherit ? '0.6' : '1';
+            baseColorInput.disabled = disabledByInherit;
+            baseColorPreview.style.background = draft.baseColor;
+            baseColorValue.textContent = String(__tmFormatColorDisplayValue(draft.baseColor) || '').trim() || '#3B82F6';
+            previewGrid.innerHTML = '';
+            const previewConfig = kind === 'group' && draft.inherit !== false
+                ? globalConfig
+                : __tmNormalizeDocColorSchemeConfig(draft, {
+                    allowInherit: kind === 'group',
+                    seedFallback: globalConfig.seed
+                });
+            previewItems.forEach((item) => {
+                const color = __tmBuildAutoDocColorFromScheme(item.id, isDark, previewConfig);
+                const chip = document.createElement('div');
+                chip.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-input-bg);min-width:0;';
+                chip.innerHTML = `
+                    <span style="width:14px;height:14px;border-radius:999px;background:${esc(color)};display:inline-flex;flex:0 0 auto;border:1px solid color-mix(in srgb, ${esc(color)} 48%, var(--tm-border-color));"></span>
+                    <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${esc(color)};font-weight:600;">${esc(String(item.label || '').trim() || '未命名文档')}</span>
+                `;
+                previewGrid.appendChild(chip);
+            });
+        };
+
+        inheritInput.onchange = () => {
+            draft.inherit = !!inheritInput.checked;
+            renderPreview();
+        };
+        paletteSelect.onchange = () => {
+            draft.palette = __tmNormalizeDocColorSchemePalette(paletteSelect.value);
+            renderPreview();
+        };
+        baseColorInput.oninput = () => {
+            draft.baseColor = __tmNormalizeHexColor(baseColorInput.value, draft.baseColor) || draft.baseColor;
+            renderPreview();
+        };
+        reshuffleBtn.onclick = () => {
+            if (kind === 'group' && draft.inherit !== false) return;
+            draft.seed = Math.floor(Math.random() * 1000000000) + 1;
+            renderPreview();
+        };
+        cancelBtn.onclick = close;
+        okBtn.onclick = async () => {
+            const persisted = await __tmPersistDocColorSchemeConfig(kind, draft);
+            if (!persisted) return;
+            hint(kind === 'group' ? '✅ 当前分组色系已更新' : '✅ 所有文档默认色系已更新', 'success');
+            __tmRefreshDocColorPresentation();
+            close();
+        };
+        modal.onclick = (e) => {
+            if (e.target === modal) cancelBtn.click();
+        };
+
+        renderPreview();
+    }
+    window.tmOpenDocColorSchemeConfigDialog = __tmOpenDocColorSchemeConfigDialog;
+
     function __tmNormalizeAppearanceMetric(input, fallback, min, max) {
         const n = Number(input);
         if (!Number.isFinite(n)) return fallback;
@@ -20551,13 +21495,16 @@ async function __tmRefreshAfterWake(reason) {
         };
     }
 
-    function __tmNormalizeDocGroupConfig(group) {
+    function __tmNormalizeDocGroupConfig(group, globalDocColorScheme = null) {
         if (!group || typeof group !== 'object') return null;
         const id = String(group.id || '').trim();
         if (!id) return null;
         const notebookId = String(group.notebookId || '').trim();
         const docs = Array.isArray(group.docs) ? group.docs : [];
         const otherBlockRefs = __tmNormalizeOtherBlockRefs(group.otherBlockRefs);
+        const normalizedGlobalScheme = __tmNormalizeDocColorSchemeConfig(globalDocColorScheme, {
+            seedFallback: Number(globalDocColorScheme?.seed) || 1
+        });
         const normalizedDocs = [];
         const seen = new Set();
         docs.forEach((doc) => {
@@ -20576,6 +21523,10 @@ async function __tmRefreshAfterWake(reason) {
             notebookId,
             docs: normalizedDocs,
             otherBlockRefs,
+            docColorConfig: __tmNormalizeDocColorSchemeConfig(group.docColorConfig, {
+                allowInherit: true,
+                seedFallback: normalizedGlobalScheme.seed
+            }),
             calendarSearchOptimization: __tmNormalizeCalendarSearchOptimization(group.calendarSearchOptimization)
         };
     }
@@ -21792,6 +22743,199 @@ async function __tmRefreshAfterWake(reason) {
             ? __tmLastRightClickedBlockEl
             : null;
         return { blockId, blockElement };
+    }
+
+    function __tmResolveProtyleElement(protyleLike) {
+        const candidates = [
+            protyleLike,
+            protyleLike?.element,
+            protyleLike?.protyle?.element,
+            protyleLike?.wysiwyg?.element,
+            protyleLike?.protyle?.wysiwyg?.element,
+        ];
+        for (const candidate of candidates) {
+            if (!(candidate instanceof Element)) continue;
+            if (candidate.matches?.('.protyle')) return candidate;
+            const protyle = candidate.closest?.('.protyle');
+            if (protyle) return protyle;
+        }
+        return null;
+    }
+
+    function __tmCollectSelectedBlockIdsFromProtyle(protyleLike, fallbackBlockId = '') {
+        const out = [];
+        const seen = new Set();
+        const push = (element) => {
+            const owner = (element?.matches?.('[data-node-id], [data-id]') ? element : element?.closest?.('[data-node-id], [data-id]')) || null;
+            const id = __tmResolveAnyBlockIdFromElement(owner);
+            if (!id || seen.has(id)) return;
+            seen.add(id);
+            out.push(id);
+        };
+        const protyle = __tmResolveProtyleElement(protyleLike);
+        const root = protyle?.querySelector?.('.protyle-wysiwyg, .protyle-content') || protyle;
+        try {
+            Array.from(root?.querySelectorAll?.('.protyle-wysiwyg--select, .protyle-content--select') || []).forEach(push);
+        } catch (e) {}
+        const fallbackId = String(fallbackBlockId || '').trim();
+        if (!out.length && fallbackId && !seen.has(fallbackId)) out.push(fallbackId);
+        return out;
+    }
+
+    async function __tmGetBlocksByIdsPreserveOrder(ids) {
+        const list = Array.from(new Set((ids || []).map((item) => String(item || '').trim()).filter(Boolean)));
+        if (!list.length) return [];
+        const rows = await API.getBlocksByIds(list).catch(() => []);
+        const rowMap = new Map((Array.isArray(rows) ? rows : []).map((row) => [String(row?.id || '').trim(), row]));
+        return list.map((id) => rowMap.get(id)).filter(Boolean);
+    }
+
+    async function __tmFindDirectChildAnchorExcluding(docId, mode = 'first', excludeIds = []) {
+        const did = String(docId || '').trim();
+        if (!did) return '';
+        const excluded = Array.from(new Set((excludeIds || []).map((item) => String(item || '').trim()).filter(Boolean)));
+        const orderSql = String(mode || '').trim() === 'last'
+            ? 'ORDER BY sort DESC, created DESC, id DESC'
+            : 'ORDER BY sort ASC, created ASC, id ASC';
+        const excludeSql = excluded.length
+            ? ` AND id NOT IN (${excluded.map((id) => `'${id.replace(/'/g, "''")}'`).join(',')})`
+            : '';
+        const sql = `SELECT id FROM blocks WHERE parent_id = '${did.replace(/'/g, "''")}'${excludeSql} ${orderSql} LIMIT 1`;
+        const res = await API.call('/api/query/sql', { stmt: sql });
+        if (res.code === 0 && Array.isArray(res.data) && res.data.length > 0) {
+            return String(res.data[0]?.id || '').trim();
+        }
+        return '';
+    }
+
+    async function __tmResolveDailyNoteNotebookIdForBlocks(blockIds, options = {}) {
+        let notebookId = __tmResolveConfiguredDailyNoteNotebookId();
+        if (notebookId) return notebookId;
+        let sourceDocId = '';
+        try {
+            const rows = await __tmGetBlocksByIdsPreserveOrder(blockIds);
+            sourceDocId = String(rows[0]?.root_id || '').trim();
+        } catch (e) {}
+        if (!sourceDocId) {
+            const protyle = __tmResolveProtyleElement(options?.protyle || null);
+            sourceDocId = __tmGetDocIdFromProtyle(protyle);
+        }
+        if (sourceDocId) {
+            try { notebookId = await API.getDocNotebook(sourceDocId); } catch (e) {}
+        }
+        return String(notebookId || '').trim();
+    }
+
+    async function __tmMoveBlocksToDailyNote(blockIds, options = {}) {
+        const normalizedIds = Array.from(new Set((blockIds || []).map((item) => String(item || '').trim()).filter(Boolean)));
+        if (!normalizedIds.length) throw new Error('未找到可移动的块');
+
+        const rows = await __tmGetBlocksByIdsPreserveOrder(normalizedIds);
+        const movableRows = rows.filter((row) => String(row?.type || '').trim().toLowerCase() !== 'd');
+        const movableIds = movableRows.map((row) => String(row?.id || '').trim()).filter(Boolean);
+        if (!movableIds.length) throw new Error('当前仅支持移动块内容，不支持移动整篇文档');
+
+        const notebookId = await __tmResolveDailyNoteNotebookIdForBlocks(movableIds, options);
+        if (!notebookId) throw new Error('无法确定日记所属笔记本');
+        const targetDocId = await API.createDailyNote(notebookId);
+        const appendToBottom = SettingsStore.data.newTaskDailyNoteAppendToBottom === true;
+        const targetTopListId = String(await API.getFirstDirectChildListIdOfDoc(targetDocId).catch(() => '') || '').trim();
+        const sourceDocIds = new Set([String(targetDocId || '').trim()]);
+        movableRows.forEach((row) => {
+            const rootId = String(row?.root_id || '').trim();
+            if (rootId) sourceDocIds.add(rootId);
+        });
+
+        const isTaskRow = (row) => String(row?.type || '').trim().toLowerCase() === 'i' && String(row?.subtype || '').trim().toLowerCase() === 't';
+        const moveRowToParent = async (row, targetParentId, anchors) => {
+            const blockId = String(row?.id || '').trim();
+            const parentId = String(targetParentId || '').trim();
+            if (!blockId || !parentId) throw new Error('移动失败：缺少目标容器');
+            if (appendToBottom) {
+                if (anchors.previousID) await API.moveBlock(blockId, { previousID: anchors.previousID, parentID: parentId });
+                else await API.moveBlock(blockId, { parentID: parentId });
+                anchors.previousID = blockId;
+                return;
+            }
+            if (anchors.nextID) {
+                await API.moveBlock(blockId, { nextID: anchors.nextID, parentID: parentId });
+                return;
+            }
+            if (anchors.previousID) await API.moveBlock(blockId, { previousID: anchors.previousID, parentID: parentId });
+            else await API.moveBlock(blockId, { parentID: parentId });
+            anchors.previousID = blockId;
+        };
+
+        const docAnchors = appendToBottom
+            ? {
+                previousID: String(await __tmFindDirectChildAnchorExcluding(targetDocId, 'last', movableIds).catch(() => '') || '').trim(),
+                nextID: ''
+            }
+            : {
+                previousID: '',
+                nextID: String(await __tmFindDirectChildAnchorExcluding(targetDocId, 'first', movableIds).catch(() => '') || '').trim()
+            };
+        const taskAnchors = targetTopListId
+            ? (appendToBottom
+                ? {
+                    previousID: String(await __tmFindDirectChildAnchorExcluding(targetTopListId, 'last', movableIds).catch(() => '') || '').trim(),
+                    nextID: ''
+                }
+                : {
+                    previousID: '',
+                    nextID: String(await __tmFindDirectChildAnchorExcluding(targetTopListId, 'first', movableIds).catch(() => '') || '').trim()
+                })
+            : null;
+
+        for (const row of movableRows) {
+            if (isTaskRow(row) && targetTopListId) {
+                await moveRowToParent(row, targetTopListId, taskAnchors);
+            } else {
+                await moveRowToParent(row, targetDocId, docAnchors);
+            }
+        }
+
+        try {
+            sourceDocIds.forEach((docId) => {
+                if (docId) __tmInvalidateTasksQueryCacheByDocId(docId);
+            });
+        } catch (e) {
+            try { __tmInvalidateAllSqlCaches(); } catch (e2) {}
+        }
+        try { __tmLoadSelectedDocumentsPreserveChecklistScroll().catch(() => {}); } catch (e) {}
+        try {
+            if (__tmIsPluginVisibleNow()) __tmRefreshMainViewInPlace({ withFilters: true });
+        } catch (e) {}
+        try { globalThis.__tmCalendar?.refreshInPlace?.({ hard: false }); } catch (e) {}
+
+        return {
+            targetDocId: String(targetDocId || '').trim(),
+            movedCount: movableIds.length,
+        };
+    }
+
+    function __tmAddMoveBlockToDailyNoteMenuItem(menu, blockIds, options = {}) {
+        if (!menu || typeof menu.addItem !== 'function') return;
+        if (SettingsStore.data.enableMoveBlockToDailyNote !== true) return;
+        const normalizedIds = Array.from(new Set((blockIds || []).map((item) => String(item || '').trim()).filter(Boolean)));
+        if (!normalizedIds.length) return;
+        menu.addItem({
+            icon: 'iconTaskHorizon',
+            label: normalizedIds.length > 1 ? '移动所选内容至今天日记' : '移动内容至今天日记',
+            click: async () => {
+                try {
+                    const result = await __tmMoveBlocksToDailyNote(normalizedIds, options);
+                    hint(
+                        result.movedCount > 1
+                            ? `✅ 已移动 ${result.movedCount} 个块到今天日记`
+                            : '✅ 已移动到今天日记',
+                        'success'
+                    );
+                } catch (e) {
+                    hint(`❌ 移动失败: ${e.message}`, 'error');
+                }
+            }
+        });
     }
 
     function __tmShiftDateKeyByDays(value, deltaDays = 1) {
@@ -24008,14 +25152,17 @@ async function __tmRefreshAfterWake(reason) {
         const hasIncompleteAncestorMemo = new Map();
         const hasIncompleteAncestor = (task) => {
             const tid = String(task?.id || '').trim();
-            if (tid && hasIncompleteAncestorMemo.has(tid)) return !!hasIncompleteAncestorMemo.get(tid);
+            if (tid && hasIncompleteAncestorMemo.has(tid)) return hasIncompleteAncestorMemo.get(tid);
             let parentId = task?.parentTaskId;
             const seen = new Set();
             while (parentId) {
                 if (seen.has(parentId)) break;
                 seen.add(parentId);
                 const parent = taskMap[parentId];
-                if (!parent) break;
+                if (!parent) {
+                    if (tid) hasIncompleteAncestorMemo.set(tid, null);
+                    return null;
+                }
                 if (!parent.done) {
                     if (tid) hasIncompleteAncestorMemo.set(tid, true);
                     return true;
@@ -24077,8 +25224,9 @@ async function __tmRefreshAfterWake(reason) {
         const ruleExcludesCompleted = currentRuleExcludesCompleted();
         
         const filterVisibleTasks = (list) => (list || []).filter(t => {
-            // 如果有父任务，且所有祖先任务都已完成，则子任务不显示
-            if (t.parentTaskId && !hasIncompleteAncestor(t)) {
+            // 只有在能确认“所有祖先都已完成”时才隐藏子任务；祖先链不完整时先保留显示
+            const ancestorState = t.parentTaskId ? hasIncompleteAncestor(t) : null;
+            if (t.parentTaskId && ancestorState === false) {
                 return false;
             }
 
@@ -25249,8 +26397,9 @@ async function __tmRefreshAfterWake(reason) {
                 border-radius: 4px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.2);
                 padding: 4px 0;
-                min-width: 160px;
-                max-width: min(220px, calc(100vw - 16px));
+                width:auto;
+                min-width: 180px;
+                max-width: calc(100vw - 16px);
                 box-sizing: border-box;
                 display:none;
                 z-index: 200001;
@@ -25260,6 +26409,31 @@ async function __tmRefreshAfterWake(reason) {
             el.appendChild(submenu);
 
             let hideTimer = null;
+            const fitSubmenuWidth = () => {
+                try {
+                    const viewportWidth = Math.max(0, window.innerWidth || document.documentElement?.clientWidth || 0);
+                    const maxWidth = Math.max(180, viewportWidth - 16);
+                    const rows = Array.from(submenu.children || []).filter((child) => child instanceof HTMLElement);
+                    rows.forEach((row) => {
+                        try { row.style.width = 'auto'; } catch (e) {}
+                    });
+                    try { submenu.style.width = 'auto'; } catch (e) {}
+                    let naturalWidth = 0;
+                    rows.forEach((row) => {
+                        try {
+                            naturalWidth = Math.max(
+                                naturalWidth,
+                                Math.ceil(row.scrollWidth || row.getBoundingClientRect().width || 0)
+                            );
+                        } catch (e) {}
+                    });
+                    const nextWidth = Math.min(maxWidth, Math.max(180, naturalWidth + 2));
+                    submenu.style.width = `${nextWidth}px`;
+                    rows.forEach((row) => {
+                        try { row.style.width = '100%'; } catch (e) {}
+                    });
+                } catch (e) {}
+            };
             const updateSubmenuPosition = () => {
                 try {
                     submenu.style.left = 'calc(100% - 4px)';
@@ -25296,6 +26470,7 @@ async function __tmRefreshAfterWake(reason) {
                 }
                 el.style.backgroundColor = 'var(--b3-theme-surface-light)';
                 submenu.style.display = 'block';
+                fitSubmenuWidth();
                 updateSubmenuPosition();
             };
             const hideSubmenu = () => {
@@ -25399,28 +26574,55 @@ async function __tmRefreshAfterWake(reason) {
             }));
         }
 
-        menu.appendChild(item(__tmRenderContextMenuLabel('brush-cleaning', `设置${isOtherBlocksTab ? '页签' : '颜色'}…`), () => {
-            const initial = existing || __tmGetDocColorHex(id, __tmIsDarkMode());
-            __tmOpenColorPickerDialog(isOtherBlocksTab ? '其他块页签颜色' : '文档颜色', initial, async (next) => {
-                const v = __tmNormalizeHexColor(next, '');
-                if (!v) return;
-                map[id] = v;
+        if (isOtherBlocksTab) {
+            menu.appendChild(item(__tmRenderContextMenuLabel('brush-cleaning', '设置页签颜色'), () => {
+                const initial = existing || __tmGetDocColorHex(id, __tmIsDarkMode());
+                __tmOpenColorPickerDialog('其他块页签颜色', initial, async (next) => {
+                    const v = __tmNormalizeHexColor(next, '');
+                    if (!v) return;
+                    map[id] = v;
+                    try { await SettingsStore.save(); } catch (e) {}
+                    __tmRefreshDocColorPresentation();
+                }, { defaultColor: initial });
+            }));
+
+            menu.appendChild(item(__tmRenderContextMenuLabel('arrow-clockwise', '恢复自动页签颜色'), async () => {
+                if (map[id]) delete map[id];
                 try { await SettingsStore.save(); } catch (e) {}
-                render();
-            }, { defaultColor: initial });
-        }));
-
-        menu.appendChild(item(__tmRenderContextMenuLabel('arrow-clockwise', `恢复自动${isOtherBlocksTab ? '页签' : '颜色'}`), async () => {
-            if (map[id]) delete map[id];
-            try { await SettingsStore.save(); } catch (e) {}
-            render();
-        }));
-
-        menu.appendChild(item(__tmRenderContextMenuLabel('dots-three', '重新随机未自定义颜色'), async () => {
-            SettingsStore.data.docColorSeed = Math.floor(Math.random() * 1000000000) + 1;
-            try { await SettingsStore.save(); } catch (e) {}
-            render();
-        }));
+                __tmRefreshDocColorPresentation();
+            }));
+        } else {
+            menu.appendChild(submenuItem(__tmRenderContextMenuLabel('brush-cleaning', '颜色与色系'), () => {
+                const children = [];
+                children.push(item(__tmRenderContextMenuLabel('brush-cleaning', '设置当前文档颜色'), () => {
+                    const initial = existing || __tmGetDocColorHex(id, __tmIsDarkMode());
+                    __tmOpenColorPickerDialog('文档颜色', initial, async (next) => {
+                        const v = __tmNormalizeHexColor(next, '');
+                        if (!v) return;
+                        map[id] = v;
+                        try { await SettingsStore.save(); } catch (e) {}
+                        __tmRefreshDocColorPresentation();
+                    }, { defaultColor: initial });
+                }));
+                children.push(item(__tmRenderContextMenuLabel('arrow-clockwise', '恢复当前文档自动颜色'), async () => {
+                    if (map[id]) delete map[id];
+                    try { await SettingsStore.save(); } catch (e) {}
+                    __tmRefreshDocColorPresentation();
+                }));
+                const divider = document.createElement('hr');
+                divider.style.cssText = 'margin: 4px 0; border: none; border-top: 1px solid var(--b3-theme-surface-light);';
+                children.push(divider);
+                children.push(item(__tmRenderContextMenuLabel('settings', `所有文档默认色系（${__tmDescribeDocColorSchemeConfig(__tmGetGlobalDocColorSchemeConfig())}）`), () => {
+                    __tmOpenDocColorSchemeConfigDialog('default');
+                }));
+                if (pinGroupId !== 'all') {
+                    children.push(item(__tmRenderContextMenuLabel('settings', `当前分组色系（${__tmGetDocColorSchemeSummary(pinGroupId).replace(/^当前：/, '').trim()}）`), () => {
+                        __tmOpenDocColorSchemeConfigDialog('group');
+                    }));
+                }
+                return children;
+            }));
+        }
 
         if (!isOtherBlocksTab) {
             const sortHr = document.createElement('hr');
@@ -25717,6 +26919,23 @@ async function __tmRefreshAfterWake(reason) {
             divider.style.cssText = 'margin: 2px 0; border: none; border-top: 1px solid var(--b3-theme-surface-light);';
             children.push(divider);
             children.push(createSettingsInfoRow());
+            return children;
+        }));
+
+        menu.appendChild(createSubmenuTrigger(__tmRenderContextMenuLabel('brush-cleaning', '颜色与色系'), () => {
+            const children = [];
+            children.push(__tmBuildAllDocTabMenuActionButton(
+                __tmRenderContextMenuLabel('settings', `所有文档默认色系（${__tmDescribeDocColorSchemeConfig(__tmGetGlobalDocColorSchemeConfig())}）`),
+                () => { __tmOpenDocColorSchemeConfigDialog('default'); },
+                { compact: true, stretch: false, mainRow: false }
+            ));
+            if (groupId !== 'all') {
+                children.push(__tmBuildAllDocTabMenuActionButton(
+                    __tmRenderContextMenuLabel('settings', `当前分组色系（${__tmGetDocColorSchemeSummary(groupId).replace(/^当前：/, '').trim()}）`),
+                    () => { __tmOpenDocColorSchemeConfigDialog('group'); },
+                    { compact: true, stretch: false, mainRow: false }
+                ));
+            }
             return children;
         }));
 
@@ -26397,17 +27616,425 @@ async function __tmRefreshAfterWake(reason) {
                 title: title || id,
                 durationMin: (Number.isFinite(durationMin) && durationMin > 0) ? Math.round(durationMin) : 60,
                 calendarId: calendarId || 'default',
+                startDate: String(meta?.startDate || '').trim(),
+                completionTime: String(meta?.completionTime || '').trim(),
             }));
             ev.dataTransfer.setData('text/plain', id);
         } catch (e) {}
+        try { __tmCalendarFloatingDragStart(id, meta, ev); } catch (e) {}
     };
 
     window.tmDragTaskEnd = function() {
         state.draggingTaskId = '';
         try { __tmClearDocTabDropTarget(); } catch (e) {}
+        try { __tmCalendarFloatingDragEnd(); } catch (e) {}
     };
 
+    function __tmDockPointerTaskDragIsEnabled() {
+        return __tmIsDockHost() && !__tmIsRuntimeMobileClient();
+    }
+
+    function __tmResolveDockPointerTaskDragSource(target) {
+        const el = target instanceof Element ? target : null;
+        if (!(el instanceof Element)) return null;
+        const candidate = el.closest('.tm-kanban-card[data-id], .tm-checklist-item[data-id], #tmTimelineLeftTable tbody tr[data-id], #tmTaskTable tbody tr[data-id]');
+        if (!(candidate instanceof HTMLElement)) return null;
+        const taskId = String(candidate.getAttribute('data-id') || candidate.getAttribute('data-task-id') || '').trim();
+        if (!taskId) return null;
+        const isKanban = candidate.classList.contains('tm-kanban-card');
+        const skipSelector = isKanban
+            ? 'input,button,select,textarea,a,label,[contenteditable="true"],.tm-task-checkbox,.tm-task-checkbox-wrap,.tm-kanban-toggle,.tm-kanban-more,.tm-status-tag,.tm-kanban-chip,.tm-priority-jira,.tm-kanban-priority-chip'
+            : 'input,button,select,textarea,a,label,[contenteditable="true"],.tm-tree-toggle,.tm-col-resize,.tm-checklist-mobile-toggle,.tm-status-tag';
+        if (el.closest(skipSelector)) return null;
+        return {
+            taskId,
+            sourceEl: candidate,
+            sourceType: isKanban ? 'kanban' : 'task',
+        };
+    }
+
+    function __tmBuildDockPointerTaskDragPayload(taskId, meta) {
+        const id = String(taskId || '').trim();
+        if (!id) return null;
+        let nextMeta = (meta && typeof meta === 'object') ? meta : null;
+        if (!nextMeta && typeof window.tmCalendarGetTaskDragMeta === 'function') {
+            try { nextMeta = window.tmCalendarGetTaskDragMeta(id); } catch (e) {}
+        }
+        const safeMeta = (nextMeta && typeof nextMeta === 'object') ? nextMeta : {};
+        const durationMin = Number(safeMeta.durationMin);
+        const title = String(safeMeta.title || state.flatTasks?.[id]?.content || id).trim() || id;
+        return {
+            taskId: id,
+            id,
+            title,
+            durationMin: (Number.isFinite(durationMin) && durationMin > 0) ? Math.round(durationMin) : 60,
+            calendarId: String(safeMeta.calendarId || 'default').trim() || 'default',
+            startDate: String(safeMeta.startDate || '').trim(),
+            completionTime: String(safeMeta.completionTime || '').trim(),
+        };
+    }
+
+    function __tmBuildDockPointerTaskSyntheticTransfer(payload) {
+        const safePayload = (payload && typeof payload === 'object') ? payload : {};
+        const taskId = String(safePayload.taskId || safePayload.id || '').trim();
+        const json = JSON.stringify({
+            id: taskId,
+            title: String(safePayload.title || taskId || '任务').trim() || '任务',
+            durationMin: Number(safePayload.durationMin) || 60,
+            calendarId: String(safePayload.calendarId || 'default').trim() || 'default',
+            startDate: String(safePayload.startDate || '').trim(),
+            completionTime: String(safePayload.completionTime || '').trim(),
+        });
+        return {
+            dropEffect: 'move',
+            effectAllowed: 'move',
+            getData(type) {
+                const key = String(type || '').trim();
+                if (key === 'application/x-tm-task-id' || key === 'text/plain') return taskId;
+                if (key === 'application/x-tm-task') return json;
+                return '';
+            },
+            setData() {},
+            setDragImage() {},
+        };
+    }
+
+    function __tmBuildDockPointerTaskGhost(taskId, sourceEl, payload, clientX, clientY) {
+        if (!(sourceEl instanceof HTMLElement)) return null;
+        const rect = sourceEl.getBoundingClientRect();
+        const title = String(payload?.title || state.flatTasks?.[String(taskId || '').trim()]?.content || taskId || '任务').trim() || '任务';
+        const dateText = String(payload?.completionTime || '').trim();
+        const ghost = document.createElement('div');
+        ghost.className = 'tm-dock-pointer-task-ghost';
+        ghost.style.position = 'fixed';
+        ghost.style.left = '0';
+        ghost.style.top = '0';
+        ghost.style.margin = '0';
+        ghost.style.padding = dateText ? '10px 12px' : '12px';
+        ghost.style.minWidth = '180px';
+        ghost.style.maxWidth = '320px';
+        ghost.style.width = `${Math.max(180, Math.min(320, Math.round(rect.width || sourceEl.offsetWidth || 240)))}px`;
+        ghost.style.borderRadius = '14px';
+        ghost.style.border = '1px solid color-mix(in srgb, var(--tm-border-color, #d0d7de) 82%, var(--tm-primary-color, #4f8cff) 18%)';
+        ghost.style.background = 'color-mix(in srgb, var(--b3-theme-surface, #ffffff) 90%, var(--tm-primary-color, #4f8cff) 10%)';
+        ghost.style.boxShadow = '0 16px 40px rgba(15, 23, 42, 0.22)';
+        ghost.style.color = 'var(--tm-text-color, var(--b3-theme-on-background, #111827))';
+        ghost.style.pointerEvents = 'none';
+        ghost.style.userSelect = 'none';
+        ghost.style.zIndex = '200160';
+        ghost.style.opacity = '0.4';
+        ghost.style.backdropFilter = 'blur(10px)';
+        ghost.style.transform = `translate(${Math.round(rect.left)}px, ${Math.round(rect.top)}px)`;
+        const titleEl = document.createElement('div');
+        titleEl.style.fontSize = '13px';
+        titleEl.style.fontWeight = '700';
+        titleEl.style.lineHeight = '1.4';
+        titleEl.style.wordBreak = 'break-word';
+        titleEl.textContent = title;
+        ghost.appendChild(titleEl);
+        if (dateText) {
+            const dateEl = document.createElement('div');
+            dateEl.style.marginTop = '6px';
+            dateEl.style.fontSize = '11px';
+            dateEl.style.opacity = '0.78';
+            dateEl.textContent = `当前完成日期 ${dateText}`;
+            ghost.appendChild(dateEl);
+        }
+        try { document.body.appendChild(ghost); } catch (e) { return null; }
+        const width = Math.max(180, Math.min(320, Math.round(rect.width || sourceEl.offsetWidth || 240)));
+        const clamp0 = (n, min, max) => Math.max(min, Math.min(max, n));
+        const offsetX = clamp0((Number(clientX) || rect.left) - rect.left, 18, Math.max(18, width - 18));
+        const offsetY = clamp0((Number(clientY) || rect.top) - rect.top, 12, Math.max(12, Math.round(Math.max(44, rect.height || sourceEl.offsetHeight || 44)) - 12));
+        return { ghost, offsetX, offsetY };
+    }
+
+    function __tmPlaceDockPointerTaskGhost(meta, clientX, clientY) {
+        if (!(meta?.ghost instanceof HTMLElement)) return;
+        const left = Math.round((Number(clientX) || 0) - (Number(meta.offsetX) || 0));
+        const top = Math.round((Number(clientY) || 0) - (Number(meta.offsetY) || 0));
+        try { meta.ghost.style.transform = `translate(${left}px, ${top}px)`; } catch (e) {}
+    }
+
+    function __tmSuppressDockPointerTaskClick(ms = 260) {
+        const timeout = Math.max(0, Number(ms) || 0);
+        if (!timeout) return 0;
+        const until = Date.now() + timeout;
+        state.dockTaskPointerSuppressClickUntil = Math.max(Number(state.dockTaskPointerSuppressClickUntil || 0), until);
+        return until;
+    }
+
+    function __tmConsumeDockPointerSuppressedClick(event) {
+        if (Number(state.dockTaskPointerSuppressClickUntil || 0) <= Date.now()) return false;
+        state.dockTaskPointerSuppressClickUntil = 0;
+        try { event?.preventDefault?.(); } catch (e) {}
+        try { event?.stopPropagation?.(); } catch (e) {}
+        return true;
+    }
+
+    function __tmBindDockPointerTaskDrag(modalEl) {
+        try { state.dockTaskPointerDragAbort?.abort?.(); } catch (e) {}
+        state.dockTaskPointerDragAbort = null;
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) return;
+        if (!__tmDockPointerTaskDragIsEnabled()) return;
+        if (String(state.viewMode || '').trim() === 'calendar') return;
+        const abort = new AbortController();
+        state.dockTaskPointerDragAbort = abort;
+
+        modal.addEventListener('click', (ev) => {
+            __tmConsumeDockPointerSuppressedClick(ev);
+        }, { capture: true, signal: abort.signal });
+
+        modal.addEventListener('dragstart', (ev) => {
+            if (!__tmDockPointerTaskDragIsEnabled()) return;
+            const source = __tmResolveDockPointerTaskDragSource(ev?.target);
+            if (!source) return;
+            try { ev.preventDefault(); } catch (e) {}
+            try { ev.stopPropagation(); } catch (e) {}
+        }, { capture: true, signal: abort.signal });
+
+        modal.addEventListener('pointerdown', (ev) => {
+            if (!__tmDockPointerTaskDragIsEnabled()) return;
+            if (String(state.viewMode || '').trim() === 'calendar') return;
+            if (ev && typeof ev.button === 'number' && ev.button !== 0) return;
+            const pointerType = String(ev?.pointerType || '').trim().toLowerCase();
+            if (pointerType === 'touch') return;
+            const source = __tmResolveDockPointerTaskDragSource(ev?.target);
+            if (!source) return;
+
+            try { state.dockTaskPointerGestureCleanup?.(); } catch (e) {}
+
+            const taskId = String(source.taskId || '').trim();
+            const sourceEl = source.sourceEl instanceof HTMLElement ? source.sourceEl : null;
+            const sourceType = String(source.sourceType || 'task').trim() || 'task';
+            if (!taskId || !(sourceEl instanceof HTMLElement)) return;
+
+            let dragMeta = null;
+            try {
+                if (typeof window.tmCalendarGetTaskDragMeta === 'function') {
+                    dragMeta = window.tmCalendarGetTaskDragMeta(taskId);
+                }
+            } catch (e) {}
+            const payload = __tmBuildDockPointerTaskDragPayload(taskId, dragMeta);
+            const syntheticTransfer = __tmBuildDockPointerTaskSyntheticTransfer(payload);
+            const threshold = sourceType === 'kanban' ? 6 : 4;
+            const suppressClickMs = 260;
+            const pointerId = Number.isFinite(Number(ev?.pointerId)) ? Number(ev.pointerId) : NaN;
+            const startX = Number(ev?.clientX) || 0;
+            const startY = Number(ev?.clientY) || 0;
+            let lastX = startX;
+            let lastY = startY;
+            let dragging = false;
+            let completing = false;
+            let ended = false;
+            let captured = false;
+            let ghostMeta = null;
+            const prevOpacity = String(sourceEl.style.opacity || '');
+            const resolvePointTarget = (x, y) => {
+                if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+                try {
+                    const hit = document.elementFromPoint(x, y);
+                    return hit instanceof Element ? hit : null;
+                } catch (e) {
+                    return null;
+                }
+            };
+            const samePointer = (e2) => {
+                if (!Number.isFinite(pointerId)) return true;
+                const cur = Number(e2?.pointerId);
+                if (!Number.isFinite(cur)) return true;
+                return cur === pointerId;
+            };
+            const capturePointer = () => {
+                if (captured || !Number.isFinite(pointerId) || typeof sourceEl.setPointerCapture !== 'function') return;
+                try {
+                    sourceEl.setPointerCapture(pointerId);
+                    captured = true;
+                } catch (e) {}
+            };
+            const clearKanbanHover = () => {
+                if (sourceType !== 'kanban') return;
+                try { __tmKanbanClearDragOver(); } catch (e) {}
+            };
+            const clearDocHover = () => {
+                try { __tmClearDocTabDropTarget(); } catch (e) {}
+            };
+            const syncHover = () => {
+                const pointTarget = resolvePointTarget(lastX, lastY);
+                const floatingInfo = __tmCalendarFloatingDragMove({
+                    clientX: lastX,
+                    clientY: lastY,
+                    target: pointTarget || sourceEl,
+                }, { mode: 'desktop' });
+                if (floatingInfo?.overFloatingMini) {
+                    clearDocHover();
+                    clearKanbanHover();
+                    return;
+                }
+                const docTabEl = pointTarget?.closest?.('.tm-doc-tab') || null;
+                if (docTabEl instanceof Element) {
+                    try {
+                        window.tmDocTabDragOver?.({
+                            preventDefault() {},
+                            stopPropagation() {},
+                            dataTransfer: syntheticTransfer,
+                            target: docTabEl,
+                            currentTarget: docTabEl,
+                        });
+                    } catch (e) {}
+                } else {
+                    clearDocHover();
+                }
+                if (sourceType === 'kanban') {
+                    try { __tmApplyKanbanDragHoverFromTarget(pointTarget); } catch (e) {}
+                }
+            };
+            const cleanup = (suppressClick) => {
+                if (ended) return;
+                ended = true;
+                try { document.removeEventListener('pointermove', onMove, true); } catch (e) {}
+                try { document.removeEventListener('pointerup', onUp, true); } catch (e) {}
+                try { document.removeEventListener('pointercancel', onUp, true); } catch (e) {}
+                try { window.removeEventListener('blur', onUp, true); } catch (e) {}
+                if (captured && Number.isFinite(pointerId) && typeof sourceEl.releasePointerCapture === 'function') {
+                    try { sourceEl.releasePointerCapture(pointerId); } catch (e) {}
+                }
+                if (ghostMeta?.ghost instanceof HTMLElement) {
+                    try { ghostMeta.ghost.remove(); } catch (e) {}
+                }
+                try { sourceEl.style.opacity = prevOpacity; } catch (e) {}
+                if (sourceType === 'kanban') {
+                    try { sourceEl.classList.remove('tm-kanban-card--dragging'); } catch (e) {}
+                    try { delete state.__tmKanbanDragId; } catch (e) {}
+                    try { delete state.__tmKanbanDragIds; } catch (e) {}
+                }
+                clearDocHover();
+                clearKanbanHover();
+                try { __tmSetCalendarSideDockDragHidden(false); } catch (e) {}
+                try { __tmCalendarFloatingDragEnd(); } catch (e) {}
+                if (String(state.draggingTaskId || '').trim() === taskId) state.draggingTaskId = '';
+                try { document.body.style.userSelect = ''; } catch (e) {}
+                try { document.body.style.cursor = ''; } catch (e) {}
+                if (suppressClick) {
+                    __tmSuppressDockPointerTaskClick(suppressClickMs);
+                }
+                if (state.dockTaskPointerGestureCleanup === cleanup) state.dockTaskPointerGestureCleanup = null;
+            };
+            const finishDrop = async () => {
+                const pointTarget = resolvePointTarget(lastX, lastY);
+                try {
+                    const handled = await globalThis.__tmCalendar?.finalizeFloatingMiniCalendarTouchDrop?.({
+                        taskId,
+                        clientX: lastX,
+                        clientY: lastY,
+                        target: pointTarget,
+                        mode: 'desktop',
+                    });
+                    if (handled) return true;
+                } catch (e) {}
+                const docTabEl = pointTarget?.closest?.('.tm-doc-tab') || null;
+                if (docTabEl instanceof Element) {
+                    try {
+                        await window.tmDocTabDrop?.({
+                            preventDefault() {},
+                            stopPropagation() {},
+                            dataTransfer: syntheticTransfer,
+                            target: docTabEl,
+                            currentTarget: docTabEl,
+                        }, String(docTabEl.getAttribute('data-tm-doc-id') || '').trim());
+                        return true;
+                    } catch (e) {}
+                }
+                if (sourceType === 'kanban') {
+                    const dropHost = pointTarget?.closest?.('.tm-kanban-group-title, .tm-kanban-group, .tm-kanban-col') || null;
+                    if (dropHost instanceof Element) {
+                        try {
+                            const ret = window.tmKanbanDrop?.({
+                                preventDefault() {},
+                                stopPropagation() {},
+                                target: dropHost,
+                                currentTarget: dropHost,
+                                dataTransfer: syntheticTransfer,
+                            });
+                            if (ret && typeof ret.then === 'function') await ret;
+                            return true;
+                        } catch (e) {}
+                    }
+                }
+                return false;
+            };
+            const startDrag = () => {
+                if (dragging || ended) return;
+                dragging = true;
+                capturePointer();
+                state.draggingTaskId = taskId;
+                if (sourceType === 'kanban') {
+                    state.__tmKanbanDragId = taskId;
+                    state.__tmKanbanDragIds = [taskId];
+                    try { sourceEl.classList.add('tm-kanban-card--dragging'); } catch (e) {}
+                }
+                try { __tmSetCalendarSideDockDragHidden(true); } catch (e) {}
+                try {
+                    sourceEl.style.opacity = '0.72';
+                    document.body.style.userSelect = 'none';
+                    document.body.style.cursor = 'grabbing';
+                } catch (e) {}
+                ghostMeta = __tmBuildDockPointerTaskGhost(taskId, sourceEl, payload, lastX, lastY);
+                try {
+                    const dockModalRect = __tmIsDockHost() && state.modal?.getBoundingClientRect
+                        ? state.modal.getBoundingClientRect()
+                        : null;
+                    __tmCalendarFloatingDragStart(taskId, dragMeta, {
+                        clientX: lastX,
+                        clientY: lastY,
+                        target: sourceEl,
+                    }, {
+                        mode: __tmIsDockHost() ? 'mobile' : 'desktop',
+                        html5: false,
+                        containerRect: dockModalRect,
+                    });
+                } catch (e) {}
+                syncHover();
+            };
+            const onMove = (e2) => {
+                if (ended || completing || !samePointer(e2)) return;
+                lastX = Number(e2?.clientX) || lastX;
+                lastY = Number(e2?.clientY) || lastY;
+                if (!dragging) {
+                    const dx = lastX - startX;
+                    const dy = lastY - startY;
+                    if ((dx * dx + dy * dy) < (threshold * threshold)) return;
+                    startDrag();
+                }
+                __tmPlaceDockPointerTaskGhost(ghostMeta, lastX, lastY);
+                syncHover();
+                try { e2.preventDefault(); } catch (e) {}
+            };
+            const onUp = async (e2) => {
+                if (ended || completing || !samePointer(e2)) return;
+                completing = true;
+                try {
+                    if (dragging) {
+                        __tmSuppressDockPointerTaskClick(suppressClickMs);
+                        lastX = Number(e2?.clientX) || lastX;
+                        lastY = Number(e2?.clientY) || lastY;
+                        await finishDrop();
+                    }
+                } finally {
+                    cleanup(dragging);
+                }
+            };
+
+            state.dockTaskPointerGestureCleanup = () => cleanup(false);
+            document.addEventListener('pointermove', onMove, true);
+            document.addEventListener('pointerup', onUp, true);
+            document.addEventListener('pointercancel', onUp, true);
+            window.addEventListener('blur', onUp, true);
+        }, { passive: false, signal: abort.signal });
+    }
+
     window.tmRowClick = async function(ev, taskId) {
+        if (__tmConsumeDockPointerSuppressedClick(ev)) return;
         const id = String(taskId || '').trim();
         if (!id) return;
         const t = ev?.target;
@@ -26430,6 +28057,7 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmChecklistSelectTask = async function(taskId, ev) {
+        if (__tmConsumeDockPointerSuppressedClick(ev)) return;
         const id = String(taskId || '').trim();
         if (!id) return;
         const target = ev?.target;
@@ -26450,6 +28078,7 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmChecklistTitleClick = function(taskId, ev) {
+        if (__tmConsumeDockPointerSuppressedClick(ev)) return;
         const id = String(taskId || '').trim();
         if (!id) return;
         try { ev?.stopPropagation?.(); } catch (e) {}
@@ -26662,6 +28291,7 @@ async function __tmRefreshAfterWake(reason) {
         'map': 'M231.38,46.54a12,12,0,0,0-10.29-2.18L161.4,59.28l-60-30a12,12,0,0,0-8.28-.91l-64,16A12,12,0,0,0,20,56V200a12,12,0,0,0,14.91,11.64L94.6,196.72l60,30a12,12,0,0,0,8.28.91l64-16A12,12,0,0,0,236,200V56A12,12,0,0,0,231.38,46.54ZM108,59.42l40,20V196.58l-40-20Zm-64,6,40-10V174.63l-40,10ZM212,190.63l-40,10V81.37l40-10Z',
         'map-pin': 'M128,60a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,60Zm0,64a20,20,0,1,1,20-20A20,20,0,0,1,128,124Zm0-112a92.1,92.1,0,0,0-92,92c0,77.36,81.64,135.4,85.12,137.83a12,12,0,0,0,13.76,0,259,259,0,0,0,42.18-39C205.15,170.57,220,136.37,220,104A92.1,92.1,0,0,0,128,12Zm31.3,174.71A249.35,249.35,0,0,1,128,216.89a249.35,249.35,0,0,1-31.3-30.18C80,167.37,60,137.31,60,104a68,68,0,0,1,136,0C196,137.31,176,167.37,159.3,186.71Z',
         'menu': 'M228,128a12,12,0,0,1-12,12H40a12,12,0,0,1,0-24H216A12,12,0,0,1,228,128ZM40,76H216a12,12,0,0,0,0-24H40a12,12,0,0,0,0,24ZM216,180H40a12,12,0,0,0,0,24H216a12,12,0,0,0,0-24Z',
+        'minus': 'M216,140H40a12,12,0,0,1,0-24H216a12,12,0,0,1,0,24Z',
         'pin': 'M216,164h-5.93L190.3,52H192a12,12,0,0,0,0-24H64a12,12,0,0,0,0,24h1.7L45.93,164H40a12,12,0,0,0,0,24h76v52a12,12,0,0,0,24,0V188h76a12,12,0,0,0,0-24ZM90.07,52h75.86L185.7,164H70.3Z',
         'plus': 'M228,128a12,12,0,0,1-12,12H140v76a12,12,0,0,1-24,0V140H40a12,12,0,0,1,0-24h76V40a12,12,0,0,1,24,0v76h76A12,12,0,0,1,228,128Z',
         'puzzle': 'M222.41,155.16a12,12,0,0,0-11.56-.69A16,16,0,0,1,188,139,16.2,16.2,0,0,1,202.8,124a15.83,15.83,0,0,1,8,1.5A12,12,0,0,0,228,114.7V72a20,20,0,0,0-20-20H176a40.15,40.15,0,0,0-12.62-29.16,39.67,39.67,0,0,0-29.94-10.76,40.08,40.08,0,0,0-37.34,37C96,50.07,96,51,96,52H64A20,20,0,0,0,44,72v28a40.15,40.15,0,0,0-29.16,12.62A40,40,0,0,0,41.1,179.9a28.3,28.3,0,0,0,2.9.1v28a20,20,0,0,0,20,20H208a20,20,0,0,0,20-20V165.31A12,12,0,0,0,222.41,155.16ZM204,204H68V165.31a12,12,0,0,0-17.15-10.84A15.9,15.9,0,0,1,42.8,156,16.2,16.2,0,0,1,28,141.06a16,16,0,0,1,22.82-15.52A12,12,0,0,0,68,114.7V76h42.7a12,12,0,0,0,10.83-17.15A15.9,15.9,0,0,1,120,50.8,16.19,16.19,0,0,1,134.94,36a16,16,0,0,1,15.53,22.81A12,12,0,0,0,161.31,76H204v24c-1,0-1.93,0-2.9.11A40,40,0,0,0,204,180h0Z',
@@ -26704,6 +28334,7 @@ async function __tmRefreshAfterWake(reason) {
                 case 'settings': return '<path d="M12 8.25A3.75 3.75 0 1 1 8.25 12 3.75 3.75 0 0 1 12 8.25Z" /><path d="M12 3.25v2" /><path d="M12 18.75v2" /><path d="m19.42 6.58-1.42 1.42" /><path d="m6 18-1.42 1.42" /><path d="M20.75 12h-2" /><path d="M5.25 12h-2" /><path d="m19.42 17.42-1.42-1.42" /><path d="m6 6 1.42 1.42" />';
                 case 'save': return '<path d="M5.25 3.5h11.5l3.25 3.25v12.5A2.75 2.75 0 0 1 17.25 22H6.75A2.75 2.75 0 0 1 4 19.25V4.75A1.25 1.25 0 0 1 5.25 3.5Z" /><path d="M8 3.5v5h7V5.75" /><path d="M8 20v-5.5h8V20" />';
                 case 'menu': return '<path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" />';
+                case 'minus': return '<path d="M5 12h14" />';
                 case 'plus': return '<path d="M12 5v14" /><path d="M5 12h14" />';
                 case 'x': return '<path d="M6 6 18 18" /><path d="M18 6 6 18" />';
                 case 'trash-2': return '<path d="M4 6h16" /><path d="M9 6V4.75A1.75 1.75 0 0 1 10.75 3h2.5A1.75 1.75 0 0 1 15 4.75V6" /><path d="M7 6v13.25A1.75 1.75 0 0 0 8.75 21h6.5A1.75 1.75 0 0 0 17 19.25V6" /><path d="M10 10v7" /><path d="M14 10v7" />';
@@ -26801,6 +28432,7 @@ async function __tmRefreshAfterWake(reason) {
     // 修改渲染函数以显示规则信息
     function render() {
         try { __tmEnsureDocTabTouchDelegation(); } catch (e) {}
+        try { state.dockTaskPointerGestureCleanup?.(); } catch (e) {}
         if (!__tmIsTomatoFocusModeEnabled()) {
             __tmClearTomatoFocusRowClasses();
         }
@@ -26859,7 +28491,11 @@ async function __tmRefreshAfterWake(reason) {
             if (docTabsPane) savedDocTabsScrollLeft = Number(docTabsPane.scrollLeft) || 0;
             const timelineLeftBody = prevModalSnapshot.querySelector('#tmTimelineLeftBody');
             const ganttBody = prevModalSnapshot.querySelector('#tmGanttBody');
-            if (timelineLeftBody) {
+            const timelineScrollHost = __tmGetTimelineGlobalScrollHost(prevModalSnapshot);
+            if (timelineScrollHost) {
+                savedTimelineScrollTop = Number(timelineScrollHost.scrollTop) || 0;
+                savedTimelineScrollLeft = Number(timelineScrollHost.scrollLeft) || 0;
+            } else if (timelineLeftBody) {
                 savedTimelineScrollTop = timelineLeftBody.scrollTop;
                 if (ganttBody) savedTimelineScrollLeft = ganttBody.scrollLeft;
             } else if (prevWasKanban) {
@@ -27434,7 +29070,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main">
                             <div class="tm-checklist-title-row">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" title="跳转到任务"><span draggable="false" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" title="跳转到任务"><span draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}
@@ -29847,6 +31483,31 @@ async function __tmRefreshAfterWake(reason) {
         const showWhiteboardMobileLayoutModeToggle = state.viewMode === 'whiteboard';
         const whiteboardMobileMenuLayoutMode = showWhiteboardAllTabsModeToggle ? whiteboardAllTabsLayoutMode : 'board';
         const showInlineDocGroupQuickSelect = isMobile || isDockHost;
+        const showMobileTimelineFloatingToolbar = !!(isMobile && !isLandscape && state.viewMode === 'timeline');
+        const showMobileLandscapeTimelineTopbar = !!(isMobile && isLandscape && state.viewMode === 'timeline');
+        const showDesktopNarrowTimelineTopbar = !!(!isMobile && isDesktopNarrow && state.viewMode === 'timeline');
+        const topbarAddBtnHtml = `<button class="tm-btn tm-btn-info tm-topbar-add-btn bc-btn bc-btn--sm" onclick="tmAdd()" aria-label="新建任务" data-tm-floating-tooltip-label="新建任务" data-tm-tooltip-side="bottom" data-tm-tooltip-align="center" style="padding: 0; width: 30px; height: 30px; min-width: 30px; min-height: 30px; display: inline-flex; align-items: center; justify-content: center;">${__tmRenderLucideIcon('plus')}</button>`;
+        const __tmRenderTimelineToolbarButtons = ({ buttonClass = '', buttonStyle = '', interactionAttrs = '', clickPrefix = '' } = {}) => {
+            const buttonClassName = ['tm-btn', 'tm-btn-info', 'tm-timeline-toolbar-btn', 'bc-btn', 'bc-btn--sm', String(buttonClass || '').trim()].filter(Boolean).join(' ');
+            const styleAttr = buttonStyle ? ` style="${__tmEscAttr(buttonStyle)}"` : '';
+            const extraAttrs = String(interactionAttrs || '');
+            const clickStart = String(clickPrefix || '');
+            return `
+                <button class="${buttonClassName}" onclick="${clickStart}tmGanttZoomOut()"${styleAttr}${extraAttrs}${__tmBuildTooltipAttrs('缩小', { side: 'bottom' })}>${__tmRenderLucideIcon('minus')}</button>
+                <button class="${buttonClassName}" onclick="${clickStart}tmGanttZoomIn()"${styleAttr}${extraAttrs}${__tmBuildTooltipAttrs('放大', { side: 'bottom' })}>${__tmRenderLucideIcon('plus')}</button>
+                <button class="${buttonClassName}" onclick="${clickStart}tmGanttFit()"${styleAttr}${extraAttrs}${__tmBuildTooltipAttrs('适配范围', { side: 'bottom' })}>${__tmRenderLucideIcon('map')}</button>
+                <button class="${buttonClassName}" onclick="${clickStart}tmGanttToday()"${styleAttr}${extraAttrs}${__tmBuildTooltipAttrs('定位今天', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>
+            `;
+        };
+        const timelineInlineToolbarButtonsHtml = __tmRenderTimelineToolbarButtons({
+            buttonStyle: 'padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;'
+        });
+        const timelineCompactToolbarButtonsHtml = __tmRenderTimelineToolbarButtons({
+            buttonStyle: 'padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;'
+        });
+        const timelineMobileFloatingToolbarHtml = showMobileTimelineFloatingToolbar
+            ? `<div class="tm-timeline-mobile-toolbar"><div class="tm-timeline-mobile-toolbar__inner">${__tmRenderTimelineToolbarButtons({ buttonClass: 'tm-timeline-mobile-toolbar__btn', interactionAttrs: ' onpointerdown=\"tmTouchTimelineMobileToolbarButton(event)\" ontouchstart=\"tmTouchTimelineMobileToolbarButton(event)\"', clickPrefix: 'tmTouchTimelineMobileToolbarButton(event);' })}</div></div>`
+            : '';
         const bodyWithSideDockHtml = (showCalendarSideDock || showAiSideDock)
             ? `
                 <div class="tm-main-body-with-cal-dock">
@@ -29883,7 +31544,6 @@ async function __tmRefreshAfterWake(reason) {
                                 <span onclick="tmHandleManagerIconClick(event)" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;line-height:0;">${__tmRenderTaskHorizonTopbarIcon(16)}</span>
                                 <span onclick="tmHandleManagerTitleClick(event)" style="cursor:pointer;">任务管理器</span>
                             </div>
-                            <button class="tm-btn tm-btn-info tm-topbar-add-btn bc-btn bc-btn--sm" onclick="tmAdd()" aria-label="新建任务" data-tm-floating-tooltip-label="新建任务" data-tm-tooltip-side="bottom" data-tm-tooltip-align="center" style="padding: 0; width: 30px; height: 30px; min-width: 30px; min-height: 30px; display: inline-flex; align-items: center; justify-content: center;">${__tmRenderLucideIcon('plus')}</button>
                             ${showInlineDocGroupQuickSelect ? __tmRenderTopbarSelect({
                                 id: 'tmTopbarDocQuickSelect',
                                 label: '文档',
@@ -29892,12 +31552,7 @@ async function __tmRefreshAfterWake(reason) {
                                 tooltip: '切换文档分组'
                             }) : ''}
                             ${isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCalendarToggleSidebar()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('日历侧边栏', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>` : ''}
-                            ${(state.viewMode === 'timeline' && ((isMobile && isLandscape) || isDesktopNarrow)) ? `
-                                <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttZoomOut()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('缩小', { side: 'bottom' })}>－</button>
-                                <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttZoomIn()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('放大', { side: 'bottom' })}>＋</button>
-                                <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttFit()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('适配范围', { side: 'bottom' })}>${__tmRenderLucideIcon('map')}</button>
-                                <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttToday()" style="padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('定位今天', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>
-                            ` : ''}
+                            ${showDesktopNarrowTimelineTopbar ? timelineInlineToolbarButtonsHtml : ''}
                         </div>
 
                         <!-- 桌面端工具栏 -->
@@ -29924,6 +31579,7 @@ async function __tmRefreshAfterWake(reason) {
                         <div class="tm-topbar-right">
                             ${!isMobile ? `
                             <div class="tm-compact-topbar-actions">
+                                ${topbarAddBtnHtml}
                                 <button class="tm-btn tm-btn-info tm-compact-topbar-action tm-compact-topbar-action--refresh bc-btn bc-btn--sm" onclick="tmRefresh()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('刷新', { side: 'bottom' })}>${__tmRenderLucideIcon('arrow-clockwise')}</button>
                                 <button class="tm-btn tm-btn-info tm-compact-topbar-action tm-compact-topbar-action--settings bc-btn bc-btn--sm" onclick="showSettings()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('设置', { side: 'bottom' })}>${__tmRenderLucideIcon('settings')}</button>
                             </div>
@@ -29932,7 +31588,9 @@ async function __tmRefreshAfterWake(reason) {
 
                         <!-- 移动端菜单按钮 -->
                             <div class="tm-mobile-menu-btn" style="display:${isMobile ? 'flex' : 'none'};">
-                            <div style="display:flex;align-items:center;gap:10px;">
+                            <div style="display:flex;align-items:center;gap:${showMobileLandscapeTimelineTopbar ? '6px' : '10px'};">
+                                ${showMobileLandscapeTimelineTopbar ? timelineCompactToolbarButtonsHtml : ''}
+                                ${isMobile ? topbarAddBtnHtml : ''}
                                 ${isMobile ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmRefresh()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('刷新', { side: 'bottom' })}>${__tmRenderLucideIcon('arrow-clockwise')}</button>` : ''}
                                 ${!isMobile ? `
                                 ` : ''}<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmToggleMobileMenu(event)" ontouchend="tmToggleMobileMenu(event)" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('菜单', { side: 'bottom' })}>
@@ -29958,10 +31616,7 @@ async function __tmRefreshAfterWake(reason) {
                             </div>
                         ` : ''}
                         ${state.viewMode === 'timeline' ? `
-                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttZoomOut()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('缩小', { side: 'bottom' })}>－</button>
-                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttZoomIn()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('放大', { side: 'bottom' })}>＋</button>
-                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttFit()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('适配范围', { side: 'bottom' })}>${__tmRenderLucideIcon('map')}</button>
-                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmGanttToday()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('定位今天', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>
+                            ${timelineCompactToolbarButtonsHtml}
                         ` : ''}
                         ${!isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCalendarToggleSidebar()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('日历侧边栏', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>` : ''}
                         ${!showMobileBottomViewBar ? `
@@ -29969,6 +31624,7 @@ async function __tmRefreshAfterWake(reason) {
                             ${__tmRenderViewSwitcherButtons()}
                         </div>
                         ` : ''}
+                        ${topbarAddBtnHtml}
                         <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmRefresh()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('刷新', { side: 'bottom' })}>${__tmRenderLucideIcon('arrow-clockwise')}</button>
                         ${__tmIsAiFeatureEnabled() ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmToggleAiSidebar()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs(state.aiSidebarOpen ? '收起 AI 工作台' : '展开 AI 工作台', { side: 'bottom' })}>${__tmRenderLucideIcon('bot')}</button>` : ''}
                         <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="showSettings()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('设置', { side: 'bottom' })}>${__tmRenderLucideIcon('settings')}</button>
@@ -30886,7 +32542,8 @@ async function __tmRefreshAfterWake(reason) {
                     }
                 </style>
                 
-                <div class="tm-main-stage${stageAnimClass}">
+                <div class="tm-main-stage${stageAnimClass}${showMobileTimelineFloatingToolbar ? ' tm-main-stage--timeline-mobile-toolbar' : ''}">
+                    ${timelineMobileFloatingToolbarHtml}
                     ${bodyWithSideDockHtml}
                 </div>
                 ${whiteboardMobileDetailSheetHtml}
@@ -30920,6 +32577,7 @@ async function __tmRefreshAfterWake(reason) {
         try { __tmBindBottomViewbarWheelScroll(state.modal); } catch (e) {}
         try { __tmBindDocTabScrollMemory(state.modal); } catch (e) {}
         try { __tmRestoreDocTabScroll(state.modal, savedDocTabsScrollLeft); } catch (e) {}
+        try { __tmBindDockPointerTaskDrag(state.modal); } catch (e) {}
         try { if (state.viewMode === 'list') __tmBindListScrollVisibility(state.modal); } catch (e) {}
         try { if (state.viewMode === 'checklist') __tmBindChecklistScrollVisibility(state.modal); } catch (e) {}
         try { __tmBindMobileViewportAutoRefresh(state.modal); } catch (e) {}
@@ -30989,11 +32647,27 @@ async function __tmRefreshAfterWake(reason) {
                 const leftBody = state.modal.querySelector('#tmTimelineLeftBody');
                 const ganttBody = state.modal.querySelector('#tmGanttBody');
                 const ganttHeader = state.modal.querySelector('#tmGanttHeader');
+                const timelineScrollHost = __tmGetTimelineGlobalScrollHost(state.modal);
+                const useGlobalScroll = !!timelineScrollHost;
                 
-                if (leftBody) leftBody.scrollTop = desiredTop;
-                if (ganttBody) {
-                    ganttBody.scrollTop = desiredTop;
-                    ganttBody.scrollLeft = desiredLeft;
+                if (useGlobalScroll) {
+                    try { if (leftBody) leftBody.scrollTop = 0; } catch (e) {}
+                    try {
+                        if (ganttBody) {
+                            ganttBody.scrollTop = 0;
+                            ganttBody.scrollLeft = 0;
+                        }
+                    } catch (e) {}
+                    try {
+                        timelineScrollHost.scrollTop = desiredTop;
+                        timelineScrollHost.scrollLeft = desiredLeft;
+                    } catch (e) {}
+                } else {
+                    if (leftBody) leftBody.scrollTop = desiredTop;
+                    if (ganttBody) {
+                        ganttBody.scrollTop = desiredTop;
+                        ganttBody.scrollLeft = desiredLeft;
+                    }
                 }
                 
                 // 渲染 Gantt
@@ -31041,32 +32715,57 @@ async function __tmRefreshAfterWake(reason) {
                             __tmScheduleRender({ withFilters: true });
                         },
                     });
-                    try {
-                        ganttBody.scrollLeft = desiredLeft;
-                    } catch (e) {}
+                    if (!useGlobalScroll) {
+                        try { ganttBody.scrollLeft = desiredLeft; } catch (e) {}
+                    }
                 }
                 __tmScheduleTimelineTodayIndicatorRefresh();
                 
                 const syncHeaderX = () => {
-                    if (!ganttBody || !ganttHeader) return;
+                    if (useGlobalScroll || !ganttBody || !ganttHeader) return;
                     const inner = ganttHeader.querySelector('.tm-gantt-header-inner');
                     if (!inner) return;
                     inner.style.transform = `translateX(${-ganttBody.scrollLeft}px)`;
                 };
-                syncHeaderX();
+                if (useGlobalScroll) {
+                    try {
+                        const inner = ganttHeader?.querySelector?.('.tm-gantt-header-inner');
+                        if (inner) inner.style.transform = '';
+                    } catch (e) {}
+                } else {
+                    syncHeaderX();
+                }
                 
                 // 强制左侧对齐（如果需要）
                 const forcedLeft = Number(state.ganttView?.__forceScrollLeft);
                 if (Number.isFinite(forcedLeft)) {
-                     if (ganttBody) ganttBody.scrollLeft = forcedLeft;
+                     if (useGlobalScroll) {
+                         try { timelineScrollHost.scrollLeft = forcedLeft; } catch (e) {}
+                     } else if (ganttBody) {
+                         ganttBody.scrollLeft = forcedLeft;
+                     }
                      delete state.ganttView.__forceScrollLeft;
                 }
                 
                 requestAnimationFrame(() => requestAnimationFrame(() => {
-                    try { if (leftBody) leftBody.scrollTop = desiredTop; } catch (e) {}
-                    try { if (ganttBody) ganttBody.scrollTop = desiredTop; } catch (e) {}
-                    try { if (ganttBody) ganttBody.scrollLeft = desiredLeft; } catch (e) {}
-                    try { syncHeaderX(); } catch (e) {}
+                    if (useGlobalScroll) {
+                        try { if (leftBody) leftBody.scrollTop = 0; } catch (e) {}
+                        try {
+                            if (ganttBody) {
+                                ganttBody.scrollTop = 0;
+                                ganttBody.scrollLeft = 0;
+                            }
+                        } catch (e) {}
+                        try {
+                            timelineScrollHost.scrollTop = desiredTop;
+                            timelineScrollHost.scrollLeft = desiredLeft;
+                        } catch (e) {}
+                    } else {
+                        try { if (leftBody) leftBody.scrollTop = desiredTop; } catch (e) {}
+                        try { if (ganttBody) ganttBody.scrollTop = desiredTop; } catch (e) {}
+                        try { if (ganttBody) ganttBody.scrollLeft = desiredLeft; } catch (e) {}
+                        try { syncHeaderX(); } catch (e) {}
+                    }
                     try { __tmRunFlipAnimation(state.modal); } catch (e) {}
                     
                     if (useSoftSwap) {
@@ -31134,6 +32833,9 @@ async function __tmRefreshAfterWake(reason) {
                         if (!key) return;
                         tmToggleGroupCollapse(key, ev);
                     };
+                    if (useGlobalScroll) {
+                        ganttBody.addEventListener('click', onGroupClick, true);
+                    } else {
                     const onGanttWheel = (ev) => {
                         if (!ev?.shiftKey) return;
                         if (!ganttBody) return;
@@ -31172,8 +32874,9 @@ async function __tmRefreshAfterWake(reason) {
                     }, { passive: true });
                     if (ganttHeader) ganttHeader.addEventListener('wheel', onGanttWheel, { passive: true });
                     ganttBody.addEventListener('click', onGroupClick, true);
+                    }
                 } else if (ganttBody) {
-                    ganttBody.addEventListener('scroll', syncHeaderX, { passive: true });
+                    if (!useGlobalScroll) ganttBody.addEventListener('scroll', syncHeaderX, { passive: true });
                     const onGanttWheel = (ev) => {
                         if (!ev?.shiftKey) return;
                         const canScrollX = (ganttBody.scrollWidth - ganttBody.clientWidth) > 2;
@@ -31187,7 +32890,7 @@ async function __tmRefreshAfterWake(reason) {
                         else if (ev.deltaMode === 2) delta *= ganttBody.clientWidth;
                         ganttBody.scrollLeft = ganttBody.scrollLeft + delta;
                     };
-                    if (ganttHeader) ganttHeader.addEventListener('wheel', onGanttWheel, { passive: true });
+                    if (!useGlobalScroll && ganttHeader) ganttHeader.addEventListener('wheel', onGanttWheel, { passive: true });
                 }
             } else {
                 const isCalendar = state.viewMode === 'calendar';
@@ -33947,6 +35650,12 @@ async function __tmRefreshAfterWake(reason) {
                 try { ev.dataTransfer.setDragImage(dragGhost, 12, 12); } catch (e) {}
             }
         } catch (e) {}
+        try {
+            const meta = (typeof window.tmCalendarGetTaskDragMeta === 'function')
+                ? window.tmCalendarGetTaskDragMeta(taskIds[0])
+                : null;
+            __tmCalendarFloatingDragStart(taskIds[0], meta, ev);
+        } catch (e) {}
         __tmStartWhiteboardPoolGlobalTracking(String(state.activeDocId && state.activeDocId !== 'all' ? state.activeDocId : ''));
     };
 
@@ -33995,6 +35704,12 @@ async function __tmRefreshAfterWake(reason) {
                 try { ev.dataTransfer.setDragImage(dragGhost, 12, 12); } catch (e) {}
             }
         } catch (e) {}
+        try {
+            const meta = (typeof window.tmCalendarGetTaskDragMeta === 'function')
+                ? window.tmCalendarGetTaskDragMeta(dragTaskIds[0] || id)
+                : null;
+            __tmCalendarFloatingDragStart(dragTaskIds[0] || id, meta, ev);
+        } catch (e) {}
         __tmStartWhiteboardPoolGlobalTracking(String(state.activeDocId && state.activeDocId !== 'all' ? state.activeDocId : ''));
     };
 
@@ -34004,6 +35719,7 @@ async function __tmRefreshAfterWake(reason) {
 
     window.tmWhiteboardPoolDragEnd = function() {
         state.draggingTaskId = '';
+        try { __tmCalendarFloatingDragEnd(); } catch (e) {}
         __tmStopWhiteboardPoolGlobalTracking();
         __tmCleanupWhiteboardPoolDragGhost();
         state.whiteboardPoolDragStart = null;
@@ -35215,9 +36931,9 @@ async function __tmRefreshAfterWake(reason) {
         render();
     };
 
-    window.tmGetCalendarDragTasks = function(limit) {
-        const max = Number.isFinite(Number(limit)) ? Math.max(1, Math.min(500, Math.floor(Number(limit)))) : 200;
-        const filtered = Array.isArray(state.filteredTasks) ? state.filteredTasks : [];
+    function __tmGetCalendarDocsToGroupMapSync() {
+        const cachedMap = window.__tmCalendarDocsToGroupCache?.map;
+        if (cachedMap instanceof Map) return new Map(cachedMap);
         const docsToGroup = new Map();
         try {
             const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
@@ -35232,12 +36948,247 @@ async function __tmRefreshAfterWake(reason) {
                 });
             });
         } catch (e) {}
+        return docsToGroup;
+    }
+
+    function __tmFlattenCalendarTaskTreeSync() {
+        const out = [];
+        const seen = new Set();
+        const walk = (tasks) => {
+            const list = Array.isArray(tasks)
+                ? tasks.slice().sort((a, b) => {
+                    try { return __tmCompareTasksByDocFlow(a, b); } catch (e) { return 0; }
+                })
+                : [];
+            list.forEach((task) => {
+                if (!task || typeof task !== 'object') return;
+                const id = String(task?.id || '').trim();
+                if (!id || seen.has(id)) return;
+                seen.add(id);
+                out.push(task);
+                if (Array.isArray(task?.children) && task.children.length > 0) walk(task.children);
+            });
+        };
+        (Array.isArray(state.taskTree) ? state.taskTree : []).forEach((doc) => walk(doc?.tasks || []));
+        return out;
+    }
+
+    function __tmGetCalendarTaskCandidatesSync() {
+        const docsToGroup = __tmGetCalendarDocsToGroupMapSync();
+
+        const pickFrom = (source) => {
+            const list = Array.isArray(source) ? source : [];
+            const out = [];
+            const seen = new Set();
+            list.forEach((task) => {
+                if (!task || typeof task !== 'object') return;
+                const id = String(task?.id || '').trim();
+                if (!id || seen.has(id)) return;
+                seen.add(id);
+                out.push(task);
+            });
+            return out;
+        };
+
+        const filteredTasks = pickFrom(state.filteredTasks);
+        if (filteredTasks.length > 0) return { tasks: filteredTasks, docsToGroup };
+
+        const treeTasks = pickFrom(__tmFlattenCalendarTaskTreeSync());
+        if (treeTasks.length > 0) return { tasks: treeTasks, docsToGroup };
+
+        const cachedTasks = pickFrom(window.__tmCalendarAllTasksCache?.tasks);
+        if (cachedTasks.length > 0) return { tasks: cachedTasks, docsToGroup };
+
+        const flatTasks = pickFrom(
+            (state.flatTasks && typeof state.flatTasks === 'object')
+                ? Object.values(state.flatTasks).sort((a, b) => {
+                    try { return __tmCompareTasksByDocFlow(a, b); } catch (e) { return 0; }
+                })
+                : []
+        );
+        return { tasks: flatTasks, docsToGroup };
+    }
+
+    let __tmCalendarTaskCacheWarmPromise = null;
+
+    async function __tmLoadAllTasksForCalendarCache(options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const limit = Number.isFinite(Number(SettingsStore.data.queryLimit)) ? Number(SettingsStore.data.queryLimit) : 2000;
+        const allDocIds = await resolveDocIdsFromGroups({
+            groupId: 'all',
+            includeQuickAddDoc: true,
+            forceRefreshScope: opts.forceRefreshScope === true,
+        });
+        const docKey = allDocIds.slice().sort().join(',');
+        const key = `${limit}|${docKey}`;
+        const maxAgeMs = Number.isFinite(Number(opts.maxAgeMs)) ? Math.max(0, Math.floor(Number(opts.maxAgeMs))) : 8000;
+        const prev = window.__tmCalendarAllTasksCache;
+        if (!opts.force && prev && prev.key === key && Array.isArray(prev.tasks) && (Date.now() - (Number(prev.ts) || 0) < maxAgeMs)) {
+            return prev.tasks;
+        }
+        if (!allDocIds.length) {
+            window.__tmCalendarAllTasksCache = { key, ts: Date.now(), tasks: [] };
+            return [];
+        }
+        try { await MetaStore.load?.(); } catch (e) {}
+        const res = await API.getTasksByDocuments(allDocIds, limit, { doneOnly: false });
+        const tasks = Array.isArray(res?.tasks) ? res.tasks : [];
+        const out = [];
+        for (const task of tasks) {
+            if (!task || typeof task !== 'object') continue;
+            const prevTask = state.flatTasks?.[String(task.id || '').trim()];
+            let parsedDone = !!task.done;
+            try {
+                const parsed = API.parseTaskStatus(task.markdown);
+                parsedDone = !!parsed.done;
+                task.done = parsedDone;
+                task.content = parsed.content;
+            } catch (e) {}
+            try { MetaStore.applyToTask?.(task); } catch (e) {}
+            try { __tmMergeVisibleDateFieldsFromPrevTask(task, prevTask); } catch (e) {}
+            task.done = parsedDone;
+            try { normalizeTaskFields(task, task.docName || '未命名文档'); } catch (e) {}
+            out.push(task);
+        }
+        window.__tmCalendarAllTasksCache = { key, ts: Date.now(), tasks: out };
+        return out;
+    }
+
+    function __tmCalendarTaskCacheIsFresh(maxAgeMs = 8000) {
+        const prev = window.__tmCalendarAllTasksCache;
+        if (!prev || !Array.isArray(prev.tasks)) return false;
+        return (Date.now() - (Number(prev.ts) || 0)) < maxAgeMs;
+    }
+
+    window.tmEnsureCalendarTaskCache = async function(options) {
+        if (__tmCalendarTaskCacheWarmPromise) return __tmCalendarTaskCacheWarmPromise;
+        const opts = (options && typeof options === 'object') ? options : {};
+        const run = Promise.resolve().then(async () => {
+            try { await window.tmCalendarWarmDocsToGroupCache?.(); } catch (e) {}
+            const tasks = await __tmLoadAllTasksForCalendarCache(opts);
+            if (opts.refresh !== false) {
+                try { globalThis.__tmCalendar?.refreshInPlace?.({ hard: false }); } catch (e) {}
+            }
+            return tasks;
+        });
+        let tracked = null;
+        tracked = run.finally(() => {
+            if (__tmCalendarTaskCacheWarmPromise === tracked) __tmCalendarTaskCacheWarmPromise = null;
+        });
+        __tmCalendarTaskCacheWarmPromise = tracked;
+        return tracked;
+    };
+
+    window.tmWarmCalendarTaskCacheIfStale = function(options) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const maxAgeMs = Number.isFinite(Number(opts.maxAgeMs)) ? Math.max(0, Math.floor(Number(opts.maxAgeMs))) : 8000;
+        if (__tmCalendarTaskCacheWarmPromise) return false;
+        if (__tmCalendarTaskCacheIsFresh(maxAgeMs)) return false;
+        try {
+            Promise.resolve().then(() => window.tmEnsureCalendarTaskCache?.(opts)).catch(() => null);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    function __tmBuildCalendarTaskRowsSync(limit = 0) {
+        const hasLimit = Number.isFinite(Number(limit)) && Number(limit) > 0;
+        const max = hasLimit ? Math.max(1, Math.min(500, Math.floor(Number(limit)))) : Number.POSITIVE_INFINITY;
+        const { tasks, docsToGroup } = __tmGetCalendarTaskCandidatesSync();
+        const map = new Map(tasks.map((t) => [String(t?.id || '').trim(), t]).filter(([k]) => !!k));
+        const depthMemo = new Map();
+        const getDepth = (id) => {
+            const tid = String(id || '').trim();
+            if (!tid) return 0;
+            if (depthMemo.has(tid)) return depthMemo.get(tid);
+            const task = map.get(tid);
+            if (!task) return 0;
+            const pid = String(task.parentTaskId || '').trim();
+            const depth = pid ? Math.min(20, getDepth(pid) + 1) : 0;
+            depthMemo.set(tid, depth);
+            return depth;
+        };
+
+        const out = [];
+        for (const task of tasks) {
+            if (!task || task.done) continue;
+            const id = String(task.id || '').trim();
+            if (!id) continue;
+            const title = String(task.content || '').trim() || '(无标题)';
+            const docId = String(task.root_id || '').trim();
+            const gid = docId ? docsToGroup.get(docId) : '';
+            const calendarId = gid ? `group:${gid}` : 'default';
+            out.push({
+                id,
+                task,
+                title,
+                duration: String(task?.duration || '').trim(),
+                spent: __tmGetTaskSpentDisplay(task),
+                calendarId,
+                depth: getDepth(id),
+            });
+            if (out.length >= max) break;
+        }
+        return out;
+    }
+
+    function __tmBuildCalendarTaskTableFallbackHtml() {
+        const colOrder = Array.isArray(SettingsStore.data.columnOrder) && SettingsStore.data.columnOrder.length
+            ? SettingsStore.data.columnOrder
+            : ['content', 'duration', 'spent'];
+        const widths = SettingsStore.data.columnWidths || SettingsStore.data.calendarColumnWidths || {};
+        const tableLayout = __tmGetTableWidthLayout(colOrder, widths, state.tableAvailableWidth);
+        const headers = {
+            content: `<th data-col="content" style="${tableLayout.cellStyle('content', 'white-space: nowrap; overflow: hidden;')}">任务内容<span class="tm-col-resize" onmousedown="startColResize(event, 'content')"></span></th>`,
+            duration: `<th data-col="duration" style="${tableLayout.cellStyle('duration', 'white-space: nowrap; overflow: hidden;')}">时长<span class="tm-col-resize" onmousedown="startColResize(event, 'duration')"></span></th>`,
+            spent: `<th data-col="spent" style="${tableLayout.cellStyle('spent', 'text-align: center; white-space: nowrap; overflow: hidden;')}">耗时<span class="tm-col-resize" onmousedown="startColResize(event, 'spent')"></span></th>`,
+        };
+        const rows = __tmBuildCalendarTaskRowsSync(300);
+        const tbody = rows.length
+            ? rows.map((item) => {
+                let contentHtml = '';
+                try {
+                    contentHtml = API.renderTaskContentHtml(item.task?.markdown, item.title);
+                } catch (e) {
+                    contentHtml = esc(item.title);
+                }
+                const depthPad = 8 + Math.min(6, Math.max(0, Number(item.depth) || 0)) * 14;
+                return `
+                    <tr data-id="${esc(item.id)}" data-calendar-id="${esc(item.calendarId)}">
+                        <td style="${tableLayout.cellStyle('content')}">
+                            <div class="tm-task-cell" style="padding-left:${depthPad}px;">
+                                <span class="tm-task-text">
+                                    <span class="tm-task-content-clickable" title="${esc(item.title)}">${contentHtml}</span>
+                                </span>
+                            </div>
+                        </td>
+                        <td class="tm-task-meta-cell" style="${tableLayout.cellStyle('duration')}">${esc(item.duration || '')}</td>
+                        <td class="tm-task-meta-cell" style="${tableLayout.cellStyle('spent', 'text-align: center; font-variant-numeric: inherit;')}">${esc(item.spent || '')}</td>
+                    </tr>
+                `;
+            }).join('')
+            : `<tr><td colspan="${Math.max(1, colOrder.length || 3)}" style="text-align: center; padding: 40px; color: var(--tm-secondary-text);">暂无任务</td></tr>`;
+        const thead = colOrder.map((col) => headers[col] || '').join('');
+        return `
+            <div class="tm-calendar-task-list" style="height:100%; display:flex; flex-direction:column;">
+                <table class="tm-table" id="tmTaskTable" data-tm-table="calendar" style="${tableLayout.tableStyle}">
+                    <thead><tr>${thead}</tr></thead>
+                    <tbody>${tbody}</tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    window.tmGetCalendarDragTasks = function(limit) {
+        const max = Number.isFinite(Number(limit)) ? Math.max(1, Math.min(500, Math.floor(Number(limit)))) : 200;
+        const { tasks, docsToGroup } = __tmGetCalendarTaskCandidatesSync();
 
         const mode = String(SettingsStore.data.tomatoSpentAttrMode || 'minutes').trim() || 'minutes';
         const useHours = !!(SettingsStore.data.enableTomatoIntegration && mode === 'hours');
 
         const out = [];
-        for (const t of filtered) {
+        for (const t of tasks) {
             if (!t) continue;
             if (t.done) continue;
             const id = String(t.id || '').trim();
@@ -35268,10 +37219,10 @@ async function __tmRefreshAfterWake(reason) {
         const page = Number.isFinite(Number(p.page)) ? Math.max(1, Math.floor(Number(p.page))) : 1;
         const q = String(p.query || '').trim().toLowerCase();
 
-        const filtered = Array.isArray(state.filteredTasks) ? state.filteredTasks : [];
-        const map = new Map(filtered.map((t) => [String(t?.id || '').trim(), t]).filter(([k]) => !!k));
+        const { tasks, docsToGroup } = __tmGetCalendarTaskCandidatesSync();
+        const map = new Map(tasks.map((t) => [String(t?.id || '').trim(), t]).filter(([k]) => !!k));
         const childSet = new Set();
-        for (const t of filtered) {
+        for (const t of tasks) {
             const pid = String(t?.parentTaskId || '').trim();
             if (pid) childSet.add(pid);
         }
@@ -35287,26 +37238,11 @@ async function __tmRefreshAfterWake(reason) {
             return d;
         };
 
-        const docsToGroup = new Map();
-        try {
-            const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
-            groups.forEach((g) => {
-                const gid = String(g?.id || '').trim();
-                const docs = __tmNormalizeGroupDocEntries(g);
-                if (!gid) return;
-                docs.forEach((d) => {
-                    const did = String(d?.id || '').trim();
-                    if (!did) return;
-                    if (!docsToGroup.has(did)) docsToGroup.set(did, gid);
-                });
-            });
-        } catch (e) {}
-
         const mode = String(SettingsStore.data.tomatoSpentAttrMode || 'minutes').trim() || 'minutes';
         const useHours = !!(SettingsStore.data.enableTomatoIntegration && mode === 'hours');
 
         const all = [];
-        for (const t of filtered) {
+        for (const t of tasks) {
             if (!t) continue;
             if (t.done) continue;
             const id = String(t.id || '').trim();
@@ -35338,6 +37274,9 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         const total = all.length;
+        if (total === 0) {
+            try { window.tmWarmCalendarTaskCacheIfStale?.({ refresh: true }); } catch (e) {}
+        }
         const start = (page - 1) * size;
         const items = all.slice(start, start + size);
         return { total, page, pageSize: size, items };
@@ -35499,10 +37438,21 @@ async function __tmRefreshAfterWake(reason) {
         const originalOrder = SettingsStore.data.columnOrder;
         const originalWidths = SettingsStore.data.columnWidths;
         const originalTableAvailableWidth = state.tableAvailableWidth;
+        const originalFilteredTasks = state.filteredTasks;
+        let patchedFilteredTasks = false;
         try {
             // Ensure calendarColumnWidths is initialized with defaults if missing or empty
             if (!SettingsStore.data.calendarColumnWidths || Object.keys(SettingsStore.data.calendarColumnWidths).length === 0) {
                 SettingsStore.data.calendarColumnWidths = { content: 140, duration: 60, spent: 60 };
+            }
+            if (!(Array.isArray(state.filteredTasks) && state.filteredTasks.length > 0)) {
+                const fallbackTasks = __tmGetCalendarTaskCandidatesSync().tasks;
+                if (Array.isArray(fallbackTasks) && fallbackTasks.length > 0) {
+                    state.filteredTasks = fallbackTasks;
+                    patchedFilteredTasks = true;
+                } else {
+                    try { window.tmWarmCalendarTaskCacheIfStale?.({ refresh: true }); } catch (e) {}
+                }
             }
             
             SettingsStore.data.columnOrder = ['content', 'duration', 'spent'];
@@ -35531,7 +37481,12 @@ async function __tmRefreshAfterWake(reason) {
             })() : 0;
             state.tableAvailableWidth = tableAvailableWidth;
             const tableLayout = __tmGetTableWidthLayout(colOrder, widths, tableAvailableWidth);
-            const thead = colOrder.map((col) => __tmBuildTableHeaderCellHtml(col, tableLayout)).join('');
+            const headers = {
+                content: `<th data-col="content" style="${tableLayout.cellStyle('content', 'white-space: nowrap; overflow: hidden;')}">任务内容<span class="tm-col-resize" onmousedown="startColResize(event, 'content')"></span></th>`,
+                duration: `<th data-col="duration" style="${tableLayout.cellStyle('duration', 'white-space: nowrap; overflow: hidden;')}">时长<span class="tm-col-resize" onmousedown="startColResize(event, 'duration')"></span></th>`,
+                spent: `<th data-col="spent" style="${tableLayout.cellStyle('spent', 'text-align: center; white-space: nowrap; overflow: hidden;')}">耗时<span class="tm-col-resize" onmousedown="startColResize(event, 'spent')"></span></th>`,
+            };
+            const thead = colOrder.map((col) => headers[col] || __tmBuildTableHeaderCellHtml(col, tableLayout)).join('');
             return `
                 <div class="tm-calendar-task-list" style="height:100%; display:flex; flex-direction:column;">
                     <table class="tm-table" id="tmTaskTable" data-tm-table="calendar" style="${tableLayout.tableStyle}">
@@ -35541,8 +37496,11 @@ async function __tmRefreshAfterWake(reason) {
                 </div>
             `;
         } catch (e) {
+            try { console.error('[tmRenderCalendarTaskTableHtml] render failed', e); } catch (e2) {}
+            try { return __tmBuildCalendarTaskTableFallbackHtml(); } catch (e2) {}
             return '';
         } finally {
+            if (patchedFilteredTasks) state.filteredTasks = originalFilteredTasks;
             state.tableAvailableWidth = originalTableAvailableWidth;
             SettingsStore.data.columnOrder = originalOrder;
             SettingsStore.data.columnWidths = originalWidths;
@@ -35619,8 +37577,89 @@ async function __tmRefreshAfterWake(reason) {
         const mins = __tmParseDurationMinutes(t?.duration);
         const durationMin = (Number.isFinite(Number(mins)) && Number(mins) > 0) ? Math.round(Number(mins)) : 60;
         const title = String(t.content || '').trim() || '(无标题)';
-        return { title, durationMin, calendarId };
+        return {
+            title,
+            durationMin,
+            calendarId,
+            startDate: String(t.startDate || '').trim(),
+            completionTime: String(t.completionTime || '').trim(),
+        };
     };
+
+    function __tmCalendarFloatingDragDetach() {
+        const cleanup = state.__tmCalendarFloatingDragCleanup;
+        if (typeof cleanup !== 'function') return;
+        try { cleanup(); } catch (e) {}
+        state.__tmCalendarFloatingDragCleanup = null;
+    }
+
+    function __tmCalendarFloatingDragStart(taskId, meta, ev, opts = {}) {
+        const id = String(taskId || '').trim();
+        if (!id) return false;
+        const calendar = globalThis.__tmCalendar;
+        if (!calendar || typeof calendar.showFloatingMiniCalendar !== 'function') return false;
+        const options = (opts && typeof opts === 'object') ? opts : {};
+        const nextMeta = (meta && typeof meta === 'object') ? meta : (
+            (typeof window.tmCalendarGetTaskDragMeta === 'function')
+                ? window.tmCalendarGetTaskDragMeta(id)
+                : null
+        );
+        let shown = false;
+        try {
+            shown = !!calendar.showFloatingMiniCalendar({
+                taskId: id,
+                meta: nextMeta,
+                dragPayload: nextMeta,
+                clientX: Number(ev?.clientX),
+                clientY: Number(ev?.clientY),
+                mode: options.mode,
+                containerRect: options.containerRect,
+            });
+        } catch (e) {}
+        if (!shown) return false;
+        if (options.html5 === false) return true;
+        __tmCalendarFloatingDragDetach();
+        const onDocDragOver = (e2) => {
+            try {
+                calendar.updateFloatingMiniCalendarDrag?.({
+                    clientX: Number(e2?.clientX),
+                    clientY: Number(e2?.clientY),
+                    target: e2?.target,
+                });
+            } catch (e3) {}
+        };
+        const onDocDragEnd = () => {
+            __tmCalendarFloatingDragEnd();
+        };
+        try { document.addEventListener('dragover', onDocDragOver, true); } catch (e) {}
+        try { document.addEventListener('dragend', onDocDragEnd, true); } catch (e) {}
+        state.__tmCalendarFloatingDragCleanup = () => {
+            try { document.removeEventListener('dragover', onDocDragOver, true); } catch (e2) {}
+            try { document.removeEventListener('dragend', onDocDragEnd, true); } catch (e2) {}
+        };
+        return true;
+    }
+
+    function __tmCalendarFloatingDragMove(ev, opts = {}) {
+        const calendar = globalThis.__tmCalendar;
+        if (!calendar || typeof calendar.updateFloatingMiniCalendarDrag !== 'function') return null;
+        const options = (opts && typeof opts === 'object') ? opts : {};
+        try {
+            return calendar.updateFloatingMiniCalendarDrag({
+                clientX: Number(ev?.clientX),
+                clientY: Number(ev?.clientY),
+                target: ev?.target,
+                mode: options.mode,
+            });
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function __tmCalendarFloatingDragEnd() {
+        __tmCalendarFloatingDragDetach();
+        try { globalThis.__tmCalendar?.hideFloatingMiniCalendar?.(); } catch (e) {}
+    }
 
     window.tmCalendarGetDraggingTaskId = function() {
         return String(state.draggingTaskId || '').trim();
@@ -35704,13 +37743,21 @@ async function __tmRefreshAfterWake(reason) {
             const skipRefresh = opts.refresh === false;
             if (!skipRefresh) {
                 let refreshedCalendar = false;
+                let refreshedMainView = false;
+                const currentViewMode = String(state.viewMode || '').trim();
                 try {
                     if (globalThis.__tmCalendar && typeof globalThis.__tmCalendar.refreshInPlace === 'function') {
                         globalThis.__tmCalendar.refreshInPlace({ hard: opts.hard === true });
                         refreshedCalendar = true;
                     }
                 } catch (e) {}
-                if (!refreshedCalendar) {
+                if (currentViewMode && currentViewMode !== 'calendar') {
+                    try {
+                        __tmRefreshMainViewInPlace({ withFilters: true });
+                        refreshedMainView = true;
+                    } catch (e) {}
+                }
+                if (!refreshedCalendar && !refreshedMainView) {
                     try { __tmScheduleRender({ withFilters: true }); } catch (e) {
                         try { render(); } catch (e2) {}
                     }
@@ -36088,12 +38135,18 @@ async function __tmRefreshAfterWake(reason) {
                 title: String(meta?.title || state.flatTasks?.[taskId]?.content || '').trim(),
                 durationMin: Number(meta?.durationMin) || 60,
                 calendarId: String(meta?.calendarId || '').trim(),
+                startDate: String(meta?.startDate || '').trim(),
+                completionTime: String(meta?.completionTime || '').trim(),
             };
             ev.dataTransfer.setData('application/x-tm-task', JSON.stringify(payload));
         } catch (e) {}
         state.__tmKanbanDragId = taskId;
         state.__tmKanbanDragIds = [taskId];
         try { ev.currentTarget?.classList?.add?.('tm-kanban-card--dragging'); } catch (e) {}
+        try {
+            const meta = (typeof window.tmCalendarGetTaskDragMeta === 'function') ? window.tmCalendarGetTaskDragMeta(taskId) : null;
+            __tmCalendarFloatingDragStart(taskId, meta, ev);
+        } catch (e) {}
 
         if (!SettingsStore.data.kanbanDragSyncSubtasks) {
             try {
@@ -36123,6 +38176,7 @@ async function __tmRefreshAfterWake(reason) {
         state.draggingTaskId = '';
         try { __tmClearDocTabDropTarget(); } catch (e) {}
         try { __tmSetCalendarSideDockDragHidden(false); } catch (e) {}
+        try { __tmCalendarFloatingDragEnd(); } catch (e) {}
         try { delete state.__tmKanbanDragId; } catch (e) {}
         try { delete state.__tmKanbanDragIds; } catch (e) {}
         __tmKanbanClearDragOver();
@@ -36348,6 +38402,15 @@ async function __tmRefreshAfterWake(reason) {
         const colBodyEl = cardEl.closest('.tm-kanban-col')?.querySelector?.('.tm-kanban-col-body');
         const taskId = String(id || cardEl.getAttribute('data-id') || '').trim();
         if (!taskId) return;
+        const calendarDragMeta = (() => {
+            try {
+                return (typeof window.tmCalendarGetTaskDragMeta === 'function')
+                    ? window.tmCalendarGetTaskDragMeta(taskId)
+                    : null;
+            } catch (e) {
+                return null;
+            }
+        })();
 
         __tmClearKanbanCardGesture();
         __tmStopKanbanMomentum();
@@ -36356,9 +38419,12 @@ async function __tmRefreshAfterWake(reason) {
         const suppressClickMs = 260;
         const panThreshold = 2;
         const scrollThreshold = 4;
+        const longPressIntentThreshold = 12;
         const axisLockRatio = 0.85;
-        const longPressMs = 420;
-        const longPressMoveTolerance = 8;
+        const longPressMs = 340;
+        const longPressMoveTolerance = 14;
+        const floatingMiniRevealDistance = 20;
+        const floatingMiniRevealDelayMs = 120;
         const pointerId = Number.isFinite(Number(ev?.pointerId)) ? Number(ev.pointerId) : null;
         const startX = Number(ev?.clientX) || 0;
         const startY = Number(ev?.clientY) || 0;
@@ -36375,6 +38441,11 @@ async function __tmRefreshAfterWake(reason) {
         let panVelocity = 0;
         let lastPanScrollLeft = baseScrollLeft;
         let lastPanTs = 0;
+        let dragStartedAt = 0;
+        let dragStartX = NaN;
+        let dragStartY = NaN;
+        let floatingMiniVisible = false;
+        let floatingMiniRevealTimer = null;
 
         const samePointer = (e2) => {
             if (!Number.isFinite(pointerId)) return true;
@@ -36400,6 +38471,27 @@ async function __tmRefreshAfterWake(reason) {
             longPressTimer = null;
         };
 
+        const cancelFloatingMiniStart = () => {
+            if (!floatingMiniRevealTimer) return;
+            try { clearTimeout(floatingMiniRevealTimer); } catch (e2) {}
+            floatingMiniRevealTimer = null;
+        };
+
+        const startFloatingMini = () => {
+            cancelFloatingMiniStart();
+            if (mode !== 'drag' || ended || floatingMiniVisible) return false;
+            try {
+                floatingMiniVisible = !!__tmCalendarFloatingDragStart(taskId, calendarDragMeta, {
+                    clientX: lastX,
+                    clientY: lastY,
+                    target: __tmResolveKanbanPointTarget(lastX, lastY) || cardEl,
+                }, { mode: 'mobile', html5: false });
+            } catch (e2) {
+                floatingMiniVisible = false;
+            }
+            return floatingMiniVisible;
+        };
+
         const capturePointer = () => {
             if (captured || !Number.isFinite(pointerId) || typeof cardEl.setPointerCapture !== 'function') return;
             try {
@@ -36422,7 +38514,36 @@ async function __tmRefreshAfterWake(reason) {
         const updateDragFeedback = (x, y) => {
             if (mode !== 'drag') return;
             __tmPlaceKanbanTouchDragGhost(ghostMeta, x, y);
+            if (!floatingMiniVisible) {
+                const dx0 = Number.isFinite(dragStartX) ? (x - dragStartX) : 0;
+                const dy0 = Number.isFinite(dragStartY) ? (y - dragStartY) : 0;
+                const movedEnough = (dx0 * dx0 + dy0 * dy0) >= (floatingMiniRevealDistance * floatingMiniRevealDistance);
+                if (movedEnough) {
+                    const elapsed = Math.max(0, Date.now() - dragStartedAt);
+                    if (elapsed >= floatingMiniRevealDelayMs) {
+                        startFloatingMini();
+                    } else if (!floatingMiniRevealTimer) {
+                        floatingMiniRevealTimer = setTimeout(() => {
+                            floatingMiniRevealTimer = null;
+                            startFloatingMini();
+                        }, Math.max(0, floatingMiniRevealDelayMs - elapsed));
+                    }
+                } else {
+                    cancelFloatingMiniStart();
+                }
+            }
             let pointTarget = __tmResolveKanbanPointTarget(x, y);
+            const floatingInfo = floatingMiniVisible
+                ? __tmCalendarFloatingDragMove({
+                    clientX: x,
+                    clientY: y,
+                    target: pointTarget || cardEl,
+                }, { mode: 'mobile' })
+                : null;
+            if (floatingInfo?.overFloatingMini) {
+                try { __tmKanbanClearDragOver(); } catch (e2) {}
+                return;
+            }
             try {
                 window.tmKanbanAutoScroll?.({
                     preventDefault() {},
@@ -36435,12 +38556,11 @@ async function __tmRefreshAfterWake(reason) {
             __tmApplyKanbanDragHoverFromTarget(pointTarget);
         };
 
-        capturePointer();
-
         const startPan = () => {
             if (mode !== 'pending' || ended) return;
             mode = 'pan';
             cancelLongPress();
+            capturePointer();
             panVelocity = 0;
             lastPanScrollLeft = Number(bodyEl.scrollLeft || 0);
             lastPanTs = 0;
@@ -36451,6 +38571,7 @@ async function __tmRefreshAfterWake(reason) {
             if (mode !== 'pending' || ended) return;
             mode = 'scroll';
             cancelLongPress();
+            capturePointer();
             setGestureActiveStyles();
         };
 
@@ -36458,6 +38579,8 @@ async function __tmRefreshAfterWake(reason) {
             if (mode !== 'pending' || ended) return;
             mode = 'drag';
             cancelLongPress();
+            capturePointer();
+            cancelFloatingMiniStart();
             setGestureActiveStyles();
             state.draggingTaskId = taskId;
             state.__tmKanbanDragId = taskId;
@@ -36465,12 +38588,27 @@ async function __tmRefreshAfterWake(reason) {
             try { __tmSetCalendarSideDockDragHidden(true); } catch (e2) {}
             try { cardEl.classList.add('tm-kanban-card--dragging'); } catch (e2) {}
             ghostMeta = __tmBuildKanbanTouchDragGhost(cardEl, lastX, lastY);
+            dragStartedAt = Date.now();
+            dragStartX = lastX;
+            dragStartY = lastY;
+            floatingMiniVisible = false;
             state.__tmKanbanPanSuppressClickUntil = Date.now() + suppressClickMs;
             updateDragFeedback(lastX, lastY);
         };
 
-        const finishDrag = () => {
+        const finishDrag = async () => {
             if (mode !== 'drag') return;
+            cancelFloatingMiniStart();
+            try {
+                const handled = await globalThis.__tmCalendar?.finalizeFloatingMiniCalendarTouchDrop?.({
+                    taskId,
+                    clientX: lastX,
+                    clientY: lastY,
+                    target: __tmResolveKanbanPointTarget(lastX, lastY),
+                    mode: 'mobile',
+                });
+                if (handled) return;
+            } catch (e2) {}
             const pointTarget = __tmResolveKanbanPointTarget(lastX, lastY);
             const dropHost = pointTarget?.closest?.('.tm-kanban-group-title, .tm-kanban-group, .tm-kanban-col') || null;
             if (!(dropHost instanceof Element)) return;
@@ -36496,6 +38634,8 @@ async function __tmRefreshAfterWake(reason) {
             if (ended) return;
             ended = true;
             cancelLongPress();
+            cancelFloatingMiniStart();
+            dragStartedAt = 0;
             try { document.removeEventListener('pointermove', onMove, true); } catch (e2) {}
             try { document.removeEventListener('pointerup', onUp, true); } catch (e2) {}
             try { document.removeEventListener('pointercancel', onUp, true); } catch (e2) {}
@@ -36509,6 +38649,7 @@ async function __tmRefreshAfterWake(reason) {
             try { cardEl.classList.remove('tm-kanban-card--dragging'); } catch (e2) {}
             try { __tmKanbanClearDragOver(); } catch (e2) {}
             try { __tmSetCalendarSideDockDragHidden(false); } catch (e2) {}
+            try { __tmCalendarFloatingDragEnd(); } catch (e2) {}
             if (String(state.draggingTaskId || '').trim() === taskId) state.draggingTaskId = '';
             try { delete state.__tmKanbanDragId; } catch (e2) {}
             try { delete state.__tmKanbanDragIds; } catch (e2) {}
@@ -36557,8 +38698,10 @@ async function __tmRefreshAfterWake(reason) {
             }
             const absX = Math.abs(dx);
             const absY = Math.abs(dy);
-            const horizontalIntent = absX >= panThreshold && (absY <= 0.5 || absX >= (absY * axisLockRatio));
-            const verticalIntent = absY >= scrollThreshold && (absX <= 0.5 || absY >= (absX * axisLockRatio));
+            const effectivePanThreshold = longPressTimer ? Math.max(panThreshold, longPressIntentThreshold) : panThreshold;
+            const effectiveScrollThreshold = longPressTimer ? Math.max(scrollThreshold, longPressIntentThreshold) : scrollThreshold;
+            const horizontalIntent = absX >= effectivePanThreshold && (absY <= 0.5 || absX >= (absY * axisLockRatio));
+            const verticalIntent = absY >= effectiveScrollThreshold && (absX <= 0.5 || absY >= (absX * axisLockRatio));
             if (horizontalIntent && canPan()) {
                 startPan();
                 const maxLeft = Math.max(0, bodyEl.scrollWidth - bodyEl.clientWidth);
@@ -36583,11 +38726,11 @@ async function __tmRefreshAfterWake(reason) {
             }
         };
 
-        const onUp = (e2) => {
+        const onUp = async (e2) => {
             if (!samePointer(e2)) return;
             const finalMode = mode;
             const finalPanVelocity = panVelocity;
-            if (mode === 'drag') finishDrag();
+            if (mode === 'drag') await finishDrag();
             cleanup();
             if (finalMode === 'pan') __tmStartKanbanMomentum(bodyEl, finalPanVelocity);
         };
@@ -37021,8 +39164,14 @@ async function __tmRefreshAfterWake(reason) {
     window.tmGanttFit = function() {
         if (state.viewMode !== 'timeline') return;
         try {
+            const globalScrollHost = __tmGetTimelineGlobalScrollHost(state.modal);
+            const useGlobalScroll = !!globalScrollHost;
             const body = state.modal?.querySelector?.('#tmGanttBody');
-            const w = body?.clientWidth;
+            const leftPaneWidth = useGlobalScroll ? __tmGetTimelineLeftPaneWidth(state.modal) : 0;
+            const w0 = useGlobalScroll
+                ? Math.max(0, (Number(globalScrollHost?.clientWidth) || 0) - Math.round(leftPaneWidth))
+                : Number(body?.clientWidth || 0);
+            const w = w0;
             if (!Number.isFinite(w) || w <= 0) {
                 state.ganttView.__forceScrollLeft = 0;
                 render();
@@ -37070,15 +39219,24 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmGanttToday = function() {
+        const globalScrollHost = __tmGetTimelineGlobalScrollHost(state.modal);
+        const useGlobalScroll = !!globalScrollHost;
         const body = state.modal?.querySelector?.('#tmGanttBody');
         if (!body) return;
         const todayLine = body.querySelector('.tm-gantt-today');
         if (!todayLine) return;
         const left = Number.parseFloat(String(todayLine.style.left || '').replace('px', ''));
         if (!Number.isFinite(left)) return;
-        const target = Math.max(0, Math.round(left - body.clientWidth * 0.35));
-        body.scrollLeft = target;
-        try { body.dispatchEvent(new Event('scroll')); } catch (e) {}
+        const leftPaneWidth = useGlobalScroll ? __tmGetTimelineLeftPaneWidth(state.modal) : 0;
+        const viewportWidth = useGlobalScroll ? Number(globalScrollHost?.clientWidth || 0) : Number(body.clientWidth || 0);
+        const baseLeft = useGlobalScroll ? (leftPaneWidth + left) : left;
+        const target = Math.max(0, Math.round(baseLeft - viewportWidth * 0.35));
+        if (useGlobalScroll) {
+            globalScrollHost.scrollLeft = target;
+        } else {
+            body.scrollLeft = target;
+            try { body.dispatchEvent(new Event('scroll')); } catch (e) {}
+        }
     };
 
     function __tmClearTimelineTodayIndicatorTimer() {
@@ -37578,6 +39736,22 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
     };
 
+    window.tmTouchTimelineMobileToolbarButton = function(event) {
+        const target = event?.target instanceof Element ? event.target : null;
+        const btn = target?.closest?.('.tm-timeline-mobile-toolbar__btn');
+        if (!(btn instanceof HTMLElement)) return;
+        try {
+            try { btn.blur?.(); } catch (e2) {}
+            btn.classList.add('tm-timeline-mobile-toolbar__btn--active');
+            if (btn.__tmActiveTimer) clearTimeout(btn.__tmActiveTimer);
+            btn.__tmActiveTimer = setTimeout(() => {
+                try { btn.classList.remove('tm-timeline-mobile-toolbar__btn--active'); } catch (e2) {}
+                try { btn.blur?.(); } catch (e2) {}
+                try { btn.__tmActiveTimer = 0; } catch (e2) {}
+            }, 220);
+        } catch (e) {}
+    };
+
     function __tmCloseTopbarSelects() {
         state.__topbarSelectUnstack?.();
         state.__topbarSelectUnstack = null;
@@ -37719,11 +39893,6 @@ async function __tmRefreshAfterWake(reason) {
             event.stopPropagation();
             event.preventDefault();
         }
-        const dockBridge = __tmIsDockHost()
-            ? (() => {
-                try { return globalThis.__taskHorizonDockBridge || window.parent?.__taskHorizonDockBridge || null; } catch (e) { return null; }
-            })()
-            : null;
         state.openToken = (Number(state.openToken) || 0) + 1;
         try { __tmHideMobileMenu(); } catch (e) {}
         try {
@@ -37779,6 +39948,11 @@ async function __tmRefreshAfterWake(reason) {
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
         } catch (e) {}
+        try { state.dockTaskPointerGestureCleanup?.(); } catch (e) {}
+        try { state.dockTaskPointerDragAbort?.abort?.(); } catch (e) {}
+        state.dockTaskPointerGestureCleanup = null;
+        state.dockTaskPointerDragAbort = null;
+        state.dockTaskPointerSuppressClickUntil = 0;
         try { __tmUnbindMobileViewportAutoRefresh(); } catch (e) {}
         __tmClearTimelineTodayIndicatorTimer();
         
@@ -37796,9 +39970,6 @@ async function __tmRefreshAfterWake(reason) {
         state.priorityModal = null;
         state.quickAddModal = null;
         state.exportModal = null;
-        if (dockBridge && typeof dockBridge.close === 'function') {
-            try { dockBridge.close(); } catch (e) {}
-        }
     };
 
     // 列宽调整功能
@@ -38286,7 +40457,7 @@ async function __tmRefreshAfterWake(reason) {
                 otherBlockRefs: __tmNormalizeOtherBlockRefs(refs)
             };
         });
-        SettingsStore.data.docGroups = nextGroups.map((group) => __tmNormalizeDocGroupConfig(group)).filter(Boolean);
+        SettingsStore.data.docGroups = nextGroups.map((group) => __tmNormalizeDocGroupConfig(group, SettingsStore.data.docDefaultColorScheme)).filter(Boolean);
         return __tmGetDocGroupById(gid);
     }
 
@@ -42695,7 +44866,7 @@ async function __tmRefreshAfterWake(reason) {
                 `#tmTaskTable tbody tr[data-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
                 `#tmTimelineLeftTable tbody tr[data-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
                 `.tm-body--kanban .tm-kanban-card[data-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
-                `.tm-checklist-item[data-id="${CSS.escape(tid)}"] .tm-checklist-title-button > span[draggable="false"]`,
+                `.tm-checklist-item[data-id="${CSS.escape(tid)}"] .tm-checklist-title-button > span`,
                 `.tm-whiteboard-node[data-task-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
                 `.tm-whiteboard-pool-item[data-task-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
                 `.tm-whiteboard-stream-task-head[data-task-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
@@ -44544,7 +46715,7 @@ async function __tmRefreshAfterWake(reason) {
         try {
             const safeId = bid.replace(/'/g, "''");
             const res = await API.call('/api/query/sql', {
-                stmt: `SELECT b.root_id, doc.content AS doc_name FROM blocks b LEFT JOIN blocks doc ON doc.id = b.root_id WHERE b.id = '${safeId}' LIMIT 1`
+                stmt: `SELECT b.root_id, b.parent_id, b.path, b.sort, b.created, b.updated, doc.content AS doc_name, doc.hpath AS doc_path FROM blocks b LEFT JOIN blocks doc ON doc.id = b.root_id WHERE b.id = '${safeId}' LIMIT 1`
             });
             blockRow = (res && res.code === 0 && Array.isArray(res.data)) ? res.data[0] : null;
         } catch (e) {}
@@ -44552,18 +46723,31 @@ async function __tmRefreshAfterWake(reason) {
         const row = {
             id: bid,
             markdown: km || '',
+            raw_content: String(parsed?.content || '').trim() || '(无内容)',
             content: String(parsed?.content || '').trim() || '(无内容)',
             done: !!parsed?.done,
             priority: String(attrs['custom-priority'] || '').trim(),
             duration: String(attrs['custom-duration'] || '').trim(),
             remark: String(attrs['custom-remark'] || '').trim(),
             startDate: String(attrs['custom-start-date'] || '').trim(),
+            start_date: String(attrs['custom-start-date'] || '').trim(),
             completionTime: String(attrs['custom-completion-time'] || '').trim(),
+            completion_time: String(attrs['custom-completion-time'] || '').trim(),
             customStatus: String(attrs['custom-status'] || '').trim(),
+            custom_status: String(attrs['custom-status'] || '').trim(),
             pinned: String(attrs['custom-pinned'] || '').trim(),
             milestone: String(attrs['custom-milestone-event'] || '').trim(),
+            custom_time: String(attrs['custom-time'] || '').trim(),
+            customTime: String(attrs['custom-time'] || '').trim(),
+            parent_id: String(blockRow?.parent_id || '').trim(),
+            parent_task_id: '',
             root_id: String(blockRow?.root_id || '').trim(),
             doc_name: docName,
+            doc_path: String(blockRow?.doc_path || '').trim(),
+            block_path: String(blockRow?.path || '').trim(),
+            block_sort: String(blockRow?.sort ?? '').trim(),
+            created: String(blockRow?.created || '').trim(),
+            updated: String(blockRow?.updated || '').trim(),
         };
         try { normalizeTaskFields(row, docName); } catch (e) {}
         return row;
@@ -45377,12 +47561,17 @@ async function __tmRefreshAfterWake(reason) {
 
         state.stats.queryTime = queryTime || 0;
         recalcStats();
-        applyFilters();
-
-        render();
+        if (opts.applyFilters !== false) {
+            applyFilters();
+        }
+        if (opts.render !== false) {
+            render();
+        }
 
         // 7. 保存恢复后的数据
-        await MetaStore.saveNow();
+        if (opts.saveMeta !== false) {
+            await MetaStore.saveNow();
+        }
     }
 
     window.tmPickPriority = function(id, el, ev) {
@@ -48663,88 +50852,70 @@ async function __tmRefreshAfterWake(reason) {
                 const semanticTaskBuckets = new Map();
                 const resolveParentTaskLinksBatch = async (tasksMapByDoc) => {
                     const docTaskIdSets = new Map();
-                    const globalTaskIdSet = new Set();
-                    const initialFrontier = new Set();
+                    const fallbackTasks = [];
+                    const unresolvedParentIds = new Set();
                     let pendingCount = 0;
                     let resolvedCount = 0;
-                    tasksMapByDoc.forEach((rawTasks, docId) => {
+
+                    for (const [docId, rawTasks] of tasksMapByDoc.entries()) {
                         const taskIdSet = new Set();
-                        (Array.isArray(rawTasks) ? rawTasks : []).forEach((task) => {
+                        const tasks = Array.isArray(rawTasks) ? rawTasks : [];
+                        for (const task of tasks) {
                             const taskId = String(task?.id || '').trim();
-                            if (!taskId) return;
-                            taskIdSet.add(taskId);
-                            globalTaskIdSet.add(taskId);
-                        });
+                            if (taskId) taskIdSet.add(taskId);
+                        }
                         docTaskIdSets.set(String(docId || '').trim(), taskIdSet);
-                    });
-                    tasksMapByDoc.forEach((rawTasks) => {
-                        (Array.isArray(rawTasks) ? rawTasks : []).forEach((task) => {
-                            if (task?.parentTaskId) return;
+                    }
+
+                    for (const [docId, rawTasks] of tasksMapByDoc.entries()) {
+                        const key = String(docId || '').trim();
+                        const taskIdSet = docTaskIdSets.get(key) || new Set();
+                        const tasks = Array.isArray(rawTasks) ? rawTasks : [];
+                        for (const task of tasks) {
+                            if (task?.parentTaskId) continue;
                             const parentId = String(task?.parent_id || '').trim();
-                            if (!parentId) return;
+                            if (!parentId) continue;
                             pendingCount += 1;
-                            if (!globalTaskIdSet.has(parentId)) initialFrontier.add(parentId);
-                        });
-                    });
+                            if (taskIdSet.has(parentId)) {
+                                task.parentTaskId = parentId;
+                                resolvedCount += 1;
+                                continue;
+                            }
+                            fallbackTasks.push({ task, docId: key, parentId });
+                            unresolvedParentIds.add(parentId);
+                        }
+                    }
+
                     if (pendingCount === 0) {
                         return { rounds: 0, queryCalls: 0, blockCount: 0, pendingCount: 0, resolvedCount: 0 };
                     }
+
                     const blockInfoMap = new Map();
-                    let frontier = Array.from(initialFrontier);
-                    let rounds = 0;
+                    const frontier = Array.from(unresolvedParentIds);
                     let queryCalls = 0;
                     const batchSize = 2000;
-                    const parentLinkDepthLimit = 3;
-                    for (let depth = 0; depth < parentLinkDepthLimit && frontier.length > 0; depth += 1) {
-                        rounds += 1;
-                        const nextSet = new Set();
-                        for (let i = 0; i < frontier.length; i += batchSize) {
-                            const chunk = frontier.slice(i, i + batchSize);
-                            if (!chunk.length) continue;
-                            queryCalls += 1;
-                            const rows = await API.getBlocksByIds(chunk);
-                            (Array.isArray(rows) ? rows : []).forEach((row) => {
-                                const id = String(row?.id || '').trim();
-                                if (!id) return;
-                                const parentId = String(row?.parent_id || '').trim();
-                                if (!blockInfoMap.has(id)) {
-                                    blockInfoMap.set(id, { parentId, type: row?.type, subtype: row?.subtype });
-                                }
-                                if (parentId && !blockInfoMap.has(parentId) && !globalTaskIdSet.has(parentId)) {
-                                    nextSet.add(parentId);
-                                }
-                            });
-                        }
-                        frontier = Array.from(nextSet);
-                    }
-                    tasksMapByDoc.forEach((rawTasks, docId) => {
-                        const taskIdSet = docTaskIdSets.get(String(docId || '').trim()) || new Set();
-                        (Array.isArray(rawTasks) ? rawTasks : []).forEach((task) => {
-                            if (task?.parentTaskId) return;
-                            let cur = String(task?.parent_id || '').trim();
-                            if (!cur) return;
-                            if (taskIdSet.has(cur)) {
-                                task.parentTaskId = cur;
-                                resolvedCount += 1;
-                                return;
-                            }
-                            const seen = new Set();
-                            for (let i = 0; i < parentLinkDepthLimit && cur; i += 1) {
-                                if (seen.has(cur)) break;
-                                seen.add(cur);
-                                const info = blockInfoMap.get(cur);
-                                const parentId = String(info?.parentId || '').trim();
-                                if (parentId && taskIdSet.has(parentId)) {
-                                    task.parentTaskId = parentId;
-                                    resolvedCount += 1;
-                                    return;
-                                }
-                                cur = parentId;
-                            }
+                    for (let i = 0; i < frontier.length; i += batchSize) {
+                        const chunk = frontier.slice(i, i + batchSize);
+                        if (!chunk.length) continue;
+                        queryCalls += 1;
+                        const rows = await API.getBlocksByIds(chunk);
+                        (Array.isArray(rows) ? rows : []).forEach((row) => {
+                            const id = String(row?.id || '').trim();
+                            if (!id || blockInfoMap.has(id)) return;
+                            blockInfoMap.set(id, String(row?.parent_id || '').trim());
                         });
-                    });
+                    }
+
+                    for (const item of fallbackTasks) {
+                        const taskIdSet = docTaskIdSets.get(item.docId) || new Set();
+                        const parentTaskId = String(blockInfoMap.get(item.parentId) || '').trim();
+                        if (!parentTaskId || !taskIdSet.has(parentTaskId)) continue;
+                        item.task.parentTaskId = parentTaskId;
+                        resolvedCount += 1;
+                    }
+
                     return {
-                        rounds,
+                        rounds: frontier.length > 0 ? 1 : 0,
                         queryCalls,
                         blockCount: blockInfoMap.size,
                         pendingCount,
@@ -48846,7 +51017,6 @@ async function __tmRefreshAfterWake(reason) {
                     
                     // 初始化层级（后续递归计算覆盖）
                     task.level = 0;
-                    task.children = [];
 
                     if (!tasksByDoc.has(task.root_id)) {
                         tasksByDoc.set(task.root_id, []);
@@ -48882,16 +51052,16 @@ async function __tmRefreshAfterWake(reason) {
                     // 准备构建当前文档的任务树
                     const idMap = new Map();
                     rawTasks.forEach(t => idMap.set(t.id, t));
+                    rawTasks.forEach((t) => {
+                        // 先统一清空，避免后续按遍历顺序重置父任务 children 时把已挂上的子任务清掉。
+                        t.children = [];
+                    });
 
                     // 建立父子关系
                     const rootTasks = [];
                     rawTasks.forEach(t => {
-                        // 每次重建树都强制清空 children，避免命中查询缓存时复用旧层级引用。
-                        t.children = [];
-                        
                         if (t.parentTaskId && idMap.has(t.parentTaskId)) {
                             const parent = idMap.get(t.parentTaskId);
-                            if (!parent.children) parent.children = [];
                             parent.children.push(t);
                         } else {
                             rootTasks.push(t);
@@ -49336,7 +51506,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main" ondblclick="tmChecklistItemDblClick('${escSq(String(task.id || ''))}', event)">
                             <div class="tm-checklist-title-row">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" title="跳转到任务"><span draggable="false" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" title="跳转到任务"><span draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}
@@ -49871,8 +52041,15 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div style="margin-top:10px;">
                             ${renderSingleSwitchSetting(
+                                '启用“移动内容至今天日记”',
+                                '开启后，在块图标菜单和正文右键菜单中显示该入口，可将当前块或所选块直接移动到今天日记；日记笔记本跟随上面的“今天日记默认笔记本”设置。',
+                                `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.enableMoveBlockToDailyNote ? 'checked' : ''} onchange="updateEnableMoveBlockToDailyNote(this.checked)">`
+                            )}
+                        </div>
+                        <div style="margin-top:10px;">
+                            ${renderSingleSwitchSetting(
                                 '日记追加到底部',
-                                '当新建目标为“今天日记”时，任务追加到日记文档底部，而不是插入顶部。',
+                                '当目标为“今天日记”时（包括快速新建任务、移动内容至今天日记），内容追加到日记文档底部，而不是插入顶部。',
                                 `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.newTaskDailyNoteAppendToBottom ? 'checked' : ''} onchange="updateNewTaskDailyNoteAppendToBottom(this.checked)">`
                             )}
                         </div>
@@ -51974,7 +54151,7 @@ async function __tmRefreshAfterWake(reason) {
     async function __tmCreateGroupAndSelect(newGroup) {
         if (!newGroup || typeof newGroup !== 'object') return;
         const groups = SettingsStore.data.docGroups || [];
-        const normalizedGroup = __tmNormalizeDocGroupConfig(newGroup);
+        const normalizedGroup = __tmNormalizeDocGroupConfig(newGroup, SettingsStore.data.docDefaultColorScheme);
         if (!normalizedGroup) return;
         groups.push(normalizedGroup);
         await SettingsStore.updateDocGroups(groups);
@@ -53957,7 +56134,7 @@ async function __tmRefreshAfterWake(reason) {
             ...current,
             enabled: !!enabled
         };
-        SettingsStore.data.docGroups = groups.map((item) => __tmNormalizeDocGroupConfig(item)).filter(Boolean);
+        SettingsStore.data.docGroups = groups.map((item) => __tmNormalizeDocGroupConfig(item, SettingsStore.data.docDefaultColorScheme)).filter(Boolean);
         __tmCalendarDocWindowCache.clear();
         await SettingsStore.save();
         try {
@@ -53978,7 +56155,7 @@ async function __tmRefreshAfterWake(reason) {
             ...current,
             days: [30, 60, 90, 120].includes(Number(value)) ? Number(value) : 90
         };
-        SettingsStore.data.docGroups = groups.map((item) => __tmNormalizeDocGroupConfig(item)).filter(Boolean);
+        SettingsStore.data.docGroups = groups.map((item) => __tmNormalizeDocGroupConfig(item, SettingsStore.data.docDefaultColorScheme)).filter(Boolean);
         __tmCalendarDocWindowCache.clear();
         await SettingsStore.save();
         try {
@@ -54298,6 +56475,12 @@ async function __tmRefreshAfterWake(reason) {
 
     window.updatePinNewTasksByDefault = async function(enabled) {
         SettingsStore.data.pinNewTasksByDefault = !!enabled;
+        await SettingsStore.save();
+        showSettings();
+    };
+
+    window.updateEnableMoveBlockToDailyNote = async function(enabled) {
+        SettingsStore.data.enableMoveBlockToDailyNote = !!enabled;
         await SettingsStore.save();
         showSettings();
     };
@@ -55072,7 +57255,11 @@ async function __tmRefreshAfterWake(reason) {
 
     function __tmSyncBreadcrumbButtonVisual(btn) {
         if (!(btn instanceof HTMLElement)) return;
-        try { btn.title = __tmGetDocTopbarButtonTitle(); } catch (e) {}
+        try {
+            const title = __tmGetDocTopbarButtonTitle();
+            btn.title = title;
+            btn.setAttribute('aria-label', title);
+        } catch (e) {}
     }
 
     function __tmEnsureBreadcrumbButtonElement() {
@@ -55082,26 +57269,12 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         const tmBtn = document.createElement('button');
-        tmBtn.className = 'tm-breadcrumb-btn';
-        tmBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;line-height:0"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="display:block;fill:none;flex:0 0 auto;transform:translateY(1px)"><use href="#iconTaskHorizon" xlink:href="#iconTaskHorizon"></use></svg></span>';
+        tmBtn.type = 'button';
+        tmBtn.className = 'block__icon fn__flex-center ariaLabel tm-breadcrumb-btn';
+        tmBtn.innerHTML = '<svg aria-hidden="true"><use href="#iconTaskHorizon" xlink:href="#iconTaskHorizon"></use></svg>';
         tmBtn.style.cssText = `
-            width: 28px;
-            height: 28px;
-            padding: 0 !important;
             margin: 0 4px;
-            background: transparent;
-            color: var(--b3-theme-on-surface, inherit);
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0;
-            line-height: 0;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            text-align: center !important;
             flex-shrink: 0;
-            transition: all 0.2s;
             z-index: 10;
         `;
 
@@ -55799,6 +57972,10 @@ async function __tmRefreshAfterWake(reason) {
             try { eb.off('open-menu-doctree', __tmDocTreeMenuHandler); } catch (e) {}
             __tmDocTreeMenuHandler = null;
         }
+        if (__tmContentMenuHandler && typeof eb.off === 'function') {
+            try { eb.off('open-menu-content', __tmContentMenuHandler); } catch (e) {}
+            __tmContentMenuHandler = null;
+        }
         if (__tmBlockIconMenuHandler && typeof eb.off === 'function') {
             try { eb.off('click-blockicon', __tmBlockIconMenuHandler); } catch (e) {}
             __tmBlockIconMenuHandler = null;
@@ -55904,6 +58081,9 @@ async function __tmRefreshAfterWake(reason) {
             if (detail?.blockElement) rawBlockElements.push(detail.blockElement);
             if (detail?.element) rawBlockElements.push(detail.element);
             try { rawBlockElements.push(...Array.from(detail?.blockElements || [])); } catch (e) {}
+            __tmAddMoveBlockToDailyNoteMenuItem(menu, __tmCollectBlockIdsFromElements(rawBlockElements), {
+                protyle: detail?.protyle || null
+            });
             const scheduleBlockIds = __tmCollectBlockIdsFromElements(rawBlockElements);
             if (
                 scheduleBlockIds.length === 1
@@ -55937,8 +58117,20 @@ async function __tmRefreshAfterWake(reason) {
             });
         };
 
+        __tmContentMenuHandler = (event) => {
+            const detail = event?.detail || {};
+            const menu = detail.menu;
+            if (!menu || typeof menu.addItem !== 'function') return;
+            const fallbackBlockId = String(__tmGetRecentBlockMenuContext()?.blockId || '').trim();
+            const blockIds = __tmCollectSelectedBlockIdsFromProtyle(detail?.protyle || null, fallbackBlockId);
+            __tmAddMoveBlockToDailyNoteMenuItem(menu, blockIds, {
+                protyle: detail?.protyle || null
+            });
+        };
+
         eb.on('click-editortitleicon', __tmEditorTitleIconMenuHandler);
         eb.on('open-menu-doctree', __tmDocTreeMenuHandler);
+        eb.on('open-menu-content', __tmContentMenuHandler);
         eb.on('click-blockicon', __tmBlockIconMenuHandler);
     }
 
@@ -56519,6 +58711,12 @@ async function __tmRefreshAfterWake(reason) {
     // 插件卸载清理
     function __tmCleanup() {
         try {
+            if (__tmModalStackEscHandler) {
+                document.removeEventListener('keydown', __tmModalStackEscHandler, true);
+                __tmModalStackEscHandler = null;
+            }
+        } catch (e) {}
+        try {
             if (__tmVisibilityHandler) {
                 document.removeEventListener('visibilitychange', __tmVisibilityHandler);
                 __tmVisibilityHandler = null;
@@ -56624,6 +58822,15 @@ async function __tmRefreshAfterWake(reason) {
                 __tmCalendarBootstrapRetryTimer = null;
             }
         } catch (e) {}
+        try {
+            if (__tmTxTaskRefreshTimer) {
+                clearTimeout(__tmTxTaskRefreshTimer);
+                __tmTxTaskRefreshTimer = null;
+            }
+            __tmTxTaskRefreshInFlight = false;
+            __tmTxTaskRefreshDocIds.clear();
+            __tmTxTaskRefreshBlockIds.clear();
+        } catch (e) {}
         try { __tmClearTimelineTodayIndicatorTimer(); } catch (e) {}
         try { __tmSetInlineLoading(false); } catch (e) {}
         try {
@@ -56686,6 +58893,10 @@ async function __tmRefreshAfterWake(reason) {
                 if (__tmDocTreeMenuHandler) {
                     eb.off('open-menu-doctree', __tmDocTreeMenuHandler);
                     __tmDocTreeMenuHandler = null;
+                }
+                if (__tmContentMenuHandler) {
+                    eb.off('open-menu-content', __tmContentMenuHandler);
+                    __tmContentMenuHandler = null;
                 }
                 if (__tmBlockIconMenuHandler) {
                     eb.off('click-blockicon', __tmBlockIconMenuHandler);
@@ -56825,6 +59036,11 @@ async function __tmRefreshAfterWake(reason) {
         try { globalThis.__tmCalendar?.cleanup?.(); } catch (e) {}
         try { delete globalThis.__tmCalendar; } catch (e) {}
         try { __tmUnbindMobileViewportAutoRefresh(); } catch (e) {}
+        try { state.dockTaskPointerGestureCleanup?.(); } catch (e) {}
+        try { state.dockTaskPointerDragAbort?.abort?.(); } catch (e) {}
+        state.dockTaskPointerGestureCleanup = null;
+        state.dockTaskPointerDragAbort = null;
+        state.dockTaskPointerSuppressClickUntil = 0;
 
         try {
             if (state.modal) {
@@ -57864,6 +60080,15 @@ async function __tmRefreshAfterWake(reason) {
             const onUpdateTaskDates = typeof opts?.onUpdateTaskDates === 'function' ? opts.onUpdateTaskDates : null;
             const onUpdateTaskMeta = typeof opts?.onUpdateTaskMeta === 'function' ? opts.onUpdateTaskMeta : null;
             if (!headerEl || !bodyEl || !getTaskById) return;
+
+            const isMobileTimelineGlobal = (() => {
+                try {
+                    const modal = bodyEl?.closest?.('.tm-modal');
+                    return !!(modal instanceof Element && modal.classList.contains('tm-modal--mobile'));
+                } catch (e) {
+                    return false;
+                }
+            })();
     
             try { cleanupMap.get(bodyEl)?.(); } catch (e) {}
     
@@ -58659,8 +60884,10 @@ async function __tmRefreshAfterWake(reason) {
                 }
             };
     
-            bodyEl.addEventListener('pointerdown', onPointerDown, { passive: false });
-            bodyEl.addEventListener('pointerdown', onPanPointerDown, { passive: false });
+            if (!isMobileTimelineGlobal) {
+                bodyEl.addEventListener('pointerdown', onPointerDown, { passive: false });
+                bodyEl.addEventListener('pointerdown', onPanPointerDown, { passive: false });
+            }
             bodyEl.addEventListener('dblclick', onDblClick);
             bodyEl.addEventListener('contextmenu', onContextMenu);
             bodyEl.addEventListener('click', onClick);

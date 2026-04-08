@@ -70,10 +70,24 @@
     <a href="https://ld246.com/member/601063672" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">601063672</a>
     <a href="https://ld246.com/member/mcz007" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">mcz007</a>
     <a href="https://ld246.com/member/Afterglow" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">Afterglow</a>
+    <a href="https://ld246.com/member/jahzeds" style="font-size:12px;color:var(--b3-theme-on-surface);text-decoration:none;padding:4px 10px;background:var(--b3-theme-surface);border:1px solid var(--b3-border-color);border-radius:18px;">jahzeds</a>
   </div>
 </div>
 
 # 更新记录
+
+## 2.1.1更新内容
+- **新增：文档颜色支持颜色色系配置，文档页签右键菜单新增“颜色与色系”二级菜单，可分别配置当前文档颜色、所有文档默认色系、当前分组色系**
+  - **预置色系：随机、莫兰迪、低饱和自然、暖复古、冷雾灰蓝、高饱和活力、自定义主色调**
+- **新增：拖拽任务时弹出悬浮小日历，支持将任务直接拖到目标日期后修改完成日期**
+- **新增：常规设置->新建任务位置->启用“移动内容至今天日记”，开启后，块菜单和多选块后的右键菜单都会出现“移动内容至今天日记”，会把当前块或所选块直接移动到今天日记**
+- 优化：调整顶栏新建任务按钮位置至顶栏右侧
+- 优化：移动端时间轴视图支持全局移动视图，增加操作工具条
+- 修复：部分子任务移动后无法找到的问题
+- 修复：Dock侧边栏顶栏层级过高问题 PR贡献:bytemain
+- 修复：列表块中含有任务导致常驻标签显示异常问题
+- 修复：开启叶归插件块创建时间后导致常驻标签显示异常问题
+- 修复：日历视图侧边栏任务区页面空白问题
 
 ## 2.1.0更新内容
 - **新增：支持自定义单选列、多选列**
@@ -86,6 +100,9 @@
 - **新增:常规设置->基础显示->文档名默认显示“优先文档名”还是“优先别名”** v2.1.0
 - 优化：日历30分钟刻度线改为虚线
 - 优化：移动端看板视图支持任意位置横滑滚动
+
+<details>
+<summary>历史版本更新（点击展开）</summary>
 
 ## 2.0.8更新内容
 - **新增：外观增加主题方案配置，预置四套主题，可以导入Tweakcn主题配置**
@@ -191,9 +208,6 @@
 - 优化：日历视图的日、周、月视图切换在移动端和桌面端dock侧边栏要改成下拉菜单样式，节省空间
 - 优化：移动端横屏后隐藏底部视图切换条
 - 修复：文档内输入任务文字引起的常驻标签遮挡问题 PR贡献:bytemain
-
-<details>
-<summary>历史版本更新（点击展开）</summary>
 
 ## 1.9.5更新内容
 - **新增：视图选择器页面底部切换栏，移动端、桌面侧边栏中视图切换更快捷**
@@ -692,6 +706,7 @@
 - 文档分组与管理：
   - 新建/切换分组
   - 向分组添加文档（支持包含子文档）
+  - 配置所有文档默认色系，或让当前分组继承/覆盖全局色系
 
 ### 外观
 - 列设置（显示/排序/宽度）：

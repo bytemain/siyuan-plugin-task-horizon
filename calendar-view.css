@@ -459,6 +459,108 @@
     min-height: 0;
 }
 
+.tm-floating-mini-cal {
+    position: fixed;
+    inset: 0;
+    z-index: 200120;
+    pointer-events: none;
+}
+
+.tm-floating-mini-cal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    pointer-events: none;
+}
+
+.tm-floating-mini-cal__panel {
+    position: absolute;
+    width: min(320px, calc(100vw - 32px));
+    max-width: 320px;
+    padding: 12px;
+    border-radius: 18px;
+    border: 1px solid var(--tm-border-color);
+    background: color-mix(in srgb, var(--tm-bg-color) 96%, var(--tm-section-bg) 4%);
+    box-shadow: 0 18px 42px rgba(0,0,0,0.18);
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.tm-floating-mini-cal.is-open .tm-floating-mini-cal__panel {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.tm-floating-mini-cal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.tm-floating-mini-cal__eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--tm-text-color);
+    letter-spacing: 0.02em;
+}
+
+.tm-floating-mini-cal__close {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--tm-border-color);
+    border-radius: 999px;
+    background: var(--tm-section-bg);
+    color: var(--tm-secondary-text);
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+}
+
+.tm-floating-mini-cal__calendar {
+    border-radius: 14px;
+}
+
+.tm-floating-mini-cal--mobile {
+    pointer-events: none;
+}
+
+.tm-floating-mini-cal--mobile .tm-floating-mini-cal__backdrop {
+    background: transparent;
+    pointer-events: none;
+}
+
+.tm-floating-mini-cal--mobile .tm-floating-mini-cal__panel {
+    left: 18px;
+    right: 18px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: auto;
+    max-width: none;
+    padding: 10px;
+    border-radius: 18px;
+    box-shadow: 0 14px 34px rgba(0,0,0,0.16);
+}
+
+.tm-floating-mini-cal--mobile .tm-mini-cal-header {
+    margin-bottom: 6px;
+}
+
+.tm-floating-mini-cal--mobile .tm-mini-cal-title {
+    font-size: 13px;
+}
+
+.tm-floating-mini-cal--mobile .tm-mini-cal-btn {
+    width: 30px;
+    height: 28px;
+}
+
 .tm-mini-cal-header {
     display: flex;
     align-items: center;
@@ -493,6 +595,31 @@
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 2px;
+}
+
+.tm-mini-cal-target {
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--tm-section-bg) 84%, transparent 16%);
+    color: var(--tm-secondary-text);
+    font-size: 11px;
+    font-weight: 600;
+    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.tm-mini-cal-target.is-active {
+    background: rgba(0,120,212,0.12);
+    color: var(--tm-text-color);
+}
+
+.tm-floating-mini-cal--mobile .tm-mini-cal-target {
+    min-height: 28px;
+    margin-bottom: 8px;
+    font-size: 11px;
 }
 
 .tm-mini-cal-dow {
@@ -532,6 +659,43 @@
 .tm-mini-cal-day--active {
     background: rgba(0,120,212,0.12);
     border-color: rgba(0,120,212,0.35);
+}
+
+.tm-mini-cal-day--source {
+    box-shadow: inset 0 0 0 1px rgba(0,120,212,0.16);
+}
+
+.tm-mini-cal-day--drop-target {
+    background: rgba(0,120,212,0.2);
+    border-color: rgba(0,120,212,0.62);
+    color: var(--tm-text-color);
+}
+
+.tm-mini-cal-hint {
+    margin-top: 8px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--tm-secondary-text);
+}
+
+.tm-floating-mini-cal--mobile .tm-mini-cal-grid {
+    gap: 3px;
+}
+
+.tm-floating-mini-cal--mobile .tm-mini-cal-dow {
+    font-size: 11px;
+    line-height: 18px;
+}
+
+.tm-floating-mini-cal--mobile .tm-mini-cal-day {
+    height: 30px;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.tm-floating-mini-cal--mobile .tm-mini-cal-hint {
+    margin-top: 8px;
+    font-size: 11px;
 }
 
 .tm-calendar-mini .fc .fc-header-toolbar {

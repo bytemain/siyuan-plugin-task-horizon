@@ -19,9 +19,6 @@ const TASK_DOCK_TYPE = "::task-horizon-dock";
 const TASK_DOCK_TITLE = "任务侧栏";
 const TASK_DOCK_ROOT_ATTR = "data-task-horizon-dock-root";
 const TASK_DOCK_SNAPSHOT_ATTR = "data-task-horizon-dock-snapshot";
-const TASK_DOCK_FRAME_ATTR = "data-task-horizon-dock-frame";
-const TASK_DOCK_THEME_STYLE_ID = "tm-task-horizon-dock-theme";
-const TASK_DOCK_MIRROR_ATTR = "data-task-horizon-dock-mirror";
 const DOCK_VIEW_IDS = new Set(["list", "checklist", "timeline", "kanban", "calendar", "whiteboard"]);
 
 const ICON_SYMBOL = `<symbol id="${ICON_ID}" viewBox="0 0 24 24">
@@ -165,6 +162,11 @@ const unwrapGetFileText = (raw) => {
 const __tmResourceTextCache = new Map();
 const __tmResourceTextInflight = new Map();
 
+const clearPluginResourceTextCache = () => {
+    try { __tmResourceTextCache.clear(); } catch (e) {}
+    try { __tmResourceTextInflight.clear(); } catch (e) {}
+};
+
 const fetchPluginResourceText = async (path) => {
     const key = String(path || "").trim();
     if (!key) throw new Error("empty resource path");
@@ -187,13 +189,13 @@ const fetchPluginResourceText = async (path) => {
     return await task;
 };
 
-const loadScriptTextIntoDocument = async (targetDoc, path, sourceName) => {
+const loadScriptText = async (path, sourceName) => {
     try {
         const code = await fetchPluginResourceText(path);
 
-        const script = targetDoc.createElement("script");
+        const script = document.createElement("script");
         script.textContent = code + `\n//# sourceURL=${sourceName}`;
-        targetDoc.head.appendChild(script);
+        document.head.appendChild(script);
         script.remove();
 
         return true;
@@ -208,13 +210,13 @@ const loadScriptTextIntoDocument = async (targetDoc, path, sourceName) => {
     }
 };
 
-const loadStyleTextIntoDocument = async (targetDoc, path, sourceName) => {
+const loadStyleText = async (path, sourceName) => {
     try {
         const css = await fetchPluginResourceText(path);
-        const style = targetDoc.createElement("style");
+        const style = document.createElement("style");
         style.textContent = css + `\n/*# sourceURL=${sourceName} */`;
         style.dataset.tmStyleSource = sourceName || "";
-        targetDoc.head.appendChild(style);
+        document.head.appendChild(style);
         return true;
     } catch (e) {
         const msg = String(e?.message || e || "");
@@ -227,214 +229,13 @@ const loadStyleTextIntoDocument = async (targetDoc, path, sourceName) => {
     }
 };
 
-const loadScriptText = async (path, sourceName) => loadScriptTextIntoDocument(document, path, sourceName);
-
-const loadStyleText = async (path, sourceName) => loadStyleTextIntoDocument(document, path, sourceName);
-
-const collectFontFaceCss = () => {
-    const chunks = [];
-    const visited = new Set();
-    const walkRules = (rules) => {
-        if (!rules) return;
-        for (const rule of Array.from(rules)) {
-            if (!rule) continue;
-            try {
-                if (typeof CSSFontFaceRule !== "undefined" && rule instanceof CSSFontFaceRule) {
-                    chunks.push(rule.cssText);
-                    continue;
-                }
-            } catch (e) {}
-            const text = String(rule.cssText || "");
-            if (text.includes("@font-face")) {
-                chunks.push(text);
-                continue;
-            }
-            const nested = rule.cssRules || rule.styleSheet?.cssRules || null;
-            if (nested) walkRules(nested);
-        }
-    };
-    try {
-        for (const sheet of Array.from(document.styleSheets || [])) {
-            if (!sheet || visited.has(sheet)) continue;
-            visited.add(sheet);
-            try {
-                walkRules(sheet.cssRules || []);
-            } catch (e) {}
-        }
-    } catch (e) {}
-    return chunks.join("\n");
-};
-
-const shouldMirrorTaskDockHeadNode = (node) => {
-    if (!(node instanceof Element)) return false;
-    const tag = String(node.tagName || "").toUpperCase();
-    if (tag === "STYLE") {
-        if (node.id === TASK_DOCK_THEME_STYLE_ID) return false;
-        if (node.getAttribute(TASK_DOCK_MIRROR_ATTR) === "1") return false;
-        if (node.dataset?.tmTaskHorizonStyle === "1") return false;
-        if (node.dataset?.tmStyleSource) return false;
-        if (node.id === "sy-custom-props-floatbar-style") return false;
-        return true;
-    }
-    if (tag === "LINK") {
-        const rel = String(node.getAttribute("rel") || "").toLowerCase();
-        return rel.includes("stylesheet");
-    }
-    return false;
-};
-
-const cloneTaskDockHeadNode = (node, targetDoc) => {
-    if (!(node instanceof Element) || !targetDoc) return null;
-    const tag = String(node.tagName || "").toUpperCase();
-    if (tag === "STYLE") {
-        const clone = targetDoc.createElement("style");
-        clone.textContent = node.textContent || "";
-        clone.setAttribute(TASK_DOCK_MIRROR_ATTR, "1");
-        return clone;
-    }
-    if (tag === "LINK") {
-        const clone = targetDoc.createElement("link");
-        for (const attr of Array.from(node.attributes || [])) {
-            if (!attr?.name) continue;
-            clone.setAttribute(attr.name, attr.value);
-        }
-        clone.setAttribute(TASK_DOCK_MIRROR_ATTR, "1");
-        return clone;
-    }
-    return null;
-};
-
-const syncTaskDockHeadStyles = (targetDoc, anchor) => {
-    if (!targetDoc?.head) return;
-    try {
-        targetDoc.head.querySelectorAll(`[${TASK_DOCK_MIRROR_ATTR}="1"]`).forEach((el) => {
-            try { el.remove(); } catch (e) {}
-        });
-    } catch (e) {}
-    const frag = targetDoc.createDocumentFragment();
-    try {
-        Array.from(document.head?.children || []).forEach((node) => {
-            if (!shouldMirrorTaskDockHeadNode(node)) return;
-            const clone = cloneTaskDockHeadNode(node, targetDoc);
-            if (clone) frag.appendChild(clone);
-        });
-    } catch (e) {}
-    try {
-        targetDoc.head.insertBefore(frag, anchor || null);
-    } catch (e) {
-        try { targetDoc.head.appendChild(frag); } catch (e2) {}
-    }
-};
-
-const isVisibleDockTypographySource = (el) => {
-    if (!(el instanceof Element)) return false;
-    try {
-        const style = getComputedStyle(el);
-        if (style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse") return false;
-        const rect = el.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0;
-    } catch (e) {
-        return false;
-    }
-};
-
-const pickTaskDockTypographySource = () => {
-    const fromRoot = (root) => {
-        if (!(root instanceof Element)) return null;
-        const selectors = [
-            '.protyle-wysiwyg [contenteditable="true"][spellcheck="false"]',
-            '.protyle-wysiwyg [contenteditable="true"]',
-            '.protyle-content [contenteditable="true"][spellcheck="false"]',
-            '.protyle-content [contenteditable="true"]',
-            '.protyle-title__input',
-        ];
-        for (const selector of selectors) {
-            try {
-                const nodes = Array.from(root.querySelectorAll(selector));
-                const hit = nodes.find(isVisibleDockTypographySource);
-                if (hit) return hit;
-            } catch (e) {}
-        }
-        return null;
-    };
-
-    try {
-        const active = document.activeElement;
-        if (active instanceof Element) {
-            const activeEditable = active.matches?.('[contenteditable="true"]') ? active : null;
-            if (isVisibleDockTypographySource(activeEditable) && activeEditable.closest?.(".protyle")) {
-                return activeEditable;
-            }
-            const fromActiveProtyle = fromRoot(active.closest?.(".protyle"));
-            if (fromActiveProtyle) return fromActiveProtyle;
-        }
-    } catch (e) {}
-
-    const roots = [
-        ...Array.from(document.querySelectorAll(".protyle--focus")),
-        ...Array.from(document.querySelectorAll(".layout-tab-container .protyle")),
-        ...Array.from(document.querySelectorAll(".protyle")),
-    ];
-    for (const root of roots) {
-        const hit = fromRoot(root);
-        if (hit) return hit;
-    }
-
-    try {
-        const fallback = Array.from(document.querySelectorAll('div[contenteditable="true"][spellcheck="false"]'))
-            .find((el) => isVisibleDockTypographySource(el) && el.closest?.(".protyle"));
-        if (fallback) return fallback;
-    } catch (e) {}
-
-    return null;
-};
-
-const readTaskDockTypography = () => {
-    const source = pickTaskDockTypographySource() || document.body || document.documentElement;
-    try {
-        const computed = getComputedStyle(source);
-        return {
-            family: String(computed.fontFamily || "").trim() || `"Segoe UI", sans-serif`,
-            size: String(computed.fontSize || "").trim() || "14px",
-            weight: String(computed.fontWeight || "").trim() || "400",
-            style: String(computed.fontStyle || "").trim() || "normal",
-            lineHeight: String(computed.lineHeight || "").trim() || "1.5",
-            letterSpacing: String(computed.letterSpacing || "").trim() || "normal",
-            featureSettings: String(computed.fontFeatureSettings || "").trim() || "normal",
-            variantNumeric: String(computed.fontVariantNumeric || "").trim() || "normal",
-            variationSettings: String(computed.fontVariationSettings || "").trim() || "normal",
-            textShadow: String(computed.textShadow || "").trim() || "none",
-            textRendering: String(computed.textRendering || computed.getPropertyValue("text-rendering") || "").trim() || "auto",
-            fontSmoothing: String(computed.getPropertyValue("-webkit-font-smoothing") || "").trim() || "auto",
-            textStrokeWidth: String(computed.getPropertyValue("-webkit-text-stroke-width") || "").trim() || "0px",
-            textStrokeColor: String(computed.getPropertyValue("-webkit-text-stroke-color") || "").trim() || "currentColor",
-        };
-    } catch (e) {
-        return {
-            family: `"Segoe UI", sans-serif`,
-            size: "14px",
-            weight: "400",
-            style: "normal",
-            lineHeight: "1.5",
-            letterSpacing: "normal",
-            featureSettings: "normal",
-            variantNumeric: "normal",
-            variationSettings: "normal",
-            textShadow: "none",
-            textRendering: "auto",
-            fontSmoothing: "auto",
-            textStrokeWidth: "0px",
-            textStrokeColor: "currentColor",
-        };
-    }
-};
-
 module.exports = class TaskHorizonPlugin extends Plugin {
     isRuntimeMobileClient() {
         return isRuntimeMobileClient(this);
     }
 
     async onload() {
+        clearPluginResourceTextCache();
         const mountToken = String(Date.now());
         const runtimeMobile = this.isRuntimeMobileClient();
         this._mountToken = mountToken;
@@ -487,6 +288,7 @@ module.exports = class TaskHorizonPlugin extends Plugin {
                 this.element.style.display = "flex";
                 this.element.style.flexDirection = "column";
                 this.element.style.height = "100%";
+                this.element.style.isolation = "isolate";
                 globalThis.__taskHorizonTabElement = this.element;
                 if (typeof globalThis.__taskHorizonMount === "function") {
                     globalThis.__taskHorizonMount(this.element);
@@ -699,6 +501,9 @@ module.exports = class TaskHorizonPlugin extends Plugin {
 
     suppressTaskDockOnMobile() {
         if (!this.isRuntimeMobileClient()) return;
+        if (!Array.isArray(this._taskDockMobileSuppressTimers)) {
+            this._taskDockMobileSuppressTimers = [];
+        }
         const sync = () => {
             if (!this.isRuntimeMobileClient()) return;
             try { this.destroyTaskDockFrame(); } catch (e) {}
@@ -706,7 +511,17 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         };
         sync();
         [80, 300, 1200].forEach((delay) => {
-            try { setTimeout(sync, delay); } catch (e) {}
+            try {
+                const timer = setTimeout(() => {
+                    try {
+                        if (Array.isArray(this._taskDockMobileSuppressTimers)) {
+                            this._taskDockMobileSuppressTimers = this._taskDockMobileSuppressTimers.filter((id) => id !== timer);
+                        }
+                    } catch (e2) {}
+                    sync();
+                }, delay);
+                this._taskDockMobileSuppressTimers.push(timer);
+            } catch (e) {}
         });
     }
 
@@ -744,11 +559,9 @@ module.exports = class TaskHorizonPlugin extends Plugin {
 
     destroyTaskDockFrame(element) {
         const host = element instanceof HTMLElement ? element : this._taskDockElement;
-        this._taskDockMountSeq = Number(this._taskDockMountSeq || 0) + 1;
         try {
             if (host instanceof HTMLElement) host.replaceChildren();
         } catch (e) {}
-        this._taskDockFrame = null;
         this._taskDockRoot = null;
     }
 
@@ -780,6 +593,7 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         root.style.flex = "1 1 auto";
         root.style.position = "relative";
         root.style.overflow = "hidden";
+        root.style.isolation = "isolate";
         if (root.dataset.tmDockReactivateBound !== "1") {
             root.addEventListener("click", () => {
                 try {
@@ -856,161 +670,14 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         }
     }
 
-    syncTaskDockTheme(frame = this._taskDockFrame) {
-        const target = frame instanceof HTMLIFrameElement ? frame : null;
-        const doc = target?.contentDocument;
-        if (!doc) return;
-        let cssVars = "";
-        let effectiveFontSize = "";
-        let effectiveFontWeight = "";
-        let effectiveFontStyle = "";
-        let effectiveLineHeight = "";
-        let effectiveLetterSpacing = "";
-        let effectiveFontFeatureSettings = "";
-        let effectiveFontVariantNumeric = "";
-        let effectiveFontVariationSettings = "";
-        let fontFaceCss = "";
-        try {
-            const computed = getComputedStyle(document.documentElement);
-            for (let i = 0; i < computed.length; i += 1) {
-                const name = computed[i];
-                if (!name || !name.startsWith("--")) continue;
-                const value = computed.getPropertyValue(name);
-                if (!value) continue;
-                cssVars += `${name}:${value};`;
-            }
-        } catch (e) {}
-        try {
-            const typography = readTaskDockTypography();
-            effectiveFontSize = typography.size;
-            effectiveFontWeight = typography.weight;
-            effectiveFontStyle = typography.style;
-            effectiveLineHeight = typography.lineHeight;
-            effectiveLetterSpacing = typography.letterSpacing;
-            effectiveFontFeatureSettings = typography.featureSettings;
-            effectiveFontVariantNumeric = typography.variantNumeric;
-            effectiveFontVariationSettings = typography.variationSettings;
-        } catch (e) {}
-        try {
-            fontFaceCss = collectFontFaceCss();
-        } catch (e) {}
-        const themeMode = String(document.documentElement.getAttribute("data-theme-mode") || "").trim();
-        try {
-            if (themeMode) doc.documentElement.setAttribute("data-theme-mode", themeMode);
-            else doc.documentElement.removeAttribute("data-theme-mode");
-        } catch (e) {}
-        let styleEl = doc.getElementById(TASK_DOCK_THEME_STYLE_ID);
-        if (!styleEl) {
-            styleEl = doc.createElement("style");
-            styleEl.id = TASK_DOCK_THEME_STYLE_ID;
-            doc.head.appendChild(styleEl);
-        }
-        syncTaskDockHeadStyles(doc, styleEl);
-        styleEl.textContent = `
-${fontFaceCss}
-:root{${cssVars}${effectiveFontSize ? `--tm-host-font-size:${effectiveFontSize};--tm-font-size:${effectiveFontSize};` : ""}${effectiveFontWeight ? `--tm-host-font-weight:${effectiveFontWeight};` : ""}${effectiveFontStyle ? `--tm-host-font-style:${effectiveFontStyle};` : ""}${effectiveLineHeight ? `--tm-host-line-height:${effectiveLineHeight};` : ""}${effectiveLetterSpacing ? `--tm-host-letter-spacing:${effectiveLetterSpacing};` : ""}${effectiveFontFeatureSettings ? `--tm-host-font-feature-settings:${effectiveFontFeatureSettings};` : ""}${effectiveFontVariantNumeric ? `--tm-host-font-variant-numeric:${effectiveFontVariantNumeric};` : ""}${effectiveFontVariationSettings ? `--tm-host-font-variation-settings:${effectiveFontVariationSettings};` : ""}}
-html,body{margin:0;width:100%;height:100%;min-width:0;min-height:0;overflow:hidden;background:var(--b3-theme-background, #fff);color:var(--b3-theme-on-background, #222);font-family:var(--b3-font-family-protyle, var(--b3-font-family, "Segoe UI", sans-serif));${effectiveFontSize ? `font-size:var(--tm-host-font-size, ${effectiveFontSize});` : ""}${effectiveFontWeight ? `font-weight:var(--tm-host-font-weight, ${effectiveFontWeight});` : ""}${effectiveFontStyle ? `font-style:var(--tm-host-font-style, ${effectiveFontStyle});` : ""}${effectiveLineHeight ? `line-height:var(--tm-host-line-height, ${effectiveLineHeight});` : ""}${effectiveLetterSpacing ? `letter-spacing:var(--tm-host-letter-spacing, ${effectiveLetterSpacing});` : ""}${effectiveFontFeatureSettings ? `font-feature-settings:var(--tm-host-font-feature-settings, ${effectiveFontFeatureSettings});` : ""}${effectiveFontVariantNumeric ? `font-variant-numeric:var(--tm-host-font-variant-numeric, ${effectiveFontVariantNumeric});` : ""}${effectiveFontVariationSettings ? `font-variation-settings:var(--tm-host-font-variation-settings, ${effectiveFontVariationSettings});` : ""}}
-body{box-sizing:border-box;}
-*,*::before,*::after{box-sizing:inherit;}
-button,input,select,textarea{font:inherit;}
-.b3-select,.b3-text-field{height:36px;min-height:36px;border-radius:10px;border:1px solid var(--b3-theme-surface-light, #d7dce3);background:var(--b3-theme-surface, #fff);color:var(--b3-theme-on-background, #222);padding:0 12px;}
-.b3-switch{accent-color:var(--b3-theme-primary, #4285f4);}
-        `;
-        try { doc.head.appendChild(styleEl); } catch (e) {}
-    }
-
-    async prepareTaskDockFrame(frame, seq) {
-        const doc = frame.contentDocument;
-        const win = frame.contentWindow;
-        if (!doc || !win) throw new Error("dock iframe not ready");
-
-        doc.open();
-        doc.write("<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head><body data-tm-host-mode=\"dock\" data-tm-ui-mode=\"mobile\"></body></html>");
-        doc.close();
-
-        win.siyuan = window.siyuan;
-        win.openTab = typeof openTab === "function" ? openTab : null;
-        win.openMobileFileById = typeof openMobileFileById === "function" ? openMobileFileById : null;
-        win.__taskHorizonPluginApp = this.app;
-        win.__taskHorizonPluginInstance = this;
-        win.__taskHorizonPluginIsMobile = false;
-        win.__taskHorizonOpenTab = typeof openTab === "function" ? openTab : null;
-        win.__taskHorizonOpenMobileFileById = typeof openMobileFileById === "function" ? openMobileFileById : null;
-        win.__taskHorizonPlatformUtils = platformUtils || null;
-        win.__taskHorizonHostMode = "dock";
-        win.__taskHorizonHostUiMode = "mobile";
-        win.__taskHorizonForceMobileUI = true;
-        win.__taskHorizonDockBridge = {
-            close: () => this.closeTaskDockPanel(),
-            reopen: () => this.reloadTaskDockFrame(),
-        };
-
-        [
-            "__dockTomato",
-            "__dockTomatoFocusModeEnabled",
-            "__tomatoReminder",
-            "__tomatoTimer",
-            "__tomatoPlatformUtils",
-            "__taskHorizonPluginApp",
-            "__taskHorizonPluginInstance",
-            "__taskHorizonOpenTab",
-            "__taskHorizonOpenMobileFileById",
-            "__taskHorizonPlatformUtils",
-        ].forEach((key) => {
-            try {
-                if (globalThis[key] !== undefined) win[key] = globalThis[key];
-            } catch (e) {}
-        });
-
-        this.syncTaskDockTheme(frame);
-
-        await loadScriptTextIntoDocument(doc, BASECOAT_SCRIPT_PATH, "basecoat/basecoat.js");
-        await loadScriptTextIntoDocument(doc, TASK_SCRIPT_PATH, "task.js");
-        await loadScriptTextIntoDocument(doc, AI_SCRIPT_PATH, "ai.js");
-        await loadScriptTextIntoDocument(doc, XLSX_VENDOR_SCRIPT_PATH, "vendor/xlsx.full.min.js");
-        await loadStyleTextIntoDocument(doc, BASECOAT_CSS_PATH, "basecoat/basecoat.css");
-        await loadScriptTextIntoDocument(doc, FULLCALENDAR_MIN_SCRIPT_PATH, "fullcalendar/index.global.min.js");
-        await loadScriptTextIntoDocument(doc, FULLCALENDAR_ZH_LOCALE_SCRIPT_PATH, "fullcalendar/locales/zh-cn.global.min.js");
-        await loadScriptTextIntoDocument(doc, CALENDAR_VIEW_SCRIPT_PATH, "calendar-view.js");
-        await loadStyleTextIntoDocument(doc, CALENDAR_VIEW_CSS_PATH, "calendar-view.css");
-        if (this._taskDockMountSeq !== seq) return;
-
-        const root = doc.createElement("div");
-        root.id = "tmTaskHorizonDockRoot";
-        root.dataset.tmHostMode = "dock";
-        root.dataset.tmUiMode = "mobile";
-        root.style.width = "100%";
-        root.style.height = "100%";
-        root.style.minWidth = "0";
-        root.style.minHeight = "0";
-        root.style.overflow = "hidden";
-        doc.body.appendChild(root);
-        if (typeof win.__taskHorizonMount !== "function") {
-            throw new Error("dock mount entry is missing");
-        }
-        win.__taskHorizonMount(root);
-    }
-
     reloadTaskDockFrame() {
         if (!(this._taskDockElement instanceof HTMLElement)) return;
         this.destroyTaskDockFrame(this._taskDockElement);
         this.mountTaskDockElement(this._taskDockElement, { reactivate: true });
     }
 
-    scheduleTaskDockResizeRefresh() {
-        return;
-    }
-
-    closeTaskDockPanel() {
-        this.destroyTaskDockFrame(this._taskDockElement);
-        this._taskDockOpen = false;
-        try {
-            const trigger = document.querySelector(`[data-type="${TASK_DOCK_TYPE}"]`);
-            trigger?.dispatchEvent?.(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
-        } catch (e) {}
-    }
-
     onunload() {
+        clearPluginResourceTextCache();
         try {
             this._mountExistingTabsStopped = true;
             if (this._mountExistingTabsTimer) {
@@ -1019,21 +686,11 @@ button,input,select,textarea{font:inherit;}
             }
         } catch (e) {}
         try {
-            if (this._taskDockThemeObserver) {
-                this._taskDockThemeObserver.disconnect();
-                this._taskDockThemeObserver = null;
-            }
-        } catch (e) {}
-        try {
-            if (this._taskDockHeadObserver) {
-                this._taskDockHeadObserver.disconnect();
-                this._taskDockHeadObserver = null;
-            }
-        } catch (e) {}
-        try {
-            if (this._taskDockResizeTimer) {
-                clearTimeout(this._taskDockResizeTimer);
-                this._taskDockResizeTimer = null;
+            if (Array.isArray(this._taskDockMobileSuppressTimers)) {
+                this._taskDockMobileSuppressTimers.forEach((timer) => {
+                    try { clearTimeout(timer); } catch (e2) {}
+                });
+                this._taskDockMobileSuppressTimers = [];
             }
         } catch (e) {}
         try {

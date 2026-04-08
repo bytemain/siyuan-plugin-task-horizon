@@ -147,6 +147,26 @@
             popoverObserver: null,
             popoverClickCapture: null,
         },
+        floatingMini: {
+            open: false,
+            mode: 'desktop',
+            overlayEl: null,
+            panelEl: null,
+            hostEl: null,
+            containerRect: null,
+            monthKey: '',
+            selectedDateKey: '',
+            sourceDateKey: '',
+            hoverDateKey: '',
+            dragTaskId: '',
+            dragPayload: null,
+            abort: null,
+            autoFlipTimer: null,
+            autoFlipAction: '',
+            pointerClientX: NaN,
+            pointerClientY: NaN,
+            lastDropAt: 0,
+        },
     };
 
     const __tmCalendarDomPassCache = {
@@ -1957,8 +1977,26 @@
         }
         let res = null;
         try { res = api({ pageSize: 60, page: 1, query: '' }) || null; } catch (e) { res = null; }
-        const tasks = Array.isArray(res?.items) ? res.items : [];
+        let tasks = Array.isArray(res?.items) ? res.items : [];
         if (tasks.length === 0) {
+            const fallbackApi = globalThis.tmGetCalendarDragTasks;
+            if (typeof fallbackApi === 'function') {
+                try {
+                    tasks = (fallbackApi(60) || []).map((t) => ({
+                        id: t?.id,
+                        title: t?.title,
+                        spent: t?.spent,
+                        durationMin: t?.durationMin,
+                        calendarId: t?.calendarId,
+                        depth: 0,
+                    })).filter((t) => String(t?.id || '').trim());
+                } catch (e) {
+                    tasks = [];
+                }
+            }
+        }
+        if (tasks.length === 0) {
+            try { globalThis.tmWarmCalendarTaskCacheIfStale?.({ refresh: true }); } catch (e) {}
             el.innerHTML = `<div class="tm-calendar-task-empty">暂无任务</div>`;
             return;
         }
@@ -1986,58 +2024,79 @@
         }).join('');
     }
 
-    function bindTaskDraggable(settings) {
-        try {
-            if (state.taskDraggable && typeof state.taskDraggable.destroy === 'function') state.taskDraggable.destroy();
-        } catch (e) {}
+    function destroyTaskDraggable() {
+        const current = state.taskDraggable;
+        if (Array.isArray(current)) {
+            current.forEach((instance) => {
+                try { instance?.destroy?.(); } catch (e) {}
+            });
+        } else {
+            try {
+                if (current && typeof current.destroy === 'function') current.destroy();
+            } catch (e) {}
+        }
         state.taskDraggable = null;
+    }
+
+    function bindTaskDraggable(wrap, settings) {
+        destroyTaskDraggable();
         const Draggable = globalThis.FullCalendar?.Draggable;
         if (typeof Draggable !== 'function') return;
-        const host = state.taskListEl;
-        if (!host) return;
-        const isTableBody = String(host?.tagName || '').toUpperCase() === 'TBODY';
-        try {
-            state.taskDraggable = new Draggable(host, {
-                itemSelector: isTableBody ? 'tr[data-id]' : '.tm-cal-task',
-                eventData: (el) => {
-                    let taskId = '';
-                    let title = '';
-                    let calendarId = '';
-                    let durMin = NaN;
-                    if (isTableBody) {
-                        taskId = String(el?.getAttribute?.('data-id') || '').trim();
-                        calendarId = String(el?.getAttribute?.('data-calendar-id') || '').trim();
-                        try {
-                            const meta = (typeof window.tmCalendarGetTaskDragMeta === 'function') ? window.tmCalendarGetTaskDragMeta(taskId) : null;
-                            title = String(meta?.title || '').trim();
-                            if (!calendarId) calendarId = String(meta?.calendarId || '').trim();
-                            durMin = Number(meta?.durationMin);
-                        } catch (e) {}
-                        if (!title) {
-                            try { title = String(el?.querySelector?.('.tm-task-content-clickable')?.textContent || '').trim(); } catch (e) {}
+        const root = (wrap instanceof Element) ? wrap : (state.wrapEl instanceof Element ? state.wrapEl : null);
+        if (!(root instanceof Element)) return;
+        const hosts = [];
+        const panelHost = root.querySelector('[data-tm-cal-role="task-list"]');
+        const tableHost = root.querySelector('[data-tm-cal-role="task-table"] #tmTaskTable tbody');
+        if (panelHost instanceof Element) hosts.push(panelHost);
+        if (tableHost instanceof Element && tableHost !== panelHost) hosts.push(tableHost);
+        state.taskListEl = hosts[0] || null;
+        if (!hosts.length) return;
+        const draggables = [];
+        hosts.forEach((host) => {
+            const isTableBody = String(host?.tagName || '').toUpperCase() === 'TBODY';
+            try {
+                const instance = new Draggable(host, {
+                    itemSelector: isTableBody ? 'tr[data-id]' : '.tm-cal-task',
+                    eventData: (el) => {
+                        let taskId = '';
+                        let title = '';
+                        let calendarId = '';
+                        let durMin = NaN;
+                        if (isTableBody) {
+                            taskId = String(el?.getAttribute?.('data-id') || '').trim();
+                            calendarId = String(el?.getAttribute?.('data-calendar-id') || '').trim();
+                            try {
+                                const meta = (typeof window.tmCalendarGetTaskDragMeta === 'function') ? window.tmCalendarGetTaskDragMeta(taskId) : null;
+                                title = String(meta?.title || '').trim();
+                                if (!calendarId) calendarId = String(meta?.calendarId || '').trim();
+                                durMin = Number(meta?.durationMin);
+                            } catch (e) {}
+                            if (!title) {
+                                try { title = String(el?.querySelector?.('.tm-task-content-clickable')?.textContent || '').trim(); } catch (e) {}
+                            }
+                        } else {
+                            taskId = String(el?.getAttribute?.('data-task-id') || '').trim();
+                            title = String(el?.getAttribute?.('data-task-title') || '').trim();
+                            calendarId = String(el?.getAttribute?.('data-calendar-id') || '').trim();
+                            durMin = Number(el?.getAttribute?.('data-task-duration-min'));
                         }
-                    } else {
-                        taskId = String(el?.getAttribute?.('data-task-id') || '').trim();
-                        title = String(el?.getAttribute?.('data-task-title') || '').trim();
-                        calendarId = String(el?.getAttribute?.('data-calendar-id') || '').trim();
-                        durMin = Number(el?.getAttribute?.('data-task-duration-min'));
-                    }
-                    if (!calendarId) calendarId = pickDefaultCalendarId(settings);
-                    const safeMin = clampNewScheduleDurationMin(durMin, settings);
-                    return {
-                        title: title || '任务',
-                        duration: toDurationStr(safeMin),
-                        extendedProps: {
-                            __tmTaskId: taskId,
-                            __tmDurationMin: safeMin,
-                            calendarId,
-                        },
-                    };
-                },
-            });
-        } catch (e) {
-            state.taskDraggable = null;
-        }
+                        if (!calendarId) calendarId = pickDefaultCalendarId(settings);
+                        const safeMin = clampNewScheduleDurationMin(durMin, settings);
+                        return {
+                            title: title || '任务',
+                            duration: toDurationStr(safeMin),
+                            extendedProps: {
+                                __tmTaskId: taskId,
+                                __tmDurationMin: safeMin,
+                                calendarId,
+                            },
+                        };
+                    },
+                });
+                draggables.push(instance);
+            } catch (e) {}
+        });
+        state.taskDraggable = draggables.length ? draggables : null;
     }
 
     function renderTaskPage(wrap, settings) {
@@ -2203,7 +2262,7 @@
             }
         } catch (e) {}
         try { globalThis.tmCalendarApplyCollapseDom?.(); } catch (e) {}
-        bindTaskDraggable(settings);
+        bindTaskDraggable(wrap, settings);
         Promise.resolve().then(() => markTodayScheduledTaskRows(host)).catch(() => null);
     }
 
@@ -2219,11 +2278,13 @@
                 state.taskPageRenderWrap = null;
                 state.taskPageRenderSettings = null;
                 if (!nextWrap) return;
+                try { renderTaskPanel(nextWrap, nextSettings || getSettings()); } catch (e) {}
                 try { renderTaskPage(nextWrap, nextSettings || getSettings()); } catch (e) {}
             });
             return true;
         } catch (e) {
             state.taskPageRenderRaf = null;
+            try { renderTaskPanel(state.taskPageRenderWrap, state.taskPageRenderSettings || getSettings()); } catch (e2) {}
             try { renderTaskPage(state.taskPageRenderWrap, state.taskPageRenderSettings || getSettings()); } catch (e2) {}
             state.taskPageRenderWrap = null;
             state.taskPageRenderSettings = null;
@@ -2372,6 +2433,141 @@
         return miniMonthKeyFromDate(base);
     }
 
+    function formatMiniCalendarTargetLabel(dateKey) {
+        const key = String(dateKey || '').trim();
+        if (!key) return '';
+        const d = parseDateOnly(key);
+        if (!(d instanceof Date) || Number.isNaN(d.getTime())) return key;
+        const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        return `${d.getMonth() + 1} 月 ${d.getDate()} 日 ${weekDays[d.getDay()] || ''}`.trim();
+    }
+
+    function buildMiniCalendarModel(opts) {
+        const options = (opts && typeof opts === 'object') ? opts : {};
+        const firstDay = Number(options.firstDay) === 0 ? 0 : 1;
+        const monthKeyRaw = String(options.monthKey || '').trim();
+        const selectedKey = String(options.selectedDateKey || '').trim();
+        const sourceKey = String(options.sourceDateKey || '').trim();
+        const hoverKey = String(options.hoverDateKey || '').trim();
+        const fallbackDate = parseDateOnly(selectedKey || sourceKey || hoverKey) || new Date();
+        const monthKey = monthKeyRaw || miniMonthKeyFromDate(fallbackDate);
+        const title = miniMonthTitleFromKey(monthKey) || '';
+
+        const monthMatch = String(monthKey || '').match(/^(\d{4})-(\d{2})$/);
+        const y = monthMatch ? Number(monthMatch[1]) : NaN;
+        const m = monthMatch ? Number(monthMatch[2]) : NaN;
+        if (!Number.isFinite(y) || !Number.isFinite(m)) {
+            return { monthKey, title, dows: [], cells: [] };
+        }
+
+        const first = new Date(y, m - 1, 1, 12, 0, 0);
+        const firstDow = (first.getDay() - firstDay + 7) % 7;
+        const start = new Date(first.getTime());
+        start.setDate(first.getDate() - firstDow);
+        const todayKey = formatDateKey(new Date());
+        const dows = firstDay === 0
+            ? ['日', '一', '二', '三', '四', '五', '六']
+            : ['一', '二', '三', '四', '五', '六', '日'];
+        const cells = [];
+
+        for (let i = 0; i < 42; i += 1) {
+            const d = new Date(start.getTime());
+            d.setDate(start.getDate() + i);
+            const key = formatDateKey(d);
+            const other = d.getMonth() !== (m - 1);
+            cells.push({
+                key,
+                day: d.getDate(),
+                other,
+                isToday: key === todayKey,
+                isSelected: !!key && key === selectedKey,
+                isHover: !!key && key === hoverKey,
+                isSource: !!key && key === sourceKey,
+            });
+        }
+
+        return { monthKey, title, dows, cells };
+    }
+
+    function buildMiniCalendarHtml(model, opts) {
+        const options = (opts && typeof opts === 'object') ? opts : {};
+        const kind = String(options.kind || '').trim();
+        const showTargetLabel = !!options.showTargetLabel;
+        const hoverKey = String(options.hoverDateKey || '').trim();
+        const selectedKey = String(options.selectedDateKey || '').trim();
+        const targetLabel = String(
+            options.targetLabel
+            || formatMiniCalendarTargetLabel(hoverKey || selectedKey)
+            || ''
+        ).trim();
+        const hintText = String(options.hintText || '').trim();
+        const rootClass = [
+            'tm-mini-cal',
+            kind ? `tm-mini-cal--${kind}` : '',
+        ].filter(Boolean).join(' ');
+        const cellsHtml = (Array.isArray(model?.cells) ? model.cells : []).map((cell) => {
+            const cls = [
+                'tm-mini-cal-day',
+                cell?.other ? 'tm-mini-cal-day--other' : '',
+                cell?.isToday ? 'tm-mini-cal-day--today' : '',
+                cell?.isSelected ? 'tm-mini-cal-day--active' : '',
+                cell?.isSource ? 'tm-mini-cal-day--source' : '',
+                cell?.isHover ? 'tm-mini-cal-day--drop-target' : '',
+            ].filter(Boolean).join(' ');
+            return `<button class="${cls}" type="button" data-tm-mini-date="${esc(String(cell?.key || ''))}" data-tm-mini-other="${cell?.other ? '1' : '0'}">${Number(cell?.day) || ''}</button>`;
+        }).join('');
+        return `
+            <div class="${rootClass}" data-tm-mini-root="1" data-tm-mini-kind="${esc(kind || 'default')}">
+                <div class="tm-mini-cal-header">
+                    <button class="tm-mini-cal-btn" type="button" data-tm-mini-action="prev">‹</button>
+                    <div class="tm-mini-cal-title">${esc(String(model?.title || ''))}</div>
+                    <button class="tm-mini-cal-btn" type="button" data-tm-mini-action="next">›</button>
+                </div>
+                ${showTargetLabel ? `<div class="tm-mini-cal-target${targetLabel ? ' is-active' : ''}" data-tm-mini-target>${esc(targetLabel || '拖到日期上修改完成日期')}</div>` : ''}
+                <div class="tm-mini-cal-grid">
+                    ${(Array.isArray(model?.dows) ? model.dows : []).map((t) => `<div class="tm-mini-cal-dow">${esc(String(t || ''))}</div>`).join('')}
+                    ${cellsHtml}
+                </div>
+                ${hintText ? `<div class="tm-mini-cal-hint">${esc(hintText)}</div>` : ''}
+            </div>
+        `;
+    }
+
+    function syncMiniCalendarInteractiveState(host, opts) {
+        const container = host instanceof Element ? host : null;
+        if (!container) return;
+        const options = (opts && typeof opts === 'object') ? opts : {};
+        const selectedKey = String(options.selectedDateKey || '').trim();
+        const sourceKey = String(options.sourceDateKey || '').trim();
+        const hoverKey = String(options.hoverDateKey || '').trim();
+        const targetLabel = String(
+            options.targetLabel
+            || formatMiniCalendarTargetLabel(hoverKey || selectedKey)
+            || ''
+        ).trim();
+        container.querySelectorAll('[data-tm-mini-date]').forEach((el) => {
+            if (!(el instanceof HTMLElement)) return;
+            const key = String(el.getAttribute('data-tm-mini-date') || '').trim();
+            try { el.classList.toggle('tm-mini-cal-day--active', !!key && key === selectedKey); } catch (e) {}
+            try { el.classList.toggle('tm-mini-cal-day--source', !!key && key === sourceKey); } catch (e) {}
+            try { el.classList.toggle('tm-mini-cal-day--drop-target', !!key && key === hoverKey); } catch (e) {}
+        });
+        const targetEl = container.querySelector('[data-tm-mini-target]');
+        if (targetEl instanceof HTMLElement) {
+            try { targetEl.textContent = targetLabel || '拖到日期上修改完成日期'; } catch (e) {}
+            try { targetEl.classList.toggle('is-active', !!targetLabel); } catch (e) {}
+        }
+    }
+
+    function renderMiniCalendarHost(host, opts) {
+        const container = host instanceof Element ? host : null;
+        if (!container) return null;
+        const model = buildMiniCalendarModel(opts);
+        container.innerHTML = buildMiniCalendarHtml(model, opts);
+        syncMiniCalendarInteractiveState(container, opts);
+        return model;
+    }
+
     function renderMiniCalendar(wrap) {
         const mini = wrap?.querySelector?.('.tm-calendar-mini');
         const calendar = state.calendar;
@@ -2382,50 +2578,12 @@
         const selectedKey = selected ? formatDateKey(selected) : '';
 
         if (!state.miniMonthKey) state.miniMonthKey = miniMonthKeyFromDate(selected || new Date());
-        const title = miniMonthTitleFromKey(state.miniMonthKey) || '';
-
-        const monthMatch = String(state.miniMonthKey || '').match(/^(\d{4})-(\d{2})$/);
-        const y = monthMatch ? Number(monthMatch[1]) : NaN;
-        const m = monthMatch ? Number(monthMatch[2]) : NaN;
-        if (!Number.isFinite(y) || !Number.isFinite(m)) return;
-
-        const first = new Date(y, m - 1, 1, 12, 0, 0);
-        const firstDow = (first.getDay() - firstDay + 7) % 7;
-        const start = new Date(first.getTime());
-        start.setDate(first.getDate() - firstDow);
-        const todayKey = formatDateKey(new Date());
-
-        const dows = firstDay === 0
-            ? ['日', '一', '二', '三', '四', '五', '六']
-            : ['一', '二', '三', '四', '五', '六', '日'];
-        const cells = [];
-        for (let i = 0; i < 42; i += 1) {
-            const d = new Date(start.getTime());
-            d.setDate(start.getDate() + i);
-            const key = formatDateKey(d);
-            const other = d.getMonth() !== (m - 1);
-            const cls = [
-                'tm-mini-cal-day',
-                other ? 'tm-mini-cal-day--other' : '',
-                key === todayKey ? 'tm-mini-cal-day--today' : '',
-                key && key === selectedKey ? 'tm-mini-cal-day--active' : '',
-            ].filter(Boolean).join(' ');
-            cells.push(`<button class="${cls}" type="button" data-tm-mini-date="${esc(key)}">${d.getDate()}</button>`);
-        }
-
-        mini.innerHTML = `
-            <div class="tm-mini-cal" data-tm-mini-root="1">
-                <div class="tm-mini-cal-header">
-                    <button class="tm-mini-cal-btn" type="button" data-tm-mini-action="prev">‹</button>
-                    <div class="tm-mini-cal-title">${esc(title)}</div>
-                    <button class="tm-mini-cal-btn" type="button" data-tm-mini-action="next">›</button>
-                </div>
-                <div class="tm-mini-cal-grid">
-                    ${dows.map((t) => `<div class="tm-mini-cal-dow">${esc(t)}</div>`).join('')}
-                    ${cells.join('')}
-                </div>
-            </div>
-        `;
+        renderMiniCalendarHost(mini, {
+            kind: 'sidebar',
+            monthKey: state.miniMonthKey,
+            selectedDateKey: selectedKey,
+            firstDay,
+        });
 
         try { state.miniAbort?.abort(); } catch (e) {}
         const abort = new AbortController();
@@ -2455,6 +2613,467 @@
             } catch (e2) {}
             renderMiniCalendar(wrap);
         }, { signal: abort.signal });
+    }
+
+    function clearFloatingMiniAutoFlipTimer() {
+        if (state.floatingMini.autoFlipTimer) {
+            try { clearTimeout(state.floatingMini.autoFlipTimer); } catch (e) {}
+            state.floatingMini.autoFlipTimer = null;
+        }
+        state.floatingMini.autoFlipAction = '';
+    }
+
+    function clearFloatingMiniAbort() {
+        try { state.floatingMini.abort?.abort?.(); } catch (e) {}
+        state.floatingMini.abort = null;
+    }
+
+    function resolveFloatingMiniMode(mode) {
+        const raw = String(mode || '').trim();
+        if (raw === 'mobile') return 'mobile';
+        if (raw === 'desktop') return 'desktop';
+        return (state.isMobileDevice || isLikelyMobileRuntime()) ? 'mobile' : 'desktop';
+    }
+
+    function normalizeFloatingMiniContainerRect(rectLike) {
+        const src = (rectLike && typeof rectLike === 'object') ? rectLike : null;
+        const left = Number(src?.left);
+        const top = Number(src?.top);
+        const width = Number(src?.width);
+        const height = Number(src?.height);
+        if (!Number.isFinite(left) || !Number.isFinite(top) || !Number.isFinite(width) || !Number.isFinite(height)) return null;
+        if (width <= 0 || height <= 0) return null;
+        return {
+            left,
+            top,
+            width,
+            height,
+            right: left + width,
+            bottom: top + height,
+        };
+    }
+
+    function syncFloatingMiniPanelPosition(opts) {
+        const panel = state.floatingMini.panelEl;
+        if (!(panel instanceof HTMLElement)) return false;
+        const options = (opts && typeof opts === 'object') ? opts : {};
+        const containerRect = normalizeFloatingMiniContainerRect(options.containerRect || state.floatingMini.containerRect);
+        if (state.floatingMini.mode === 'mobile') {
+            const viewportWidth = Math.max(320, Number(window.innerWidth) || 0);
+            const viewportHeight = Math.max(320, Number(window.innerHeight) || 0);
+            const panelRect = panel.getBoundingClientRect();
+            const panelHeight = Math.max(220, Math.round(panelRect.height || panel.offsetHeight || 300));
+            const compactViewport = viewportWidth <= 420;
+            const insetX = compactViewport ? 18 : 24;
+            const topInset = 12;
+            const bottomInset = 10;
+            const pointerYRaw = Number.isFinite(Number(options.clientY))
+                ? Number(options.clientY)
+                : Number(state.floatingMini.pointerClientY);
+            const boundsLeft = containerRect
+                ? Math.max(8, Math.round(containerRect.left + Math.min(14, Math.max(8, containerRect.width * 0.04))))
+                : insetX;
+            const boundsRight = containerRect
+                ? Math.max(8, Math.round(viewportWidth - containerRect.right + Math.min(14, Math.max(8, containerRect.width * 0.04))))
+                : insetX;
+            const boundsTop = containerRect
+                ? Math.max(8, Math.round(containerRect.top + 8))
+                : topInset;
+            const boundsBottom = containerRect
+                ? Math.max(8, Math.round(viewportHeight - containerRect.bottom + 8))
+                : bottomInset;
+            const verticalMid = containerRect
+                ? (containerRect.top + (containerRect.height / 2))
+                : (viewportHeight * 0.5);
+            const bottomPanelTop = Math.max(boundsTop, viewportHeight - boundsBottom - panelHeight);
+            const topPanelBottom = boundsTop + panelHeight;
+            let preferTop = false;
+            if (Number.isFinite(pointerYRaw)) {
+                const nearBottomPanel = pointerYRaw >= (bottomPanelTop - 28);
+                const nearTopPanel = pointerYRaw <= (topPanelBottom + 28);
+                if (nearBottomPanel && !nearTopPanel) preferTop = true;
+                else if (nearTopPanel && !nearBottomPanel) preferTop = false;
+                else preferTop = pointerYRaw > verticalMid;
+            }
+            try {
+                panel.style.left = `${boundsLeft}px`;
+                panel.style.right = `${boundsRight}px`;
+                panel.style.maxWidth = containerRect ? 'none' : '';
+                if (preferTop) {
+                    panel.style.top = `${boundsTop}px`;
+                    panel.style.bottom = 'auto';
+                } else {
+                    panel.style.top = 'auto';
+                    panel.style.bottom = `${boundsBottom}px`;
+                }
+            } catch (e) {}
+            return true;
+        }
+        const viewportWidth = Math.max(320, Number(window.innerWidth) || 0);
+        const viewportHeight = Math.max(320, Number(window.innerHeight) || 0);
+        const panelRect = panel.getBoundingClientRect();
+        const panelHeight = Math.max(260, Math.round(panelRect.height || panel.offsetHeight || 340));
+        const clientYRaw = Number.isFinite(Number(options.clientY))
+            ? Number(options.clientY)
+            : Number(state.floatingMini.pointerClientY);
+        const top = Number.isFinite(clientYRaw)
+            ? Math.max(16, Math.min(viewportHeight - panelHeight - 16, Math.round(clientYRaw - 120)))
+            : Math.max(20, Math.round((viewportHeight - panelHeight) * 0.28));
+        const right = viewportWidth <= 960 ? 16 : 24;
+        try {
+            panel.style.top = `${top}px`;
+            panel.style.right = `${right}px`;
+            panel.style.left = 'auto';
+            panel.style.bottom = 'auto';
+        } catch (e) {}
+        return true;
+    }
+
+    function ensureFloatingMiniOverlay(mode) {
+        const nextMode = resolveFloatingMiniMode(mode);
+        const existingOverlay = state.floatingMini.overlayEl;
+        const existingPanel = state.floatingMini.panelEl;
+        const existingHost = state.floatingMini.hostEl;
+        if (
+            existingOverlay instanceof HTMLElement
+            && existingPanel instanceof HTMLElement
+            && existingHost instanceof HTMLElement
+            && String(existingOverlay.getAttribute('data-tm-floating-mini-mode') || '').trim() === nextMode
+        ) {
+            return existingHost;
+        }
+
+        clearFloatingMiniAbort();
+        clearFloatingMiniAutoFlipTimer();
+        if (existingOverlay instanceof HTMLElement) {
+            try { existingOverlay.remove(); } catch (e) {}
+        }
+        state.floatingMini.overlayEl = null;
+        state.floatingMini.panelEl = null;
+        state.floatingMini.hostEl = null;
+
+        const overlay = document.createElement('div');
+        overlay.className = `tm-floating-mini-cal tm-floating-mini-cal--${nextMode}`;
+        overlay.setAttribute('data-tm-floating-mini-mode', nextMode);
+        overlay.innerHTML = `
+            <div class="tm-floating-mini-cal__backdrop" data-tm-floating-mini-action="close"></div>
+            <div class="tm-floating-mini-cal__panel">
+                <div class="tm-floating-mini-cal__header">
+                    <div class="tm-floating-mini-cal__eyebrow">拖拽修改完成日期</div>
+                    <button class="tm-floating-mini-cal__close" type="button" data-tm-floating-mini-action="close" aria-label="关闭">×</button>
+                </div>
+                <div class="tm-calendar-mini tm-floating-mini-cal__calendar" data-tm-floating-mini-role="calendar"></div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        const panel = overlay.querySelector('.tm-floating-mini-cal__panel');
+        const host = overlay.querySelector('[data-tm-floating-mini-role="calendar"]');
+        if (!(panel instanceof HTMLElement) || !(host instanceof HTMLElement)) {
+            try { overlay.remove(); } catch (e) {}
+            return null;
+        }
+
+        const abort = new AbortController();
+        state.floatingMini.abort = abort;
+        state.floatingMini.overlayEl = overlay;
+        state.floatingMini.panelEl = panel;
+        state.floatingMini.hostEl = host;
+        state.floatingMini.mode = nextMode;
+
+        overlay.addEventListener('click', (e) => {
+            const action = String(e?.target?.closest?.('[data-tm-floating-mini-action]')?.getAttribute?.('data-tm-floating-mini-action') || '').trim();
+            if (action === 'close') {
+                hideFloatingMiniCalendar();
+            }
+        }, { signal: abort.signal });
+
+        host.addEventListener('click', (e) => {
+            const actionEl = e.target?.closest?.('[data-tm-mini-action]');
+            const action = String(actionEl?.getAttribute?.('data-tm-mini-action') || '').trim();
+            if (action === 'prev') {
+                state.floatingMini.monthKey = miniMonthKeyShift(state.floatingMini.monthKey, -1) || state.floatingMini.monthKey;
+                renderFloatingMiniCalendarPanel();
+                return;
+            }
+            if (action === 'next') {
+                state.floatingMini.monthKey = miniMonthKeyShift(state.floatingMini.monthKey, 1) || state.floatingMini.monthKey;
+                renderFloatingMiniCalendarPanel();
+            }
+        }, { signal: abort.signal });
+
+        overlay.addEventListener('dragover', (e) => {
+            const info = updateFloatingMiniCalendarDrag({
+                clientX: e?.clientX,
+                clientY: e?.clientY,
+                target: e?.target,
+            });
+            if (info.overFloatingMini) {
+                try { e.preventDefault(); } catch (e2) {}
+                try {
+                    if (e?.dataTransfer) {
+                        e.dataTransfer.dropEffect = (info.dateKey || info.action) ? 'move' : 'none';
+                    }
+                } catch (e2) {}
+            }
+        }, { signal: abort.signal });
+
+        overlay.addEventListener('dragleave', (e) => {
+            const rel = e?.relatedTarget instanceof Element ? e.relatedTarget : null;
+            if (rel && overlay.contains(rel)) return;
+            clearFloatingMiniCalendarHover();
+        }, { signal: abort.signal });
+
+        overlay.addEventListener('drop', async (e) => {
+            try { e.preventDefault(); } catch (e2) {}
+            const info = updateFloatingMiniCalendarDrag({
+                clientX: e?.clientX,
+                clientY: e?.clientY,
+                target: e?.target,
+            });
+            if (!info.dateKey) return;
+            const payload = parseTaskDropPayload(e, null, null) || state.floatingMini.dragPayload || null;
+            const taskId = String(payload?.taskId || state.floatingMini.dragTaskId || '').trim();
+            if (!taskId) {
+                toast('⚠ 未识别到拖拽任务', 'warning');
+                return;
+            }
+            await applyFloatingMiniCalendarDate(taskId, info.dateKey);
+        }, { signal: abort.signal });
+
+        return host;
+    }
+
+    function renderFloatingMiniCalendarPanel() {
+        const host = state.floatingMini.hostEl;
+        if (!(host instanceof HTMLElement) || !state.floatingMini.open) return false;
+        const selectedDateKey = String(state.floatingMini.selectedDateKey || '').trim();
+        const sourceDateKey = String(state.floatingMini.sourceDateKey || '').trim();
+        const hoverDateKey = String(state.floatingMini.hoverDateKey || '').trim();
+        const fallbackDate = parseDateOnly(selectedDateKey || sourceDateKey || hoverDateKey) || new Date();
+        if (!state.floatingMini.monthKey) {
+            state.floatingMini.monthKey = miniMonthKeyFromDate(fallbackDate);
+        }
+        renderMiniCalendarHost(host, {
+            kind: 'floating',
+            monthKey: state.floatingMini.monthKey,
+            selectedDateKey,
+            sourceDateKey,
+            hoverDateKey,
+            firstDay: Number(getSettings().firstDay) === 0 ? 0 : 1,
+            showTargetLabel: true,
+            hintText: state.floatingMini.mode === 'mobile'
+                ? '拖到日期后松手即可修改完成日期'
+                : '拖到日期上后松手即可修改完成日期',
+        });
+        return true;
+    }
+
+    function setFloatingMiniCalendarHover(dateKey) {
+        const nextKey = String(dateKey || '').trim();
+        if (String(state.floatingMini.hoverDateKey || '').trim() === nextKey) return false;
+        state.floatingMini.hoverDateKey = nextKey;
+        const host = state.floatingMini.hostEl;
+        if (host instanceof HTMLElement) {
+            syncMiniCalendarInteractiveState(host, {
+                selectedDateKey: state.floatingMini.selectedDateKey,
+                sourceDateKey: state.floatingMini.sourceDateKey,
+                hoverDateKey: state.floatingMini.hoverDateKey,
+            });
+        }
+        return true;
+    }
+
+    function clearFloatingMiniCalendarHover(opts) {
+        const options = (opts && typeof opts === 'object') ? opts : {};
+        if (options.preserveAutoFlip !== true) {
+            clearFloatingMiniAutoFlipTimer();
+        }
+        return setFloatingMiniCalendarHover('');
+    }
+
+    function applyFloatingMiniMonthFlip(action) {
+        const nextAction = String(action || '').trim();
+        if (!state.floatingMini.open) return false;
+        if (nextAction !== 'prev' && nextAction !== 'next') return false;
+        const delta = nextAction === 'prev' ? -1 : 1;
+        const nextMonthKey = miniMonthKeyShift(state.floatingMini.monthKey, delta);
+        if (!nextMonthKey || nextMonthKey === state.floatingMini.monthKey) return false;
+        state.floatingMini.monthKey = nextMonthKey;
+        state.floatingMini.hoverDateKey = '';
+        renderFloatingMiniCalendarPanel();
+        return true;
+    }
+
+    function scheduleFloatingMiniMonthFlip(action) {
+        const nextAction = String(action || '').trim();
+        if (!nextAction || (nextAction !== 'prev' && nextAction !== 'next')) {
+            clearFloatingMiniAutoFlipTimer();
+            return false;
+        }
+        if (state.floatingMini.autoFlipTimer && state.floatingMini.autoFlipAction === nextAction) return true;
+        clearFloatingMiniAutoFlipTimer();
+        state.floatingMini.autoFlipAction = nextAction;
+        const scheduleNextTick = () => {
+            state.floatingMini.autoFlipTimer = setTimeout(() => {
+                state.floatingMini.autoFlipTimer = null;
+                if (!state.floatingMini.open) {
+                    state.floatingMini.autoFlipAction = '';
+                    return;
+                }
+                if (state.floatingMini.autoFlipAction !== nextAction) return;
+                const flipped = applyFloatingMiniMonthFlip(nextAction);
+                if (!flipped) {
+                    state.floatingMini.autoFlipAction = '';
+                    return;
+                }
+                if (state.floatingMini.autoFlipAction === nextAction) {
+                    scheduleNextTick();
+                }
+            }, 1000);
+        };
+        scheduleNextTick();
+        return true;
+    }
+
+    function getFloatingMiniHitFromTarget(target) {
+        const overlay = state.floatingMini.overlayEl;
+        const el = target instanceof Element ? target : null;
+        if (!(overlay instanceof HTMLElement) || !(el instanceof Element)) {
+            return { overFloatingMini: false, action: '', dateKey: '', targetEl: null };
+        }
+        if (!overlay.contains(el)) {
+            return { overFloatingMini: false, action: '', dateKey: '', targetEl: el };
+        }
+        const actionEl = el.closest('[data-tm-mini-action]');
+        const action = String(actionEl?.getAttribute?.('data-tm-mini-action') || '').trim();
+        if (action === 'prev' || action === 'next') {
+            return { overFloatingMini: true, action, dateKey: '', targetEl: actionEl };
+        }
+        const dateEl = el.closest('[data-tm-mini-date]');
+        const dateKey = String(dateEl?.getAttribute?.('data-tm-mini-date') || '').trim();
+        if (dateKey) {
+            return { overFloatingMini: true, action: '', dateKey, targetEl: dateEl };
+        }
+        return { overFloatingMini: true, action: '', dateKey: '', targetEl: el };
+    }
+
+    function updateFloatingMiniCalendarDrag(opts) {
+        if (!state.floatingMini.open) {
+            return { overFloatingMini: false, action: '', dateKey: '', targetEl: null };
+        }
+        const options = (opts && typeof opts === 'object') ? opts : {};
+        const clientX = Number(options.clientX);
+        const clientY = Number(options.clientY);
+        if (Number.isFinite(clientX)) state.floatingMini.pointerClientX = clientX;
+        if (Number.isFinite(clientY)) state.floatingMini.pointerClientY = clientY;
+        let targetEl = options.target instanceof Element ? options.target : null;
+        if (!(targetEl instanceof Element) && Number.isFinite(clientX) && Number.isFinite(clientY)) {
+            try { targetEl = document.elementFromPoint(clientX, clientY); } catch (e) { targetEl = null; }
+        }
+        const hit = getFloatingMiniHitFromTarget(targetEl);
+        if (!hit.overFloatingMini) {
+            clearFloatingMiniCalendarHover();
+            return hit;
+        }
+        if (hit.action) {
+            clearFloatingMiniCalendarHover({ preserveAutoFlip: true });
+            scheduleFloatingMiniMonthFlip(hit.action);
+            return hit;
+        }
+        clearFloatingMiniAutoFlipTimer();
+        if (hit.dateKey) {
+            setFloatingMiniCalendarHover(hit.dateKey);
+            return hit;
+        }
+        clearFloatingMiniCalendarHover();
+        return hit;
+    }
+
+    async function applyFloatingMiniCalendarDate(taskId, dateKey) {
+        const id = String(taskId || state.floatingMini.dragTaskId || '').trim();
+        const normalizedDateKey = String(dateKey || '').trim();
+        if (!id || !normalizedDateKey) return false;
+        if (typeof window.tmUpdateTaskDates !== 'function') {
+            toast('⚠ 未找到任务日期更新接口', 'warning');
+            return false;
+        }
+        try {
+            await window.tmUpdateTaskDates(id, { completionTime: normalizedDateKey });
+            state.floatingMini.lastDropAt = Date.now();
+            state.floatingMini.selectedDateKey = normalizedDateKey;
+            state.floatingMini.sourceDateKey = normalizedDateKey;
+            state.floatingMini.hoverDateKey = '';
+            toast(`✅ 完成日期已更新为 ${normalizedDateKey}`, 'success');
+            hideFloatingMiniCalendar();
+            return true;
+        } catch (e) {
+            toast(`❌ 更新任务日期失败：${String(e?.message || e || '')}`, 'error');
+            return false;
+        }
+    }
+
+    async function finalizeFloatingMiniCalendarTouchDrop(opts) {
+        if (!state.floatingMini.open) return false;
+        const options = (opts && typeof opts === 'object') ? opts : {};
+        const hit = updateFloatingMiniCalendarDrag(options);
+        const dateKey = String(hit?.dateKey || state.floatingMini.hoverDateKey || '').trim();
+        if (!dateKey) return false;
+        const taskId = String(options.taskId || options.dragTaskId || state.floatingMini.dragTaskId || '').trim();
+        return await applyFloatingMiniCalendarDate(taskId, dateKey);
+    }
+
+    function showFloatingMiniCalendar(opts) {
+        const options = (opts && typeof opts === 'object') ? opts : {};
+        const taskId = String(options.taskId || options.dragTaskId || '').trim();
+        let meta = (options.meta && typeof options.meta === 'object') ? options.meta : null;
+        if (!meta && taskId && typeof window.tmCalendarGetTaskDragMeta === 'function') {
+            try { meta = window.tmCalendarGetTaskDragMeta(taskId); } catch (e) {}
+        }
+        const selectedDateKey = String(meta?.completionTime || options.completionTime || '').trim();
+        const fallbackDate = parseDateOnly(selectedDateKey) || new Date();
+        const host = ensureFloatingMiniOverlay(options.mode);
+        if (!(host instanceof HTMLElement)) return false;
+
+        state.floatingMini.open = true;
+        state.floatingMini.dragTaskId = taskId;
+        state.floatingMini.dragPayload = options.dragPayload || meta || null;
+        state.floatingMini.selectedDateKey = selectedDateKey;
+        state.floatingMini.sourceDateKey = selectedDateKey;
+        state.floatingMini.hoverDateKey = '';
+        state.floatingMini.containerRect = normalizeFloatingMiniContainerRect(options.containerRect);
+        state.floatingMini.monthKey = String(options.monthKey || '').trim() || miniMonthKeyFromDate(fallbackDate);
+        state.floatingMini.pointerClientX = Number(options.clientX);
+        state.floatingMini.pointerClientY = Number(options.clientY);
+
+        renderFloatingMiniCalendarPanel();
+        try {
+            state.floatingMini.overlayEl?.classList?.add?.('is-open');
+        } catch (e) {}
+        try { syncFloatingMiniPanelPosition(options); } catch (e) {}
+        return true;
+    }
+
+    function hideFloatingMiniCalendar() {
+        clearFloatingMiniAutoFlipTimer();
+        clearFloatingMiniAbort();
+        const overlay = state.floatingMini.overlayEl;
+        if (overlay instanceof HTMLElement) {
+            try { overlay.remove(); } catch (e) {}
+        }
+        state.floatingMini.open = false;
+        state.floatingMini.overlayEl = null;
+        state.floatingMini.panelEl = null;
+        state.floatingMini.hostEl = null;
+        state.floatingMini.containerRect = null;
+        state.floatingMini.monthKey = '';
+        state.floatingMini.selectedDateKey = '';
+        state.floatingMini.sourceDateKey = '';
+        state.floatingMini.hoverDateKey = '';
+        state.floatingMini.dragTaskId = '';
+        state.floatingMini.dragPayload = null;
+        state.floatingMini.pointerClientX = NaN;
+        state.floatingMini.pointerClientY = NaN;
+        return true;
     }
 
     function bindCalendarDrop(wrap) {
@@ -8461,7 +9080,6 @@
         state.opts = opts || {};
         state.settingsStore = state.opts.settingsStore || null;
         const hostForcesMobileUi = (() => {
-            try { if (globalThis.__taskHorizonForceMobileUI === true) return true; } catch (e) {}
             try {
                 const local = String(rootEl?.dataset?.tmUiMode || '').trim();
                 if (local === 'mobile') return true;
@@ -8469,10 +9087,6 @@
             try {
                 const bodyMode = String(document.body?.dataset?.tmUiMode || '').trim();
                 if (bodyMode === 'mobile') return true;
-            } catch (e) {}
-            try {
-                const frameMode = String(window.frameElement?.dataset?.tmUiMode || '').trim();
-                if (frameMode === 'mobile') return true;
             } catch (e) {}
             return false;
         })();
@@ -8493,15 +9107,7 @@
                 const bodyMode = String(document.body?.dataset?.tmHostMode || '').trim();
                 if (bodyMode === 'dock') return true;
             } catch (e) {}
-            try {
-                const frameMode = String(window.frameElement?.dataset?.tmHostMode || '').trim();
-                if (frameMode === 'dock') return true;
-            } catch (e) {}
-            try {
-                return String(globalThis.__taskHorizonHostMode || '').trim() === 'dock';
-            } catch (e) {
-                return false;
-            }
+            return false;
         })();
         state.isMobileDevice = !!isMobileDevice;
         state.isDockHost = !!isDockHost;
@@ -8546,6 +9152,15 @@
                                     </div>
                                     <div class="tm-calendar-nav-list" data-tm-cal-role="tomato-list"></div>
                                 </div>
+                                <div class="tm-calendar-nav-section">
+                                    <div class="tm-calendar-nav-header" data-tm-cal-collapse="tasks">
+                                        <span>任务</span>
+                                        <span class="tm-calendar-nav-header-actions">
+                                            <span class="tm-calendar-nav-chevron"></span>
+                                        </span>
+                                    </div>
+                                    <div class="tm-calendar-task-list" data-tm-cal-role="task-list"></div>
+                                </div>
                             </div>
                         </div>
                         <div class="tm-calendar-side-page" data-tm-cal-side-page="tasks" data-tm-cal-role="task-page" style="display:none; flex:1; overflow:hidden; flex-direction:column; min-height:0;">
@@ -8579,6 +9194,7 @@
             if (sidebar) sidebar.style.width = `${Math.max(220, Math.min(560, w))}px`;
         } catch (e) {}
         renderSidebar(wrap, s);
+        renderTaskPanel(wrap, s);
         renderTaskPage(wrap, s);
         setSidePage(wrap, state.sidePage);
         if (isMobileDevice || isDockHost) setCalendarSidebarOpen(wrap, false);
@@ -10017,14 +10633,12 @@
         try { state.miniAbort?.abort(); } catch (e) {}
         state.miniAbort = null;
         state.miniMonthKey = '';
-        if (state.taskDraggable) {
-            try { state.taskDraggable.destroy(); } catch (e) {}
-        }
+        destroyTaskDraggable();
         if (state.mobileDragCloseTimer) {
             try { clearTimeout(state.mobileDragCloseTimer); } catch (e) {}
             state.mobileDragCloseTimer = null;
         }
-        state.taskDraggable = null;
+        try { hideFloatingMiniCalendar(); } catch (e) {}
         state.taskListEl = null;
         state.taskPageHost = null;
         state.taskPageHtml = '';
@@ -10280,8 +10894,8 @@
                     try { state.sideDay?.calendar?.refetchEvents?.(); } catch (e2) {}
                 } else if (key === 'calendarNewScheduleMaxDurationMin') {
                     try {
-                        const root = state.rootEl;
-                        if (root) renderTaskPage(root, getSettings());
+                        const root = state.wrapEl;
+                        if (root) scheduleTaskPageRender(root, getSettings());
                     } catch (e2) {}
                 } else if (state.calendar) {
                     if (key === 'calendarFirstDay') {
@@ -10686,6 +11300,10 @@
             if (!wrap) return false;
             return setCalendarSidebarOpen(wrap, false);
         },
+        showFloatingMiniCalendar,
+        hideFloatingMiniCalendar,
+        updateFloatingMiniCalendarDrag,
+        finalizeFloatingMiniCalendarTouchDrop,
         mountSideDayTimeline,
         unmountSideDayTimeline,
         setSideDayDate,

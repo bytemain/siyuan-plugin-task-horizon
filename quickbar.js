@@ -289,14 +289,20 @@
         if (!el) return false;
         const marker = el.getAttribute?.('data-marker') || '';
         if (marker.includes('[ ]') || marker.includes('[x]') || marker.includes('[X]')) return true;
-        if (el.querySelector?.('[data-marker*="[ ]"],[data-marker*="[x]"],[data-marker*="[X]"]')) return true;
+        const subtype = String(el.getAttribute?.('data-subtype') || '').trim().toLowerCase();
+        if (subtype === 't') return true;
         return false;
     }
 
     function isTaskBlockElement(blockEl) {
         if (!blockEl) return false;
-        const checkbox = blockEl.querySelector?.('input[type="checkbox"],.protyle-action__task,.protyle-action--task,.protyle-task--checkbox,.protyle-task,.b3-checkbox,[data-task]');
-        if (checkbox) return true;
+        // 只检查当前块本身和直接子元素，避免父级普通列表项因为包含子任务而被误判成任务块。
+        const directChildren = Array.from(blockEl.children || []);
+        const hasDirectTaskControl = directChildren.some((child) => {
+            if (!(child instanceof Element)) return false;
+            return child.matches?.('input[type="checkbox"],.protyle-action__task,.protyle-action--task,.protyle-task--checkbox,.protyle-task,.b3-checkbox,[data-task]');
+        });
+        if (hasDirectTaskControl) return true;
         return hasTaskMarkerEl(blockEl);
     }
 
@@ -321,8 +327,8 @@
 
         function getTaskTitleFromBlockEl(blockEl) {
             if (!blockEl) return '';
-            const p = blockEl.querySelector?.(':scope > .p') || blockEl.querySelector?.('.p') || null;
-            const text = p ? p.textContent : blockEl.textContent;
+            const textAnchor = getInlineTextAnchor(blockEl);
+            const text = textAnchor ? getInlinePlainText(textAnchor) : blockEl.textContent;
             return String(text || '').replace(/\s+/g, ' ').trim();
         }
 
@@ -2027,7 +2033,12 @@
 
         function getInlineTextAnchor(blockEl) {
             if (!blockEl) return null;
-            return blockEl.querySelector?.(':scope > .p') || blockEl.querySelector?.('.p') || null;
+            const paragraph = blockEl.querySelector?.(':scope > .p') || blockEl.querySelector?.('.p') || null;
+            if (!paragraph) return null;
+            // 只把真正可编辑的正文区当作定位锚点，避免把其他插件插入的 contenteditable=false 信息区算进正文尾部。
+            return paragraph.querySelector?.(':scope > [contenteditable="true"]')
+                || paragraph.querySelector?.('[contenteditable="true"]')
+                || paragraph;
         }
 
         function rectsOverlap(a, b, gap = 4) {
@@ -2065,6 +2076,7 @@
                         if (!text) return NodeFilter.FILTER_REJECT;
                         const parent = node.parentElement;
                         if (parent?.closest?.('.sy-custom-props-inline-host')) return NodeFilter.FILTER_REJECT;
+                        if (parent?.closest?.('[contenteditable="false"],.protyle-attr,.protyle-custom')) return NodeFilter.FILTER_REJECT;
                         return NodeFilter.FILTER_ACCEPT;
                     }
                 });
@@ -2094,6 +2106,7 @@
                     acceptNode(node) {
                         const parent = node?.parentElement;
                         if (parent?.closest?.('.sy-custom-props-inline-host')) return NodeFilter.FILTER_REJECT;
+                        if (parent?.closest?.('[contenteditable="false"],.protyle-attr,.protyle-custom')) return NodeFilter.FILTER_REJECT;
                         return NodeFilter.FILTER_ACCEPT;
                     }
                 });
