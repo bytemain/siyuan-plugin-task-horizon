@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.1.2
+// @version      2.1.3
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -474,6 +474,23 @@
             height: 28px;
             background: var(--tm-input-bg);
             color: var(--tm-text-color);
+        }
+
+        .tm-cell-editor-textarea {
+            width: 100%;
+            min-height: 84px;
+            box-sizing: border-box;
+            padding: 6px 8px;
+            border: 1px solid var(--tm-input-border);
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.5;
+            background: var(--tm-input-bg);
+            color: var(--tm-text-color);
+            resize: vertical;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font-family: inherit;
         }
 
         .tm-group-row td {
@@ -1932,6 +1949,217 @@
         .tm-main-stage > .tm-main-body-with-cal-dock {
             flex: 1 1 auto;
             min-height: 0;
+        }
+
+        .tm-multi-bulkbar {
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            bottom: 14px;
+            z-index: 46;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .tm-multi-bulkbar__inner {
+            pointer-events: auto;
+            width: fit-content;
+            max-width: min(calc(100% - 8px), 980px);
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid var(--b3-border-color);
+            background: var(--b3-theme-background);
+            box-shadow: var(--b3-dialog-shadow);
+            white-space: nowrap;
+        }
+
+        .tm-multi-bulkbar__summary {
+            display: inline-flex;
+            align-items: center;
+            flex: 0 0 auto;
+        }
+
+        .tm-multi-bulkbar__count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 26px;
+            padding: 0 5px;
+            border-radius: 6px;
+            border: 1px solid color-mix(in srgb, var(--b3-theme-primary) 40%, var(--b3-border-color));
+            background: color-mix(in srgb, var(--b3-theme-primary) 12%, var(--b3-theme-background));
+            color: var(--b3-theme-primary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tm-multi-bulkbar__actions {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 6px;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+
+        .tm-multi-bulkbar__btn {
+            height: 26px !important;
+            min-height: 26px !important;
+            padding: 0 6px !important;
+            border-radius: 6px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px;
+            border: 1px solid var(--b3-border-color) !important;
+            background: var(--b3-theme-surface) !important;
+            color: var(--b3-theme-on-surface) !important;
+            font-size: 12px !important;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .tm-multi-bulkbar__btn:hover {
+            background: var(--b3-theme-background) !important;
+            border-color: var(--b3-theme-primary) !important;
+        }
+
+        .tm-multi-bulkbar__btn.tm-multi-bulkbar__btn--icon {
+            width: 26px !important;
+            min-width: 26px !important;
+            padding: 0 !important;
+        }
+
+        .tm-multi-bulkbar__btn.tm-multi-bulkbar__btn--wide {
+            width: auto !important;
+            padding: 0 8px !important;
+        }
+
+        .tm-multi-bulkbar__icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
+        }
+
+        .tm-multi-bulkbar__icon svg {
+            width: 14px;
+            height: 14px;
+            display: block;
+        }
+
+        .tm-multi-bulkbar__menu {
+            position: fixed;
+            z-index: 200120;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 188px;
+            max-width: min(92vw, 280px);
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid var(--b3-border-color);
+            background: var(--b3-theme-background);
+            box-shadow: var(--b3-dialog-shadow);
+        }
+
+        .tm-multi-bulkbar__menu-item {
+            height: 28px;
+            min-height: 28px;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--b3-theme-on-surface);
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            padding: 0 8px;
+            font-size: 13px;
+            cursor: pointer;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .tm-multi-bulkbar__menu-item:hover {
+            background: var(--b3-theme-surface);
+        }
+
+        .tm-multi-bulkbar__menu-item:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .tm-multi-bulkbar__menu-item:disabled:hover {
+            background: transparent;
+        }
+
+        .tm-multi-bulkbar__menu-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            line-height: 0;
+            flex: 0 0 auto;
+        }
+
+        .tm-multi-bulkbar__menu-icon svg {
+            width: 14px;
+            height: 14px;
+            display: block;
+        }
+
+        .tm-multi-bulkbar__menu-separator {
+            height: 1px;
+            margin: 2px 4px;
+            background: var(--b3-border-color);
+            opacity: 0.8;
+        }
+
+        .tm-multi-bulkbar__btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-multi-bulkbar,
+        .tm-modal.tm-modal--dock .tm-multi-bulkbar {
+            left: 12px;
+            right: 12px;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-multi-bulkbar__inner,
+        .tm-modal.tm-modal--dock .tm-multi-bulkbar__inner {
+            max-width: 100%;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-multi-bulkbar__inner::-webkit-scrollbar,
+        .tm-modal.tm-modal--dock .tm-multi-bulkbar__inner::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-multi-bulkbar__summary,
+        .tm-modal.tm-modal--dock .tm-multi-bulkbar__summary {
+            width: auto;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-multi-bulkbar__actions,
+        .tm-modal.tm-modal--dock .tm-multi-bulkbar__actions {
+            justify-content: flex-start;
+            flex-wrap: nowrap;
         }
 
         .tm-inline-loading-overlay {
@@ -3551,6 +3779,15 @@
             background: var(--card);
         }
 
+        .tm-whiteboard-stream-task-head.tm-task-row--multi-selected {
+            background: color-mix(in srgb, var(--card) 80%, var(--tm-primary-color) 20%);
+            box-shadow: 0 0 0 1px color-mix(in srgb, var(--tm-primary-color) 76%, var(--tm-border-color)) inset, 0 10px 20px color-mix(in srgb, var(--tm-primary-color) 12%, transparent);
+        }
+
+        .tm-whiteboard-stream-task-head.tm-task-row--multi-selected:hover {
+            background: color-mix(in srgb, var(--card) 78%, var(--tm-primary-color) 22%);
+        }
+
         .tm-whiteboard-stream-task-toggle-slot {
             width: 20px;
             min-width: 20px;
@@ -4421,6 +4658,17 @@
 
         .tm-kanban-card:hover {
             box-shadow: 0 2px 6px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+        }
+
+        .tm-kanban-card.tm-task-row--multi-selected {
+            border-color: color-mix(in srgb, var(--tm-primary-color) 78%, var(--tm-border-color));
+            box-shadow: 0 0 0 1px color-mix(in srgb, var(--tm-primary-color) 78%, var(--tm-border-color)) inset, 0 10px 22px color-mix(in srgb, var(--tm-primary-color) 14%, transparent);
+            background: color-mix(in srgb, var(--card) 86%, var(--tm-primary-color) 14%);
+        }
+
+        .tm-kanban-card.tm-task-row--multi-selected:hover {
+            border-color: color-mix(in srgb, var(--tm-primary-color) 82%, var(--tm-border-color));
+            box-shadow: 0 0 0 1px color-mix(in srgb, var(--tm-primary-color) 82%, var(--tm-border-color)) inset, 0 12px 24px color-mix(in srgb, var(--tm-primary-color) 16%, transparent);
         }
 
         .tm-kanban-card.tm-kanban-card--dragging {
@@ -5586,6 +5834,181 @@
             overflow-y: hidden;
         }
 
+        .tm-task-detail-remark-shell {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 52px;
+            border: 1px solid color-mix(in srgb, var(--tm-border-color) 76%, transparent);
+            border-radius: 14px;
+            background: color-mix(in srgb, var(--tm-card-bg) 88%, var(--tm-bg-color) 12%);
+            padding: 12px 44px 12px 12px;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+
+        .tm-task-detail-remark-shell.is-editing {
+            border-color: color-mix(in srgb, var(--tm-primary-color) 42%, var(--tm-border-color) 58%);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 16%, transparent);
+            background: color-mix(in srgb, var(--tm-hover-bg) 72%, var(--tm-card-bg) 28%);
+        }
+
+        .tm-task-detail-remark-preview {
+            position: relative;
+            z-index: 3;
+            min-height: 22px;
+            line-height: 1.6;
+            font-size: 14px;
+            color: var(--tm-text-color);
+            white-space: normal;
+            word-break: break-word;
+            cursor: text;
+            pointer-events: none;
+        }
+
+        .tm-task-detail-remark-preview:focus-visible {
+            outline: none;
+        }
+
+        .tm-task-detail-remark-preview p,
+        .tm-task-detail-remark-preview blockquote,
+        .tm-task-detail-remark-preview ul,
+        .tm-task-detail-remark-preview ol {
+            margin: 0;
+        }
+
+        .tm-task-detail-remark-preview p + p,
+        .tm-task-detail-remark-preview p + blockquote,
+        .tm-task-detail-remark-preview p + ul,
+        .tm-task-detail-remark-preview p + ol,
+        .tm-task-detail-remark-preview blockquote + p,
+        .tm-task-detail-remark-preview blockquote + ul,
+        .tm-task-detail-remark-preview blockquote + ol,
+        .tm-task-detail-remark-preview ul + p,
+        .tm-task-detail-remark-preview ul + blockquote,
+        .tm-task-detail-remark-preview ul + ol,
+        .tm-task-detail-remark-preview ol + p,
+        .tm-task-detail-remark-preview ol + blockquote,
+        .tm-task-detail-remark-preview ol + ul {
+            margin-top: 8px;
+        }
+
+        .tm-task-detail-remark-preview blockquote {
+            padding-left: 10px;
+            border-left: 3px solid color-mix(in srgb, var(--tm-primary-color) 36%, var(--tm-border-color) 64%);
+            color: var(--tm-secondary-text);
+        }
+
+        .tm-task-detail-remark-preview ul,
+        .tm-task-detail-remark-preview ol {
+            padding-left: 20px;
+        }
+
+        .tm-task-detail-remark-preview li + li {
+            margin-top: 4px;
+        }
+
+        .tm-task-detail-remark-preview code {
+            display: inline-block;
+            padding: 0 6px;
+            border-radius: 6px;
+            background: color-mix(in srgb, var(--tm-border-color) 18%, var(--tm-bg-color) 82%);
+            font-family: var(--b3-font-family-code, Consolas, monospace);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .tm-task-detail-remark-link {
+            position: relative;
+            z-index: 4;
+            pointer-events: auto;
+            color: var(--tm-primary-color);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .tm-task-detail-remark-empty {
+            color: var(--tm-secondary-text);
+        }
+
+        .tm-task-detail-remark-editor {
+            display: none;
+            position: relative;
+            z-index: 4;
+            min-height: 80px;
+            padding-right: 8px;
+        }
+
+        .tm-task-detail-remark-shell.is-editing .tm-task-detail-remark-editor {
+            display: block;
+        }
+
+        .tm-task-detail-remark-shell.is-editing .tm-task-detail-remark-preview {
+            display: none;
+        }
+
+        .tm-task-detail-remark-activator {
+            position: absolute;
+            inset: 0 44px 0 0;
+            z-index: 2;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            cursor: text;
+        }
+
+        .tm-task-detail-remark-shell.is-editing .tm-task-detail-remark-activator {
+            display: none;
+        }
+
+        .tm-task-detail-remark-toolbar-toggle {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            z-index: 5;
+            width: 28px;
+            min-width: 28px;
+            height: 28px;
+            padding: 0;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .tm-task-detail-remark-toolbar {
+            display: none;
+            position: relative;
+            z-index: 4;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid color-mix(in srgb, var(--tm-border-color) 70%, transparent);
+            background: color-mix(in srgb, var(--tm-card-bg) 94%, var(--tm-bg-color) 6%);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+        }
+
+        .tm-task-detail-remark-toolbar.is-open {
+            display: inline-flex;
+        }
+
+        .tm-task-detail-remark-toolbar-btn {
+            width: 30px;
+            min-width: 30px;
+            height: 30px;
+            padding: 0;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
         .tm-task-detail-core-chip.is-open {
             border-color: color-mix(in srgb, var(--primary) 42%, var(--border) 58%);
             background: color-mix(in srgb, var(--accent) 72%, var(--input) 28%);
@@ -5869,6 +6292,13 @@
             border-color: var(--tm-primary-color);
             box-shadow: 0 0 0 1px var(--tm-primary-color) inset, 0 12px 24px color-mix(in srgb, var(--tm-primary-color) 14%, transparent);
             background: color-mix(in srgb, var(--tm-bg-color) 88%, var(--tm-primary-color) 12%);
+        }
+
+        .tm-checklist-item.tm-task-row--multi-selected {
+            --tm-checklist-item-border-color: color-mix(in srgb, var(--tm-primary-color) 78%, var(--tm-border-color));
+            border-color: color-mix(in srgb, var(--tm-primary-color) 78%, var(--tm-border-color));
+            box-shadow: 0 0 0 1px color-mix(in srgb, var(--tm-primary-color) 78%, var(--tm-border-color)) inset, 0 10px 20px color-mix(in srgb, var(--tm-primary-color) 12%, transparent);
+            background: color-mix(in srgb, var(--tm-bg-color) 84%, var(--tm-primary-color) 16%);
         }
 
         .tm-checklist-item--done .tm-checklist-title {
@@ -6295,6 +6725,16 @@
             border-radius: 12px;
             box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tm-primary-color) 36%, var(--tm-border-color));
             background-color: color-mix(in srgb, var(--tm-bg-color) 88%, var(--tm-primary-color) 8%) !important;
+            z-index: 1;
+        }
+
+        .tm-checklist-pane--compact .tm-checklist-item.tm-task-row--multi-selected {
+            border: 0;
+            border-bottom: 1px solid color-mix(in srgb, var(--tm-border-color) 92%, transparent);
+            border-bottom-color: transparent;
+            border-radius: 12px;
+            box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tm-primary-color) 44%, var(--tm-border-color));
+            background-color: color-mix(in srgb, var(--tm-bg-color) 84%, var(--tm-primary-color) 12%) !important;
             z-index: 1;
         }
 
@@ -7326,6 +7766,21 @@
 
         .tm-table tr:hover {
             background: var(--tm-hover-bg);
+        }
+
+        .tm-table tbody tr.tm-task-row--multi-selected td,
+        #tmTimelineLeftTable tbody tr.tm-task-row--multi-selected td {
+            box-shadow:
+                inset 0 0 0 999px color-mix(in srgb, var(--tm-primary-color) 18%, transparent),
+                inset 0 -1px 0 var(--tm-table-border-color);
+        }
+
+        .tm-table tbody tr.tm-task-row--multi-selected td:first-child,
+        #tmTimelineLeftTable tbody tr.tm-task-row--multi-selected td:first-child {
+            box-shadow:
+                inset 3px 0 0 var(--tm-primary-color),
+                inset 0 0 0 999px color-mix(in srgb, var(--tm-primary-color) 18%, transparent),
+                inset 0 -1px 0 var(--tm-table-border-color);
         }
 
         .tm-table tr.tm-timer-dim {
@@ -8453,7 +8908,69 @@
             overflow-y: auto;
             overflow-x: hidden;
             padding-right: 2px;
+            margin-bottom: 0;
+        }
+
+        .tm-settings-subtabs {
+            position: sticky;
+            top: 0;
+            z-index: 3;
             margin-bottom: 12px;
+            padding: 2px 0 10px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            touch-action: pan-x;
+            overscroll-behavior-x: contain;
+            background:
+                linear-gradient(180deg,
+                    var(--tm-bg-color) 0%,
+                    var(--tm-bg-color) 84%,
+                    color-mix(in srgb, var(--tm-bg-color) 0%, transparent) 100%);
+        }
+
+        .tm-settings-subtabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tm-settings-subtabs-inner {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 2px;
+        }
+
+        .tm-settings-subtab-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: 1px solid var(--tm-border-color);
+            border-radius: 999px;
+            padding: 7px 12px;
+            background: var(--tm-sidebar-bg, var(--tm-section-bg));
+            color: var(--tm-secondary-text);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tm-settings-subtab-btn:hover {
+            background: var(--tm-hover-bg);
+            color: var(--tm-text-color);
+            border-color: var(--tm-input-border);
+        }
+
+        .tm-settings-subtab-btn.is-active {
+            background: color-mix(in srgb, var(--tm-primary-color) 14%, var(--tm-bg-color));
+            color: var(--tm-primary-color);
+            border-color: color-mix(in srgb, var(--tm-primary-color) 38%, var(--tm-border-color));
+            box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tm-primary-color) 18%, transparent);
         }
 
         .tm-settings-panel {
@@ -8603,7 +9120,31 @@
                 gap: 8px;
             }
             .tm-settings-main {
-                padding: 10px;
+                padding: 10px 10px 0;
+            }
+
+            .tm-settings-subtabs {
+                margin-bottom: 10px;
+                padding-bottom: 8px;
+                overflow: visible;
+                touch-action: auto;
+            }
+
+            .tm-settings-subtabs-inner {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                width: 100%;
+                min-width: 0;
+                gap: 6px;
+                padding: 2px 0;
+            }
+
+            .tm-settings-subtab-btn {
+                width: 100%;
+                min-width: 0;
+                padding: 7px 6px;
+                font-size: 12px;
+                justify-content: center;
             }
         }
 
@@ -8618,6 +9159,7 @@
 
             .tm-settings-content {
                 padding-right: 0;
+                margin-bottom: 0;
             }
 
             .tm-settings-content > * {
@@ -8723,12 +9265,14 @@
             }
 
             .tm-settings-footer {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 8px;
-                flex-wrap: wrap;
             }
 
             .tm-settings-footer .tm-btn {
-                flex: 1 1 calc(50% - 4px);
+                width: 100%;
+                min-width: 0;
                 min-height: 34px;
                 padding: 0 10px;
                 display: inline-flex;
@@ -8857,7 +9401,7 @@
     const __TM_OTHER_BLOCK_TAB_ID = '__tm_other_blocks__';
     const __TM_OTHER_BLOCK_TAB_NAME = '其他块';
     const WHITEBOARD_DATA_CACHE_KEY = 'tm_whiteboard_data_cache';
-    const __TM_BUILTIN_COLUMN_DEFAULT_ORDER = ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'duration', 'spent', 'remark'];
+    const __TM_BUILTIN_COLUMN_DEFAULT_ORDER = ['pinned', 'content', 'status', 'score', 'doc', 'h2', 'priority', 'startDate', 'completionTime', 'remainingTime', 'duration', 'spent', 'remark'];
     const __TM_BUILTIN_COLUMN_WIDTHS = {
         pinned: 48,
         content: 360,
@@ -8868,6 +9412,7 @@
         priority: 96,
         startDate: 90,
         completionTime: 170,
+        remainingTime: 116,
         duration: 96,
         spent: 96,
         remark: 240,
@@ -8882,6 +9427,7 @@
         priority: 8,
         startDate: 7,
         completionTime: 18,
+        remainingTime: 10,
         duration: 8,
         spent: 8,
         remark: 19,
@@ -8907,12 +9453,12 @@
     function __tmNormalizeCustomFieldId(raw, fallback = '') {
         const normalizeToken = (value) => String(value || '').trim().toLowerCase()
             .replace(/\s+/g, '-')
-            .replace(/[^a-z0-9_-]/g, '-')
+            .replace(/[^a-z0-9-]/g, '-')
             .replace(/-+/g, '-')
-            .replace(/^[-_]+|[-_]+$/g, '');
+            .replace(/^-+|-+$/g, '');
         const fallbackToken = normalizeToken(fallback || '');
         const base = normalizeToken(raw || '');
-        return base || fallbackToken || `field_${Date.now().toString(36)}`;
+        return base || fallbackToken || `field-${Date.now().toString(36)}`;
     }
 
     function __tmNormalizeCustomFieldAttrName(raw, fallback = '') {
@@ -9002,11 +9548,11 @@
     function __tmNormalizeCustomFieldOption(option, index = 0, seenIds = null) {
         const source = (option && typeof option === 'object') ? option : {};
         const baseName = String(source.name || source.label || '').trim() || `选项${index + 1}`;
-        let id = __tmNormalizeCustomFieldId(source.id || baseName, `option_${index + 1}`);
+        let id = __tmNormalizeCustomFieldId(source.id || baseName, `option-${index + 1}`);
         const seen = seenIds instanceof Set ? seenIds : new Set();
         let dedupe = 2;
         while (seen.has(id)) {
-            id = `${__tmNormalizeCustomFieldId(source.id || baseName, `option_${index + 1}`)}_${dedupe}`;
+            id = `${__tmNormalizeCustomFieldId(source.id || baseName, `option-${index + 1}`)}-${dedupe}`;
             dedupe += 1;
         }
         seen.add(id);
@@ -9021,24 +9567,27 @@
     function __tmNormalizeCustomFieldDef(field, index = 0, seenIds = null, seenAttrKeys = null) {
         const source = (field && typeof field === 'object') ? field : {};
         const name = String(source.name || source.label || '').trim() || `自定义列${index + 1}`;
-        let id = __tmNormalizeCustomFieldId(source.id || name, `field_${index + 1}`);
+        let id = __tmNormalizeCustomFieldId(source.id || name, `field-${index + 1}`);
         const seen = seenIds instanceof Set ? seenIds : new Set();
         let dedupe = 2;
         while (seen.has(id)) {
-            id = `${__tmNormalizeCustomFieldId(source.id || name, `field_${index + 1}`)}_${dedupe}`;
+            id = `${__tmNormalizeCustomFieldId(source.id || name, `field-${index + 1}`)}-${dedupe}`;
             dedupe += 1;
         }
         seen.add(id);
-        let attrKey = __tmNormalizeCustomFieldAttrName(source.attrKey || name, id || `field_${index + 1}`);
+        let attrKey = __tmNormalizeCustomFieldAttrName(source.attrKey || name, id || `field-${index + 1}`);
         const seenAttrs = seenAttrKeys instanceof Set ? seenAttrKeys : new Set();
         const attrBase = attrKey;
         let attrDedupe = 2;
         while (seenAttrs.has(attrKey)) {
-            attrKey = `${attrBase}_${attrDedupe}`;
+            attrKey = `${attrBase}-${attrDedupe}`;
             attrDedupe += 1;
         }
         seenAttrs.add(attrKey);
-        const type = String(source.type || '').trim() === 'multi' ? 'multi' : 'single';
+        const rawType = String(source.type || '').trim();
+        const type = rawType === 'multi'
+            ? 'multi'
+            : (rawType === 'text' ? 'text' : 'single');
         const optionSeen = new Set();
         const options = (Array.isArray(source.options) ? source.options : [])
             .map((item, optionIndex) => __tmNormalizeCustomFieldOption(item, optionIndex, optionSeen))
@@ -9145,7 +9694,10 @@
         __tmGetCustomFieldDefs().forEach((field) => {
             const key = __tmBuildCustomFieldColumnKey(field?.id);
             if (!key) return;
-            widths[key] = String(field?.type || '').trim() === 'multi' ? 180 : 140;
+            const type = String(field?.type || '').trim();
+            widths[key] = type === 'multi'
+                ? 180
+                : (type === 'text' ? 220 : 140);
         });
         return widths;
     }
@@ -9155,7 +9707,10 @@
         __tmGetCustomFieldDefs().forEach((field) => {
             const key = __tmBuildCustomFieldColumnKey(field?.id);
             if (!key) return;
-            widths[key] = String(field?.type || '').trim() === 'multi' ? 14 : 12;
+            const type = String(field?.type || '').trim();
+            widths[key] = type === 'multi'
+                ? 14
+                : (type === 'text' ? 18 : 12);
         });
         return widths;
     }
@@ -9186,6 +9741,7 @@
         if (raw === 'priority') return '重要性';
         if (raw === 'startDate') return '开始日期';
         if (raw === 'completionTime') return '完成日期';
+        if (raw === 'remainingTime') return '剩余时间';
         if (raw === 'duration') return '时长';
         if (raw === 'spent') return '耗时';
         if (raw === 'remark') return '备注';
@@ -9206,6 +9762,7 @@
             { key: 'priority', label: '重要性', kind: 'builtin' },
             { key: 'startDate', label: '开始日期', kind: 'builtin' },
             { key: 'completionTime', label: '完成日期', kind: 'builtin' },
+            { key: 'remainingTime', label: '剩余时间', kind: 'builtin' },
             { key: 'duration', label: '时长', kind: 'builtin' },
             { key: 'spent', label: '耗时', kind: 'builtin' },
             { key: 'remark', label: '备注', kind: 'builtin' },
@@ -9249,7 +9806,10 @@
 
     function __tmNormalizeCustomFieldValue(field, rawValue) {
         const def = (field && typeof field === 'object') ? field : {};
-        const type = String(def.type || '').trim() === 'multi' ? 'multi' : 'single';
+        const rawType = String(def.type || '').trim();
+        const type = rawType === 'multi'
+            ? 'multi'
+            : (rawType === 'text' ? 'text' : 'single');
         if (type === 'multi') {
             let list = [];
             if (Array.isArray(rawValue)) {
@@ -9277,6 +9837,9 @@
             });
             return out;
         }
+        if (type === 'text') {
+            return String(rawValue ?? '').trim();
+        }
         const rawToken = String(rawValue ?? '').trim();
         if (!rawToken) return '';
         const option = __tmFindCustomFieldOption(def, rawToken);
@@ -9285,7 +9848,10 @@
 
     function __tmSerializeCustomFieldValue(field, value) {
         const def = (field && typeof field === 'object') ? field : {};
-        const type = String(def.type || '').trim() === 'multi' ? 'multi' : 'single';
+        const rawType = String(def.type || '').trim();
+        const type = rawType === 'multi'
+            ? 'multi'
+            : (rawType === 'text' ? 'text' : 'single');
         if (type === 'multi') {
             const list = __tmNormalizeCustomFieldValue(def, value);
             if (!list.length) return '';
@@ -9298,6 +9864,9 @@
                 })
                 .filter(Boolean)
                 .join(', ');
+        }
+        if (type === 'text') {
+            return String(value ?? '').trim();
         }
         const token = String(__tmNormalizeCustomFieldValue(def, value) || '').trim();
         if (!token) return '';
@@ -9364,6 +9933,22 @@
             return opts.allowEmpty === false ? '' : `<span class="tm-status-tag tm-custom-field-tag--empty" style="${__tmBuildStatusChipStyle('#9ca3af')}">${esc(emptyText)}</span>`;
         }
         return `${chips}${remainHtml}`;
+    }
+
+    function __tmBuildCustomFieldDisplayHtml(field, rawValue, options = {}) {
+        const def = (field && typeof field === 'object') ? field : {};
+        const type = String(def.type || '').trim();
+        const opts = (options && typeof options === 'object') ? options : {};
+        if (type === 'text') {
+            const text = String(__tmNormalizeCustomFieldValue(def, rawValue) || '').trim();
+            if (!text) {
+                if (opts.allowEmpty === false) return '';
+                const emptyText = String(opts.emptyText || '').trim() || '未设置';
+                return `<span class="tm-task-remark-text" style="color:var(--tm-secondary-text);">${esc(emptyText)}</span>`;
+            }
+            return `<span class="tm-task-remark-text">${esc(text)}</span>`;
+        }
+        return __tmBuildCustomFieldTagsHtml(def, rawValue, opts);
     }
 
     const MetaStore = {
@@ -9550,6 +10135,7 @@
             dockDefaultViewMode: 'follow-mobile',
             dockChecklistCompactTitleJump: true,
             mobileChecklistCompactTitleJump: true,
+            checklistCompactTitleOpenDetailPage: false,
             enabledViews: ['list', 'checklist', 'timeline', 'kanban', 'calendar', 'whiteboard'],
             kanbanCompactMode: false,
             checklistCompactMode: true,
@@ -9933,6 +10519,7 @@
                                 } else {
                                     this.data.mobileChecklistCompactTitleJump = this.data.dockChecklistCompactTitleJump;
                                 }
+                                if (typeof cloudData.checklistCompactTitleOpenDetailPage === 'boolean') this.data.checklistCompactTitleOpenDetailPage = cloudData.checklistCompactTitleOpenDetailPage;
                                 if (Array.isArray(cloudData.enabledViews)) this.data.enabledViews = __tmNormalizeEnabledViews(cloudData.enabledViews);
                                 if (typeof cloudData.kanbanCompactMode === 'boolean') this.data.kanbanCompactMode = cloudData.kanbanCompactMode;
                                 if (typeof cloudData.checklistCompactMode === 'boolean') this.data.checklistCompactMode = cloudData.checklistCompactMode;
@@ -10226,6 +10813,7 @@
             this.data.dockDefaultViewMode = Storage.get('tm_dock_default_view_mode', this.data.dockDefaultViewMode || 'follow-mobile');
             this.data.dockChecklistCompactTitleJump = !!Storage.get('tm_dock_checklist_compact_title_jump', this.data.dockChecklistCompactTitleJump);
             this.data.mobileChecklistCompactTitleJump = !!Storage.get('tm_mobile_checklist_compact_title_jump', this.data.mobileChecklistCompactTitleJump ?? this.data.dockChecklistCompactTitleJump);
+            this.data.checklistCompactTitleOpenDetailPage = !!Storage.get('tm_checklist_compact_title_open_detail_page', this.data.checklistCompactTitleOpenDetailPage);
             this.data.enabledViews = __tmNormalizeEnabledViews(Storage.get('tm_enabled_views', this.data.enabledViews));
             this.data.kanbanCompactMode = !!Storage.get('tm_kanban_compact_mode', this.data.kanbanCompactMode);
             this.data.checklistCompactMode = !!Storage.get('tm_checklist_compact_mode', this.data.checklistCompactMode);
@@ -10529,6 +11117,7 @@
             Storage.set('tm_dock_default_view_mode', String(this.data.dockDefaultViewMode || 'follow-mobile').trim() || 'follow-mobile');
             Storage.set('tm_dock_checklist_compact_title_jump', !!this.data.dockChecklistCompactTitleJump);
             Storage.set('tm_mobile_checklist_compact_title_jump', !!this.data.mobileChecklistCompactTitleJump);
+            Storage.set('tm_checklist_compact_title_open_detail_page', !!this.data.checklistCompactTitleOpenDetailPage);
             Storage.set('tm_enabled_views', this.data.enabledViews);
             Storage.set('tm_kanban_compact_mode', !!this.data.kanbanCompactMode);
             Storage.set('tm_checklist_compact_mode', !!this.data.checklistCompactMode);
@@ -11363,7 +11952,7 @@
             }, {});
             const customFieldRuleFields = __tmGetCustomFieldDefs().map((field) => {
                 const fieldId = String(field?.id || '').trim();
-                if (!fieldId) return null;
+                if (!fieldId || String(field?.type || '').trim() === 'text') return null;
                 const optionIds = Array.isArray(field?.options)
                     ? field.options.map((option) => String(option?.id || '').trim()).filter(Boolean)
                     : [];
@@ -11547,7 +12136,7 @@
             ];
             __tmGetCustomFieldDefs().forEach((field) => {
                 const fieldId = String(field?.id || '').trim();
-                if (!fieldId) return;
+                if (!fieldId || String(field?.type || '').trim() === 'text') return;
                 sortFields.push({
                     value: __tmBuildCustomFieldColumnKey(fieldId),
                     label: `${String(field?.name || fieldId).trim() || fieldId}（自定义列）`,
@@ -14619,6 +15208,9 @@
         checklistDetailDismissed: false,
         kanbanDetailTaskId: '',
         kanbanDetailAnchorTaskId: '',
+        multiSelectModeEnabled: false,
+        multiSelectedTaskIds: [],
+        multiBulkEditFieldKey: '',
         calendarSideDockDragHidden: false,
         listRenderStep: 100,
         listRenderLimit: 100,
@@ -14626,9 +15218,15 @@
         calendarDockDate: '',
         docTabsHidden: false,
         docTabsScrollLeft: 0,
+        settingsSubtabsScrollLeft: 0,
         dockTaskPointerDragAbort: null,
         dockTaskPointerGestureCleanup: null,
         dockTaskPointerSuppressClickUntil: 0,
+        multiSelectPointerSweepAbort: null,
+        multiSelectPointerGestureCleanup: null,
+        multiSelectMenuEl: null,
+        multiSelectMenuAnchorEl: null,
+        multiSelectMenuCloseHandler: null,
         mobileBottomViewbarActiveUntil: 0,
         mobileBottomViewbarTimer: 0,
         mobileViewportRefreshSig: '',
@@ -14748,6 +15346,14 @@
         activeLanes: new Set(),
         drainTimer: 0,
         persistTimer: 0,
+    };
+    const __TM_UNDO_STACK_LIMIT = 80;
+    const __tmUndoState = {
+        seq: 0,
+        undoStack: [],
+        redoStack: [],
+        applying: false,
+        keydownHandler: null,
     };
 
     function __tmNormalizeQueueTaskValue(field, value) {
@@ -15019,6 +15625,7 @@
             return await __tmSetDoneKernel(op?.data?.taskId, !!op?.data?.done, null, {
                 force: true,
                 statusPatch: op?.data?.statusPatch,
+                suppressHint: op?.data?.suppressHint === true,
             });
         }
         if (type === 'moveTask') {
@@ -16844,6 +17451,9 @@
             checklistDetailDismissed: !!state.checklistDetailDismissed,
             kanbanDetailTaskId: String(state.kanbanDetailTaskId || ''),
             kanbanDetailAnchorTaskId: String(state.kanbanDetailAnchorTaskId || ''),
+            multiSelectModeEnabled: !!state.multiSelectModeEnabled,
+            multiSelectedTaskIds: Array.isArray(state.multiSelectedTaskIds) ? state.multiSelectedTaskIds.slice() : [],
+            multiBulkEditFieldKey: String(state.multiBulkEditFieldKey || ''),
             docTabsHidden: !!state.docTabsHidden,
             aiSidebarOpen: !!state.aiSidebarOpen,
             aiMobilePanelOpen: !!state.aiMobilePanelOpen,
@@ -16869,6 +17479,11 @@
         state.checklistDetailDismissed = !!snap.checklistDetailDismissed;
         state.kanbanDetailTaskId = String(snap.kanbanDetailTaskId || '');
         state.kanbanDetailAnchorTaskId = String(snap.kanbanDetailAnchorTaskId || '');
+        state.multiSelectModeEnabled = !!snap.multiSelectModeEnabled;
+        state.multiSelectedTaskIds = Array.isArray(snap.multiSelectedTaskIds)
+            ? snap.multiSelectedTaskIds.map((id) => String(id || '').trim()).filter(Boolean)
+            : [];
+        state.multiBulkEditFieldKey = String(snap.multiBulkEditFieldKey || '').trim();
         state.docTabsHidden = !!snap.docTabsHidden;
         state.aiSidebarOpen = !!snap.aiSidebarOpen;
         state.aiMobilePanelOpen = !!snap.aiMobilePanelOpen;
@@ -16876,6 +17491,736 @@
         state.listRenderLimit = Number(snap.listRenderLimit) || 100;
         state.listRenderStep = Number(snap.listRenderStep) || 100;
         state.viewScroll = __tmCloneHostSessionValue(snap.viewScroll || {});
+    }
+
+    function __tmIsMultiSelectSupportedView(mode) {
+        const viewMode = String(mode || state.viewMode || '').trim();
+        if (viewMode === 'whiteboard') return __tmIsWhiteboardAllTabsStreamMode();
+        return viewMode === 'list' || viewMode === 'checklist' || viewMode === 'timeline' || viewMode === 'kanban';
+    }
+
+    function __tmNormalizeMultiSelectedTaskIds(ids) {
+        const out = [];
+        const seen = new Set();
+        (Array.isArray(ids) ? ids : []).forEach((rawId) => {
+            const id = String(rawId || '').trim();
+            if (!id || seen.has(id)) return;
+            if (state.flatTasks && Object.keys(state.flatTasks).length > 0 && !state.flatTasks[id]) return;
+            seen.add(id);
+            out.push(id);
+        });
+        return out;
+    }
+
+    function __tmGetMultiSelectedTaskIds() {
+        return __tmNormalizeMultiSelectedTaskIds(state.multiSelectedTaskIds);
+    }
+
+    function __tmGetMultiSelectedTaskIdSet() {
+        return new Set(__tmGetMultiSelectedTaskIds());
+    }
+
+    function __tmIsMultiSelectActive(mode) {
+        return !!state.multiSelectModeEnabled && __tmIsMultiSelectSupportedView(mode);
+    }
+
+    function __tmIsTaskMultiSelected(taskId) {
+        const id = String(taskId || '').trim();
+        if (!id) return false;
+        return __tmGetMultiSelectedTaskIdSet().has(id);
+    }
+
+    function __tmRefreshMultiSelectBarInPlace(modalEl) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) return false;
+        const bar = modal.querySelector('.tm-multi-bulkbar');
+        if (!(bar instanceof HTMLElement)) return false;
+        const count = __tmGetMultiSelectedTaskIds().length;
+        const countEl = bar.querySelector('[data-tm-multi-count]');
+        if (countEl instanceof HTMLElement) countEl.textContent = String(count);
+        bar.querySelectorAll('[data-tm-multi-action]').forEach((btn) => {
+            try { btn.toggleAttribute('disabled', count <= 0); } catch (e) {
+                try { btn.disabled = count <= 0; } catch (e2) {}
+            }
+        });
+        if (count <= 0) {
+            try { __tmCloseMultiSelectMoreMenu(); } catch (e) {}
+        }
+        try { bar.setAttribute('data-tm-multi-has-selection', count > 0 ? 'true' : 'false'); } catch (e) {}
+        return true;
+    }
+
+    function __tmRefreshMultiSelectUiInPlace(modalEl, options = {}) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) return false;
+        const refreshed = __tmRefreshMultiSelectedRowsInPlace(modal);
+        try { __tmRefreshMultiSelectBarInPlace(modal); } catch (e) {}
+        if (String(state.viewMode || '').trim() === 'checklist') {
+            try { __tmRefreshChecklistSelectionInPlace(modal); } catch (e) {}
+        } else if (!refreshed && options.renderFallback !== false) {
+            try { render(); } catch (e) {}
+        }
+        return refreshed;
+    }
+
+    function __tmAddTaskIdsToMultiSelection(ids, options = {}) {
+        if (!__tmIsMultiSelectActive()) return false;
+        const nextSet = __tmGetMultiSelectedTaskIdSet();
+        let changed = false;
+        (Array.isArray(ids) ? ids : [ids]).forEach((rawId) => {
+            const id = String(rawId || '').trim();
+            if (!id || nextSet.has(id)) return;
+            nextSet.add(id);
+            changed = true;
+        });
+        if (!changed && options.forceRefresh !== true) return false;
+        __tmSetMultiSelectedTaskIds(Array.from(nextSet), { render: false });
+        if (options.render !== false && state.modal && document.body.contains(state.modal)) {
+            __tmRefreshMultiSelectUiInPlace(state.modal, { renderFallback: options.renderFallback });
+        }
+        return changed;
+    }
+
+    function __tmSetTaskMultiSelection(taskId, selected, options = {}) {
+        const id = String(taskId || '').trim();
+        if (!id || !__tmIsMultiSelectActive()) return false;
+        const nextSet = __tmGetMultiSelectedTaskIdSet();
+        const shouldSelect = !!selected;
+        const hasSelection = nextSet.has(id);
+        if (shouldSelect === hasSelection && options.forceRefresh !== true) return false;
+        if (shouldSelect) nextSet.add(id);
+        else nextSet.delete(id);
+        __tmSetMultiSelectedTaskIds(Array.from(nextSet), { render: false });
+        if (options.render !== false && state.modal && document.body.contains(state.modal)) {
+            __tmRefreshMultiSelectUiInPlace(state.modal, { renderFallback: options.renderFallback });
+        }
+        return shouldSelect !== hasSelection;
+    }
+
+    function __tmSetMultiSelectedTaskIds(ids, options = {}) {
+        state.multiSelectedTaskIds = __tmNormalizeMultiSelectedTaskIds(ids);
+        if (state.multiSelectedTaskIds.length === 0) {
+            state.multiBulkEditFieldKey = '';
+        }
+        if (state.modal && document.body.contains(state.modal)) {
+            try { __tmRefreshMultiSelectBarInPlace(state.modal); } catch (e) {}
+        }
+        if (options.render !== false && state.modal && document.body.contains(state.modal)) {
+            try { render(); } catch (e) {}
+        }
+    }
+
+    function __tmClearMultiTaskSelection(options = {}) {
+        __tmSetMultiSelectedTaskIds([], { render: false });
+        state.multiBulkEditFieldKey = '';
+        if (options.keepMode !== true) state.multiSelectModeEnabled = false;
+        if (options.render !== false && state.modal && document.body.contains(state.modal)) {
+            try { render(); } catch (e) {}
+        }
+    }
+
+    window.tmToggleMultiSelectMode = function(enabled, options = {}) {
+        const next = typeof enabled === 'boolean' ? enabled : !state.multiSelectModeEnabled;
+        state.multiSelectModeEnabled = !!next;
+        if (!state.multiSelectModeEnabled) {
+            __tmClearMultiTaskSelection({ keepMode: true, render: false });
+            state.multiBulkEditFieldKey = '';
+        } else if (String(state.viewMode || '').trim() === 'checklist') {
+            state.detailTaskId = '';
+            state.checklistDetailDismissed = true;
+            state.checklistDetailSheetOpen = false;
+        } else if (!__tmIsMultiSelectSupportedView()) {
+            try { hint('ℹ 当前仅清单、表格、时间轴、看板和卡片流支持多选模式', 'info'); } catch (e) {}
+        }
+        if (options.render !== false && state.modal && document.body.contains(state.modal)) {
+            try { render(); } catch (e) {}
+        }
+    };
+
+    function __tmRefreshMultiSelectedRowsInPlace(modalEl) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) return false;
+        const selectedSet = __tmGetMultiSelectedTaskIdSet();
+        let touched = false;
+        modal.querySelectorAll('#tmTaskTable tbody tr[data-id], #tmTimelineLeftTable tbody tr[data-id], .tm-checklist-item[data-id], .tm-kanban-card[data-id], .tm-whiteboard-stream-task-head[data-id]').forEach((row) => {
+            if (!(row instanceof HTMLElement)) return;
+            const id = String(row.getAttribute('data-id') || '').trim();
+            row.classList.toggle('tm-task-row--multi-selected', !!id && selectedSet.has(id));
+            try { row.setAttribute('aria-selected', !!id && selectedSet.has(id) ? 'true' : 'false'); } catch (e) {}
+            touched = true;
+        });
+        return touched;
+    }
+
+    function __tmToggleTaskMultiSelection(taskId, options = {}) {
+        const id = String(taskId || '').trim();
+        if (!id || !__tmIsMultiSelectActive()) return false;
+        const nextSet = __tmGetMultiSelectedTaskIdSet();
+        if (nextSet.has(id)) nextSet.delete(id);
+        else nextSet.add(id);
+        __tmSetMultiSelectedTaskIds(Array.from(nextSet), { render: false });
+        if (options.render !== false && state.modal && document.body.contains(state.modal)) {
+            __tmRefreshMultiSelectUiInPlace(state.modal);
+        }
+        return true;
+    }
+
+    function __tmCloneUndoValue(value) {
+        if (value == null) return value;
+        if (typeof value !== 'object') return value;
+        try { return JSON.parse(JSON.stringify(value)); } catch (e) { return value; }
+    }
+
+    function __tmUndoComparableValue(value) {
+        if (value == null) return '';
+        if (Array.isArray(value)) {
+            try { return JSON.stringify(value); } catch (e) { return String(value); }
+        }
+        if (typeof value === 'object') {
+            try { return JSON.stringify(value); } catch (e) { return String(value); }
+        }
+        return String(value);
+    }
+
+    function __tmCreateUndoRecord(definition = {}) {
+        const def = (definition && typeof definition === 'object') ? definition : {};
+        return {
+            id: String(def.id || `tmundo_${Date.now()}_${++__tmUndoState.seq}`).trim(),
+            type: String(def.type || '').trim(),
+            taskId: String(def.taskId || '').trim(),
+            requestedTaskId: String(def.requestedTaskId || '').trim(),
+            patch: __tmCloneUndoValue(def.patch && typeof def.patch === 'object' ? def.patch : {}),
+            inversePatch: __tmCloneUndoValue(def.inversePatch && typeof def.inversePatch === 'object' ? def.inversePatch : {}),
+            label: String(def.label || '').trim(),
+            source: String(def.source || '').trim(),
+            createdAt: Math.max(0, Number(def.createdAt) || Date.now()),
+        };
+    }
+
+    function __tmPushUndoRecord(definition = {}, options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const record = __tmCreateUndoRecord(definition);
+        if (!record.type || !record.taskId) return null;
+        __tmUndoState.undoStack.push(record);
+        if (__tmUndoState.undoStack.length > __TM_UNDO_STACK_LIMIT) {
+            __tmUndoState.undoStack.splice(0, __tmUndoState.undoStack.length - __TM_UNDO_STACK_LIMIT);
+        }
+        if (opts.clearRedo !== false) __tmUndoState.redoStack = [];
+        return record;
+    }
+
+    function __tmGetUndoLabel(label, fallback = '最近一次修改') {
+        const text = String(label || '').trim();
+        return text || String(fallback || '最近一次修改').trim() || '最近一次修改';
+    }
+
+    function __tmBuildAttrUndoLabel(attrKey, fallbackName = '') {
+        const key = String(attrKey || '').trim();
+        const named = String(fallbackName || '').trim();
+        if (named) return named;
+        if (key === 'custom-status') return '状态';
+        if (key === 'custom-priority') return '优先级';
+        if (key === 'custom-start-date') return '开始日期';
+        if (key === 'custom-completion-time') return '完成时间';
+        if (key === 'custom-duration') return '时长';
+        if (key === 'custom-remark') return '备注';
+        const field = __tmGetCustomFieldDefByAttrStorageKey(key);
+        const fieldName = String(field?.name || '').trim();
+        return fieldName || '任务字段';
+    }
+
+    function __tmExtractUndoEligibleMetaPatch(patch) {
+        const input = (patch && typeof patch === 'object') ? patch : {};
+        const out = {};
+        ['customStatus', 'startDate', 'completionTime', 'duration', 'remark'].forEach((key) => {
+            if (Object.prototype.hasOwnProperty.call(input, key)) out[key] = input[key];
+        });
+        return out;
+    }
+
+    function __tmBuildUndoLabelFromMetaPatch(patch, fallback = '任务字段') {
+        const nextPatch = __tmExtractUndoEligibleMetaPatch(patch);
+        const keys = Object.keys(nextPatch);
+        if (keys.length === 1) {
+            const key = keys[0];
+            if (key === 'customStatus') return '状态';
+            if (key === 'startDate') return '开始日期';
+            if (key === 'completionTime') return '完成时间';
+            if (key === 'duration') return '时长';
+            if (key === 'remark') return '备注';
+        }
+        if (keys.length === 2 && keys.includes('startDate') && keys.includes('completionTime')) return '日期';
+        return String(fallback || '任务字段').trim() || '任务字段';
+    }
+
+    function __tmBuildMetaPatchFromAttrUpdate(attrKey, attrValue) {
+        const key = String(attrKey || '').trim();
+        if (!key) return null;
+        const rawValue = attrValue == null ? '' : String(attrValue);
+        const trimmedValue = String(rawValue || '').trim();
+        if (key === 'custom-status') return { patch: { customStatus: trimmedValue }, attrValue: trimmedValue };
+        if (key === 'custom-priority') return { patch: { priority: trimmedValue }, attrValue: trimmedValue };
+        if (key === 'custom-start-date') return { patch: { startDate: trimmedValue }, attrValue: trimmedValue };
+        if (key === 'custom-completion-time') return { patch: { completionTime: trimmedValue }, attrValue: trimmedValue };
+        if (key === 'custom-duration') return { patch: { duration: trimmedValue }, attrValue: trimmedValue };
+        if (key === 'custom-remark') return { patch: { remark: rawValue }, attrValue: rawValue };
+        if (key === 'custom-pinned') {
+            const pin = trimmedValue === '1' || trimmedValue.toLowerCase() === 'true';
+            return { patch: { pinned: pin ? '1' : '' }, attrValue: pin ? '1' : '' };
+        }
+        const field = __tmGetCustomFieldDefByAttrStorageKey(key);
+        const fieldId = String(field?.id || '').trim();
+        if (!field || !fieldId) return null;
+        const normalizedValue = __tmNormalizeCustomFieldValue(field, rawValue);
+        const serializedValue = __tmSerializeCustomFieldValue(field, normalizedValue);
+        return {
+            patch: { customFieldValues: { [fieldId]: normalizedValue } },
+            attrValue: serializedValue,
+        };
+    }
+
+    function __tmIsPatchNoop(nextPatch, inversePatch) {
+        const patch = (nextPatch && typeof nextPatch === 'object') ? nextPatch : {};
+        const inverse = (inversePatch && typeof inversePatch === 'object') ? inversePatch : {};
+        const keys = Object.keys(patch);
+        if (!keys.length) return true;
+        return keys.every((key) => {
+            const nextValue = __tmNormalizeQueueTaskValue(key, patch[key]);
+            const prevValue = __tmNormalizeQueueTaskValue(key, inverse[key]);
+            return __tmUndoComparableValue(nextValue) === __tmUndoComparableValue(prevValue);
+        });
+    }
+
+    function __tmDispatchTaskAttrPatchUpdated(taskId, patch, extra = {}) {
+        const tid = String(taskId || '').trim();
+        if (!tid || !patch || typeof patch !== 'object') return;
+        const attrs = __tmBuildAttrPayloadFromPatch(patch);
+        Object.entries(attrs || {}).forEach(([attrKey, value]) => {
+            const key = String(attrKey || '').trim();
+            if (!key) return;
+            try {
+                window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
+                    detail: {
+                        taskId: tid,
+                        attrKey: key,
+                        value: value == null ? '' : String(value),
+                        ...extra,
+                    }
+                }));
+            } catch (e) {}
+        });
+    }
+
+    async function __tmResolveTaskMutationContext(taskId) {
+        const requestedId = String(taskId || '').trim();
+        if (!requestedId) return null;
+        let resolvedId = requestedId;
+        let task = state.flatTasks?.[requestedId] || null;
+        if (!task) {
+            try {
+                const nextResolved = await __tmResolveTaskIdFromAnyBlockId(requestedId);
+                if (nextResolved) resolvedId = String(nextResolved || '').trim() || requestedId;
+            } catch (e) {}
+        }
+        if (!task && resolvedId && resolvedId !== requestedId) {
+            task = state.flatTasks?.[resolvedId] || null;
+        }
+        if (!task) {
+            try { task = await __tmEnsureTaskInStateById(resolvedId || requestedId); } catch (e) { task = null; }
+        }
+        if (!task && resolvedId && resolvedId !== requestedId) {
+            try { task = await __tmBuildTaskLikeFromBlockId(resolvedId); } catch (e) { task = null; }
+        }
+        if (!task) {
+            try { task = await __tmBuildTaskLikeFromBlockId(requestedId); } catch (e) { task = null; }
+        }
+        if (task && typeof task === 'object') {
+            try {
+                task = __tmCacheTaskInState(task, {
+                    docNameFallback: task.doc_name || task.docName || '未命名文档'
+                }) || task;
+            } catch (e) {}
+        }
+        const persistId = String(task?.id || resolvedId || requestedId).trim();
+        if (!persistId) return null;
+        return {
+            requestedId,
+            resolvedId,
+            persistId,
+            task: task || null,
+            docId: String(task?.root_id || task?.docId || '').trim(),
+        };
+    }
+
+    function __tmRefreshViewsAfterTaskMutation(options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        if (opts.refresh === false) return;
+        let refreshed = false;
+        if (opts.refreshCalendar !== false) {
+            try {
+                if (globalThis.__tmCalendar && typeof globalThis.__tmCalendar.refreshInPlace === 'function') {
+                    globalThis.__tmCalendar.refreshInPlace({ hard: opts.hard === true });
+                    refreshed = true;
+                }
+            } catch (e) {}
+        }
+        try {
+            __tmRefreshMainViewInPlace({ withFilters: opts.withFilters !== false });
+            refreshed = true;
+        } catch (e) {}
+        if (!refreshed) {
+            try { __tmScheduleRender({ withFilters: opts.withFilters !== false }); } catch (e) {
+                try { render(); } catch (e2) {}
+            }
+        }
+    }
+
+    async function __tmApplyTaskMetaPatchWithUndo(taskId, patch, options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const nextPatch = (patch && typeof patch === 'object') ? patch : {};
+        if (!Object.keys(nextPatch).length) return { ok: true, changed: false, taskId: String(taskId || '').trim() };
+        const context = await __tmResolveTaskMutationContext(taskId);
+        if (!context?.persistId) throw new Error('未找到任务');
+        const inversePatch = __tmCaptureTaskPatchInverse(context.persistId, nextPatch);
+        if (__tmIsPatchNoop(nextPatch, inversePatch)) {
+            return {
+                ok: true,
+                changed: false,
+                taskId: context.persistId,
+                requestedTaskId: context.requestedId,
+                patch: __tmCloneUndoValue(nextPatch),
+                inversePatch,
+            };
+        }
+        await __tmPersistMetaAndAttrsAsync(context.persistId, nextPatch, {
+            queued: opts.queued === true,
+            background: opts.background === true,
+            skipFlush: opts.skipFlush,
+            docId: context.docId,
+            renderOptimistic: opts.renderOptimistic,
+            withFilters: opts.withFilters,
+        });
+        __tmApplyAttrPatchLocally(context.persistId, nextPatch, { render: false, withFilters: opts.withFilters !== false });
+        try {
+            if (context.docId) __tmInvalidateTasksQueryCacheByDocId(context.docId);
+            else __tmInvalidateAllSqlCaches();
+        } catch (e) {}
+        try { window.__tmCalendarAllTasksCache = null; } catch (e) {}
+        __tmRefreshViewsAfterTaskMutation({
+            refresh: opts.refresh !== false,
+            refreshCalendar: opts.refreshCalendar !== false,
+            withFilters: opts.withFilters !== false,
+            hard: opts.hard === true,
+        });
+        if (opts.broadcast !== false) {
+            __tmDispatchTaskAttrPatchUpdated(opts.broadcastTaskId || context.requestedId || context.persistId, nextPatch, {
+                resolvedTaskId: context.persistId,
+                source: String(opts.source || '').trim(),
+            });
+        }
+        if (opts.recordUndo !== false && !__tmUndoState.applying) {
+            __tmPushUndoRecord({
+                type: 'attrPatch',
+                taskId: context.persistId,
+                requestedTaskId: context.requestedId,
+                patch: nextPatch,
+                inversePatch,
+                label: __tmGetUndoLabel(opts.label, '任务字段'),
+                source: String(opts.source || '').trim(),
+            });
+        }
+        return {
+            ok: true,
+            changed: true,
+            taskId: context.persistId,
+            requestedTaskId: context.requestedId,
+            patch: __tmCloneUndoValue(nextPatch),
+            inversePatch,
+        };
+    }
+
+    async function __tmApplyTaskAttrUpdateWithUndo(taskId, attrKey, attrValue, options = {}) {
+        const key = String(attrKey || '').trim();
+        const meta = __tmBuildMetaPatchFromAttrUpdate(key, attrValue);
+        if (!meta || !meta.patch) throw new Error('未找到可更新字段');
+        const opts = (options && typeof options === 'object') ? options : {};
+        const result = await __tmApplyTaskMetaPatchWithUndo(taskId, meta.patch, {
+            ...opts,
+            label: __tmGetUndoLabel(opts.label, __tmBuildAttrUndoLabel(key, opts.fieldName)),
+        });
+        return {
+            ...result,
+            attrKey: key,
+            attrValue: meta.attrValue,
+        };
+    }
+
+    async function __tmUndoLastMutation(options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        if (__tmUndoState.applying) return false;
+        const record = __tmUndoState.undoStack.pop();
+        if (!record) {
+            if (opts.silentEmpty !== true) hint('ℹ 当前没有可撤销的修改', 'info');
+            return false;
+        }
+        __tmUndoState.applying = true;
+        try {
+            if (record.type === 'attrPatch') {
+                await __tmApplyTaskMetaPatchWithUndo(record.taskId || record.requestedTaskId, record.inversePatch, {
+                    recordUndo: false,
+                    refresh: true,
+                    refreshCalendar: true,
+                    source: 'undo',
+                    label: record.label,
+                    broadcastTaskId: record.requestedTaskId || record.taskId,
+                });
+            } else if (record.type === 'setDone') {
+                const statusPatch = {
+                    ...((record.inversePatch && typeof record.inversePatch === 'object') ? record.inversePatch : {})
+                };
+                delete statusPatch.done;
+                await window.tmSetDone(record.taskId || record.requestedTaskId, !!record.inversePatch?.done, null, {
+                    recordUndo: false,
+                    statusPatch: Object.keys(statusPatch).length ? statusPatch : null,
+                    suppressHint: true,
+                    source: 'undo',
+                });
+            } else {
+                throw new Error(`未支持的撤销类型: ${record.type || 'unknown'}`);
+            }
+            __tmUndoState.redoStack.push(__tmCreateUndoRecord(record));
+            hint(`✅ 已撤销${__tmGetUndoLabel(record.label) ? `：${__tmGetUndoLabel(record.label)}` : ''}`, 'success');
+            return true;
+        } catch (e) {
+            __tmUndoState.undoStack.push(record);
+            if (opts.silentError !== true) hint(`❌ 撤销失败: ${e?.message || String(e)}`, 'error');
+            return false;
+        } finally {
+            __tmUndoState.applying = false;
+        }
+    }
+
+    function __tmShouldIgnoreUndoShortcutTarget(target) {
+        const el = target instanceof Element ? target : null;
+        if (!el) return false;
+        if (el.closest('input,textarea,select,[contenteditable="true"],[contenteditable=""],.ace_editor,.CodeMirror,.cm-editor')) return true;
+        const role = String(el.getAttribute?.('role') || '').trim().toLowerCase();
+        if (role === 'textbox' || role === 'combobox') return true;
+        return false;
+    }
+
+    function __tmBindUndoShortcut() {
+        if (__tmUndoState.keydownHandler || __tmIsMobileDevice()) return;
+        __tmUndoState.keydownHandler = (event) => {
+            if (!event || event.defaultPrevented) return;
+            if (__tmIsMobileDevice()) return;
+            if (event.isComposing) return;
+            const key = String(event.key || '').toLowerCase();
+            if (key !== 'z') return;
+            if (!event.ctrlKey && !event.metaKey) return;
+            if (event.altKey || event.shiftKey) return;
+            if (!__tmUndoState.undoStack.length) return;
+            if (__tmShouldIgnoreUndoShortcutTarget(event.target)) return;
+            try { event.preventDefault(); } catch (e) {}
+            try { event.stopPropagation(); } catch (e) {}
+            void __tmUndoLastMutation({ silentEmpty: true, silentError: false });
+        };
+        try { document.addEventListener('keydown', __tmUndoState.keydownHandler, true); } catch (e) {}
+    }
+
+    function __tmResolveMultiSelectSweepSource(target) {
+        if (!__tmIsMultiSelectActive()) return null;
+        const el = target instanceof Element ? target : null;
+        if (!(el instanceof Element)) return null;
+        const candidate = el.closest('.tm-checklist-item[data-id], #tmTimelineLeftTable tbody tr[data-id], #tmTaskTable tbody tr[data-id], .tm-kanban-card[data-id], .tm-whiteboard-stream-task-head[data-id]');
+        if (!(candidate instanceof HTMLElement)) return null;
+        const taskId = String(candidate.getAttribute('data-id') || '').trim();
+        if (!taskId) return null;
+        const isKanban = candidate.classList.contains('tm-kanban-card');
+        const isWhiteboardStream = candidate.classList.contains('tm-whiteboard-stream-task-head');
+        const skipSelector = isKanban
+            ? 'input,button,select,textarea,a,label,[contenteditable="true"],.tm-task-checkbox,.tm-task-checkbox-wrap,.tm-kanban-toggle,.tm-kanban-more,.tm-status-tag,.tm-kanban-chip,.tm-priority-jira,.tm-kanban-priority-chip'
+            : (isWhiteboardStream
+                ? 'input,button,select,textarea,a,label,[contenteditable="true"],.tm-task-checkbox,.tm-task-checkbox-wrap,.tm-kanban-toggle'
+                : 'input,button,select,textarea,a,label,[contenteditable="true"],.tm-tree-toggle,.tm-col-resize,.tm-checklist-mobile-toggle,.tm-status-tag');
+        if (el.closest(skipSelector)) return null;
+        return { taskId, sourceEl: candidate };
+    }
+
+    function __tmResolveMultiSelectRowFromPoint(clientX, clientY) {
+        if (!Number.isFinite(Number(clientX)) || !Number.isFinite(Number(clientY))) return null;
+        let hit = null;
+        try { hit = document.elementFromPoint(Number(clientX), Number(clientY)); } catch (e) {}
+        if (!(hit instanceof Element)) return null;
+        const row = hit.closest('.tm-checklist-item[data-id], #tmTimelineLeftTable tbody tr[data-id], #tmTaskTable tbody tr[data-id], .tm-kanban-card[data-id], .tm-whiteboard-stream-task-head[data-id]');
+        if (!(row instanceof HTMLElement)) return null;
+        const taskId = String(row.getAttribute('data-id') || '').trim();
+        if (!taskId) return null;
+        return { taskId, rowEl: row };
+    }
+
+    function __tmBindMultiSelectPointerSweep(modalEl) {
+        try { state.multiSelectPointerSweepAbort?.abort?.(); } catch (e) {}
+        state.multiSelectPointerSweepAbort = null;
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) return;
+        if (!__tmIsMultiSelectActive()) return;
+        const viewMode = String(state.viewMode || '').trim();
+        if (!__tmIsMultiSelectSupportedView(viewMode)) return;
+        const abort = new AbortController();
+        state.multiSelectPointerSweepAbort = abort;
+
+        modal.addEventListener('dragstart', (ev) => {
+            if (!__tmIsMultiSelectActive()) return;
+            const source = __tmResolveMultiSelectSweepSource(ev?.target);
+            if (!source) return;
+            try { ev.preventDefault(); } catch (e) {}
+            try { ev.stopPropagation(); } catch (e) {}
+        }, { capture: true, signal: abort.signal });
+
+        modal.addEventListener('pointerdown', (ev) => {
+            if (!__tmIsMultiSelectActive()) return;
+            if (ev && typeof ev.button === 'number' && ev.button !== 0) return;
+            const pointerType = String(ev?.pointerType || '').trim().toLowerCase();
+            if (pointerType === 'touch') return;
+            const source = __tmResolveMultiSelectSweepSource(ev?.target);
+            if (!source) return;
+
+            try { state.multiSelectPointerGestureCleanup?.(); } catch (e) {}
+
+            const taskId = String(source.taskId || '').trim();
+            const sourceEl = source.sourceEl instanceof HTMLElement ? source.sourceEl : null;
+            if (!taskId || !(sourceEl instanceof HTMLElement)) return;
+
+            const pointerId = Number.isFinite(Number(ev?.pointerId)) ? Number(ev.pointerId) : NaN;
+            const threshold = 4;
+            const suppressClickMs = 260;
+            const baselineSelectedSet = __tmGetMultiSelectedTaskIdSet();
+            const sweepPath = [];
+            const startX = Number(ev?.clientX) || 0;
+            const startY = Number(ev?.clientY) || 0;
+            let lastX = startX;
+            let lastY = startY;
+            let sweeping = false;
+            let ended = false;
+            let captured = false;
+
+            const samePointer = (e2) => {
+                if (!Number.isFinite(pointerId)) return true;
+                const currentPointerId = Number(e2?.pointerId);
+                if (!Number.isFinite(currentPointerId)) return true;
+                return currentPointerId === pointerId;
+            };
+
+            const capturePointer = () => {
+                if (captured || !Number.isFinite(pointerId) || typeof sourceEl.setPointerCapture !== 'function') return;
+                try {
+                    sourceEl.setPointerCapture(pointerId);
+                    captured = true;
+                } catch (e) {}
+            };
+
+            const applySelection = (id) => {
+                const normalizedId = String(id || '').trim();
+                if (!normalizedId) return;
+                __tmSetTaskMultiSelection(normalizedId, true, { render: true });
+            };
+
+            const revertSelection = (id) => {
+                const normalizedId = String(id || '').trim();
+                if (!normalizedId) return;
+                __tmSetTaskMultiSelection(normalizedId, baselineSelectedSet.has(normalizedId), { render: true });
+            };
+
+            const syncPathSelection = (id) => {
+                const normalizedId = String(id || '').trim();
+                if (!normalizedId) return;
+                const lastId = sweepPath.length ? sweepPath[sweepPath.length - 1] : '';
+                if (lastId === normalizedId) return;
+                const existingIndex = sweepPath.lastIndexOf(normalizedId);
+                if (existingIndex >= 0) {
+                    while ((sweepPath.length - 1) > existingIndex) {
+                        const removedId = String(sweepPath.pop() || '').trim();
+                        if (!removedId) continue;
+                        revertSelection(removedId);
+                    }
+                    return;
+                }
+                sweepPath.push(normalizedId);
+                applySelection(normalizedId);
+            };
+
+            const sweepAtPoint = (x, y) => {
+                const hit = __tmResolveMultiSelectRowFromPoint(x, y);
+                if (!hit) return;
+                syncPathSelection(hit.taskId);
+            };
+
+            const startSweep = () => {
+                if (sweeping || ended) return;
+                sweeping = true;
+                capturePointer();
+                syncPathSelection(taskId);
+                try { sourceEl.classList.add('tm-task-row--multi-sweeping'); } catch (e) {}
+                try {
+                    document.body.style.userSelect = 'none';
+                    document.body.style.cursor = 'crosshair';
+                } catch (e) {}
+            };
+
+            const cleanup = (suppressClick) => {
+                if (ended) return;
+                ended = true;
+                try { document.removeEventListener('pointermove', onMove, true); } catch (e) {}
+                try { document.removeEventListener('pointerup', onUp, true); } catch (e) {}
+                try { document.removeEventListener('pointercancel', onUp, true); } catch (e) {}
+                try { window.removeEventListener('blur', onUp, true); } catch (e) {}
+                if (captured && Number.isFinite(pointerId) && typeof sourceEl.releasePointerCapture === 'function') {
+                    try { sourceEl.releasePointerCapture(pointerId); } catch (e) {}
+                }
+                try { sourceEl.classList.remove('tm-task-row--multi-sweeping'); } catch (e) {}
+                try {
+                    document.body.style.userSelect = '';
+                    document.body.style.cursor = '';
+                } catch (e) {}
+                if (suppressClick) {
+                    __tmSuppressDockPointerTaskClick(suppressClickMs);
+                }
+                if (state.multiSelectPointerGestureCleanup === cleanup) {
+                    state.multiSelectPointerGestureCleanup = null;
+                }
+            };
+
+            const onMove = (e2) => {
+                if (ended || !samePointer(e2)) return;
+                lastX = Number(e2?.clientX) || lastX;
+                lastY = Number(e2?.clientY) || lastY;
+                if (!sweeping) {
+                    const dx = lastX - startX;
+                    const dy = lastY - startY;
+                    if ((dx * dx + dy * dy) < (threshold * threshold)) return;
+                    startSweep();
+                }
+                sweepAtPoint(lastX, lastY);
+                try { e2.preventDefault(); } catch (e) {}
+            };
+
+            const onUp = (e2) => {
+                if (ended || !samePointer(e2)) return;
+                if (sweeping) {
+                    lastX = Number(e2?.clientX) || lastX;
+                    lastY = Number(e2?.clientY) || lastY;
+                    sweepAtPoint(lastX, lastY);
+                }
+                cleanup(sweeping);
+            };
+
+            state.multiSelectPointerGestureCleanup = () => cleanup(false);
+            document.addEventListener('pointermove', onMove, true);
+            document.addEventListener('pointerup', onUp, true);
+            document.addEventListener('pointercancel', onUp, true);
+            window.addEventListener('blur', onUp, true);
+        }, { capture: true, signal: abort.signal });
     }
 
     function __tmGetKeepaliveSnapshotKind(el) {
@@ -17556,6 +18901,342 @@ async function __tmRefreshAfterWake(reason) {
         return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     }
 
+    const __tmRemarkRenderCache = new Map();
+    const __tmRemarkStripCache = new Map();
+
+    function __tmNormalizeRemarkMarkdown(input) {
+        const text = String(input || '').replace(/\r\n?/g, '\n');
+        const lines = text.split('\n').map((line) => String(line || '').replace(/[ \t]+$/g, ''));
+        const normalized = [];
+        let blankCount = 0;
+        lines.forEach((line) => {
+            const nextLine = String(line || '');
+            if (!nextLine.trim()) {
+                blankCount += 1;
+                if (blankCount <= 2) normalized.push('');
+                return;
+            }
+            blankCount = 0;
+            normalized.push(nextLine);
+        });
+        return normalized.join('\n').trim();
+    }
+
+    function __tmSanitizeRemarkHref(rawHref) {
+        const href = String(rawHref || '').trim();
+        if (!href) return '';
+        if (/^(https?:|mailto:|tel:)/i.test(href)) return href;
+        return /^\/(?!\/)/.test(href) ? href : '';
+    }
+
+    function __tmRenderRemarkInlineHtml(input, depth = 0) {
+        const text = String(input || '');
+        if (!text) return '';
+        if (depth > 6) return esc(text);
+        const tokens = [];
+        const stash = (html) => `\u0000${tokens.push(String(html || '')) - 1}\u0000`;
+        let source = text;
+
+        source = source.replace(/\[([^\]]+)\]\(([^)\s]+(?:\s[^)]*)?)\)/g, (match, label, href) => {
+            const safeHref = __tmSanitizeRemarkHref(href);
+            const labelHtml = __tmRenderRemarkInlineHtml(label, depth + 1);
+            if (!safeHref) return stash(labelHtml);
+            return stash(`<a class="tm-task-detail-remark-link" href="${esc(safeHref)}" target="_blank" rel="noopener noreferrer">${labelHtml}</a>`);
+        });
+        source = source.replace(/\*\*([\s\S]+?)\*\*/g, (match, inner) => stash(`<strong>${__tmRenderRemarkInlineHtml(inner, depth + 1)}</strong>`));
+        source = source.replace(/__([\s\S]+?)__/g, (match, inner) => stash(`<strong>${__tmRenderRemarkInlineHtml(inner, depth + 1)}</strong>`));
+        source = source.replace(/(^|[^\*])\*([^\*\n]+)\*(?!\*)/g, (match, prefix, inner) => `${prefix}${stash(`<em>${__tmRenderRemarkInlineHtml(inner, depth + 1)}</em>`)}`);
+        source = source.replace(/(^|[^_])_([^_\n]+)_(?!_)/g, (match, prefix, inner) => `${prefix}${stash(`<em>${__tmRenderRemarkInlineHtml(inner, depth + 1)}</em>`)}`);
+        source = source.replace(/`([^`\n]+)`/g, (match, inner) => stash(`<code>${esc(inner)}</code>`));
+
+        let html = esc(source);
+        html = html.replace(/\u0000(\d+)\u0000/g, (match, index) => tokens[Number(index)] || '');
+        return html;
+    }
+
+    function __tmRenderRemarkMarkdown(input) {
+        const source = __tmNormalizeRemarkMarkdown(input);
+        if (!source) return '<div class="tm-task-detail-remark-empty">点击添加备注</div>';
+        const cached = __tmRemarkRenderCache.get(source);
+        if (cached) return cached;
+        const lines = source.split('\n');
+        const blocks = [];
+        let paragraph = [];
+        let quote = [];
+        let listType = '';
+        let listItems = [];
+
+        const flushParagraph = () => {
+            if (!paragraph.length) return;
+            blocks.push(`<p>${paragraph.map((line) => __tmRenderRemarkInlineHtml(line)).join('<br>')}</p>`);
+            paragraph = [];
+        };
+        const flushQuote = () => {
+            if (!quote.length) return;
+            blocks.push(`<blockquote>${quote.map((line) => __tmRenderRemarkInlineHtml(line)).join('<br>')}</blockquote>`);
+            quote = [];
+        };
+        const flushList = () => {
+            if (!listItems.length || !listType) return;
+            const tag = listType === 'ol' ? 'ol' : 'ul';
+            blocks.push(`<${tag}>${listItems.map((item) => `<li>${__tmRenderRemarkInlineHtml(item)}</li>`).join('')}</${tag}>`);
+            listType = '';
+            listItems = [];
+        };
+
+        lines.forEach((line) => {
+            const rawLine = String(line || '');
+            const trimmed = rawLine.trim();
+            const quoteMatch = rawLine.match(/^\s*>\s?(.*)$/);
+            const orderedMatch = rawLine.match(/^\s*(\d+)\.\s+(.+)$/);
+            const bulletMatch = rawLine.match(/^\s*[-*+]\s+(.+)$/);
+
+            if (!trimmed) {
+                flushParagraph();
+                flushQuote();
+                flushList();
+                return;
+            }
+            if (quoteMatch) {
+                flushParagraph();
+                flushList();
+                quote.push(String(quoteMatch[1] || '').trim());
+                return;
+            }
+            if (orderedMatch) {
+                flushParagraph();
+                flushQuote();
+                if (listType && listType !== 'ol') flushList();
+                listType = 'ol';
+                listItems.push(String(orderedMatch[2] || '').trim());
+                return;
+            }
+            if (bulletMatch) {
+                flushParagraph();
+                flushQuote();
+                if (listType && listType !== 'ul') flushList();
+                listType = 'ul';
+                listItems.push(String(bulletMatch[1] || '').trim());
+                return;
+            }
+            flushQuote();
+            flushList();
+            paragraph.push(trimmed);
+        });
+
+        flushParagraph();
+        flushQuote();
+        flushList();
+
+        const html = blocks.join('') || '<div class="tm-task-detail-remark-empty">点击添加备注</div>';
+        if (__tmRemarkRenderCache.size > 400) __tmRemarkRenderCache.clear();
+        __tmRemarkRenderCache.set(source, html);
+        return html;
+    }
+
+    function __tmStripRemarkMarkdown(input) {
+        const source = __tmNormalizeRemarkMarkdown(input);
+        if (!source) return '';
+        const cached = __tmRemarkStripCache.get(source);
+        if (cached !== undefined) return cached;
+        const text = source
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+            .replace(/^\s*>\s?/gm, '')
+            .replace(/^\s*[-*+]\s+/gm, '')
+            .replace(/^\s*\d+\.\s+/gm, '')
+            .replace(/(\*\*|__)([\s\S]+?)\1/g, '$2')
+            .replace(/(^|[^\*])\*([^\*\n]+)\*(?!\*)/g, '$1$2')
+            .replace(/(^|[^_])_([^_\n]+)_(?!_)/g, '$1$2')
+            .replace(/`([^`\n]+)`/g, '$1')
+            .replace(/\n+/g, ' ')
+            .replace(/\s{2,}/g, ' ')
+            .trim();
+        if (__tmRemarkStripCache.size > 400) __tmRemarkStripCache.clear();
+        __tmRemarkStripCache.set(source, text);
+        return text;
+    }
+
+    function __tmGetTextareaSelectionRange(textarea) {
+        if (!(textarea instanceof HTMLTextAreaElement)) return { start: 0, end: 0, value: '' };
+        return {
+            start: Math.max(0, Number(textarea.selectionStart) || 0),
+            end: Math.max(0, Number(textarea.selectionEnd) || 0),
+            value: String(textarea.value || ''),
+        };
+    }
+
+    function __tmSetTextareaValueAndSelection(textarea, nextValue, start, end = start) {
+        if (!(textarea instanceof HTMLTextAreaElement)) return;
+        textarea.value = String(nextValue || '');
+        try { textarea.focus({ preventScroll: true }); } catch (e) { try { textarea.focus(); } catch (e2) {} }
+        try { textarea.setSelectionRange(start, end); } catch (e) {}
+        try { textarea.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
+    }
+
+    function __tmWrapRemarkSelection(textarea, prefix, suffix = prefix) {
+        if (!(textarea instanceof HTMLTextAreaElement)) return false;
+        const { start, end, value } = __tmGetTextareaSelectionRange(textarea);
+        const selected = value.slice(start, end);
+        const fallback = prefix === '`' ? '代码' : '文本';
+        const nextInner = selected || fallback;
+        const nextValue = `${value.slice(0, start)}${prefix}${nextInner}${suffix}${value.slice(end)}`;
+        const selectionStart = start + prefix.length;
+        const selectionEnd = selectionStart + nextInner.length;
+        __tmSetTextareaValueAndSelection(textarea, nextValue, selectionStart, selectionEnd);
+        return true;
+    }
+
+    function __tmToggleRemarkLinePrefix(textarea, prefix) {
+        if (!(textarea instanceof HTMLTextAreaElement)) return false;
+        const { start, end, value } = __tmGetTextareaSelectionRange(textarea);
+        const lineStart = value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
+        const lineEndIndex = value.indexOf('\n', end);
+        const lineEnd = lineEndIndex < 0 ? value.length : lineEndIndex;
+        const block = value.slice(lineStart, lineEnd);
+        const lines = block.split('\n');
+        const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const prefixRe = new RegExp(`^(\\s*)${escapedPrefix}`);
+        const nonEmptyLines = lines.filter((line) => !!line.trim());
+        const shouldRemove = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => prefixRe.test(line));
+        if (nonEmptyLines.length === 0) {
+            const insertText = prefix;
+            const nextValue = `${value.slice(0, lineStart)}${insertText}${value.slice(lineEnd)}`;
+            const caret = lineStart + insertText.length;
+            __tmSetTextareaValueAndSelection(textarea, nextValue, caret, caret);
+            return true;
+        }
+        const nextLines = lines.map((line) => {
+            if (!line.trim()) return line;
+            if (shouldRemove) return line.replace(prefixRe, '$1');
+            const indent = (line.match(/^\s*/) || [''])[0];
+            return `${indent}${prefix}${line.slice(indent.length)}`;
+        });
+        const nextBlock = nextLines.join('\n');
+        const nextValue = `${value.slice(0, lineStart)}${nextBlock}${value.slice(lineEnd)}`;
+        const delta = nextBlock.length - block.length;
+        __tmSetTextareaValueAndSelection(textarea, nextValue, start + (shouldRemove ? -prefix.length : prefix.length), end + delta);
+        return true;
+    }
+
+    function __tmToggleRemarkOrderedList(textarea) {
+        if (!(textarea instanceof HTMLTextAreaElement)) return false;
+        const { start, end, value } = __tmGetTextareaSelectionRange(textarea);
+        const lineStart = value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
+        const lineEndIndex = value.indexOf('\n', end);
+        const lineEnd = lineEndIndex < 0 ? value.length : lineEndIndex;
+        const block = value.slice(lineStart, lineEnd);
+        const lines = block.split('\n');
+        const orderedRe = /^(\s*)(\d+)\.\s+/;
+        const nonEmptyLines = lines.filter((line) => !!line.trim());
+        const shouldRemove = nonEmptyLines.length > 0 && nonEmptyLines.every((line) => orderedRe.test(line));
+        if (nonEmptyLines.length === 0) {
+            const insertText = '1. ';
+            const nextValue = `${value.slice(0, lineStart)}${insertText}${value.slice(lineEnd)}`;
+            const caret = lineStart + insertText.length;
+            __tmSetTextareaValueAndSelection(textarea, nextValue, caret, caret);
+            return true;
+        }
+        const nextLines = lines.map((line, index) => {
+            if (!line.trim()) return line;
+            if (shouldRemove) return line.replace(orderedRe, '$1');
+            const indent = (line.match(/^\s*/) || [''])[0];
+            return `${indent}${index + 1}. ${line.slice(indent.length)}`;
+        });
+        const nextBlock = nextLines.join('\n');
+        const nextValue = `${value.slice(0, lineStart)}${nextBlock}${value.slice(lineEnd)}`;
+        const delta = nextBlock.length - block.length;
+        __tmSetTextareaValueAndSelection(textarea, nextValue, Math.max(lineStart, start + (shouldRemove ? -3 : 3)), end + delta);
+        return true;
+    }
+
+    function __tmInsertRemarkLinkTemplate(textarea) {
+        if (!(textarea instanceof HTMLTextAreaElement)) return false;
+        const { start, end, value } = __tmGetTextareaSelectionRange(textarea);
+        const selected = value.slice(start, end) || '链接文本';
+        const template = `[${selected}](https://)`;
+        const nextValue = `${value.slice(0, start)}${template}${value.slice(end)}`;
+        const urlStart = start + selected.length + 3;
+        const caret = urlStart + 'https://'.length;
+        __tmSetTextareaValueAndSelection(textarea, nextValue, caret, caret);
+        return true;
+    }
+
+    function __tmHandleRemarkTextareaKeydown(textarea, event) {
+        if (!(textarea instanceof HTMLTextAreaElement) || !event || event.defaultPrevented) return false;
+        const isMeta = !!(event.metaKey || event.ctrlKey);
+        if (isMeta && !event.altKey) {
+            const key = String(event.key || '').toLowerCase();
+            if (key === 'b') {
+                event.preventDefault();
+                return __tmWrapRemarkSelection(textarea, '**');
+            }
+            if (key === 'i') {
+                event.preventDefault();
+                return __tmWrapRemarkSelection(textarea, '*');
+            }
+            if (key === 'k') {
+                event.preventDefault();
+                return __tmInsertRemarkLinkTemplate(textarea);
+            }
+        }
+        if (event.key !== 'Enter' || event.shiftKey || event.isComposing) return false;
+        const { start, end, value } = __tmGetTextareaSelectionRange(textarea);
+        if (start !== end) return false;
+        const lineStart = value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
+        const lineEndIndex = value.indexOf('\n', start);
+        const lineEnd = lineEndIndex < 0 ? value.length : lineEndIndex;
+        const line = value.slice(lineStart, lineEnd);
+        const orderedMatch = line.match(/^(\s*)(\d+)\.\s*(.*)$/);
+        const bulletMatch = line.match(/^(\s*)([-*+])\s*(.*)$/);
+        if (!orderedMatch && !bulletMatch) return false;
+        event.preventDefault();
+        if (orderedMatch) {
+            const indent = orderedMatch[1] || '';
+            const index = Math.max(1, Number(orderedMatch[2]) || 1);
+            const body = String(orderedMatch[3] || '');
+            if (!body.trim()) {
+                const nextLine = line.replace(/^(\s*)\d+\.\s*$/, '$1');
+                const nextValue = `${value.slice(0, lineStart)}${nextLine}${value.slice(lineEnd)}`;
+                const cursor = lineStart + nextLine.length;
+                __tmSetTextareaValueAndSelection(textarea, nextValue, cursor);
+                return true;
+            }
+            const insert = `\n${indent}${index + 1}. `;
+            const nextValue = `${value.slice(0, start)}${insert}${value.slice(end)}`;
+            const cursor = start + insert.length;
+            __tmSetTextareaValueAndSelection(textarea, nextValue, cursor);
+            return true;
+        }
+        const indent = bulletMatch[1] || '';
+        const marker = bulletMatch[2] || '-';
+        const body = String(bulletMatch[3] || '');
+        if (!body.trim()) {
+            const nextLine = line.replace(/^(\s*)[-*+]\s*$/, '$1');
+            const nextValue = `${value.slice(0, lineStart)}${nextLine}${value.slice(lineEnd)}`;
+            const cursor = lineStart + nextLine.length;
+            __tmSetTextareaValueAndSelection(textarea, nextValue, cursor);
+            return true;
+        }
+        const insert = `\n${indent}${marker} `;
+        const nextValue = `${value.slice(0, start)}${insert}${value.slice(end)}`;
+        const cursor = start + insert.length;
+        __tmSetTextareaValueAndSelection(textarea, nextValue, cursor);
+        return true;
+    }
+
+    try {
+        globalThis.__tmRemarkMarkdownTools = {
+            normalize: __tmNormalizeRemarkMarkdown,
+            renderHtml: __tmRenderRemarkMarkdown,
+            stripText: __tmStripRemarkMarkdown,
+            wrapSelection: __tmWrapRemarkSelection,
+            toggleLinePrefix: __tmToggleRemarkLinePrefix,
+            toggleOrderedList: __tmToggleRemarkOrderedList,
+            insertLinkTemplate: __tmInsertRemarkLinkTemplate,
+            handleTextareaKeydown: __tmHandleRemarkTextareaKeydown,
+        };
+    } catch (e) {}
+
     function __tmNormalizeHeadingText(value) {
         let text = String(value || '').trim();
         if (!text) return '';
@@ -17962,6 +19643,31 @@ async function __tmRefreshAfterWake(reason) {
             && !!SettingsStore?.data?.checklistCompactMode
             && !!SettingsStore?.data?.mobileChecklistCompactTitleJump;
     };
+
+    const __tmChecklistTitleClickUsesScopedJumpSettings = () => {
+        const appliesToDock = __tmIsDockHost() && !__tmIsRuntimeMobileClient();
+        const appliesToMobile = __tmIsMobileDevice() && !(__tmIsDockHost() && !__tmIsRuntimeMobileClient());
+        return !!SettingsStore?.data?.checklistCompactMode && (appliesToDock || appliesToMobile);
+    };
+
+    const __tmShouldOpenTaskDetailPageOnChecklistTitleClick = () =>
+        (__tmShouldJumpOnDockChecklistTitleClick() || __tmShouldJumpOnMobileChecklistTitleClick())
+        && !!SettingsStore?.data?.checklistCompactTitleOpenDetailPage;
+
+    const __tmIsTaskTitleClickEvent = (ev) => {
+        const selector = '.tm-task-content-clickable,.tm-whiteboard-stream-task-title,.tm-checklist-title,.tm-checklist-title-button > span';
+        const target = ev?.target instanceof Element ? ev.target : null;
+        const current = ev?.currentTarget instanceof Element ? ev.currentTarget : null;
+        return !!(
+            (current?.matches?.(selector))
+            || (current?.closest?.(selector))
+            || (target?.closest?.(selector))
+        );
+    };
+
+    const __tmShouldOpenTaskDetailPageOnAnyTitleClick = (ev) =>
+        !!SettingsStore?.data?.checklistCompactTitleOpenDetailPage
+        && __tmIsTaskTitleClickEvent(ev);
 
     const __tmGetConfiguredDefaultViewMode = (isMobile = __tmIsMobileDevice()) => {
         let raw = '';
@@ -20585,6 +22291,7 @@ async function __tmRefreshAfterWake(reason) {
         const renderTaskRow = (row) => {
             const task = state.flatTasks[row.id];
             if (!task) return '';
+            const isMultiSelected = __tmIsTaskMultiSelected(task.id);
             const depth = Math.max(0, Number(row.depth) || 0);
             const contentIndent = 12 + depth * 16;
             const treeGuides = depth > 0
@@ -20627,7 +22334,7 @@ async function __tmRefreshAfterWake(reason) {
             const otherCellBgStyle = groupBg ? `background-color:${groupBg};` : '';
 
             return `
-                <tr class="tm-timeline-row ${rowClass}" data-id="${task.id}" data-depth="${row.depth}" onclick="tmRowClick(event, '${task.id}')" oncontextmenu="tmShowTaskContextMenu(event, '${task.id}')">
+                <tr class="tm-timeline-row ${finalRowClass}" data-id="${task.id}" data-depth="${row.depth}" onclick="tmRowClick(event, '${task.id}')" oncontextmenu="tmShowTaskContextMenu(event, '${task.id}')">
                     <td class="tm-task-content-cell" style="width: ${timelineContentWidth}px; min-width: ${timelineContentWidth}px; max-width: ${timelineContentWidth}px; ${contentCellBgStyle}">
                             <div class="tm-task-cell" style="padding-left:${contentIndent}px">
                                 ${treeGuides}
@@ -23746,6 +25453,465 @@ async function __tmRefreshAfterWake(reason) {
             } catch (e) {}
         });
     }
+
+    function __tmGetMultiSelectTargetIds() {
+        return __tmGetMultiSelectedTaskIds().filter((id) => !!state.flatTasks?.[id]);
+    }
+
+    function __tmBuildBatchResultHint(result, actionLabel) {
+        const ok = Number(result?.successCount) || 0;
+        const fail = Number(result?.failureCount) || 0;
+        const label = String(actionLabel || '批量更新').trim() || '批量更新';
+        if (ok > 0 && fail <= 0) return `✅ ${label}成功（${ok} 项）`;
+        if (ok > 0 && fail > 0) return `⚠ ${label}完成：成功 ${ok} 项，失败 ${fail} 项`;
+        return `❌ ${label}失败`;
+    }
+
+    async function __tmApplyBatchAttrPatch(patch, options = {}) {
+        const targetIds = __tmGetMultiSelectTargetIds();
+        if (!targetIds.length) {
+            hint('⚠ 请先选择至少一条任务', 'warning');
+            return { successCount: 0, failureCount: 0, failures: [] };
+        }
+        const nextPatch = (patch && typeof patch === 'object') ? patch : {};
+        if (!Object.keys(nextPatch).length) {
+            hint('⚠ 未找到可批量更新的内容', 'warning');
+            return { successCount: 0, failureCount: 0, failures: [] };
+        }
+        const failures = [];
+        let successCount = 0;
+        for (const id of targetIds) {
+            const inversePatch = __tmCaptureTaskPatchInverse(id, nextPatch);
+            try { __tmApplyAttrPatchLocally(id, nextPatch, { render: false, withFilters: false }); } catch (e) {}
+            try {
+                await __tmPersistMetaAndAttrsAsync(id, nextPatch, {
+                    skipFlush: true,
+                    renderOptimistic: false,
+                    withFilters: false,
+                });
+                successCount += 1;
+            } catch (e) {
+                failures.push({
+                    id,
+                    error: e instanceof Error ? e : new Error(String(e || '更新失败'))
+                });
+                try { __tmRollbackAttrPatchLocally(id, inversePatch, { render: false, withFilters: false }); } catch (e2) {}
+            }
+        }
+        try { await API.call('/api/sqlite/flushTransaction', {}); } catch (e) {}
+        try { await MetaStore.saveNow(); } catch (e) {}
+        try {
+            if (!__tmRerenderCurrentViewInPlace(state.modal)) render();
+            else {
+                __tmRefreshMultiSelectedRowsInPlace(state.modal);
+                if (String(state.viewMode || '').trim() === 'checklist') {
+                    __tmRefreshChecklistSelectionInPlace(state.modal);
+                }
+            }
+        } catch (e) {
+            try { render(); } catch (e2) {}
+        }
+        const failureCount = failures.length;
+        const actionLabel = String(options.actionLabel || '批量更新').trim() || '批量更新';
+        hint(__tmBuildBatchResultHint({ successCount, failureCount }, actionLabel), (successCount > 0 && failureCount <= 0) ? 'success' : (successCount > 0 ? 'warning' : 'error'));
+        return { successCount, failureCount, failures };
+    }
+
+    function __tmBuildBatchCustomFieldPromptText(field) {
+        const options = Array.isArray(field?.options) ? field.options : [];
+        const names = options.map((item) => String(item?.name || item?.id || '').trim()).filter(Boolean);
+        return names.length
+            ? `可用选项：${names.join('、')}；多个值请用逗号分隔，留空清空`
+            : '多个值请用逗号分隔，留空清空';
+    }
+
+    async function __tmBatchSetStartDate() {
+        state.multiBulkEditFieldKey = 'startDate';
+        try {
+            const next = await showDatePrompt('批量设置开始日期', '');
+            if (next === null) return;
+            await __tmApplyBatchAttrPatch({ startDate: String(next || '').trim() }, {
+                actionLabel: String(next || '').trim() ? '批量设置开始日期' : '批量清空开始日期'
+            });
+        } finally {
+            state.multiBulkEditFieldKey = '';
+        }
+    }
+
+    async function __tmBatchSetCompletionDate() {
+        state.multiBulkEditFieldKey = 'completionTime';
+        try {
+            const next = await showDatePrompt('批量设置完成日期', '');
+            if (next === null) return;
+            await __tmApplyBatchAttrPatch({ completionTime: String(next || '').trim() }, {
+                actionLabel: String(next || '').trim() ? '批量设置完成日期' : '批量清空完成日期'
+            });
+        } finally {
+            state.multiBulkEditFieldKey = '';
+        }
+    }
+
+    async function __tmBatchSetPriority() {
+        state.multiBulkEditFieldKey = 'priority';
+        try {
+            const next = await showSelectPrompt('批量设置重要性', [
+                { value: 'none', label: '无' },
+                { value: 'high', label: '高' },
+                { value: 'medium', label: '中' },
+                { value: 'low', label: '低' },
+            ], 'none');
+            if (next === null) return;
+            await __tmApplyBatchAttrPatch({ priority: String(next || 'none').trim() || 'none' }, {
+                actionLabel: '批量设置重要性'
+            });
+        } finally {
+            state.multiBulkEditFieldKey = '';
+        }
+    }
+
+    async function __tmBatchSetStatus() {
+        state.multiBulkEditFieldKey = 'customStatus';
+        try {
+            const statusOptions = Array.isArray(SettingsStore.data.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
+            const options = statusOptions
+                .map((item) => ({
+                    value: String(item?.id || '').trim(),
+                    label: String(item?.name || item?.id || '').trim() || String(item?.id || '').trim(),
+                }))
+                .filter((item) => item.value);
+            if (!options.length) {
+                hint('⚠ 请先在设置中配置状态选项', 'warning');
+                return;
+            }
+            const next = await showSelectPrompt('批量设置状态', options, __tmGetDefaultUndoneStatusId(statusOptions));
+            if (next === null) return;
+            await __tmApplyBatchAttrPatch({ customStatus: String(next || '').trim() }, {
+                actionLabel: '批量设置状态'
+            });
+        } finally {
+            state.multiBulkEditFieldKey = '';
+        }
+    }
+
+    async function __tmBatchSetStartDateTime() {
+        state.multiBulkEditFieldKey = 'startDateTime';
+        try {
+            const next = await showDateTimePrompt('批量设置开始时间', '');
+            if (next === null) return;
+            await __tmApplyBatchAttrPatch({ startDate: String(next || '').trim() }, {
+                actionLabel: String(next || '').trim() ? '批量设置开始时间' : '批量清空开始时间'
+            });
+        } finally {
+            state.multiBulkEditFieldKey = '';
+        }
+    }
+
+    async function __tmBatchSetCompletionDateTime() {
+        state.multiBulkEditFieldKey = 'completionDateTime';
+        try {
+            const next = await showDateTimePrompt('批量设置完成时间', '');
+            if (next === null) return;
+            await __tmApplyBatchAttrPatch({ completionTime: String(next || '').trim() }, {
+                actionLabel: String(next || '').trim() ? '批量设置完成时间' : '批量清空完成时间'
+            });
+        } finally {
+            state.multiBulkEditFieldKey = '';
+        }
+    }
+
+    async function __tmBatchSetPinned(pinned) {
+        await __tmApplyBatchAttrPatch({ pinned: pinned ? '1' : '' }, {
+            actionLabel: pinned ? '批量置顶' : '批量取消置顶'
+        });
+    }
+
+    async function __tmBatchSetDone(done) {
+        const targetIds = __tmGetMultiSelectTargetIds();
+        if (!targetIds.length) {
+            hint('⚠ 请先选择至少一条任务', 'warning');
+            return { successCount: 0, failureCount: 0, failures: [] };
+        }
+        const targetDone = !!done;
+        const failures = [];
+        let successCount = 0;
+        for (const id of targetIds) {
+            let task = state.flatTasks?.[id] || null;
+            if (!task) {
+                try { task = await __tmEnsureTaskInStateById(id); } catch (e) { task = null; }
+            }
+            const statusPatch = task ? __tmBuildCheckboxStatusPatch(task, targetDone) : null;
+            const inversePatch = {
+                done: !!task?.done,
+                ...((statusPatch && Object.keys(statusPatch).length > 0) ? __tmCaptureTaskPatchInverse(id, statusPatch) : {}),
+            };
+            if (task && !!task.done === targetDone && !(statusPatch && Object.keys(statusPatch).length > 0)) {
+                successCount += 1;
+                continue;
+            }
+            try {
+                if (task && __tmIsCollectedOtherBlockTask(task)) {
+                    const ok = await __tmSetCollectedOtherBlockDone(task, targetDone);
+                    if (!ok) throw new Error('更新完成状态失败');
+                    if (statusPatch && Object.keys(statusPatch).length > 0) {
+                        await __tmPersistMetaAndAttrsKernel(id, statusPatch, {
+                            touchMetaStore: false,
+                            skipFlush: true,
+                        });
+                        __tmApplyAttrPatchLocally(id, statusPatch, { render: false, withFilters: false });
+                    }
+                } else {
+                    if (task) __tmApplyDoneOptimisticLocal(id, targetDone, statusPatch);
+                    const ok = await __tmSetDoneByIdStateless(id, targetDone);
+                    if (!ok) throw new Error('更新完成状态失败');
+                    if (statusPatch && Object.keys(statusPatch).length > 0) {
+                        await __tmPersistMetaAndAttrsKernel(id, statusPatch, {
+                            touchMetaStore: false,
+                            skipFlush: true,
+                        });
+                    }
+                }
+                successCount += 1;
+                try {
+                    const docId = String(task?.root_id || task?.docId || '').trim();
+                    if (docId) __tmInvalidateTasksQueryCacheByDocId(docId);
+                } catch (e) {}
+            } catch (e) {
+                failures.push({
+                    id,
+                    error: e instanceof Error ? e : new Error(String(e || '更新完成状态失败'))
+                });
+                if (task && !__tmIsCollectedOtherBlockTask(task)) {
+                    try { __tmRollbackDoneOptimisticLocal(id, inversePatch); } catch (e2) {}
+                } else if (task && __tmIsCollectedOtherBlockTask(task)) {
+                    try { task.done = !!inversePatch.done; } catch (e2) {}
+                    try {
+                        if (!state.doneOverrides || typeof state.doneOverrides !== 'object') state.doneOverrides = {};
+                        state.doneOverrides[String(id)] = !!inversePatch.done;
+                    } catch (e2) {}
+                    try {
+                        if (Object.prototype.hasOwnProperty.call(inversePatch, 'customStatus')) {
+                            __tmRollbackAttrPatchLocally(id, { customStatus: inversePatch.customStatus }, { render: false, withFilters: false });
+                        }
+                    } catch (e2) {}
+                }
+            }
+        }
+        try { await API.call('/api/sqlite/flushTransaction', {}); } catch (e) {}
+        try { await MetaStore.saveNow(); } catch (e) {}
+        try {
+            if (!__tmRerenderCurrentViewInPlace(state.modal)) render();
+            else __tmRefreshMultiSelectUiInPlace(state.modal, { renderFallback: false });
+        } catch (e) {
+            try { render(); } catch (e2) {}
+        }
+        const failureCount = failures.length;
+        const actionLabel = targetDone ? '批量完成' : '批量取消完成';
+        hint(__tmBuildBatchResultHint({ successCount, failureCount }, actionLabel), (successCount > 0 && failureCount <= 0) ? 'success' : (successCount > 0 ? 'warning' : 'error'));
+        return { successCount, failureCount, failures };
+    }
+
+    async function __tmBatchSetDoneStatus() {
+        const statusId = __tmResolveCheckboxLinkedStatusId(true);
+        if (!statusId) {
+            hint('⚠ 请先在设置中配置完成状态联动', 'warning');
+            return;
+        }
+        await __tmApplyBatchAttrPatch({ customStatus: statusId }, {
+            actionLabel: '批量设置完成状态'
+        });
+    }
+
+    async function __tmBatchSetCustomField() {
+        state.multiBulkEditFieldKey = 'customField';
+        try {
+            const fieldDefs = __tmGetCustomFieldDefs()
+                .filter((field) => Array.isArray(field?.options) && field.options.length > 0);
+            const fieldOptions = fieldDefs
+                .map((field) => ({
+                    value: String(field?.id || '').trim(),
+                    label: `${String(field?.name || field?.id || '').trim() || '未命名字段'}（${String(field?.type || '').trim() === 'multi' ? '多选' : '单选'}）`,
+                }))
+                .filter((item) => item.value);
+            if (!fieldOptions.length) {
+                hint('⚠ 当前没有可批量设置的自定义选项列', 'warning');
+                return;
+            }
+            const fieldId = await showSelectPrompt('选择自定义列', fieldOptions, fieldOptions[0]?.value || '');
+            if (fieldId === null) return;
+            const field = fieldDefs.find((item) => String(item?.id || '').trim() === String(fieldId || '').trim()) || null;
+            if (!field) {
+                hint('⚠ 未找到对应自定义列', 'warning');
+                return;
+            }
+            let normalizedValue;
+            if (String(field?.type || '').trim() === 'multi') {
+                const raw = await showPrompt(`批量设置 ${String(field?.name || fieldId).trim()}`, __tmBuildBatchCustomFieldPromptText(field), '');
+                if (raw === null) return;
+                normalizedValue = __tmNormalizeCustomFieldValue(field, raw);
+            } else {
+                const options = [
+                    { value: '', label: '清空' },
+                    ...((Array.isArray(field?.options) ? field.options : []).map((item) => ({
+                        value: String(item?.id || '').trim(),
+                        label: String(item?.name || item?.id || '').trim() || String(item?.id || '').trim(),
+                    })).filter((item) => item.value))
+                ];
+                const raw = await showSelectPrompt(`批量设置 ${String(field?.name || fieldId).trim()}`, options, '');
+                if (raw === null) return;
+                normalizedValue = __tmNormalizeCustomFieldValue(field, raw);
+            }
+            await __tmApplyBatchAttrPatch({ customFieldValues: { [String(fieldId || '').trim()]: normalizedValue } }, {
+                actionLabel: `批量设置 ${String(field?.name || fieldId).trim()}`
+            });
+        } finally {
+            state.multiBulkEditFieldKey = '';
+        }
+    }
+
+    window.tmMultiSelectClear = function() {
+        __tmClearMultiTaskSelection({ keepMode: true });
+    };
+
+    window.tmMultiSelectExit = function() {
+        window.tmToggleMultiSelectMode(false);
+    };
+
+    window.tmMultiSelectBatchSetStartDate = async function() {
+        await __tmBatchSetStartDate();
+    };
+
+    window.tmMultiSelectBatchSetCompletionDate = async function() {
+        await __tmBatchSetCompletionDate();
+    };
+
+    window.tmMultiSelectBatchSetPriority = async function() {
+        await __tmBatchSetPriority();
+    };
+
+    window.tmMultiSelectBatchSetStatus = async function() {
+        await __tmBatchSetStatus();
+    };
+
+    window.tmMultiSelectBatchSetStartDateTime = async function() {
+        await __tmBatchSetStartDateTime();
+    };
+
+    window.tmMultiSelectBatchSetCompletionDateTime = async function() {
+        await __tmBatchSetCompletionDateTime();
+    };
+
+    window.tmMultiSelectBatchPin = async function() {
+        await __tmBatchSetPinned(true);
+    };
+
+    window.tmMultiSelectBatchUnpin = async function() {
+        await __tmBatchSetPinned(false);
+    };
+
+    window.tmMultiSelectBatchComplete = async function() {
+        await __tmBatchSetDone(true);
+    };
+
+    window.tmMultiSelectBatchUncomplete = async function() {
+        await __tmBatchSetDone(false);
+    };
+
+    window.tmMultiSelectBatchSetDoneStatus = async function() {
+        await __tmBatchSetDoneStatus();
+    };
+
+    window.tmMultiSelectBatchSetCustomField = async function() {
+        await __tmBatchSetCustomField();
+    };
+
+    function __tmCloseMultiSelectMoreMenu() {
+        try {
+            if (state.multiSelectMenuCloseHandler) {
+                __tmClearOutsideCloseHandler(state.multiSelectMenuCloseHandler);
+            }
+        } catch (e) {}
+        try { state.multiSelectMenuEl?.remove?.(); } catch (e) {}
+        state.multiSelectMenuEl = null;
+        state.multiSelectMenuAnchorEl = null;
+        state.multiSelectMenuCloseHandler = null;
+    }
+
+    function __tmBuildMultiSelectMenuItem(label, iconName, onClick, options = {}) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tm-multi-bulkbar__menu-item';
+        if (options.disabled) btn.disabled = true;
+        btn.innerHTML = `<span class="tm-multi-bulkbar__menu-icon">${__tmPhosphorBoldSvg(iconName, { size: 14, className: 'tm-multi-bulkbar__menu-icon-svg' })}</span><span>${esc(String(label || '').trim())}</span>`;
+        btn.onclick = async (ev) => {
+            try { ev.preventDefault(); } catch (e) {}
+            try { ev.stopPropagation(); } catch (e) {}
+            if (btn.disabled) return;
+            __tmCloseMultiSelectMoreMenu();
+            try { await onClick?.(); } catch (e) {}
+        };
+        return btn;
+    }
+
+    function __tmOpenMultiSelectMoreMenu(anchorEl) {
+        const anchor = anchorEl instanceof Element ? anchorEl : null;
+        if (!(anchor instanceof Element)) return;
+        const selectedCount = __tmGetMultiSelectTargetIds().length;
+        if (selectedCount <= 0) return;
+        __tmCloseMultiSelectMoreMenu();
+
+        const menu = document.createElement('div');
+        menu.className = 'tm-popup-menu bc-dropdown-menu tm-multi-bulkbar__menu';
+        menu.appendChild(__tmBuildMultiSelectMenuItem('完成', 'check-circle-2', () => window.tmMultiSelectBatchComplete?.()));
+        menu.appendChild(__tmBuildMultiSelectMenuItem('取消完成', 'circle-dot', () => window.tmMultiSelectBatchUncomplete?.()));
+        {
+            const separator = document.createElement('div');
+            separator.className = 'tm-multi-bulkbar__menu-separator';
+            menu.appendChild(separator);
+        }
+        menu.appendChild(__tmBuildMultiSelectMenuItem('置顶', 'pin', () => window.tmMultiSelectBatchPin?.()));
+        menu.appendChild(__tmBuildMultiSelectMenuItem('取消置顶', 'x-circle', () => window.tmMultiSelectBatchUnpin?.()));
+        {
+            const separator = document.createElement('div');
+            separator.className = 'tm-multi-bulkbar__menu-separator';
+            menu.appendChild(separator);
+        }
+        menu.appendChild(__tmBuildMultiSelectMenuItem('自定义列', 'chart-column', () => window.tmMultiSelectBatchSetCustomField?.()));
+
+        document.body.appendChild(menu);
+        const rect = anchor.getBoundingClientRect();
+        const menuRect = menu.getBoundingClientRect();
+        let left = Math.round(rect.right - menuRect.width);
+        let top = Math.round(rect.top - menuRect.height - 8);
+        if (top < 8) top = Math.round(rect.bottom + 8);
+        try { menu.style.left = `${Math.max(8, left)}px`; } catch (e) {}
+        try { menu.style.top = `${Math.max(8, top)}px`; } catch (e) {}
+        try { __tmClampFloatingMenuToViewport(menu, left, top, { margin: 8 }); } catch (e) {}
+
+        const closeHandler = (ev) => {
+            const target = ev?.target instanceof Element ? ev.target : null;
+            if (target?.closest?.('.tm-multi-bulkbar__menu')) return;
+            if (target?.closest?.('[data-tm-multi-more-btn]')) return;
+            __tmCloseMultiSelectMoreMenu();
+        };
+        state.multiSelectMenuEl = menu;
+        state.multiSelectMenuAnchorEl = anchor;
+        state.multiSelectMenuCloseHandler = closeHandler;
+        __tmBindOutsideCloseHandler(closeHandler, '.tm-multi-bulkbar__menu, [data-tm-multi-more-btn]');
+    }
+
+    window.tmMultiSelectToggleMoreMenu = function(ev) {
+        try { ev?.preventDefault?.(); } catch (e) {}
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        const anchor = ev?.currentTarget instanceof Element
+            ? ev.currentTarget
+            : (ev?.target instanceof Element ? ev.target.closest('[data-tm-multi-more-btn]') : null);
+        if (!(anchor instanceof Element)) return;
+        if (state.multiSelectMenuEl && state.multiSelectMenuAnchorEl === anchor) {
+            __tmCloseMultiSelectMoreMenu();
+            return;
+        }
+        __tmOpenMultiSelectMoreMenu(anchor);
+    };
 
     // 显示规则管理器
     async function showRulesManager() {
@@ -28049,6 +30215,12 @@ async function __tmRefreshAfterWake(reason) {
     window.tmDragTaskStart = function(ev, taskId) {
         const id = String(taskId || '').trim();
         if (!id) return;
+        if (__tmIsMultiSelectActive()) {
+            try { ev?.preventDefault?.(); } catch (e) {}
+            try { ev?.stopPropagation?.(); } catch (e) {}
+            state.draggingTaskId = '';
+            return;
+        }
         state.draggingTaskId = id;
         let meta = null;
         try {
@@ -28235,6 +30407,7 @@ async function __tmRefreshAfterWake(reason) {
         if (!(modal instanceof Element)) return;
         if (!__tmDockPointerTaskDragIsEnabled()) return;
         if (String(state.viewMode || '').trim() === 'calendar') return;
+        if (__tmIsMultiSelectActive()) return;
         const abort = new AbortController();
         state.dockTaskPointerDragAbort = abort;
 
@@ -28495,6 +30668,11 @@ async function __tmRefreshAfterWake(reason) {
         const id = String(taskId || '').trim();
         if (!id) return;
         const t = ev?.target;
+        if (__tmIsMultiSelectActive()) {
+            if (t?.closest?.('button,input,select,textarea,a,.tm-tree-toggle,.tm-col-resize')) return;
+            __tmToggleTaskMultiSelection(id);
+            return;
+        }
         if (t?.closest?.('button,input,select,textarea,a,.tm-task-content-clickable,.tm-tree-toggle,.tm-col-resize')) return;
         if (String(state.viewMode || '').trim() === 'checklist') {
             const task = state.flatTasks?.[id];
@@ -28519,6 +30697,10 @@ async function __tmRefreshAfterWake(reason) {
         if (!id) return;
         const target = ev?.target;
         if (target?.closest?.('input,button,select,textarea,a,.tm-tree-toggle')) return;
+        if (__tmIsMultiSelectActive('checklist')) {
+            __tmToggleTaskMultiSelection(id);
+            return;
+        }
         const prevSelectedId = String(state.detailTaskId || '').trim();
         if (prevSelectedId && prevSelectedId !== id) {
             try {
@@ -28553,22 +30735,37 @@ async function __tmRefreshAfterWake(reason) {
         const id = String(taskId || '').trim();
         if (!id) return;
         try { ev?.stopPropagation?.(); } catch (e) {}
-        if (__tmShouldJumpOnDockChecklistTitleClick() || __tmShouldJumpOnMobileChecklistTitleClick()) {
-            window.tmJumpToTask(id, ev);
-            return;
-        }
-        if (__tmIsMobileDevice()) {
+        if (__tmIsMultiSelectActive('checklist')) {
             window.tmChecklistSelectTask(id, ev);
             return;
         }
-        window.tmJumpToTask(id, ev);
+        if (__tmChecklistTitleClickUsesScopedJumpSettings()) {
+            if (__tmShouldOpenTaskDetailPageOnChecklistTitleClick()) {
+                window.tmOpenTaskDetail?.(id, ev);
+                return;
+            }
+            if (__tmShouldJumpOnDockChecklistTitleClick() || __tmShouldJumpOnMobileChecklistTitleClick()) {
+                window.tmJumpToTask(id, ev);
+                return;
+            }
+        }
+        window.tmChecklistSelectTask(id, ev);
     };
 
     window.tmWhiteboardStreamTaskTitleClick = function(taskId, ev) {
+        if (__tmConsumeDockPointerSuppressedClick(ev)) return;
         const id = String(taskId || '').trim();
         if (!id) return;
         try { ev?.stopPropagation?.(); } catch (e) {}
         try { ev?.preventDefault?.(); } catch (e) {}
+        if (__tmIsMultiSelectActive('whiteboard')) {
+            __tmToggleTaskMultiSelection(id);
+            return true;
+        }
+        if (__tmShouldOpenTaskDetailPageOnAnyTitleClick(ev)) {
+            window.tmOpenTaskDetail?.(id, ev);
+            return true;
+        }
         if (__tmIsMobileDevice() || __tmHostUsesMobileUI()) {
             state.detailTaskId = id;
             state.checklistDetailDismissed = false;
@@ -28592,12 +30789,17 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmWhiteboardStreamTaskHeadClick = function(taskId, ev) {
+        if (__tmConsumeDockPointerSuppressedClick(ev)) return;
         const id = String(taskId || '').trim();
         if (!id) return;
         const target = ev?.target;
         if (target?.closest?.('button,input,select,textarea,a,.tm-task-checkbox,.tm-task-checkbox-wrap,.tm-kanban-toggle')) return;
         try { ev?.stopPropagation?.(); } catch (e) {}
         try { ev?.preventDefault?.(); } catch (e) {}
+        if (__tmIsMultiSelectActive('whiteboard')) {
+            __tmToggleTaskMultiSelection(id);
+            return true;
+        }
         if (__tmIsMobileDevice() || __tmHostUsesMobileUI()) {
             state.detailTaskId = id;
             state.checklistDetailDismissed = false;
@@ -28852,6 +31054,28 @@ async function __tmRefreshAfterWake(reason) {
         return `<svg class="${__tmEscAttr(className)}" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"${styleAttr}><g fill="none" stroke="currentColor" stroke-width="2.45" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`;
     }
 
+    function __tmPhosphorBoldSvg(iconName, options = {}) {
+        const normalizedName = __tmNormalizeLucideIconName(iconName);
+        const size = Math.max(1, Number(options?.size) || 14);
+        const className = String(options?.className || 'tm-phosphor-emoji__svg').trim();
+        const style = String(options?.style || '').trim();
+        const styleAttr = style ? ` style="${__tmEscAttr(style)}"` : '';
+        const phosphorPath = __tmPhosphorBoldPaths[normalizedName];
+        if (phosphorPath) {
+            return `<svg class="${__tmEscAttr(className)}" viewBox="0 0 256 256" width="${size}" height="${size}" aria-hidden="true"${styleAttr}><path fill="currentColor" stroke="none" d="${phosphorPath}"></path></svg>`;
+        }
+        const body = (() => {
+            switch (normalizedName) {
+                case 'flag': return '<path d="M6 21V4.5" /><path d="M6 5.5c1.4-1.2 2.8-1.75 4.25-1.75 2.5 0 4.3 1.5 6.25 1.5.75 0 1.5-.12 2.25-.5v8.5c-.75.38-1.5.5-2.25.5-1.95 0-3.75-1.5-6.25-1.5-1.45 0-2.85.55-4.25 1.75" />';
+                case 'circle-dot': return '<circle cx="12" cy="12" r="8.75" /><circle cx="12" cy="12" r="1.25" />';
+                case 'x-circle': return '<circle cx="12" cy="12" r="9" /><path d="M9 9 15 15" /><path d="M15 9 9 15" />';
+                case 'note-pencil': return '<path d="M18.5 4.5a2.12 2.12 0 0 1 3 3l-8.75 8.75-3.5 1 1-3.5Z" /><path d="M13.5 4H6.5A1.5 1.5 0 0 0 5 5.5v13A1.5 1.5 0 0 0 6.5 20H19a1.5 1.5 0 0 0 1.5-1.5V10" />';
+                default: return '<circle cx="12" cy="12" r="8.75" />';
+            }
+        })();
+        return `<svg class="${__tmEscAttr(className)}" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"${styleAttr}><g fill="none" stroke="currentColor" stroke-width="2.45" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`;
+    }
+
     function __tmRenderLucideIcon(iconName, extraClass = '', options = {}) {
         const normalizedName = __tmNormalizeLucideIconName(iconName);
         const cls = `tm-lucide-emoji${extraClass ? ` ${extraClass}` : ''}`;
@@ -28922,6 +31146,8 @@ async function __tmRefreshAfterWake(reason) {
     function render() {
         try { __tmEnsureDocTabTouchDelegation(); } catch (e) {}
         try { state.dockTaskPointerGestureCleanup?.(); } catch (e) {}
+        try { state.multiSelectPointerGestureCleanup?.(); } catch (e) {}
+        try { __tmCloseMultiSelectMoreMenu(); } catch (e) {}
         if (!__tmIsTomatoFocusModeEnabled()) {
             __tmClearTomatoFocusRowClasses();
         }
@@ -29259,7 +31485,7 @@ async function __tmRefreshAfterWake(reason) {
         if (!key) return '';
         const label = __tmResolveColumnLabel(key);
         const escapedKey = key.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        const align = (key === 'pinned' || key === 'score' || key === 'priority' || key === 'status')
+        const align = (key === 'pinned' || key === 'score' || key === 'priority' || key === 'status' || key === 'remainingTime')
             ? 'text-align: center;'
             : '';
         const labelHtml = key === 'pinned'
@@ -29495,6 +31721,7 @@ async function __tmRefreshAfterWake(reason) {
             const renderTask = (row) => {
                 const task = state.flatTasks?.[String(row?.id || '').trim()];
                 if (!task) return '';
+                const isMultiSelected = __tmIsTaskMultiSelected(task.id);
                 if ((state.groupByTaskName || (!state.groupByDocName && !state.groupByTime && !state.quadrantEnabled)) && task.root_id) {
                     const taskDocColor = __tmGetDocColorHex(task.root_id, isDark) || '';
                     currentGroupBg = (enableGroupBg && taskDocColor) ? (__tmGroupBgFromLabelColor(taskDocColor, isDark) || '') : '';
@@ -29527,6 +31754,7 @@ async function __tmRefreshAfterWake(reason) {
                         ? ' tm-timer-focus'
                         : (tomatoFocusModeEnabled ? ' tm-timer-dim' : ''))
                     : '';
+                const multiSelectCls = isMultiSelected ? ' tm-task-row--multi-selected' : '';
                 const activeCls = String(task.id) === activeId ? ' tm-checklist-item--active' : '';
                 const doneCls = task.done ? ' tm-checklist-item--done' : '';
                 const reminderHtml = __tmHasReminderMark(task) ? __tmRenderReminderIcon() : '';
@@ -29558,7 +31786,7 @@ async function __tmRefreshAfterWake(reason) {
                     : `margin-left:${indent}px;`;
                 renderedChecklistTaskCount += 1;
                 return `
-                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}" draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')">
+                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}${multiSelectCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}" draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')">
                         <div class="tm-checklist-leading${hasChildren ? ' tm-checklist-leading--branch' : ''}${hasChildren && collapsed ? ' tm-checklist-leading--collapsed' : ''}">
                             ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);">${__tmRenderToggleIcon(16, collapsed ? 0 : 90, 'tm-tree-toggle-icon')}</span>` : '<span class="tm-tree-toggle tm-tree-toggle--placeholder" aria-hidden="true"></span>'}
                             ${hasChildren && collapsed ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>' : ''}
@@ -29566,7 +31794,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main">
                             <div class="${titleRowClass}">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}><span draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}
@@ -29781,6 +32009,7 @@ async function __tmRefreshAfterWake(reason) {
             const renderTaskRow = (row) => {
                 const task = state.flatTasks[row.id];
                 if (!task) return '';
+                const isMultiSelected = __tmIsTaskMultiSelected(task.id);
                 const depth = Math.max(0, Number(row.depth) || 0);
                 const contentIndent = 12 + depth * 16;
                 const treeGuides = depth > 0
@@ -29805,6 +32034,7 @@ async function __tmRefreshAfterWake(reason) {
                         ? 'tm-timer-focus'
                         : (tomatoFocusModeEnabled ? 'tm-timer-dim' : ''))
                     : '';
+                const finalRowClass = [rowClass, isMultiSelected ? 'tm-task-row--multi-selected' : ''].filter(Boolean).join(' ');
 
                 const allChildren = task.children || [];
                 const totalChildren = allChildren.length;
@@ -29823,7 +32053,7 @@ async function __tmRefreshAfterWake(reason) {
                 const otherCellBgStyle = groupBg ? `background-color:${groupBg};` : '';
 
                 return `
-                    <tr class="tm-timeline-row ${rowClass}" data-id="${task.id}" data-depth="${row.depth}" onclick="tmRowClick(event, '${task.id}')" oncontextmenu="tmShowTaskContextMenu(event, '${task.id}')">
+                    <tr class="tm-timeline-row ${finalRowClass}" data-id="${task.id}" data-depth="${row.depth}" onclick="tmRowClick(event, '${task.id}')" oncontextmenu="tmShowTaskContextMenu(event, '${task.id}')">
                         <td class="tm-task-content-cell" style="width: ${timelineContentWidth}px; min-width: ${timelineContentWidth}px; max-width: ${timelineContentWidth}px; ${contentCellBgStyle}">
                             <div class="tm-task-cell" style="padding-left:${contentIndent}px">
                                 ${treeGuides}
@@ -30320,16 +32550,18 @@ async function __tmRefreshAfterWake(reason) {
                 if (kanbanCardFields.has('status')) metaParts.push(statusChip);
                 if (kanbanCardFields.has('date')) metaParts.push(`<span class="tm-kanban-chip tm-kanban-chip--muted" onclick="tmKanbanPickDate('${id}', event)" title="点击选择日期">${esc(dateTxt || '日期')}</span>`);
                 const remarkHtml = kanbanCardFields.has('remark') ? __tmRenderTaskCardRemark(task) : '';
+                const multiSelectCls = __tmIsTaskMultiSelected(id) ? ' tm-task-row--multi-selected' : '';
                 const cardDragAttrs = __tmIsRuntimeMobileClient()
                     ? 'draggable="false"'
                     : `draggable="true" ondragstart="tmKanbanDragStart(event, '${id}')" ondragend="tmKanbanDragEnd(event, '${id}')"`; 
                 const cardPointerDownAttr = `onpointerdown="tmKanbanCardPointerDown(event, '${id}')"`;
+                const cardClickAttr = `onclick="tmKanbanCardClick('${id}', event)"`;
                 const cardContextMenuAttr = __tmIsRuntimeMobileClient()
                     ? 'oncontextmenu="event.preventDefault();event.stopPropagation();return false;"'
                     : `oncontextmenu="tmShowTaskContextMenu(event, '${id}')"`;
 
                 return `
-                    <div class="tm-kanban-card${isSub ? ' tm-kanban-card--sub' : ''}${isChildRoot ? ' tm-kanban-card--childroot' : ''}${isParent ? ' tm-kanban-card--parent' : ''}${task?.done ? ' tm-kanban-card--done' : ''}${remarkHtml ? ' tm-kanban-card--has-remark' : ''}" data-id="${id}" ${cardDragAttrs} ${cardPointerDownAttr} ${cardContextMenuAttr} ondblclick="tmKanbanCardDblClick('${id}', event)" style="${isSub ? '' : ''}">
+                    <div class="tm-kanban-card${isSub ? ' tm-kanban-card--sub' : ''}${isChildRoot ? ' tm-kanban-card--childroot' : ''}${isParent ? ' tm-kanban-card--parent' : ''}${task?.done ? ' tm-kanban-card--done' : ''}${remarkHtml ? ' tm-kanban-card--has-remark' : ''}${multiSelectCls}" data-id="${id}" ${cardDragAttrs} ${cardPointerDownAttr} ${cardClickAttr} ${cardContextMenuAttr} ondblclick="tmKanbanCardDblClick('${id}', event)" style="${isSub ? '' : ''}">
                         <div class="tm-kanban-card-top">
                             <div class="tm-kanban-card-head">
                                 ${toggleHtml || ''}
@@ -31236,10 +33468,11 @@ async function __tmRefreshAfterWake(reason) {
                         const childrenHtml = childIds.length && !collapsed
                             ? `<div class="tm-whiteboard-stream-children"><div class="tm-whiteboard-stream-subtasks">${childIds.map((id) => renderTaskTree(id, hideCompletedDescendants)).join('')}</div></div>`
                             : '';
+                        const multiSelectCls = __tmIsTaskMultiSelected(tid) ? ' tm-task-row--multi-selected' : '';
                         return `
                             <div class="tm-whiteboard-stream-task-node" data-task-id="${esc(tid)}" data-id="${esc(tid)}">
                                 <div class="tm-whiteboard-stream-task">
-                                    <div class="tm-whiteboard-stream-task-head" data-task-id="${esc(tid)}" data-id="${esc(tid)}" draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(tid)}')" ondragend="tmDragTaskEnd(event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(tid)}')" onclick="tmWhiteboardStreamTaskHeadClick('${escSq(tid)}', event)">
+                                    <div class="tm-whiteboard-stream-task-head${multiSelectCls}" data-task-id="${esc(tid)}" data-id="${esc(tid)}" draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(tid)}')" ondragend="tmDragTaskEnd(event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(tid)}')" onclick="tmWhiteboardStreamTaskHeadClick('${escSq(tid)}', event)">
                                         ${__tmRenderTaskCheckboxWrap(tid, task, { checked: task?.done, stopMouseDown: true, stopClick: true, title: '完成状态' })}
                                         <span class="tm-whiteboard-stream-task-title ${task?.done ? 'tm-task-done' : ''}" onpointerdown="tmWhiteboardStreamTaskTitlePointerDown(event)" onmousedown="tmWhiteboardStreamTaskTitleMouseDown(event)" ontouchstart="tmWhiteboardStreamTaskTitleTouchStart(event)" onclick="tmWhiteboardStreamTaskTitleClick('${escSq(tid)}', event)"${__tmBuildTooltipAttrs(String(content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task?.markdown, content)}</span>
                                         ${toggleHtml}
@@ -32023,6 +34256,34 @@ async function __tmRefreshAfterWake(reason) {
                 </div>
             `
             : mainBodyHtml;
+        const multiSelectCount = __tmGetMultiSelectedTaskIds().length;
+        const showMultiSelectBar = __tmIsMultiSelectActive() && __tmIsMultiSelectSupportedView();
+        const multiSelectBarBottom = showMobileTimelineFloatingToolbar
+            ? 'calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 108px)'
+            : (showMobileBottomViewBar
+                ? 'calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 52px)'
+                : '14px');
+        const multiSelectActionDisabledAttr = multiSelectCount > 0 ? '' : ' disabled';
+        const multiSelectBarHtml = showMultiSelectBar
+            ? `
+                <div class="tm-multi-bulkbar" style="bottom:${multiSelectBarBottom};">
+                    <div class="tm-multi-bulkbar__inner">
+                        <div class="tm-multi-bulkbar__summary">
+                            <span class="tm-multi-bulkbar__count" data-tm-multi-count title="已选任务数">${multiSelectCount}</span>
+                        </div>
+                        <div class="tm-multi-bulkbar__actions">
+                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm tm-multi-bulkbar__btn tm-multi-bulkbar__btn--icon" type="button" data-tm-multi-action="1" onclick="tmMultiSelectBatchSetStartDate()"${multiSelectActionDisabledAttr}${__tmBuildTooltipAttrs('批量设置开始日期', { side: 'top' })}><span class="tm-multi-bulkbar__icon">${__tmPhosphorBoldSvg('calendar-plus-2', { size: 14, className: 'tm-multi-bulkbar__icon-svg' })}</span></button>
+                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm tm-multi-bulkbar__btn tm-multi-bulkbar__btn--icon" type="button" data-tm-multi-action="1" onclick="tmMultiSelectBatchSetCompletionDate()"${multiSelectActionDisabledAttr}${__tmBuildTooltipAttrs('批量设置完成日期', { side: 'top' })}><span class="tm-multi-bulkbar__icon">${__tmPhosphorBoldSvg('calendar-check', { size: 14, className: 'tm-multi-bulkbar__icon-svg' })}</span></button>
+                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm tm-multi-bulkbar__btn tm-multi-bulkbar__btn--icon" type="button" data-tm-multi-action="1" onclick="tmMultiSelectBatchSetPriority()"${multiSelectActionDisabledAttr}${__tmBuildTooltipAttrs('批量设置重要性', { side: 'top' })}><span class="tm-multi-bulkbar__icon">${__tmPhosphorBoldSvg('flag', { size: 14, className: 'tm-multi-bulkbar__icon-svg' })}</span></button>
+                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm tm-multi-bulkbar__btn tm-multi-bulkbar__btn--icon" type="button" data-tm-multi-action="1" onclick="tmMultiSelectBatchSetStatus()"${multiSelectActionDisabledAttr}${__tmBuildTooltipAttrs('批量设置状态', { side: 'top' })}><span class="tm-multi-bulkbar__icon">${__tmPhosphorBoldSvg('circle-dot', { size: 14, className: 'tm-multi-bulkbar__icon-svg' })}</span></button>
+                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm tm-multi-bulkbar__btn tm-multi-bulkbar__btn--icon" type="button" data-tm-multi-action="1" data-tm-multi-more-btn="1" onclick="tmMultiSelectToggleMoreMenu(event)"${multiSelectActionDisabledAttr}${__tmBuildTooltipAttrs('更多批量操作', { side: 'top' })}><span class="tm-multi-bulkbar__icon">${__tmPhosphorBoldSvg('dots-three', { size: 14, className: 'tm-multi-bulkbar__icon-svg' })}</span></button>
+                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm tm-multi-bulkbar__btn tm-multi-bulkbar__btn--wide" type="button" data-tm-multi-action="1" onclick="tmMultiSelectClear()"${multiSelectActionDisabledAttr}><span class="tm-multi-bulkbar__icon">${__tmPhosphorBoldSvg('x-circle', { size: 14, className: 'tm-multi-bulkbar__icon-svg' })}</span><span>清空</span></button>
+                            <button class="tm-btn tm-btn-info bc-btn bc-btn--sm tm-multi-bulkbar__btn tm-multi-bulkbar__btn--wide" type="button" onclick="tmMultiSelectExit()"><span class="tm-multi-bulkbar__icon">${__tmPhosphorBoldSvg('x', { size: 14, className: 'tm-multi-bulkbar__icon-svg' })}</span><span>退出</span></button>
+                        </div>
+                    </div>
+                </div>
+            `
+            : '';
         const whiteboardMobileDetailSheetHtml = showWhiteboardMobileDetailSheet
             ? `<div id="tmChecklistSheetBackdrop" class="tm-checklist-sheet-backdrop ${state.checklistDetailSheetOpen && whiteboardDetailTask ? 'tm-checklist-sheet-backdrop--open' : ''}" onclick="tmChecklistCloseSheet(event)"></div>
                 <div id="tmChecklistSheet" class="tm-checklist-sheet ${state.checklistDetailSheetOpen && whiteboardDetailTask ? 'tm-checklist-sheet--open' : ''}" onpointerdown="tmChecklistSheetDragStart(event)">
@@ -32193,6 +34454,12 @@ async function __tmRefreshAfterWake(reason) {
                                     <button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="window.tmAiSemanticCompletionPreview?.(); tmHideMobileMenu();" style="flex:1; padding: 6px;">
                                         <span style="display:inline-flex;align-items:center;gap:6px;">${__tmRenderLucideIcon('calendar-days')}<span>语义日期</span></span>
                                     </button>
+                                </div>
+                                <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
+                                    <div class="tm-btn tm-btn-info bc-btn bc-btn--sm" style="flex:1; padding: 6px 10px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                                        <span>多选模式</span>
+                                        <input class="b3-switch fn__flex-center" type="checkbox" ${state.multiSelectModeEnabled ? 'checked' : ''} onchange="tmToggleMultiSelectMode(this.checked); tmHideMobileMenu();">
+                                    </div>
                                 </div>
                                 ${__tmIsAiFeatureEnabled() ? `
                                 <div class="tm-mobile-only-item" style="display:flex; gap:10px; align-items:center;">
@@ -33041,6 +35308,7 @@ async function __tmRefreshAfterWake(reason) {
                 <div class="tm-main-stage${stageAnimClass}${showMobileTimelineFloatingToolbar ? ' tm-main-stage--timeline-mobile-toolbar' : ''}">
                     ${timelineMobileFloatingToolbarHtml}
                     ${bodyWithSideDockHtml}
+                    ${multiSelectBarHtml}
                 </div>
                 ${whiteboardMobileDetailSheetHtml}
                 ${showMobileBottomViewBar ? `
@@ -33073,6 +35341,7 @@ async function __tmRefreshAfterWake(reason) {
         try { __tmBindBottomViewbarWheelScroll(state.modal); } catch (e) {}
         try { __tmBindDocTabScrollMemory(state.modal); } catch (e) {}
         try { __tmRestoreDocTabScroll(state.modal, savedDocTabsScrollLeft); } catch (e) {}
+        try { __tmBindMultiSelectPointerSweep(state.modal); } catch (e) {}
         try { __tmBindDockPointerTaskDrag(state.modal); } catch (e) {}
         try { if (state.viewMode === 'list') __tmBindListScrollVisibility(state.modal); } catch (e) {}
         try { if (state.viewMode === 'checklist') __tmBindChecklistScrollVisibility(state.modal); } catch (e) {}
@@ -33680,7 +35949,7 @@ async function __tmRefreshAfterWake(reason) {
         try {
             if (state.viewMode !== 'calendar') return;
             if (!globalThis.__tmCalendar || typeof globalThis.__tmCalendar.toggleSidebar !== 'function') return;
-            globalThis.__tmCalendar.toggleSidebar(undefined, 'calendar');
+            globalThis.__tmCalendar.toggleSidebar();
         } catch (e) {}
     };
 
@@ -38225,52 +40494,19 @@ async function __tmRefreshAfterWake(reason) {
         if (hasStartDate) attrPatch.startDate = nextStart;
         if (hasCompletionTime) attrPatch.completionTime = nextEnd;
 
-        try {
-            await __tmPersistMetaAndAttrsAsync(persistId, attrPatch);
-            if (task && typeof task === 'object') {
-                task.id = String(task.id || persistId).trim() || persistId;
-                task.startDate = nextStart;
-                task.completionTime = nextEnd;
-                if (!state.flatTasks || typeof state.flatTasks !== 'object') state.flatTasks = {};
-                state.flatTasks[String(task.id || persistId).trim() || persistId] = task;
-            }
-            try { __tmInvalidateTasksQueryCacheByDocId(task?.root_id || task?.docId); } catch (e) {}
-            try { window.__tmCalendarAllTasksCache = null; } catch (e) {}
-            const skipRefresh = opts.refresh === false;
-            if (!skipRefresh) {
-                let refreshedCalendar = false;
-                let refreshedMainView = false;
-                const currentViewMode = String(state.viewMode || '').trim();
-                try {
-                    if (globalThis.__tmCalendar && typeof globalThis.__tmCalendar.refreshInPlace === 'function') {
-                        globalThis.__tmCalendar.refreshInPlace({ hard: opts.hard === true });
-                        refreshedCalendar = true;
-                    }
-                } catch (e) {}
-                if (currentViewMode && currentViewMode !== 'calendar') {
-                    try {
-                        __tmRefreshMainViewInPlace({ withFilters: true });
-                        refreshedMainView = true;
-                    } catch (e) {}
-                }
-                if (!refreshedCalendar && !refreshedMainView) {
-                    try { __tmScheduleRender({ withFilters: true }); } catch (e) {
-                        try { render(); } catch (e2) {}
-                    }
-                }
-            }
-            return {
-                id: persistId,
-                startDate: nextStart,
-                completionTime: nextEnd,
-            };
-        } catch (e) {
-            if (task && typeof task === 'object') {
-                task.startDate = prevStart;
-                task.completionTime = prevEnd;
-            }
-            throw e;
-        }
+        await __tmApplyTaskMetaPatchWithUndo(persistId, attrPatch, {
+            source: 'calendar-dates',
+            label: __tmBuildUndoLabelFromMetaPatch(attrPatch, '日期'),
+            refresh: opts.refresh !== false,
+            refreshCalendar: true,
+            withFilters: true,
+            hard: opts.hard === true,
+        });
+        return {
+            id: persistId,
+            startDate: nextStart,
+            completionTime: nextEnd,
+        };
     };
 
     window.tmCalendarWarmDocsToGroupCache = async function() {
@@ -38346,6 +40582,7 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     window.tmKanbanCardDblClick = function(id, ev) {
+        if (__tmIsMultiSelectActive('kanban')) return;
         const tid = String(id || '').trim();
         if (!tid) return;
         const target = ev?.target;
@@ -38354,6 +40591,23 @@ async function __tmRefreshAfterWake(reason) {
         const hasChildren = Array.isArray(task?.children) && task.children.length > 0;
         if (!hasChildren) return;
         window.tmKanbanToggleCollapse(tid, ev);
+    };
+
+    window.tmKanbanCardClick = function(id, ev) {
+        if (__tmConsumeDockPointerSuppressedClick(ev)) return;
+        const tid = String(id || '').trim();
+        if (!tid) return;
+        const target = ev?.target;
+        if (target?.closest?.('button,input,select,textarea,a,.tm-task-content-clickable,.tm-task-checkbox,.tm-task-checkbox-wrap,.tm-kanban-toggle,.tm-kanban-more,.tm-status-tag,.tm-kanban-chip,.tm-priority-jira,.tm-kanban-priority-chip')) return;
+        if (!__tmIsMultiSelectActive('kanban')) return;
+        if (Number(ev?.detail) > 1) {
+            try { ev?.preventDefault?.(); } catch (e) {}
+            try { ev?.stopPropagation?.(); } catch (e) {}
+            return;
+        }
+        try { ev?.preventDefault?.(); } catch (e) {}
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        __tmToggleTaskMultiSelection(tid);
     };
 
     function __tmKanbanCollectDescendantIds(rootId) {
@@ -38887,6 +41141,7 @@ async function __tmRefreshAfterWake(reason) {
 
     window.tmKanbanCardPointerDown = function(ev, id) {
         if (state.viewMode !== 'kanban') return;
+        if (__tmIsMultiSelectActive('kanban')) return;
         if (!__tmIsKanbanTouchPointer(ev)) return;
         if (ev && typeof ev.button === 'number' && ev.button !== 0) return;
         const cardEl = ev?.currentTarget instanceof HTMLElement
@@ -39955,6 +42210,7 @@ async function __tmRefreshAfterWake(reason) {
             ${renderDesktopMenuButton(`${__tmRenderLucideIcon('file-text')}<span>摘要</span>`, `tmShowSummaryModal(); tmCloseDesktopMenu()`)}
             ${String(state.viewMode || '').trim() === 'list' ? renderDesktopMenuButton(`${__tmRenderLucideIcon('chart-column')}<span>导出 Excel</span>`, `tmExportCurrentTableExcel(); tmCloseDesktopMenu()`) : ''}
             ${renderDesktopMenuButton(`${__tmRenderLucideIcon('calendar-days')}<span>语义日期</span>`, `window.tmAiSemanticCompletionPreview?.(); tmCloseDesktopMenu()`)}
+            ${renderDesktopMenuToggle('多选模式', !!state.multiSelectModeEnabled, `tmToggleMultiSelectMode(this.checked); tmCloseDesktopMenu()`)}
             ${__tmIsAiFeatureEnabled() ? renderDesktopMenuToggle('AI 对话', !!SettingsStore.data.aiSideDockEnabled, `tmToggleAiSideDock(this.checked); tmCloseDesktopMenu()`) : ''}
             ${renderDesktopMenuToggle('日历侧边栏', !!SettingsStore.data.calendarSideDockEnabled, `tmToggleCalendarSideDock(this.checked); tmCloseDesktopMenu()`)}
             ${state.searchKeyword ? renderDesktopMenuButton(`<span>清除搜索</span>`, `tmSearch(''); tmCloseDesktopMenu()`) : ''}
@@ -40446,9 +42702,14 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
         try { state.dockTaskPointerGestureCleanup?.(); } catch (e) {}
         try { state.dockTaskPointerDragAbort?.abort?.(); } catch (e) {}
+        try { state.multiSelectPointerGestureCleanup?.(); } catch (e) {}
+        try { state.multiSelectPointerSweepAbort?.abort?.(); } catch (e) {}
+        try { __tmCloseMultiSelectMoreMenu(); } catch (e) {}
         state.dockTaskPointerGestureCleanup = null;
         state.dockTaskPointerDragAbort = null;
         state.dockTaskPointerSuppressClickUntil = 0;
+        state.multiSelectPointerGestureCleanup = null;
+        state.multiSelectPointerSweepAbort = null;
         try { __tmUnbindMobileViewportAutoRefresh(); } catch (e) {}
         __tmClearTimelineTodayIndicatorTimer();
         
@@ -42758,6 +45019,15 @@ async function __tmRefreshAfterWake(reason) {
         const task = state.flatTasks[id];
         if (!task) return;
         try {
+            const customFieldId = __tmParseCustomFieldColumnKey(field);
+            const customField = customFieldId ? __tmGetCustomFieldDefMap().get(customFieldId) : null;
+            if (customField && String(customField.type || '').trim() === 'text') {
+                const next = String(__tmNormalizeCustomFieldValue(customField, value) || '').trim();
+                __tmApplyTaskCustomFieldValueLocally(task, customField, next);
+                __tmPersistMetaAndAttrs(id, { customFieldValues: { [customFieldId]: next } });
+                hint(`✅ ${String(customField.name || '文本列').trim() || '文本列'}已更新`, 'success');
+                return;
+            }
             if (field === 'priority') {
                 const next = value === 'high' || value === 'medium' || value === 'low' ? value : '';
                 task.priority = next;
@@ -42767,31 +45037,39 @@ async function __tmRefreshAfterWake(reason) {
             }
             if (field === 'duration') {
                 const next = String(value || '').trim();
-                task.duration = next;
-                __tmPersistMetaAndAttrs(id, { duration: next });
+                await __tmApplyTaskMetaPatchWithUndo(id, { duration: next }, {
+                    source: 'cell-edit',
+                    label: '时长',
+                });
                 hint('✅ 时长已更新', 'success');
                 return;
             }
             if (field === 'remark') {
                 const next = String(value || '').trim();
-                task.remark = next;
-                __tmPersistMetaAndAttrs(id, { remark: next });
+                await __tmApplyTaskMetaPatchWithUndo(id, { remark: next }, {
+                    source: 'cell-edit',
+                    label: '备注',
+                });
                 hint('✅ 备注已更新', 'success');
                 return;
             }
             if (field === 'completionTime') {
                 const raw = String(value || '').trim();
                 const next = raw ? __tmNormalizeDateOnly(raw) : '';
-                task.completionTime = next;
-                __tmPersistMetaAndAttrs(id, { completionTime: next });
+                await __tmApplyTaskMetaPatchWithUndo(id, { completionTime: next }, {
+                    source: 'cell-edit',
+                    label: '完成时间',
+                });
                 hint(next ? '✅ 完成日期已更新' : '✅ 完成日期已清空', 'success');
                 return;
             }
             if (field === 'startDate') {
                 const raw = String(value || '').trim();
                 const next = raw ? __tmNormalizeDateOnly(raw) : '';
-                task.startDate = next;
-                __tmPersistMetaAndAttrs(id, { startDate: next });
+                await __tmApplyTaskMetaPatchWithUndo(id, { startDate: next }, {
+                    source: 'cell-edit',
+                    label: '开始日期',
+                });
                 hint(next ? '✅ 开始日期已更新' : '✅ 开始日期已清空', 'success');
                 return;
             }
@@ -42837,6 +45115,8 @@ async function __tmRefreshAfterWake(reason) {
 
         const task = state.flatTasks[id];
         if (!task) return;
+        const customFieldId = __tmParseCustomFieldColumnKey(field);
+        const customField = customFieldId ? __tmGetCustomFieldDefMap().get(customFieldId) : null;
 
         const finish = (rerender) => __tmCloseCellEditor(rerender);
         const cancel = () => finish(true);
@@ -43038,11 +45318,11 @@ async function __tmRefreshAfterWake(reason) {
             return;
         }
 
-        if (field === 'duration' || field === 'remark') {
+        if (field === 'duration') {
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'tm-cell-editor-input';
-            input.value = field === 'duration' ? String(task.duration || '') : String(task.remark || '');
+            input.value = String(task.duration || '');
             td.appendChild(input);
             const save = () => commitAndClose(input.value);
             input.onblur = () => save();
@@ -43053,6 +45333,47 @@ async function __tmRefreshAfterWake(reason) {
             try {
                 input.focus();
                 input.select?.();
+            } catch (e) {}
+            return;
+        }
+
+        if (customField && String(customField.type || '').trim() === 'text') {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'tm-cell-editor-input';
+            input.value = String(__tmNormalizeCustomFieldValue(customField, __tmGetTaskCustomFieldValue(task, customFieldId)) || '');
+            td.appendChild(input);
+            const save = () => commitAndClose(input.value);
+            input.onblur = () => save();
+            input.onkeydown = (e) => {
+                if (e.key === 'Escape') cancel();
+                if (e.key === 'Enter') save();
+            };
+            try {
+                input.focus();
+                input.select?.();
+            } catch (e) {}
+            return;
+        }
+
+        if (field === 'remark') {
+            const input = document.createElement('textarea');
+            input.className = 'tm-cell-editor-textarea';
+            input.rows = 4;
+            input.value = String(task.remark || '');
+            td.appendChild(input);
+            const save = () => commitAndClose(input.value);
+            input.onblur = () => save();
+            input.onkeydown = (e) => {
+                if (e.key === 'Escape') cancel();
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    try { e.preventDefault(); } catch (err) {}
+                    save();
+                }
+            };
+            try {
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
             } catch (e) {}
             return;
         }
@@ -43795,6 +46116,25 @@ async function __tmRefreshAfterWake(reason) {
             event.preventDefault();
             event.stopPropagation();
         }
+        const taskId = String(id || '').trim();
+        if (!taskId) return false;
+        if (__tmShouldOpenTaskDetailPageOnAnyTitleClick(event)) {
+            try {
+                await window.tmOpenTaskDetail?.(taskId, event);
+                return true;
+            } catch (e) {}
+        }
+        if (__tmIsMultiSelectActive()) {
+            const ownerRow = event?.target instanceof Element
+                ? event.target.closest('.tm-checklist-item[data-id], #tmTimelineLeftTable tbody tr[data-id], #tmTaskTable tbody tr[data-id], .tm-kanban-card[data-id], .tm-whiteboard-stream-task-head[data-id], .tm-whiteboard-stream-task-node[data-id]')
+                : null;
+            const ownerId = String(ownerRow?.getAttribute?.('data-id') || '').trim();
+            const targetId = taskId;
+            if (targetId && ownerId && ownerId === targetId) {
+                __tmToggleTaskMultiSelection(targetId);
+                return false;
+            }
+        }
         const app = __getPluginApp();
         const isDock = __tmIsDockHost();
         const isRealMobile = __tmIsRuntimeMobileClient();
@@ -43810,15 +46150,15 @@ async function __tmRefreshAfterWake(reason) {
         const openMobile = getOpenMobileFn();
         if (isRealMobile && typeof openMobile === 'function') {
             try {
-                let docId = id;
+                let docId = taskId;
                 try {
-                    const sql = `SELECT root_id FROM blocks WHERE id = '${id}' LIMIT 1`;
+                    const sql = `SELECT root_id FROM blocks WHERE id = '${taskId}' LIMIT 1`;
                     const res = await API.call('/api/query/sql', { stmt: sql });
                     const rows = (res && res.code === 0) ? res.data : [];
-                    docId = (rows && rows[0] && rows[0].root_id) ? rows[0].root_id : id;
+                    docId = (rows && rows[0] && rows[0].root_id) ? rows[0].root_id : taskId;
                 } catch (e) {}
                 openMobile(app, docId);
-                setTimeout(() => __tmScheduleScrollToBlock(id, 24), 650);
+                setTimeout(() => __tmScheduleScrollToBlock(taskId, 24), 650);
                 closeAfterJump();
                 return;
             } catch (e) {}
@@ -43827,22 +46167,22 @@ async function __tmRefreshAfterWake(reason) {
         const openTab = getOpenTabFn();
         if (typeof openTab === 'function') {
             try {
-                const sql = `SELECT root_id FROM blocks WHERE id = '${id}' LIMIT 1`;
+                const sql = `SELECT root_id FROM blocks WHERE id = '${taskId}' LIMIT 1`;
                 const res = await API.call('/api/query/sql', { stmt: sql });
                 const rows = (res && res.code === 0) ? res.data : [];
-                const docId = (rows && rows[0]) ? rows[0].root_id : id;
+                const docId = (rows && rows[0]) ? rows[0].root_id : taskId;
 
                 const params = { 
                     app, 
                     doc: { id: docId }
                 };
                 
-                if (docId !== id) {
-                    params.block = { id: id, mode: 0 };
+                if (docId !== taskId) {
+                    params.block = { id: taskId, mode: 0 };
                 }
 
                 openTab(params);
-                __tmScheduleScrollToBlock(id);
+                __tmScheduleScrollToBlock(taskId);
                 closeAfterJump();
                 
                 return;
@@ -43852,7 +46192,7 @@ async function __tmRefreshAfterWake(reason) {
         try {
             const tempSpan = topDoc.createElement('span');
             tempSpan.setAttribute('data-type', 'block-ref');
-            tempSpan.setAttribute('data-id', id);
+            tempSpan.setAttribute('data-id', taskId);
             tempSpan.style.position = 'fixed';
             tempSpan.style.top = '-9999px';
             tempSpan.style.left = '-9999px';
@@ -43875,7 +46215,7 @@ async function __tmRefreshAfterWake(reason) {
             return;
         } catch (e) {}
 
-        topWin.open(`siyuan://blocks/${id}`);
+        topWin.open(`siyuan://blocks/${taskId}`);
         closeAfterJump();
     };
 
@@ -44555,6 +46895,43 @@ async function __tmRefreshAfterWake(reason) {
         return children.map((child) => renderNode(child, 0)).join('');
     }
 
+    function __tmBuildTaskDetailRemarkToolbarHtml() {
+        const tools = [
+            { action: 'bullet', label: '•', title: '无序列表' },
+            { action: 'ordered', label: '1.', title: '有序列表' },
+            { action: 'bold', label: 'B', title: '粗体' },
+            { action: 'italic', label: 'I', title: '斜体' },
+            { action: 'code', label: 'Code', title: '行内代码' },
+            { action: 'link', label: '∞', title: '链接' },
+            { action: 'quote', label: '❝', title: '引用' },
+        ];
+        return tools.map((tool) => `
+            <button type="button"
+                class="bc-btn bc-btn--sm tm-task-detail-remark-toolbar-btn"
+                data-tm-detail-remark-tool="${esc(tool.action)}"
+                ${__tmBuildTooltipAttrs(tool.title, { side: 'top', ariaLabel: false })}>${tool.label}</button>
+        `).join('');
+    }
+
+    function __tmBuildTaskDetailRemarkSectionHtml(remarkValue, detailTip) {
+        const source = __tmNormalizeRemarkMarkdown(remarkValue);
+        const previewHtml = __tmRenderRemarkMarkdown(source);
+        return `
+            <section class="tm-task-detail-section">
+                <div class="tm-task-detail-section-head">
+                    <div class="tm-task-detail-section-title">备注</div>
+                </div>
+                <div class="tm-task-detail-remark-shell" data-tm-detail-remark-shell>
+                    <div class="tm-task-detail-remark-preview" data-tm-detail-remark-preview>${previewHtml}</div>
+                    <button type="button" class="tm-task-detail-remark-activator" data-tm-detail-remark-activator aria-label="编辑备注"></button>
+                    <textarea class="bc-textarea tm-task-detail-remark tm-task-detail-remark-editor" data-tm-detail="remark" rows="1">${esc(source)}</textarea>
+                    <button type="button" class="bc-btn bc-btn--sm tm-task-detail-remark-toolbar-toggle" data-tm-detail-remark-toolbar-toggle${detailTip('格式工具', { ariaLabel: false })}>A</button>
+                    <div class="tm-task-detail-remark-toolbar" data-tm-detail-remark-toolbar>${__tmBuildTaskDetailRemarkToolbarHtml()}</div>
+                </div>
+            </section>
+        `;
+    }
+
     function __tmBuildTaskDetailInnerHtml(task, options = {}) {
         const opts = (options && typeof options === 'object') ? options : {};
         const embedded = !!opts.embedded;
@@ -44600,23 +46977,25 @@ async function __tmRefreshAfterWake(reason) {
             const colKey = __tmBuildCustomFieldColumnKey(field?.id);
             return !!colKey && visibleColumnSet.has(colKey);
         });
+        const visibleOptionCustomFieldDefs = visibleCustomFieldDefs.filter((field) => String(field?.type || '').trim() !== 'text');
+        const visibleTextCustomFieldDefs = visibleCustomFieldDefs.filter((field) => String(field?.type || '').trim() === 'text');
         const priorityOptions = [
             { value: '', label: '无' },
             { value: 'low', label: '低' },
             { value: 'medium', label: '中' },
             { value: 'high', label: '高' },
         ];
-        const customFieldsHtml = visibleCustomFieldDefs.length
+        const customFieldsHtml = visibleOptionCustomFieldDefs.length
             ? `
                 <div class="tm-task-detail-custom-fields">
-                    ${visibleCustomFieldDefs.map((field) => {
+                    ${visibleOptionCustomFieldDefs.map((field) => {
                         const fieldId = String(field?.id || '').trim();
                         if (!fieldId) return '';
                         return `
                             <div class="tm-task-detail-custom-field">
                                 <span class="tm-task-detail-custom-field-label">${esc(String(field?.name || fieldId).trim() || fieldId)}</span>
                                 <button type="button" class="tm-task-detail-custom-field-btn" data-tm-custom-field-anchor data-tm-detail-custom-field="${esc(fieldId)}">
-                                    <span class="tm-task-detail-custom-field-value">${__tmBuildCustomFieldTagsHtml(field, __tmGetTaskCustomFieldValue(task, fieldId), { emptyText: '未设置', maxTags: String(field?.type || '').trim() === 'multi' ? 3 : 1 })}</span>
+                                    <span class="tm-task-detail-custom-field-value">${__tmBuildCustomFieldDisplayHtml(field, __tmGetTaskCustomFieldValue(task, fieldId), { emptyText: '未设置', maxTags: String(field?.type || '').trim() === 'multi' ? 3 : 1 })}</span>
                                 </button>
                             </div>
                         `;
@@ -44624,6 +47003,20 @@ async function __tmRefreshAfterWake(reason) {
                 </div>
             `
             : '';
+        const textCustomFieldsHtml = visibleTextCustomFieldDefs.map((field) => {
+            const fieldId = String(field?.id || '').trim();
+            if (!fieldId) return '';
+            const fieldName = String(field?.name || fieldId).trim() || fieldId;
+            const fieldValue = String(__tmNormalizeCustomFieldValue(field, __tmGetTaskCustomFieldValue(task, fieldId)) || '').trim();
+            return `
+                <section class="tm-task-detail-section">
+                    <div class="tm-task-detail-section-head">
+                        <div class="tm-task-detail-section-title">${esc(fieldName)}</div>
+                    </div>
+                    <textarea class="bc-textarea tm-task-detail-remark" data-tm-detail-custom-text-field="${esc(fieldId)}" rows="1">${esc(fieldValue)}</textarea>
+                </section>
+            `;
+        }).join('');
         const locationHtml = (docName || showHeadingLocation)
             ? `
                 <div class="tm-task-detail-location">
@@ -44716,12 +47109,8 @@ async function __tmRefreshAfterWake(reason) {
                     </div>
                 </section>
 
-                <section class="tm-task-detail-section">
-                    <div class="tm-task-detail-section-head">
-                        <div class="tm-task-detail-section-title">备注</div>
-                    </div>
-                    <textarea class="bc-textarea tm-task-detail-remark" data-tm-detail="remark" rows="1">${esc(remarkValue)}</textarea>
-                </section>
+                ${__tmBuildTaskDetailRemarkSectionHtml(remarkValue, detailTip)}
+                ${textCustomFieldsHtml}
             </div>
         `;
     }
@@ -44792,6 +47181,18 @@ async function __tmRefreshAfterWake(reason) {
             return input.type === 'checkbox'
                 ? !!input.checked
                 : !!String(input.value || '').trim();
+        };
+        const collectCustomTextFieldValues = () => {
+            const values = {};
+            root.querySelectorAll('textarea[data-tm-detail-custom-text-field]').forEach((el) => {
+                if (!(el instanceof HTMLTextAreaElement)) return;
+                const fieldId = String(el.getAttribute('data-tm-detail-custom-text-field') || '').trim();
+                if (!fieldId) return;
+                const field = __tmGetCustomFieldDefMap().get(fieldId);
+                if (!field || String(field?.type || '').trim() !== 'text') return;
+                values[fieldId] = String(__tmNormalizeCustomFieldValue(field, el.value) || '').trim();
+            });
+            return values;
         };
         const refreshBoundDetail = (nextTaskId = taskId) => {
             const nextId = String(nextTaskId || '').trim();
@@ -44902,13 +47303,13 @@ async function __tmRefreshAfterWake(reason) {
         const syncSerializedSnapshot = () => {
             try {
                 const s = collectFormState();
-                lastSerialized = JSON.stringify([s.nextContent, s.nextStatus, s.nextPriority, s.nextPinned, s.nextStart, s.nextEnd, s.nextDuration, s.nextRemark]);
+                lastSerialized = JSON.stringify([s.nextContent, s.nextStatus, s.nextPriority, s.nextPinned, s.nextStart, s.nextEnd, s.nextDuration, s.nextRemark, s.nextCustomFieldTextValues]);
             } catch (e) {}
         };
         const isDetailEditorFocused = () => {
             try {
                 const active = document.activeElement;
-                return !!(active instanceof Element && root.contains(active) && active.closest?.('[data-tm-detail="content"], [data-tm-detail="remark"], [data-tm-detail-subtask-content], [data-tm-detail-subtask-draft-input]'));
+                return !!(active instanceof Element && root.contains(active) && active.closest?.('[data-tm-detail="content"], [data-tm-detail="remark"], [data-tm-detail-custom-text-field], [data-tm-detail-subtask-content], [data-tm-detail-subtask-draft-input]'));
             } catch (e) {
                 return false;
             }
@@ -44977,15 +47378,21 @@ async function __tmRefreshAfterWake(reason) {
                     syncMetaChipFaces();
                     break;
                 case 'custom-remark':
-                    nextTask.remark = value;
+                    nextTask.remark = __tmNormalizeRemarkMarkdown(value);
                     nextTask = __tmCacheTaskInState(nextTask, {
                         docNameFallback: nextTask.doc_name || nextTask.docName || '未命名文档'
                     }) || nextTask;
                     {
                         const textarea = root.querySelector('textarea[data-tm-detail="remark"]');
                         if (textarea instanceof HTMLTextAreaElement) {
-                            textarea.value = String(nextTask.remark || '').trim();
+                            textarea.value = __tmNormalizeRemarkMarkdown(nextTask.remark || '');
                             syncAutoHeight(textarea, 34);
+                        }
+                    }
+                    {
+                        const preview = root.querySelector('[data-tm-detail-remark-preview]');
+                        if (preview instanceof HTMLElement) {
+                            preview.innerHTML = __tmRenderRemarkMarkdown(nextTask.remark || '');
                         }
                     }
                     break;
@@ -45007,12 +47414,20 @@ async function __tmRefreshAfterWake(reason) {
                             nextTask = __tmCacheTaskInState(nextTask, {
                                 docNameFallback: nextTask.doc_name || nextTask.docName || '未命名文档'
                             }) || nextTask;
-                            const valueWrap = root.querySelector(`[data-tm-detail-custom-field="${customFieldId}"] .tm-task-detail-custom-field-value`);
-                            if (valueWrap instanceof HTMLElement) {
-                                valueWrap.innerHTML = __tmBuildCustomFieldTagsHtml(customField, __tmGetTaskCustomFieldValue(nextTask, customFieldId), {
-                                    emptyText: '未设置',
-                                    maxTags: String(customField?.type || '').trim() === 'multi' ? 3 : 1
-                                });
+                            if (String(customField?.type || '').trim() === 'text') {
+                                const textarea = root.querySelector(`textarea[data-tm-detail-custom-text-field="${customFieldId}"]`);
+                                if (textarea instanceof HTMLTextAreaElement) {
+                                    textarea.value = String(__tmNormalizeCustomFieldValue(customField, __tmGetTaskCustomFieldValue(nextTask, customFieldId)) || '').trim();
+                                    syncAutoHeight(textarea, 34);
+                                }
+                            } else {
+                                const valueWrap = root.querySelector(`[data-tm-detail-custom-field="${customFieldId}"] .tm-task-detail-custom-field-value`);
+                                if (valueWrap instanceof HTMLElement) {
+                                    valueWrap.innerHTML = __tmBuildCustomFieldDisplayHtml(customField, __tmGetTaskCustomFieldValue(nextTask, customFieldId), {
+                                        emptyText: '未设置',
+                                        maxTags: String(customField?.type || '').trim() === 'multi' ? 3 : 1
+                                    });
+                                }
                             }
                             break;
                         }
@@ -45064,7 +47479,8 @@ async function __tmRefreshAfterWake(reason) {
             const nextStart = normalize(root.querySelector('[data-tm-detail="startDate"]')?.value);
             const nextEnd = normalize(root.querySelector('[data-tm-detail="completionTime"]')?.value);
             const nextDuration = String(root.querySelector('[data-tm-detail="duration"]')?.value || '').trim();
-            const nextRemark = String(root.querySelector('[data-tm-detail="remark"]')?.value || '').trim();
+            const nextRemark = __tmNormalizeRemarkMarkdown(root.querySelector('[data-tm-detail="remark"]')?.value || '');
+            const nextCustomFieldTextValues = collectCustomTextFieldValues();
             return {
                 task,
                 nextContent,
@@ -45074,7 +47490,8 @@ async function __tmRefreshAfterWake(reason) {
                 nextStart,
                 nextEnd,
                 nextDuration,
-                nextRemark
+                nextRemark,
+                nextCustomFieldTextValues
             };
         };
         const doSave = async (saveOptions = true) => {
@@ -45094,7 +47511,8 @@ async function __tmRefreshAfterWake(reason) {
                 nextStart,
                 nextEnd,
                 nextDuration,
-                nextRemark
+                nextRemark,
+                nextCustomFieldTextValues
             } = collectFormState();
             if (!task) {
                 if (showHint) hint('⚠️ 未找到任务数据，无法保存', 'warning');
@@ -45104,10 +47522,18 @@ async function __tmRefreshAfterWake(reason) {
                 if (showHint) hint('⚠️ 任务内容不能为空', 'warning');
                 return false;
             }
-            const serialized = JSON.stringify([nextContent, nextStatus, nextPriority, nextPinned, nextStart, nextEnd, nextDuration, nextRemark]);
+            const serialized = JSON.stringify([nextContent, nextStatus, nextPriority, nextPinned, nextStart, nextEnd, nextDuration, nextRemark, nextCustomFieldTextValues]);
             if (serialized === lastSerialized && !showHint) return true;
             if (saving) return false;
             saving = true;
+            const detailScrollSnapshotForSave = (() => {
+                try {
+                    if (embedded) return __tmCaptureChecklistDetailScrollSnapshot(state.modal);
+                    return __tmCaptureStandaloneTaskDetailScrollSnapshot();
+                } catch (e) {
+                    return null;
+                }
+            })();
 
             const rerenderCurrentViewDeferred = () => {
                 const run = () => {
@@ -45137,19 +47563,42 @@ async function __tmRefreshAfterWake(reason) {
                     duration: nextDuration,
                     remark: nextRemark
                 };
+                if (nextCustomFieldTextValues && typeof nextCustomFieldTextValues === 'object' && Object.keys(nextCustomFieldTextValues).length) {
+                    patch.customFieldValues = nextCustomFieldTextValues;
+                }
+                const undoPatch = __tmExtractUndoEligibleMetaPatch(patch);
+                const undoInversePatch = Object.keys(undoPatch).length
+                    ? __tmCaptureTaskPatchInverse(task.id, undoPatch)
+                    : {};
                 task.customStatus = nextStatus;
                 task.priority = nextPriority;
                 task.pinned = nextPinned;
                 task.startDate = nextStart;
                 task.completionTime = nextEnd;
                 task.duration = nextDuration;
-                task.remark = nextRemark;
+                task.remark = __tmNormalizeRemarkMarkdown(nextRemark);
+                Object.entries(nextCustomFieldTextValues || {}).forEach(([fieldId, fieldValue]) => {
+                    const field = __tmGetCustomFieldDefMap().get(String(fieldId || '').trim());
+                    if (!field || String(field?.type || '').trim() !== 'text') return;
+                    __tmApplyTaskCustomFieldValueLocally(task, field, fieldValue);
+                });
                 task.content = nextContent;
                 task.raw_content = nextContent;
                 try { root.__tmTaskDetailTask = task; } catch (e) {}
                 await __tmPersistMetaAndAttrsAsync(task.id, patch, { background: true, skipFlush: true });
                 try { __tmInvalidateTasksQueryCacheByDocId(task.root_id || task.docId); } catch (e) {}
                 lastSerialized = serialized;
+                if (!__tmUndoState.applying && Object.keys(undoPatch).length && !__tmIsPatchNoop(undoPatch, undoInversePatch)) {
+                    __tmPushUndoRecord({
+                        type: 'attrPatch',
+                        taskId: String(task.id || '').trim(),
+                        requestedTaskId: String(task.id || '').trim(),
+                        patch: undoPatch,
+                        inversePatch: undoInversePatch,
+                        label: __tmBuildUndoLabelFromMetaPatch(undoPatch, '任务字段'),
+                        source: 'detail',
+                    });
+                }
                 try { applyFilters(); } catch (e) {}
                 try { root.__tmTaskDetailCloseInlinePopover?.(); } catch (e) {}
                 if (skipRerender) {
@@ -45170,6 +47619,10 @@ async function __tmRefreshAfterWake(reason) {
                 if (showHint) hint(`❌ 保存失败: ${e.message}`, 'error');
                 return false;
             } finally {
+                try {
+                    if (embedded) __tmRestoreChecklistDetailScrollSnapshot(detailScrollSnapshotForSave, state.modal);
+                    else __tmRestoreStandaloneTaskDetailScrollSnapshot(detailScrollSnapshotForSave);
+                } catch (e) {}
                 saving = false;
             }
         };
@@ -45369,7 +47822,9 @@ async function __tmRefreshAfterWake(reason) {
                 if (!(el instanceof HTMLElement)) return;
                 try { el.innerHTML = html; } catch (e) {}
                 try { el.removeAttribute('title'); } catch (e) {}
-                const tooltipTarget = el.closest('.tm-checklist-title-button') || el;
+                const tooltipTarget = el.matches('.tm-checklist-title-button > span')
+                    ? el
+                    : (el.closest('.tm-checklist-title-button') || el);
                 try { __tmApplyTooltipAttrsToElement(tooltipTarget, plainText, { side: 'bottom' }); } catch (e) {}
             };
             const contentSelectors = [
@@ -45844,17 +48299,302 @@ async function __tmRefreshAfterWake(reason) {
                 requestAnimationFrame(() => syncAutoHeight(titleTextarea, 36));
             } catch (e) {}
         }
+        const remarkShell = root.querySelector('[data-tm-detail-remark-shell]');
+        const remarkPreview = root.querySelector('[data-tm-detail-remark-preview]');
+        const remarkActivator = root.querySelector('[data-tm-detail-remark-activator]');
         const remarkTextarea = root.querySelector('[data-tm-detail="remark"]');
-        if (remarkTextarea instanceof HTMLTextAreaElement) {
-            const syncRemarkHeight = () => syncAutoHeight(remarkTextarea, 34);
-            syncRemarkHeight();
-            on(remarkTextarea, 'input', () => {
+        const remarkToolbar = root.querySelector('[data-tm-detail-remark-toolbar]');
+        const remarkToolbarToggle = root.querySelector('[data-tm-detail-remark-toolbar-toggle]');
+        if (remarkShell instanceof HTMLElement && remarkPreview instanceof HTMLElement && remarkTextarea instanceof HTMLTextAreaElement) {
+            const resolveRemarkTargetElement = (target) => {
+                if (target instanceof Element) return target;
+                if (target && typeof target === 'object' && target.parentElement instanceof Element) return target.parentElement;
+                return null;
+            };
+            let remarkEnterGuardUntil = 0;
+            const captureDetailScrollSnapshot = () => {
+                try {
+                    const checklistSnapshot = __tmCaptureChecklistDetailScrollSnapshot(state.modal);
+                    if (checklistSnapshot) return { kind: 'checklist', snapshot: checklistSnapshot };
+                } catch (e) {}
+                try {
+                    const standaloneSnapshot = __tmCaptureStandaloneTaskDetailScrollSnapshot();
+                    if (standaloneSnapshot) return { kind: 'standalone', snapshot: standaloneSnapshot };
+                } catch (e) {}
+                return null;
+            };
+            const restoreDetailScrollSnapshot = (pack) => {
+                if (!pack || !pack.snapshot) return;
+                try {
+                    if (pack.kind === 'checklist') {
+                        __tmRestoreChecklistDetailScrollSnapshot(pack.snapshot, state.modal);
+                        return;
+                    }
+                    if (pack.kind === 'standalone') {
+                        __tmRestoreStandaloneTaskDetailScrollSnapshot(pack.snapshot);
+                    }
+                } catch (e) {}
+            };
+            const preserveDetailScroll = (fn) => {
+                const snapshot = captureDetailScrollSnapshot();
+                const result = typeof fn === 'function' ? fn() : undefined;
+                restoreDetailScrollSnapshot(snapshot);
+                try { requestAnimationFrame(() => restoreDetailScrollSnapshot(snapshot)); } catch (e) {}
+                try { setTimeout(() => restoreDetailScrollSnapshot(snapshot), 30); } catch (e) {}
+                try { setTimeout(() => restoreDetailScrollSnapshot(snapshot), 90); } catch (e) {}
+                return result;
+            };
+            const getDetailScrollContainer = () => {
+                if (embedded) {
+                    const modal = state.modal instanceof Element ? state.modal : null;
+                    const panel = modal?.querySelector?.(__tmChecklistUseSheetMode(modal) ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+                    if (panel instanceof HTMLElement) return panel;
+                }
+                const standalone = root.closest?.('.tm-task-detail');
+                if (standalone instanceof HTMLElement) return standalone;
+                return root instanceof HTMLElement ? root : null;
+            };
+            const ensureRemarkVisibleOnMobile = () => {
+                if (!__tmIsMobileDevice()) return;
+                if (!remarkShell.classList.contains('is-editing')) return;
+                const scroller = getDetailScrollContainer();
+                if (!(scroller instanceof HTMLElement)) return;
+                try {
+                    const scrollerRect = scroller.getBoundingClientRect();
+                    const shellRect = remarkShell.getBoundingClientRect();
+                    const topPadding = 12;
+                    const bottomPadding = 160;
+                    const isAbove = shellRect.top < (scrollerRect.top + topPadding);
+                    const isBelow = shellRect.bottom > (scrollerRect.bottom - bottomPadding);
+                    if (!isAbove && !isBelow) return;
+                    const targetTop = Math.max(0, Number(scroller.scrollTop || 0) + (shellRect.top - scrollerRect.top) - topPadding);
+                    try { scroller.scrollTo({ top: targetTop, behavior: 'auto' }); } catch (e) { scroller.scrollTop = targetTop; }
+                } catch (e) {}
+            };
+            const scheduleEnsureRemarkVisibleOnMobile = () => {
+                if (!__tmIsMobileDevice()) return;
+                try { ensureRemarkVisibleOnMobile(); } catch (e) {}
+                try { requestAnimationFrame(() => ensureRemarkVisibleOnMobile()); } catch (e) {}
+                try { setTimeout(() => ensureRemarkVisibleOnMobile(), 60); } catch (e) {}
+                try { setTimeout(() => ensureRemarkVisibleOnMobile(), 180); } catch (e) {}
+                try { setTimeout(() => ensureRemarkVisibleOnMobile(), 320); } catch (e) {}
+            };
+            const syncRemarkHeight = () => syncAutoHeight(remarkTextarea, 80);
+            const syncRemarkPreview = (force = false) => {
+                if (!force && remarkShell.classList.contains('is-editing') && __tmIsMobileDevice()) return;
+                remarkPreview.innerHTML = __tmRenderRemarkMarkdown(remarkTextarea.value || '');
+            };
+            const setRemarkToolbarOpen = (open) => {
+                if (!(remarkToolbar instanceof HTMLElement)) return;
+                remarkToolbar.classList.toggle('is-open', !!open);
+                remarkToolbar.hidden = !open;
+                try { remarkShell.dataset.toolbarOpen = open ? 'true' : 'false'; } catch (e) {}
+            };
+            const focusRemarkTextarea = (selectAll = false) => {
+                try { syncRemarkHeight(); } catch (e) {}
+                preserveDetailScroll(() => {
+                    try { remarkTextarea.focus({ preventScroll: true }); } catch (e) { try { remarkTextarea.focus(); } catch (e2) {} }
+                    try {
+                        const caret = selectAll ? 0 : String(remarkTextarea.value || '').length;
+                        const end = selectAll ? String(remarkTextarea.value || '').length : caret;
+                        remarkTextarea.setSelectionRange(caret, end);
+                    } catch (e) {}
+                });
+                scheduleEnsureRemarkVisibleOnMobile();
+            };
+            const enterRemarkEditMode = (options = {}) => {
+                remarkShell.classList.add('is-editing');
+                try { remarkShell.dataset.mode = 'edit'; } catch (e) {}
+                remarkEnterGuardUntil = Date.now() + 320;
                 syncRemarkHeight();
+                if (options.openToolbar) setRemarkToolbarOpen(true);
+                focusRemarkTextarea(!!options.selectAll);
+                try {
+                    requestAnimationFrame(() => {
+                        focusRemarkTextarea(!!options.selectAll);
+                    });
+                } catch (e) {}
+                try {
+                    setTimeout(() => focusRemarkTextarea(!!options.selectAll), 30);
+                } catch (e) {}
+            };
+            const exitRemarkEditMode = (save = true) => {
+                const run = async () => {
+                    syncRemarkHeight();
+                    syncRemarkPreview(true);
+                    if (save) {
+                        await flushAutoSaveNow({
+                            showHint: false,
+                            closeAfterSave: false,
+                            preserveFocus: false,
+                            skipRerender: true,
+                        }).catch(() => null);
+                    }
+                    setRemarkToolbarOpen(false);
+                    remarkShell.classList.remove('is-editing');
+                    try { remarkShell.dataset.mode = 'preview'; } catch (e) {}
+                };
+                run().catch(() => null);
+            };
+
+            syncRemarkPreview();
+            syncRemarkHeight();
+            setRemarkToolbarOpen(false);
+            try { remarkShell.dataset.mode = 'preview'; } catch (e) {}
+
+            if (remarkActivator instanceof HTMLButtonElement) {
+                on(remarkActivator, 'mousedown', (ev) => {
+                    try { ev.preventDefault(); } catch (e) {}
+                    try { ev.stopPropagation(); } catch (e) {}
+                    enterRemarkEditMode();
+                });
+                on(remarkActivator, 'click', (ev) => {
+                    try { ev.preventDefault(); } catch (e) {}
+                    try { ev.stopPropagation(); } catch (e) {}
+                    enterRemarkEditMode();
+                });
+            }
+            on(remarkShell, 'mousedown', (ev) => {
+                if (remarkShell.classList.contains('is-editing')) return;
+                const target = resolveRemarkTargetElement(ev.target);
+                if (!(target instanceof Element)) return;
+                if (target.closest('[data-tm-detail-remark-toolbar-toggle], [data-tm-detail-remark-toolbar], [data-tm-detail-remark-activator], a')) return;
+                if (!target.closest('[data-tm-detail-remark-preview], [data-tm-detail-remark-shell]')) return;
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                enterRemarkEditMode();
+            });
+            on(remarkPreview, 'mousedown', (ev) => {
+                const target = resolveRemarkTargetElement(ev.target);
+                if (target instanceof Element && target.closest('a')) return;
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                enterRemarkEditMode();
+            });
+            on(remarkPreview, 'click', (ev) => {
+                const target = resolveRemarkTargetElement(ev.target);
+                if (target instanceof Element && target.closest('a')) return;
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                enterRemarkEditMode();
+            });
+            on(remarkPreview, 'keydown', (ev) => {
+                if (ev.key !== 'Enter' && ev.key !== ' ') return;
+                try { ev.preventDefault(); } catch (e) {}
+                enterRemarkEditMode();
+            });
+            on(remarkTextarea, 'input', () => {
+                preserveDetailScroll(() => {
+                    syncRemarkHeight();
+                    syncRemarkPreview(false);
+                });
+                scheduleEnsureRemarkVisibleOnMobile();
                 scheduleAutoSave();
             });
             on(remarkTextarea, 'focus', syncRemarkHeight);
+            on(remarkTextarea, 'focus', () => {
+                scheduleEnsureRemarkVisibleOnMobile();
+            });
+            on(remarkTextarea, 'keydown', (ev) => {
+                if (preserveDetailScroll(() => __tmHandleRemarkTextareaKeydown(remarkTextarea, ev))) {
+                    syncRemarkHeight();
+                    syncRemarkPreview(false);
+                    scheduleEnsureRemarkVisibleOnMobile();
+                    scheduleAutoSave();
+                    return;
+                }
+                if (ev.key === 'Escape') {
+                    try { ev.preventDefault(); } catch (e) {}
+                    if (remarkToolbar instanceof HTMLElement && remarkToolbar.classList.contains('is-open')) {
+                        setRemarkToolbarOpen(false);
+                    } else {
+                        exitRemarkEditMode(true);
+                    }
+                }
+            });
             on(remarkTextarea, 'blur', () => {
                 syncRemarkHeight();
+                syncRemarkPreview(true);
+            });
+            if (remarkToolbarToggle instanceof HTMLButtonElement) {
+                on(remarkToolbarToggle, 'mousedown', (ev) => {
+                    try { ev.preventDefault(); } catch (e) {}
+                });
+                on(remarkToolbarToggle, 'click', (ev) => {
+                    try { ev.preventDefault(); } catch (e) {}
+                    try { ev.stopPropagation(); } catch (e) {}
+                    if (!remarkShell.classList.contains('is-editing')) {
+                        enterRemarkEditMode({ openToolbar: true });
+                        return;
+                    }
+                    setRemarkToolbarOpen(!(remarkToolbar instanceof HTMLElement && remarkToolbar.classList.contains('is-open')));
+                    preserveDetailScroll(() => {
+                        try { remarkTextarea.focus({ preventScroll: true }); } catch (e) { try { remarkTextarea.focus(); } catch (e2) {} }
+                    });
+                });
+            }
+            if (remarkToolbar instanceof HTMLElement) {
+                remarkToolbar.querySelectorAll('[data-tm-detail-remark-tool]').forEach((button) => {
+                    if (!(button instanceof HTMLButtonElement)) return;
+                    on(button, 'mousedown', (ev) => {
+                        try { ev.preventDefault(); } catch (e) {}
+                    });
+                    on(button, 'click', (ev) => {
+                        try { ev.preventDefault(); } catch (e) {}
+                        try { ev.stopPropagation(); } catch (e) {}
+                        const action = String(button.getAttribute('data-tm-detail-remark-tool') || '').trim();
+                        if (!action) return;
+                        preserveDetailScroll(() => {
+                            if (action === 'bold') __tmWrapRemarkSelection(remarkTextarea, '**');
+                            else if (action === 'italic') __tmWrapRemarkSelection(remarkTextarea, '*');
+                            else if (action === 'code') __tmWrapRemarkSelection(remarkTextarea, '`');
+                            else if (action === 'link') __tmInsertRemarkLinkTemplate(remarkTextarea);
+                            else if (action === 'quote') __tmToggleRemarkLinePrefix(remarkTextarea, '> ');
+                            else if (action === 'bullet') __tmToggleRemarkLinePrefix(remarkTextarea, '- ');
+                            else if (action === 'ordered') __tmToggleRemarkOrderedList(remarkTextarea);
+                        });
+                        syncRemarkHeight();
+                        syncRemarkPreview(false);
+                        scheduleAutoSave();
+                    });
+                });
+            }
+            on(remarkShell, 'focusout', () => {
+                try {
+                    requestAnimationFrame(() => {
+                        if (Date.now() < remarkEnterGuardUntil) return;
+                        if (remarkShell.contains(document.activeElement)) return;
+                        if (!remarkShell.classList.contains('is-editing')) return;
+                        exitRemarkEditMode(true);
+                    });
+                } catch (e) {}
+            });
+            if (window.visualViewport?.addEventListener) {
+                on(window.visualViewport, 'resize', () => {
+                    scheduleEnsureRemarkVisibleOnMobile();
+                }, { passive: true });
+                on(window.visualViewport, 'scroll', () => {
+                    scheduleEnsureRemarkVisibleOnMobile();
+                }, { passive: true });
+            }
+            try {
+                requestAnimationFrame(() => {
+                    syncRemarkHeight();
+                    syncRemarkPreview();
+                });
+            } catch (e) {}
+        }
+        root.querySelectorAll('textarea[data-tm-detail-custom-text-field]').forEach((textarea) => {
+            if (!(textarea instanceof HTMLTextAreaElement)) return;
+            const syncTextHeight = () => syncAutoHeight(textarea, 34);
+            syncTextHeight();
+            on(textarea, 'input', () => {
+                syncTextHeight();
+                scheduleAutoSave();
+            });
+            on(textarea, 'focus', syncTextHeight);
+            on(textarea, 'blur', () => {
+                syncTextHeight();
                 flushAutoSaveNow({
                     showHint: false,
                     closeAfterSave: false,
@@ -45863,9 +48603,9 @@ async function __tmRefreshAfterWake(reason) {
                 }).catch(() => null);
             });
             try {
-                requestAnimationFrame(syncRemarkHeight);
+                requestAnimationFrame(syncTextHeight);
             } catch (e) {}
-        }
+        });
         bindStatusSelect();
         bindPrioritySelect();
         bindCoreMetaControls();
@@ -45909,12 +48649,14 @@ async function __tmRefreshAfterWake(reason) {
         if (!(modal instanceof Element)) return false;
         if (!__tmIsChecklistSelectionContext(modal)) return false;
         const selectedId = String(state.detailTaskId || '').trim();
+        const multiSelectedSet = __tmGetMultiSelectedTaskIdSet();
         const sheetMode = __tmChecklistUseSheetMode(modal);
         const items = modal.querySelectorAll('.tm-checklist-item[data-id]');
         items.forEach((item) => {
             if (!(item instanceof HTMLElement)) return;
             const id = String(item.getAttribute('data-id') || '').trim();
             item.classList.toggle('tm-checklist-item--active', !!selectedId && id === selectedId);
+            item.classList.toggle('tm-task-row--multi-selected', !!id && multiSelectedSet.has(id));
         });
         const panel = modal.querySelector(sheetMode ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
         if (!(panel instanceof HTMLElement)) return false;
@@ -46320,7 +49062,8 @@ async function __tmRefreshAfterWake(reason) {
         const emitRow = (task, depth, hasChildren, collapsed) => {
             if (!hasTaskRowBudget()) return '';
             const { done, content, priority, completionTime, duration, remark, docName, pinned, startDate } = task;
-            
+            const isMultiSelected = __tmIsTaskMultiSelected(task.id);
+
             // 计算子任务统计信息
             const directChildStats = getDirectChildStats(task);
             const totalChildren = directChildStats.total;
@@ -46412,6 +49155,10 @@ async function __tmRefreshAfterWake(reason) {
                     <td class="tm-cell-editable tm-task-meta-cell" style="${tableLayout.cellStyle('startDate')}" onclick="tmBeginCellEdit('${task.id}','startDate',this,event)">${__tmFormatTaskTime(startDate)}</td>`,
                 completionTime: () => `
                     <td class="tm-cell-editable tm-task-meta-cell" style="${tableLayout.cellStyle('completionTime')}" onclick="tmBeginCellEdit('${task.id}','completionTime',this,event)">${__tmFormatTaskTime(completionTime)}</td>`,
+                remainingTime: () => {
+                    const label = __tmGetTaskRemainingTimeLabel(task);
+                    return `<td class="tm-task-meta-cell" style="${tableLayout.cellStyle('remainingTime', 'text-align:center;')}" title="${esc(label)}">${__tmRenderTaskRemainingTimeHtml(task)}</td>`;
+                },
                 duration: () => `
                     <td class="tm-cell-editable tm-task-meta-cell" style="${tableLayout.cellStyle('duration')}" onclick="tmBeginCellEdit('${task.id}','duration',this,event)">${esc(duration || '')}</td>`,
                 spent: () => {
@@ -46444,13 +49191,21 @@ async function __tmRefreshAfterWake(reason) {
                 const colKey = __tmBuildCustomFieldColumnKey(fieldId);
                 if (!fieldId || !colKey) return;
                 cells[colKey] = () => {
-                    const tagsHtml = __tmBuildCustomFieldTagsHtml(field, __tmGetTaskCustomFieldValue(task, fieldId), {
+                    const fieldType = String(field?.type || '').trim();
+                    const fieldValue = __tmGetTaskCustomFieldValue(task, fieldId);
+                    const displayHtml = __tmBuildCustomFieldDisplayHtml(field, fieldValue, {
                         allowEmpty: false,
-                        maxTags: String(field?.type || '').trim() === 'multi' ? 2 : 1,
+                        maxTags: fieldType === 'multi' ? 2 : 1,
                     });
+                    const textValue = fieldType === 'text'
+                        ? String(__tmNormalizeCustomFieldValue(field, fieldValue) || '').trim()
+                        : '';
+                    const onClick = fieldType === 'text'
+                        ? `tmBeginCellEdit('${task.id}','${colKey}',this,event)`
+                        : `tmOpenCustomFieldSelect('${task.id}', '${fieldId}', event, this)`;
                     return `
-                        <td class="tm-cell-editable tm-task-meta-cell" style="${tableLayout.cellStyle(colKey)}" onclick="tmOpenCustomFieldSelect('${task.id}', '${fieldId}', event, this)">
-                            <div class="tm-custom-field-cell">${tagsHtml}</div>
+                        <td class="tm-cell-editable tm-task-meta-cell" style="${tableLayout.cellStyle(colKey)}" ${textValue ? `title="${esc(textValue)}"` : ''} onclick="${onClick}">
+                            <div class="tm-custom-field-cell">${displayHtml}</div>
                         </td>
                     `;
                 };
@@ -46463,7 +49218,8 @@ async function __tmRefreshAfterWake(reason) {
                     ? 'tm-timer-focus'
                     : (tomatoFocusModeEnabled ? 'tm-timer-dim' : ''))
                 : '';
-            let rowHtml = `<tr data-id="${task.id}" data-depth="${depth}" class="${rowClass}" ${groupBg ? `style="background-color:${groupBg};"` : ''} draggable="true" ondragstart="tmDragTaskStart(event, '${task.id}')" ondragend="tmDragTaskEnd(event)" onclick="tmRowClick(event, '${task.id}')" oncontextmenu="tmShowTaskContextMenu(event, '${task.id}')">`;
+            const finalRowClass = [rowClass, isMultiSelected ? 'tm-task-row--multi-selected' : ''].filter(Boolean).join(' ');
+            let rowHtml = `<tr data-id="${task.id}" data-depth="${depth}" class="${finalRowClass}" ${groupBg ? `style="background-color:${groupBg};"` : ''} draggable="true" ondragstart="tmDragTaskStart(event, '${task.id}')" ondragend="tmDragTaskEnd(event)" onclick="tmRowClick(event, '${task.id}')" oncontextmenu="tmShowTaskContextMenu(event, '${task.id}')">`;
             colOrder.forEach(col => {
                 if (cells[col]) rowHtml += cells[col]();
             });
@@ -46512,7 +49268,7 @@ async function __tmRefreshAfterWake(reason) {
         if (pinnedRoots.length > 0) {
             const pinnedGroupKey = 'pinned_root_tasks';
             const pinnedCollapsed = state.collapsedGroups?.has(pinnedGroupKey);
-            const pinnedToggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${pinnedGroupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+            const pinnedToggle = `<span class="tm-group-toggle${pinnedCollapsed ? ' tm-group-toggle--collapsed' : ''}" onclick="tmToggleGroupCollapse('${pinnedGroupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
             const pinnedDurationSum = __tmCalcGroupDurationText(pinnedRoots);
             allRows.push(`<tr class="tm-group-row" data-group-key="${pinnedGroupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${pinnedGroupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${pinnedToggle}<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;min-width:16px;color:var(--tm-warning-color);">📌</span><span class="tm-group-label" style="color:var(--tm-warning-color);">置顶</span><span class="tm-badge tm-badge--count">${pinnedRoots.length}</span>${pinnedDurationSum ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">${__tmRenderBadgeIcon('chart-column')}</span>${esc(pinnedDurationSum)}</span>` : ''}</div></td></tr>`);
             if (!pinnedCollapsed) {
@@ -46527,7 +49283,7 @@ async function __tmRefreshAfterWake(reason) {
         if (isUngroupForRender && pinnedRoots.length > 0 && normalRoots.length > 0) {
             const normalGroupKey = 'normal_root_tasks';
             const normalCollapsed = state.collapsedGroups?.has(normalGroupKey);
-            const normalToggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${normalGroupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+            const normalToggle = `<span class="tm-group-toggle${normalCollapsed ? ' tm-group-toggle--collapsed' : ''}" onclick="tmToggleGroupCollapse('${normalGroupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
             allRows.push(`<tr class="tm-group-row" data-group-key="${normalGroupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${normalGroupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${normalToggle}<span class="tm-group-label">普通</span><span class="tm-badge tm-badge--count">${normalRoots.length}</span></div></td></tr>`);
             if (!normalCollapsed) {
                 currentGroupBg = '';
@@ -46646,7 +49402,7 @@ async function __tmRefreshAfterWake(reason) {
                 // 支持折叠
                 const groupKey = `quadrant_${quadrantId}`;
                 const isCollapsed = state.collapsedGroups?.has(groupKey);
-                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+                const toggle = `<span class="tm-group-toggle${isCollapsed ? ' tm-group-toggle--collapsed' : ''}" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                 
                 // 计算时长总和
                 const durationFormat = SettingsStore.data.durationFormat || 'hours';
@@ -46726,7 +49482,7 @@ async function __tmRefreshAfterWake(reason) {
                 const docName = docEntry.name || '未知文档';
                 const groupKey = `doc_${docId}`;
                 const isCollapsed = state.collapsedGroups?.has(groupKey);
-                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+                const toggle = `<span class="tm-group-toggle${isCollapsed ? ' tm-group-toggle--collapsed' : ''}" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                 const labelColor = __tmGetDocColorHex(docId, isDark) || 'var(--tm-group-doc-label-color)';
 
                 allRows.push(`<tr class="tm-group-row" data-group-key="${groupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">${__tmRenderDocGroupLabel(docId, docName)}</span><span class="tm-badge tm-badge--count">${docTasks.length}</span></div></td></tr>`);
@@ -46760,7 +49516,7 @@ async function __tmRefreshAfterWake(reason) {
                             const items = Array.isArray(g.items) ? g.items : [];
                             const h2Key = `doc_${docId}__h2_${encodeURIComponent(String(bucket.key || 'label:__none__'))}`;
                             const h2Collapsed = state.collapsedGroups?.has(h2Key);
-                            const toggleH2 = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+                            const toggleH2 = `<span class="tm-group-toggle${h2Collapsed ? ' tm-group-toggle--collapsed' : ''}" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                             const createBtnHtml = __tmBuildHeadingGroupCreateBtnHtml(docId, String(g.id || bucket.id || '').trim(), '在该标题下新建任务');
                             const h2LabelColor = __tmGetHeadingSubgroupLabelColor(labelColor, isDark);
                             allRows.push(`<tr class="tm-group-row" data-group-kind="h2" data-group-key="${esc(h2Key)}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${h2Key}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky" style="padding-left:2ch;">${toggleH2}<span class="tm-group-label" style="color:${h2LabelColor};">${__tmRenderIconLabel('puzzle', g.label || '')}</span><span class="tm-badge tm-badge--count">${Array.isArray(items) ? items.length : 0}</span>${createBtnHtml}</div></td></tr>`);
@@ -46858,7 +49614,7 @@ async function __tmRefreshAfterWake(reason) {
 
             sortedGroups.forEach(group => {
                 const isCollapsed = state.collapsedGroups?.has(group.key);
-                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${group.key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+                const toggle = `<span class="tm-group-toggle${isCollapsed ? ' tm-group-toggle--collapsed' : ''}" onclick="tmToggleGroupCollapse('${group.key}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                 const labelColor = __tmGetTimeGroupLabelColor(group);
                 
                 // 计算该分组下所有任务的时长总和
@@ -46909,7 +49665,7 @@ async function __tmRefreshAfterWake(reason) {
                 const safeContent = String(content || '').replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_');
                 const groupKey = `task_${safeContent}`;
                 const isCollapsed = state.collapsedGroups?.has(groupKey);
-                const toggle = `<span class="tm-group-toggle" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+                const toggle = `<span class="tm-group-toggle${isCollapsed ? ' tm-group-toggle--collapsed' : ''}" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;"><svg class="tm-group-toggle-icon" viewBox="0 0 16 16" width="16" height="16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
                 const labelColor = 'var(--tm-primary-color)';
 
                 allRows.push(`<tr class="tm-group-row" data-group-key="${groupKey}"><td colspan="${colCount}" onclick="tmToggleGroupCollapse('${groupKey}', event)" style="cursor:pointer;background:var(--tm-header-bg);font-weight:bold;color:var(--tm-text-color);"><div class="tm-group-sticky">${toggle}<span class="tm-group-label" style="color:${labelColor};">🧩 ${esc(content)}</span><span class="tm-badge tm-badge--count">${tasks.length}</span></div></td></tr>`);
@@ -47487,7 +50243,9 @@ async function __tmRefreshAfterWake(reason) {
                 if (ev?.target) ev.target.checked = !!task.done;
                 return;
             }
-            try { hint(done ? '✅ 已在插件内标记完成' : '✅ 已取消插件内完成', 'success'); } catch (e) {}
+            if (opts.suppressHint !== true) {
+                try { hint(done ? '✅ 已在插件内标记完成' : '✅ 已取消插件内完成', 'success'); } catch (e) {}
+            }
             return;
         }
         const statusPatch = __tmBuildCheckboxStatusPatch(task, targetDone, opts.statusPatch);
@@ -47510,11 +50268,13 @@ async function __tmRefreshAfterWake(reason) {
                     state.doneOverrides[String(id)] = !!done;
                 } catch (e) {}
                 try { __tmInvalidateAllSqlCaches(); } catch (e) {}
-                try { hint(done ? '✅ 任务已完成' : '✅ 已取消完成', 'success'); } catch (e) {}
+                if (opts.suppressHint !== true) {
+                    try { hint(done ? '✅ 任务已完成' : '✅ 已取消完成', 'success'); } catch (e) {}
+                }
                 try { globalThis.__tmCalendar?.refreshInPlace?.({ hard: false }); } catch (e) {}
                 return;
             }
-            hint('❌ 任务不存在', 'error');
+            if (opts.suppressHint !== true) hint('❌ 任务不存在', 'error');
             if (ev?.target) ev.target.checked = !done;
             return;
         }
@@ -47522,7 +50282,7 @@ async function __tmRefreshAfterWake(reason) {
 
         // 检查全局锁
         if (GlobalLock.isLocked()) {
-            hint('⚠ 操作频繁，请等待10ms后再试', 'warning');
+            if (opts.suppressHint !== true) hint('⚠ 操作频繁，请等待10ms后再试', 'warning');
             if (ev?.target) ev.target.checked = !targetDone;
             return;
         }
@@ -47797,8 +50557,10 @@ async function __tmRefreshAfterWake(reason) {
                 else __tmInvalidateAllSqlCaches();
             } catch (e) {}
 
-            if (statusSyncError) hint(`${actualDone ? '✅ 任务已完成' : '✅ 已取消完成'}，但状态同步失败`, 'warning');
-            else hint(actualDone ? '✅ 任务已完成' : '✅ 已取消完成', 'success');
+            if (opts.suppressHint !== true) {
+                if (statusSyncError) hint(`${actualDone ? '✅ 任务已完成' : '✅ 已取消完成'}，但状态同步失败`, 'warning');
+                else hint(actualDone ? '✅ 任务已完成' : '✅ 已取消完成', 'success');
+            }
 
         } catch (err) {
             console.error('[完成操作失败]', err);
@@ -47820,7 +50582,7 @@ async function __tmRefreshAfterWake(reason) {
             recalcStats();
             render();
             __tmRestoreChecklistDetailScrollSnapshot(detailScrollSnapshot);
-            hint(`❌ 操作失败: ${err.message}`, 'error');
+            if (opts.suppressHint !== true) hint(`❌ 操作失败: ${err.message}`, 'error');
         } finally {
             // render() 完成后手动解锁
             requestAnimationFrame(() => {
@@ -47831,7 +50593,8 @@ async function __tmRefreshAfterWake(reason) {
         }
     };
 
-    window.tmSetDone = async function(id, done, ev) {
+    window.tmSetDone = async function(id, done, ev, options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
         if (ev) {
             try { ev.stopPropagation(); } catch (e) {}
             try { ev.preventDefault(); } catch (e) {}
@@ -47842,11 +50605,11 @@ async function __tmRefreshAfterWake(reason) {
             try { task = await __tmEnsureTaskInStateById(tid); } catch (e) { task = null; }
         }
         if (!task || __tmIsCollectedOtherBlockTask(task)) {
-            return await __tmSetDoneKernel(tid, done, ev);
+            return await __tmSetDoneKernel(tid, done, ev, opts);
         }
         const targetDone = !!done;
         if (!!task.done === targetDone) return;
-        const statusPatch = __tmBuildCheckboxStatusPatch(task, targetDone);
+        const statusPatch = __tmBuildCheckboxStatusPatch(task, targetDone, opts.statusPatch);
         const inversePatch = {
             done: !!task.done,
             ...((statusPatch && Object.keys(statusPatch).length > 0) ? __tmCaptureTaskPatchInverse(tid, statusPatch) : {}),
@@ -47866,9 +50629,25 @@ async function __tmRefreshAfterWake(reason) {
                     done: targetDone,
                     docId: String(task.root_id || task.docId || '').trim(),
                     statusPatch: statusPatch && Object.keys(statusPatch).length > 0 ? { ...statusPatch } : null,
+                    suppressHint: opts.suppressHint === true,
                 },
                 inversePatch,
             }, { wait: true });
+            if (opts.recordUndo !== false && !__tmUndoState.applying) {
+                __tmPushUndoRecord({
+                    type: 'setDone',
+                    taskId: tid,
+                    requestedTaskId: tid,
+                    patch: {
+                        done: targetDone,
+                        ...((statusPatch && Object.keys(statusPatch).length > 0) ? statusPatch : {}),
+                    },
+                    inversePatch,
+                    label: __tmGetUndoLabel(opts.label, '完成状态'),
+                    source: String(opts.source || '').trim(),
+                });
+            }
+            if (opts.suppressHint === true) return true;
         } catch (e) {
             hint(`❌ 操作失败: ${e.message}`, 'error');
             if (ev?.target) ev.target.checked = !targetDone;
@@ -48299,8 +51078,10 @@ async function __tmRefreshAfterWake(reason) {
                 b.appendChild(chip);
                 b.onclick = async () => {
                     try {
-                        task.customStatus = opt.id;
-                        __tmPersistMetaAndAttrs(id, { customStatus: opt.id });
+                        await __tmApplyTaskMetaPatchWithUndo(id, { customStatus: opt.id }, {
+                            source: 'inline-status',
+                            label: '状态',
+                        });
                         close();
                         __tmRefreshMainViewInPlace({ withFilters: true });
                     } catch (e) {
@@ -48568,8 +51349,10 @@ async function __tmRefreshAfterWake(reason) {
                 b.appendChild(chip);
                 b.onclick = async () => {
                     try {
-                        task.customStatus = opt.id;
-                        __tmPersistMetaAndAttrs(id, { customStatus: opt.id });
+                        await __tmApplyTaskMetaPatchWithUndo(id, { customStatus: opt.id }, {
+                            source: 'kanban-status',
+                            label: '状态',
+                        });
                         close();
                         __tmRefreshMainViewInPlace({ withFilters: true });
                     } catch (e) {
@@ -51968,6 +54751,142 @@ async function __tmRefreshAfterWake(reason) {
             });
     }
 
+    const TM_MAIN_SETTINGS_SECTIONS = Object.freeze([
+        { id: 'display', label: '基础显示' },
+        { id: 'new-task', label: '新建任务' },
+        { id: 'status', label: '状态选项' },
+        { id: 'layout', label: '视图布局' },
+        { id: 'search', label: '搜索分组' },
+        { id: 'topbar', label: '顶栏入口' },
+        { id: 'quickbar', label: '悬浮条' },
+        { id: 'tomato', label: '番茄钟' }
+    ]);
+
+    function __tmSetActiveSettingsSection(modal, sectionId, ensureVisible = false) {
+        const root = modal || state.settingsModal;
+        if (!root) return;
+        const activeId = String(sectionId || '').trim();
+        const buttons = Array.from(root.querySelectorAll('.tm-settings-subtab-btn[data-section-id]'));
+        if (!buttons.length) return;
+        let activeButton = null;
+        buttons.forEach((button) => {
+            const matched = String(button.dataset.sectionId || '') === activeId;
+            button.classList.toggle('is-active', matched);
+            button.setAttribute('aria-pressed', matched ? 'true' : 'false');
+            if (matched) activeButton = button;
+        });
+        if (!ensureVisible || !(activeButton instanceof HTMLElement)) return;
+        const scroller = activeButton.closest('.tm-settings-subtabs');
+        if (!(scroller instanceof HTMLElement)) return;
+        const btnLeft = activeButton.offsetLeft;
+        const btnRight = btnLeft + activeButton.offsetWidth;
+        const visibleLeft = scroller.scrollLeft;
+        const visibleRight = visibleLeft + scroller.clientWidth;
+        if (btnLeft >= visibleLeft && btnRight <= visibleRight) return;
+        const nextLeft = Math.max(0, btnLeft - Math.max(16, Math.round((scroller.clientWidth - activeButton.offsetWidth) / 2)));
+        try { scroller.scrollTo({ left: nextLeft, behavior: 'smooth' }); } catch (e) { scroller.scrollLeft = nextLeft; }
+    }
+
+    function __tmSyncSettingsSectionNav(modal) {
+        const root = modal || state.settingsModal;
+        if (!root || String(state.settingsActiveTab || 'docs') !== 'main') return;
+        const content = root.querySelector('.tm-settings-content');
+        const sections = Array.from(root.querySelectorAll('.tm-settings-panel[data-tm-settings-section]'));
+        if (!(content instanceof HTMLElement) || !sections.length) return;
+        const probeTop = content.scrollTop + 20;
+        let activeId = String(sections[0]?.dataset?.tmSettingsSection || '').trim();
+        sections.forEach((section) => {
+            const sectionId = String(section?.dataset?.tmSettingsSection || '').trim();
+            if (!sectionId) return;
+            if (section.offsetTop <= probeTop) activeId = sectionId;
+        });
+        __tmSetActiveSettingsSection(root, activeId, false);
+    }
+
+    function __tmBindHorizontalDragScroll(scroller) {
+        if (!(scroller instanceof HTMLElement) || scroller.__tmHorizontalDragBound) return;
+        scroller.__tmHorizontalDragBound = true;
+        let startX = 0;
+        let startY = 0;
+        let startScrollLeft = 0;
+        let dragging = false;
+        let touchActive = false;
+        let touchHandled = false;
+        let startTarget = null;
+        const threshold = 6;
+
+        const finish = () => {
+            touchActive = false;
+            if (dragging || touchHandled) scroller.__tmSuppressClickUntil = Date.now() + 300;
+            dragging = false;
+            touchHandled = false;
+            startTarget = null;
+        };
+
+        scroller.addEventListener('touchstart', (event) => {
+            const touch = event.touches && event.touches[0];
+            if (!touch) return;
+            touchActive = true;
+            touchHandled = false;
+            startX = Number(touch.clientX) || 0;
+            startY = Number(touch.clientY) || 0;
+            startScrollLeft = Number(scroller.scrollLeft) || 0;
+            dragging = false;
+            startTarget = event.target instanceof Element ? event.target.closest('.tm-settings-subtab-btn') : null;
+        }, { passive: true });
+
+        scroller.addEventListener('touchmove', (event) => {
+            if (!touchActive) return;
+            const touch = event.touches && event.touches[0];
+            if (!touch) return;
+            const deltaX = (Number(touch.clientX) || 0) - startX;
+            const deltaY = (Number(touch.clientY) || 0) - startY;
+            if (!dragging && Math.abs(deltaX) > threshold && Math.abs(deltaX) > Math.abs(deltaY)) dragging = true;
+            if (!dragging) return;
+            scroller.scrollLeft = startScrollLeft - deltaX;
+            touchHandled = true;
+            try { event.preventDefault(); } catch (e) {}
+        }, { passive: false });
+
+        scroller.addEventListener('touchend', (event) => {
+            if (!touchActive) return;
+            const button = startTarget instanceof HTMLElement ? startTarget : null;
+            const shouldJump = !dragging && button;
+            const sectionId = shouldJump ? String(button.dataset.sectionId || '').trim() : '';
+            finish();
+            if (!sectionId) return;
+            try { event.preventDefault(); } catch (e) {}
+            try { event.stopPropagation(); } catch (e) {}
+            try { window.tmJumpSettingsSection?.(sectionId); } catch (e) {}
+        }, { passive: false });
+
+        scroller.addEventListener('touchcancel', finish, { passive: true });
+        scroller.addEventListener('click', (event) => {
+            if ((Number(scroller.__tmSuppressClickUntil) || 0) <= Date.now()) return;
+            try { event.preventDefault(); } catch (e) {}
+            try { event.stopPropagation(); } catch (e) {}
+        }, true);
+    }
+
+    window.tmJumpSettingsSection = function(sectionId) {
+        const root = state.settingsModal;
+        if (!root) return;
+        const content = root.querySelector('.tm-settings-content');
+        const subtabs = root.querySelector('.tm-settings-subtabs');
+        if (!(content instanceof HTMLElement)) return;
+        const target = Array.from(root.querySelectorAll('.tm-settings-panel[data-tm-settings-section]')).find((section) => {
+            return String(section?.dataset?.tmSettingsSection || '').trim() === String(sectionId || '').trim();
+        });
+        if (!(target instanceof HTMLElement)) return;
+        const anchor = target.querySelector('.tm-settings-section-title') || target;
+        const contentRect = content.getBoundingClientRect();
+        const anchorRect = anchor.getBoundingClientRect();
+        const stickyOffset = (subtabs instanceof HTMLElement ? subtabs.getBoundingClientRect().height : 0) + 6;
+        const nextTop = Math.max(0, content.scrollTop + (anchorRect.top - contentRect.top) - stickyOffset);
+        __tmSetActiveSettingsSection(root, sectionId, true);
+        try { content.scrollTo({ top: nextTop, behavior: 'smooth' }); } catch (e) { content.scrollTop = nextTop; }
+    };
+
     // 显示设置
     function showSettings() {
         try { __tmHideMobileMenu(); } catch (e) {}
@@ -51985,6 +54904,7 @@ async function __tmRefreshAfterWake(reason) {
         let savedSettingsSidebarScrollLeft = Number(state.settingsSidebarScrollLeft) || 0;
         let savedSettingsTabsScrollLeft = Number(state.settingsTabsScrollLeft) || 0;
         let savedSettingsContentScrollTop = Number(state.settingsContentScrollTop) || 0;
+        let savedSettingsSubtabsScrollLeft = Number(state.settingsSubtabsScrollLeft) || 0;
         if (state.settingsModal) {
             try {
                 state.__settingsUnstack?.();
@@ -51994,9 +54914,11 @@ async function __tmRefreshAfterWake(reason) {
                 const prevSidebar = state.settingsModal.querySelector('.tm-settings-sidebar');
                 const prevTabs = state.settingsModal.querySelector('.tm-settings-tabs');
                 const prevContent = state.settingsModal.querySelector('.tm-settings-content');
+                const prevSubtabs = state.settingsModal.querySelector('.tm-settings-subtabs');
                 if (prevSidebar) savedSettingsSidebarScrollLeft = Number(prevSidebar.scrollLeft) || 0;
                 if (prevTabs) savedSettingsTabsScrollLeft = Number(prevTabs.scrollLeft) || 0;
                 if (prevContent) savedSettingsContentScrollTop = Number(prevContent.scrollTop) || 0;
+                if (prevSubtabs) savedSettingsSubtabsScrollLeft = Number(prevSubtabs.scrollLeft) || 0;
             } catch (e) {}
             try { state.settingsModal.remove(); } catch (e) {}
             state.settingsModal = null;
@@ -52004,6 +54926,7 @@ async function __tmRefreshAfterWake(reason) {
         state.settingsSidebarScrollLeft = savedSettingsSidebarScrollLeft;
         state.settingsTabsScrollLeft = savedSettingsTabsScrollLeft;
         state.settingsContentScrollTop = savedSettingsContentScrollTop;
+        state.settingsSubtabsScrollLeft = savedSettingsSubtabsScrollLeft;
 
         state.settingsModal = document.createElement('div');
         state.settingsModal.className = 'tm-settings-modal';
@@ -52227,7 +55150,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main" ondblclick="tmChecklistItemDblClick('${escSq(String(task.id || ''))}', event)">
                             <div class="${titleRowClass}">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}><span draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}
@@ -52420,6 +55343,25 @@ async function __tmRefreshAfterWake(reason) {
         if (activeTab === 'main' || activeTab === 'docs') {
             try { __tmEnsureAllDocumentsLoaded(false); } catch (e) {}
         }
+        const renderMainSettingsSubtabs = () => {
+            if (activeTab !== 'main') return '';
+            return `
+                <div class="tm-settings-subtabs">
+                    <div class="tm-settings-subtabs-inner">
+                        ${TM_MAIN_SETTINGS_SECTIONS.map((section, index) => `
+                            <button
+                                class="tm-settings-subtab-btn${index === 0 ? ' is-active' : ''}"
+                                type="button"
+                                data-section-id="${esc(String(section.id || ''))}"
+                                data-tm-call="tmJumpSettingsSection"
+                                data-tm-args='["${esc(String(section.id || ''))}"]'
+                                aria-pressed="${index === 0 ? 'true' : 'false'}"
+                            >${esc(String(section.label || ''))}</button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        };
         const renderSingleSwitchSetting = (title, desc, inputHtml, opt = {}) => {
             const extraClass = String(opt?.className || '').trim();
             const extraStyle = String(opt?.style || '').trim();
@@ -52645,7 +55587,8 @@ async function __tmRefreshAfterWake(reason) {
                     ` : ''}
 
                     ${activeTab === 'main' ? `
-                    <div class="tm-settings-panel">
+                    ${renderMainSettingsSubtabs()}
+                    <div class="tm-settings-panel" data-tm-settings-section="display">
                         <div class="tm-settings-section-title">🖥️ 基础显示</div>
                         <div class="tm-settings-section-desc">调整常规字号、行高和文本展示方式。</div>
                         ${renderSingleFieldSetting(
@@ -52721,7 +55664,7 @@ async function __tmRefreshAfterWake(reason) {
                         )}
                     </div>
 
-                    <div class="tm-settings-panel">
+                    <div class="tm-settings-panel" data-tm-settings-section="new-task">
                         <div class="tm-settings-section-title">📍 新建任务位置</div>
                         <div class="tm-settings-section-desc">设置快速新建任务时默认写入的文档位置。</div>
                         ${renderSingleFieldSetting(
@@ -52790,7 +55733,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                     </div>
 
-                    <div class="tm-settings-panel" style="margin-bottom: 16px;">
+                    <div class="tm-settings-panel" style="margin-bottom: 16px;" data-tm-settings-section="status">
                         <div class="tm-settings-section-title">🏷️ 状态选项</div>
                         <div class="tm-settings-section-desc">维护任务状态列表，影响任务状态菜单和相关视图显示。</div>
                         ${renderSingleFieldSetting(
@@ -52815,7 +55758,7 @@ async function __tmRefreshAfterWake(reason) {
                         <button class="tm-btn tm-btn-primary" data-tm-action="addStatusOption" style="margin-top: 8px; font-size: 12px;">+ 添加状态</button>
                     </div>
 
-                    <div class="tm-settings-panel">
+                    <div class="tm-settings-panel" data-tm-settings-section="layout">
                         <div class="tm-settings-section-title">🪟 视图与布局</div>
                         <div class="tm-settings-section-desc">控制默认视图、紧凑模式和各类展示布局。</div>
                         ${renderSingleFieldSetting(
@@ -52862,15 +55805,21 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         ${renderSingleSwitchSetting(
                             'Dock 紧凑标题点击跳转',
-                            '桌面端 Dock 清单紧凑视图中，开启后点击任务名直接跳转文档；关闭后保持打开任务详情抽屉。',
+                            '桌面端 Dock 清单紧凑视图中，开启后点击任务名默认跳转文档；若开启下方“标题点击弹出详情页面”则改为弹出详情页面。关闭后保持打开任务详情抽屉。',
                             `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.dockChecklistCompactTitleJump ? 'checked' : ''} ${SettingsStore.data.dockSidebarEnabled !== false ? '' : 'disabled'} onchange="updateDockChecklistCompactTitleJump(this.checked)">`,
                             { style: `margin-bottom:10px;opacity:${SettingsStore.data.dockSidebarEnabled !== false ? 1 : 0.6};` }
                         )}
                         ` : ''}
                         ${renderSingleSwitchSetting(
                             '移动端清单紧凑视图标题点击跳转',
-                            '移动端清单紧凑视图中，开启后点击任务名直接跳转文档；关闭后保持打开任务详情抽屉。',
+                            '移动端清单紧凑视图中，开启后点击任务名默认跳转文档；若开启下方“标题点击弹出详情页面”则改为弹出详情页面。关闭后保持打开任务详情抽屉。',
                             `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.mobileChecklistCompactTitleJump ? 'checked' : ''} onchange="updateMobileChecklistCompactTitleJump(this.checked)">`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleSwitchSetting(
+                            '标题点击弹出详情页面',
+                            '适用于各视图的任务标题点击。开启后标题默认弹出任务详情页面；在移动端/Dock 清单紧凑视图中，仍低于上方两个“标题点击跳转”开关，仅在原本允许标题点击跳转时才会把跳转改为弹出详情页面。',
+                            `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.checklistCompactTitleOpenDetailPage ? 'checked' : ''} onchange="updateChecklistCompactTitleOpenDetailPage(this.checked)">`,
                             { style: 'margin-bottom:10px;' }
                         )}
                         <div style="margin-bottom:10px;">
@@ -52980,7 +55929,7 @@ async function __tmRefreshAfterWake(reason) {
                         )}
                     </div>
 
-                    <div class="tm-settings-panel">
+                    <div class="tm-settings-panel" data-tm-settings-section="search">
                         <div class="tm-settings-section-title">🔎 搜索与分组</div>
                         <div class="tm-settings-section-desc">控制任务检索范围，以及文档和任务的分组行为。</div>
                         ${renderSingleFieldSetting(
@@ -53038,7 +55987,7 @@ async function __tmRefreshAfterWake(reason) {
                         )}
                     </div>
 
-                    <div class="tm-settings-panel">
+                    <div class="tm-settings-panel" data-tm-settings-section="topbar">
                         <div class="tm-settings-section-title">🔘 顶栏入口</div>
                         <div class="tm-settings-section-desc">分别控制文档顶栏按钮与思源窗口顶栏图标在桌面端、移动端的显示。</div>
                         ${renderSingleSwitchSetting(
@@ -53068,7 +56017,7 @@ async function __tmRefreshAfterWake(reason) {
                         )}
                     </div>
 
-                    <div class="tm-settings-panel">
+                    <div class="tm-settings-panel" data-tm-settings-section="quickbar">
                         <div class="tm-settings-section-title">🧷 任务悬浮条</div>
                         <div class="tm-settings-section-desc">控制任务块点击后的悬浮条与任务行末尾常驻字段显示。</div>
                         ${renderSingleSwitchSetting(
@@ -53138,7 +56087,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                     </div>
 
-                    <div class="tm-settings-panel">
+                    <div class="tm-settings-panel" data-tm-settings-section="tomato">
                         <div class="tm-settings-section-title">🍅 番茄钟联动</div>
                         <div class="tm-settings-section-desc">管理底栏番茄钟和任务耗时属性的联动方式。</div>
                         ${renderSingleSwitchSetting(
@@ -53179,7 +56128,7 @@ async function __tmRefreshAfterWake(reason) {
                         <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
                             <button class="tm-btn tm-btn-primary" onclick="tmOpenTickTickImportDialog()" style="padding:6px 12px;font-size:12px;">导入滴答 CSV</button>
                             <div style="font-size:12px;color:var(--tm-secondary-text);line-height:1.6;">
-                                仅导入 Status=0 的未完成任务；List Name -> 文档，Column Name -> 二级标题，Content -> 备注/子任务。
+                                支持按需导入 Status=0/1/2 任务；Status=1 已完成、Status=2 已归档会自动勾选完成，不同文档会并行写入以提升速度。
                             </div>
                         </div>
                     </div>
@@ -53336,6 +56285,14 @@ async function __tmRefreshAfterWake(reason) {
                 try { settingsContent.scrollTop = Number(state.settingsContentScrollTop) || 0; } catch (e) {}
                 settingsContent.addEventListener('scroll', () => {
                     try { state.settingsContentScrollTop = Number(settingsContent.scrollTop) || 0; } catch (e2) {}
+                    try { __tmSyncSettingsSectionNav(state.settingsModal); } catch (e3) {}
+                }, { passive: true });
+            }
+            const settingsSubtabs = state.settingsModal.querySelector('.tm-settings-subtabs');
+            if (settingsSubtabs) {
+                try { settingsSubtabs.scrollLeft = Number(state.settingsSubtabsScrollLeft) || 0; } catch (e) {}
+                settingsSubtabs.addEventListener('scroll', () => {
+                    try { state.settingsSubtabsScrollLeft = Number(settingsSubtabs.scrollLeft) || 0; } catch (e2) {}
                 }, { passive: true });
             }
             const activeNav = state.settingsModal.querySelector('.tm-settings-nav-btn.is-active');
@@ -53343,6 +56300,7 @@ async function __tmRefreshAfterWake(reason) {
                 try {
                     requestAnimationFrame(() => {
                         try { activeNav.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e2) {}
+                        try { __tmSyncSettingsSectionNav(state.settingsModal); } catch (e3) {}
                     });
                 } catch (e) {}
             }
@@ -54174,7 +57132,17 @@ async function __tmRefreshAfterWake(reason) {
         return '';
     }
 
-    function __tmBuildTickTickImportModel(csvText) {
+    function __tmNormalizeTickTickImportOptions(options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        return {
+            includeCompleted: opts.includeCompleted === true,
+            includeArchived: opts.includeArchived === true,
+            docConcurrency: Math.max(1, Math.min(6, Number(opts.docConcurrency) || 3)),
+        };
+    }
+
+    function __tmBuildTickTickImportModel(csvText, options = {}) {
+        const importOptions = __tmNormalizeTickTickImportOptions(options);
         const rows = __tmParseCsvRows(csvText);
         if (!rows.length) throw new Error('CSV 文件为空');
         const headerRowIndex = __tmFindTickTickHeaderRowIndex(rows);
@@ -54182,7 +57150,12 @@ async function __tmRefreshAfterWake(reason) {
         const getCell = __tmBuildTickTickCsvCellGetter(rows[headerRowIndex]);
         const entries = [];
         let skippedCompleted = 0;
+        let skippedArchived = 0;
+        let skippedOtherStatus = 0;
         let skippedBlankTitle = 0;
+        let pendingTasks = 0;
+        let completedTasks = 0;
+        let archivedTasks = 0;
         for (let i = headerRowIndex + 1; i < rows.length; i += 1) {
             const row = Array.isArray(rows[i]) ? rows[i] : [];
             if (!row.some((cell) => String(cell || '').trim())) continue;
@@ -54192,10 +57165,21 @@ async function __tmRefreshAfterWake(reason) {
                 continue;
             }
             const status = __tmTickTickParseNumericField(getCell(row, 'Status'));
-            if (status !== 0) {
-                skippedCompleted += 1;
+            const isCompleted = status === 1;
+            const isArchived = status === 2;
+            const isDone = isCompleted || isArchived;
+            const shouldInclude = status === 0
+                || (isCompleted && importOptions.includeCompleted)
+                || (isArchived && importOptions.includeArchived);
+            if (!shouldInclude) {
+                if (isCompleted) skippedCompleted += 1;
+                else if (isArchived) skippedArchived += 1;
+                else skippedOtherStatus += 1;
                 continue;
             }
+            if (status === 0) pendingTasks += 1;
+            else if (isCompleted) completedTasks += 1;
+            else if (isArchived) archivedTasks += 1;
             const kind = String(getCell(row, 'Kind')).trim().toLowerCase();
             const timezone = getCell(row, ['Timezone', 'Time Zone']);
             const floating = /^true$/i.test(getCell(row, ['Is Floating', 'IsFloating']));
@@ -54217,6 +57201,8 @@ async function __tmRefreshAfterWake(reason) {
                 docName: getCell(row, ['List Name', 'ListName']) || '未命名清单',
                 headingName: getCell(row, ['Column Name', 'ColumnName']),
                 title,
+                done: isDone,
+                sourceStatus: status,
                 kind,
                 priority: __tmTickTickMapPriority(getCell(row, 'Priority')),
                 startDate: __tmTickTickParseDateOnly(getCell(row, ['Start Date', 'StartDate']), timezone, { floating }),
@@ -54260,6 +57246,8 @@ async function __tmRefreshAfterWake(reason) {
                 .map((title, idx) => ({
                     internalId: `${key || 'inline'}:inline:${idx}`,
                     title: __tmTickTickNormalizeTaskTitle(title),
+                    done: !!entry.done,
+                    sourceStatus: Number(entry?.sourceStatus) || 0,
                     priority: '',
                     startDate: '',
                     completionTime: '',
@@ -54270,6 +57258,8 @@ async function __tmRefreshAfterWake(reason) {
             return {
                 internalId: key,
                 title: entry.title,
+                done: !!entry.done,
+                sourceStatus: Number(entry?.sourceStatus) || 0,
                 priority: String(entry.priority || '').trim(),
                 startDate: String(entry.startDate || '').trim(),
                 completionTime: String(entry.completionTime || '').trim(),
@@ -54345,10 +57335,16 @@ async function __tmRefreshAfterWake(reason) {
             summary: {
                 ...totals,
                 sourceRows: rows.length - (headerRowIndex + 1),
+                pendingTasks,
+                completedTasks,
+                archivedTasks,
                 skippedCompleted,
+                skippedArchived,
+                skippedOtherStatus,
                 skippedBlankTitle,
                 orphanSubtasks,
             },
+            options: importOptions,
         };
     }
 
@@ -54358,9 +57354,11 @@ async function __tmRefreshAfterWake(reason) {
         const opts = (options && typeof options === 'object') ? options : {};
         const summary = data.summary;
         const extra = [];
-        extra.push(`识别到 ${Number(summary.docs) || 0} 个文档、${Number(summary.headings) || 0} 个二级标题、${Number(summary.tasks) || 0} 条未完成任务`);
+        extra.push(`识别到 ${Number(summary.docs) || 0} 个文档、${Number(summary.headings) || 0} 个二级标题、${Number(summary.tasks) || 0} 条任务`);
+        extra.push(`待办 ${Number(summary.pendingTasks) || 0} 条，已完成 ${Number(summary.completedTasks) || 0} 条，已归档 ${Number(summary.archivedTasks) || 0} 条`);
         if (Number(summary.subtasks) > 0) extra.push(`其中子任务 ${Number(summary.subtasks)} 条`);
-        extra.push(`已跳过已完成/归档 ${Number(summary.skippedCompleted) || 0} 条`);
+        extra.push(`已跳过已完成 ${Number(summary.skippedCompleted) || 0} 条、已归档 ${Number(summary.skippedArchived) || 0} 条`);
+        if (Number(summary.skippedOtherStatus) > 0) extra.push(`其他状态 ${Number(summary.skippedOtherStatus) || 0} 条`);
         if (Number(summary.skippedBlankTitle) > 0) extra.push(`空标题 ${Number(summary.skippedBlankTitle)} 条`);
         if (Number(summary.orphanSubtasks) > 0) extra.push(`找不到父任务的子任务 ${Number(summary.orphanSubtasks)} 条，已按根任务导入`);
         if (opts.fileName) extra.unshift(`文件：${String(opts.fileName || '').trim()}`);
@@ -54517,6 +57515,26 @@ async function __tmRefreshAfterWake(reason) {
         return currentId;
     }
 
+    async function __tmRunTickTickImportDocPool(items, worker, options = {}) {
+        const list = Array.isArray(items) ? items : [];
+        const runner = typeof worker === 'function' ? worker : null;
+        const opts = (options && typeof options === 'object') ? options : {};
+        const shouldCancel = typeof opts.shouldCancel === 'function' ? opts.shouldCancel : null;
+        if (!runner || !list.length) return;
+        const concurrency = Math.max(1, Math.min(list.length, Number(opts.concurrency) || 1));
+        let cursor = 0;
+        const workers = Array.from({ length: concurrency }, async () => {
+            while (true) {
+                __tmThrowIfTickTickImportCancelled({ shouldCancel });
+                if (cursor >= list.length) return;
+                const index = cursor;
+                cursor += 1;
+                await runner(list[index], index);
+            }
+        });
+        await Promise.all(workers);
+    }
+
     async function __tmAppendTickTickImportHeading(docId, headingName) {
         const did = String(docId || '').trim();
         const text = String(headingName || '').trim();
@@ -54536,7 +57554,7 @@ async function __tmRefreshAfterWake(reason) {
         const opts = (options && typeof options === 'object') ? options : {};
         if (!targetParentId) throw new Error('未找到导入目标');
         if (!text) throw new Error('任务内容为空');
-        const md = `- [ ] ${text}`;
+        const md = `- [${opts.done === true ? 'x' : ' '}] ${text}`;
         let insertedId = '';
         const previousID = String(opts.previousID || '').trim();
         const nextID = String(opts.nextID || opts.insertBeforeId || '').trim();
@@ -54589,17 +57607,25 @@ async function __tmRefreshAfterWake(reason) {
             title,
             depth <= 0
                 ? {
+                    done: task?.done === true,
                     previousID: String(opts.previousID || '').trim(),
                     nextID: String(opts.nextID || opts.insertBeforeId || '').trim(),
                     appendToBottom: opts.appendToBottom !== false,
                 }
-                : { appendToBottom: true }
+                : {
+                    done: task?.done === true,
+                    appendToBottom: true,
+                }
         );
         const patch = {};
         if (task?.priority) patch.priority = String(task.priority).trim();
         if (task?.startDate) patch.startDate = String(task.startDate).trim();
         if (task?.completionTime) patch.completionTime = String(task.completionTime).trim();
         if (task?.remark) patch.remark = String(task.remark).trim();
+        if (task?.done === true) {
+            const doneStatusPatch = __tmBuildCheckboxStatusPatch(task, true);
+            if (doneStatusPatch && typeof doneStatusPatch === 'object') Object.assign(patch, doneStatusPatch);
+        }
         if (Object.keys(patch).length > 0) {
             taskId = await __tmPersistNewTaskAttrsWithRetry(taskId, patch, null, { skipFlush: true });
         }
@@ -54657,9 +57683,13 @@ async function __tmRefreshAfterWake(reason) {
     async function __tmImportTickTickModel(model, notebookId, options = {}) {
         const docs = Array.isArray(model?.docs) ? model.docs : [];
         const opts = (options && typeof options === 'object') ? options : {};
+        const importOptions = __tmNormalizeTickTickImportOptions({
+            ...model?.options,
+            ...opts,
+        });
         const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : null;
         const shouldCancel = typeof opts.shouldCancel === 'function' ? opts.shouldCancel : null;
-        if (!docs.length) throw new Error('没有可导入的未完成任务');
+        if (!docs.length) throw new Error('没有可导入的任务');
         await SettingsStore.load();
         await MetaStore.load();
         const createdDocIds = [];
@@ -54704,7 +57734,7 @@ async function __tmRefreshAfterWake(reason) {
             }
         };
         emitProgress();
-        for (const doc of docs) {
+        const processDoc = async (doc) => {
             __tmThrowIfTickTickImportCancelled({ shouldCancel });
             const currentDocName = String(doc?.name || '').trim() || '未命名清单';
             emitProgress({
@@ -54770,7 +57800,11 @@ async function __tmRefreshAfterWake(reason) {
                 }
             }
             try { __tmInvalidateTasksQueryCacheByDocId(docId); } catch (e) {}
-        }
+        };
+        await __tmRunTickTickImportDocPool(docs, processDoc, {
+            concurrency: importOptions.docConcurrency,
+            shouldCancel,
+        });
         try { await API.call('/api/sqlite/flushTransaction', {}); } catch (e) {}
         try { await MetaStore.saveNow(); } catch (e) {}
         try {
@@ -54822,7 +57856,7 @@ async function __tmRefreshAfterWake(reason) {
 
         const desc = document.createElement('div');
         desc.style.cssText = 'padding: 2px 0 10px; color: var(--tm-secondary-text); font-size: 13px; line-height: 1.7;';
-        desc.textContent = '按 List Name 创建文档，按 Column Name 创建二级标题，Title 创建任务，Start Date/ Due Date 写入开始日期和完成日期，Priority 映射重要性，只导入 Status=0 的未完成任务。';
+        desc.textContent = '按 List Name 创建文档，按 Column Name 创建二级标题，Title 创建任务，Start Date / Due Date 写入开始日期和完成日期，Priority 映射重要性；可选择是否导入 Status=1 的已完成任务和 Status=2 的归档任务，并按文档并行写入。';
         box.appendChild(desc);
 
         const notebookRow = document.createElement('label');
@@ -54838,6 +57872,22 @@ async function __tmRefreshAfterWake(reason) {
         }).join('');
         notebookRow.appendChild(notebookSelect);
         box.appendChild(notebookRow);
+
+        const optionRow = document.createElement('div');
+        optionRow.style.cssText = 'display:flex; flex-wrap:wrap; gap:12px; padding: 0 0 10px;';
+        optionRow.innerHTML = `
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--tm-text-color); cursor:pointer;">
+                <input type="checkbox" class="b3-switch fn__flex-center" data-tm-ticktick-import-option="completed">
+                <span>导入已完成任务</span>
+            </label>
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--tm-text-color); cursor:pointer;">
+                <input type="checkbox" class="b3-switch fn__flex-center" data-tm-ticktick-import-option="archived">
+                <span>导入已归档任务</span>
+            </label>
+        `;
+        box.appendChild(optionRow);
+        const includeCompletedInput = optionRow.querySelector('[data-tm-ticktick-import-option="completed"]');
+        const includeArchivedInput = optionRow.querySelector('[data-tm-ticktick-import-option="archived"]');
 
         const helper = document.createElement('div');
         helper.style.cssText = 'padding: 10px 12px; border: 1px solid var(--tm-border-color); border-radius: 10px; background: color-mix(in srgb, var(--tm-card-bg, var(--tm-bg-color)) 92%, var(--tm-primary-color) 8%); color: var(--tm-secondary-text); font-size: 12px; line-height: 1.7; white-space: pre-wrap;';
@@ -54911,8 +57961,15 @@ async function __tmRefreshAfterWake(reason) {
         const removeFromStack = __tmModalStackBind(() => cancelBtn.click());
         let importModel = null;
         let fileName = '';
+        let fileText = '';
         let importInFlight = false;
         let cancelRequested = false;
+
+        const getImportOptions = () => ({
+            includeCompleted: includeCompletedInput?.checked === true,
+            includeArchived: includeArchivedInput?.checked === true,
+            docConcurrency: 3,
+        });
 
         const refreshHelper = (text, isError = false) => {
             helper.textContent = text;
@@ -54962,6 +58019,29 @@ async function __tmRefreshAfterWake(reason) {
             okBtn.style.opacity = enabled ? '1' : '0.6';
         };
 
+        const rebuildImportModel = () => {
+            if (!fileText) {
+                importModel = null;
+                refreshHelper('尚未选择 CSV 文件。');
+                setProgressVisible(false);
+                refreshProgress(null);
+                refreshSubmitState();
+                return;
+            }
+            try {
+                importModel = __tmBuildTickTickImportModel(fileText, getImportOptions());
+                refreshHelper(__tmRenderTickTickImportSummary(importModel, { fileName }));
+                setProgressVisible(false);
+                refreshProgress(null);
+            } catch (e) {
+                importModel = null;
+                refreshHelper(String(e?.message || e || 'CSV 解析失败'), true);
+                setProgressVisible(false);
+                refreshProgress(null);
+            }
+            refreshSubmitState();
+        };
+
         pickBtn.onclick = () => fileInput.click();
         cancelBtn.onclick = () => {
             if (importInFlight) {
@@ -55005,6 +58085,7 @@ async function __tmRefreshAfterWake(reason) {
             });
             try {
                 const result = await __tmImportTickTickModel(importModel, notebookId, {
+                    ...getImportOptions(),
                     onProgress: (progress) => {
                         refreshProgress(progress);
                     },
@@ -55044,20 +58125,11 @@ async function __tmRefreshAfterWake(reason) {
             fileName = String(file.name || '').trim();
             const reader = new FileReader();
             reader.onload = () => {
-                try {
-                    importModel = __tmBuildTickTickImportModel(String(reader.result || ''));
-                    refreshHelper(__tmRenderTickTickImportSummary(importModel, { fileName }));
-                    setProgressVisible(false);
-                    refreshProgress(null);
-                } catch (e) {
-                    importModel = null;
-                    refreshHelper(String(e?.message || e || 'CSV 解析失败'), true);
-                    setProgressVisible(false);
-                    refreshProgress(null);
-                }
-                refreshSubmitState();
+                fileText = String(reader.result || '');
+                rebuildImportModel();
             };
             reader.onerror = () => {
+                fileText = '';
                 importModel = null;
                 refreshHelper('读取文件失败，请重试。', true);
                 setProgressVisible(false);
@@ -55066,6 +58138,16 @@ async function __tmRefreshAfterWake(reason) {
             };
             reader.readAsText(file, 'utf-8');
         };
+
+        [includeCompletedInput, includeArchivedInput].forEach((input) => {
+            input?.addEventListener('change', () => {
+                if (importInFlight) {
+                    try { input.checked = !input.checked; } catch (e) {}
+                    return;
+                }
+                rebuildImportModel();
+            });
+        });
 
         modal.onclick = (event) => {
             if (event.target === modal) {
@@ -55622,17 +58704,22 @@ async function __tmRefreshAfterWake(reason) {
         const defs = __tmGetCustomFieldDefs();
         const resolveDraft = (sourceField = null, type = '') => {
             const source = sourceField && typeof sourceField === 'object' ? sourceField : null;
+            const draftType = type === 'multi'
+                ? 'multi'
+                : (type === 'text' ? 'text' : 'single');
             const normalized = source
                 ? __tmNormalizeCustomFieldDef(source, 0, new Set(), new Set())
                 : __tmNormalizeCustomFieldDef({
                     id: '',
                     name: '',
                     attrKey: '',
-                    type: type === 'multi' ? 'multi' : 'single',
-                    options: [
-                        { name: '选项1', color: __tmGetCustomFieldPresetColor(0) },
-                        { name: '选项2', color: __tmGetCustomFieldPresetColor(1) },
-                    ],
+                    type: draftType,
+                    options: draftType === 'text'
+                        ? []
+                        : [
+                            { name: '选项1', color: __tmGetCustomFieldPresetColor(0) },
+                            { name: '选项2', color: __tmGetCustomFieldPresetColor(1) },
+                        ],
                     enabled: true,
                 }, 0, new Set(), new Set());
             if (!source) {
@@ -55678,13 +58765,21 @@ async function __tmRefreshAfterWake(reason) {
                 `max-height:${isCompact ? `calc(100vh - ${backdropPadding * 2}px)` : 'min(88vh,860px)'}`,
             ].join(';');
             const defsNow = __tmGetCustomFieldDefs();
+            const draftType = String(draft.type || 'single').trim() === 'multi'
+                ? 'multi'
+                : (String(draft.type || '').trim() === 'text' ? 'text' : 'single');
+            const supportsOptions = draftType !== 'text';
             const listHtml = defsNow.map((field) => {
                 const id = String(field?.id || '').trim();
                 const active = id && id === currentFieldId;
+                const fieldType = String(field?.type || '').trim();
+                const fieldTypeLabel = fieldType === 'multi'
+                    ? '多选'
+                    : (fieldType === 'text' ? '文本' : '单选');
                 return `
                     <button type="button" data-tm-custom-field-open="${esc(id)}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid ${active ? 'var(--tm-primary-color)' : 'var(--tm-border-color)'};border-radius:10px;background:${active ? 'var(--tm-hover-bg)' : 'var(--tm-card-bg)'};color:var(--tm-text-color);cursor:pointer;text-align:left;">
                         <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(String(field?.name || id || '未命名自定义列').trim() || '未命名自定义列')}</span>
-                        <span style="font-size:11px;color:var(--tm-secondary-text);flex:none;">${field?.type === 'multi' ? '多选' : '单选'}</span>
+                        <span style="font-size:11px;color:var(--tm-secondary-text);flex:none;">${fieldTypeLabel}</span>
                     </button>
                 `;
             }).join('');
@@ -55702,7 +58797,7 @@ async function __tmRefreshAfterWake(reason) {
             dialog.innerHTML = `
                 <div style="padding:${isCompact ? '14px 14px 12px' : '16px 18px'};border-bottom:1px solid var(--tm-border-color);display:flex;align-items:${isCompact ? 'flex-start' : 'center'};justify-content:space-between;gap:${isCompact ? '8px' : '12px'};flex-wrap:${isCompact ? 'wrap' : 'nowrap'};">
                     <div style="min-width:0;">
-                        <div style="font-size:18px;font-weight:700;">自定义单选 / 多选列</div>
+                        <div style="font-size:18px;font-weight:700;">自定义单选 / 多选 / 文本列</div>
                         <div style="font-size:12px;color:var(--tm-secondary-text);margin-top:4px;line-height:1.5;">右击表头即可再次打开这里。自定义列会同步进入列设置、表格视图和任务详情页。</div>
                     </div>
                     <button type="button" class="tm-btn tm-btn-gray" data-tm-custom-field-close style="padding:${isCompact ? '8px 12px' : '6px 10px'};min-height:${isCompact ? '40px' : 'auto'};${isCompact ? 'margin-left:auto;' : ''}">关闭</button>
@@ -55711,9 +58806,10 @@ async function __tmRefreshAfterWake(reason) {
                     <div style="display:flex;flex-direction:column;gap:10px;">
                         <div style="font-size:12px;font-weight:600;color:var(--tm-secondary-text);">已配置自定义列</div>
                         <div style="display:${isCompact ? 'grid' : 'flex'};${isCompact ? `grid-template-columns:${isPhone ? '1fr' : 'repeat(auto-fit,minmax(132px,1fr))'};` : 'flex-direction:column;'}gap:8px;">${listHtml || '<div style="font-size:12px;color:var(--tm-secondary-text);padding:10px;border:1px dashed var(--tm-border-color);border-radius:10px;">还没有自定义列</div>'}</div>
-                        <div style="display:grid;grid-template-columns:${isPhone ? '1fr' : 'repeat(2,minmax(0,1fr))'};gap:8px;">
+                        <div style="display:grid;grid-template-columns:${isPhone ? '1fr' : 'repeat(3,minmax(0,1fr))'};gap:8px;">
                             <button type="button" class="tm-btn tm-btn-primary" data-tm-custom-field-new="single" style="padding:${isCompact ? '8px 12px' : '6px 10px'};font-size:12px;min-height:${isCompact ? '40px' : 'auto'};">+ 单选列</button>
                             <button type="button" class="tm-btn tm-btn-secondary" data-tm-custom-field-new="multi" style="padding:${isCompact ? '8px 12px' : '6px 10px'};font-size:12px;min-height:${isCompact ? '40px' : 'auto'};">+ 多选列</button>
+                            <button type="button" class="tm-btn tm-btn-secondary" data-tm-custom-field-new="text" style="padding:${isCompact ? '8px 12px' : '6px 10px'};font-size:12px;min-height:${isCompact ? '40px' : 'auto'};">+ 文本列</button>
                         </div>
                     </div>
                     <div style="display:flex;flex-direction:column;gap:14px;">
@@ -55725,24 +58821,31 @@ async function __tmRefreshAfterWake(reason) {
                             <label style="display:flex;flex-direction:column;gap:6px;">
                                 <span style="font-size:12px;color:var(--tm-secondary-text);">自定义列类型</span>
                                 <select data-tm-custom-field-type style="width:100%;padding:8px 10px;border:1px solid var(--tm-input-border);border-radius:10px;background:var(--tm-input-bg);color:var(--tm-text-color);">
-                                    <option value="single" ${String(draft.type || 'single') === 'single' ? 'selected' : ''}>单选</option>
-                                    <option value="multi" ${String(draft.type || '') === 'multi' ? 'selected' : ''}>多选</option>
+                                    <option value="single" ${draftType === 'single' ? 'selected' : ''}>单选</option>
+                                    <option value="multi" ${draftType === 'multi' ? 'selected' : ''}>多选</option>
+                                    <option value="text" ${draftType === 'text' ? 'selected' : ''}>文本</option>
                                 </select>
                             </label>
                         </div>
                         <label style="display:flex;flex-direction:column;gap:6px;">
                             <span style="font-size:12px;color:var(--tm-secondary-text);">属性键名</span>
                             <input type="text" data-tm-custom-field-attr-key value="${esc(String(draft.attrKey || '').trim())}" placeholder="例如 location / owner / channel" style="width:100%;padding:8px 10px;border:1px solid var(--tm-input-border);border-radius:10px;background:var(--tm-input-bg);color:var(--tm-text-color);">
-                            <span style="font-size:12px;color:var(--tm-secondary-text);">会写入思源块属性 custom-tm-属性键名。仅支持字母、数字、-、_；留空时会自动使用稳定的字段 ID。</span>
+                            <span style="font-size:12px;color:var(--tm-secondary-text);">会写入思源块属性 custom-tm-属性键名。仅支持字母、数字、-；留空时会自动使用稳定的字段 ID。</span>
                         </label>
-                        <div style="display:flex;align-items:${isCompact ? 'stretch' : 'center'};justify-content:space-between;gap:12px;flex-direction:${isCompact ? 'column' : 'row'};">
-                            <div style="min-width:0;">
-                                <div style="font-size:13px;font-weight:600;">选项配置</div>
-                                <div style="font-size:12px;color:var(--tm-secondary-text);margin-top:4px;">每个选项自带默认颜色，表格、详情页和导出会复用这些颜色与名称。</div>
+                        ${supportsOptions ? `
+                            <div style="display:flex;align-items:${isCompact ? 'stretch' : 'center'};justify-content:space-between;gap:12px;flex-direction:${isCompact ? 'column' : 'row'};">
+                                <div style="min-width:0;">
+                                    <div style="font-size:13px;font-weight:600;">选项配置</div>
+                                    <div style="font-size:12px;color:var(--tm-secondary-text);margin-top:4px;">每个选项自带默认颜色，表格、详情页和导出会复用这些颜色与名称。</div>
+                                </div>
+                                <button type="button" class="tm-btn tm-btn-secondary" data-tm-custom-field-add-option style="padding:${isCompact ? '8px 12px' : '6px 10px'};font-size:12px;min-height:${isCompact ? '40px' : 'auto'};${isCompact ? 'width:100%;' : ''}">+ 添加选项</button>
                             </div>
-                            <button type="button" class="tm-btn tm-btn-secondary" data-tm-custom-field-add-option style="padding:${isCompact ? '8px 12px' : '6px 10px'};font-size:12px;min-height:${isCompact ? '40px' : 'auto'};${isCompact ? 'width:100%;' : ''}">+ 添加选项</button>
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:8px;">${optionRows || '<div style="font-size:12px;color:var(--tm-secondary-text);padding:10px;border:1px dashed var(--tm-border-color);border-radius:10px;">请至少添加一个选项</div>'}</div>
+                            <div style="display:flex;flex-direction:column;gap:8px;">${optionRows || '<div style="font-size:12px;color:var(--tm-secondary-text);padding:10px;border:1px dashed var(--tm-border-color);border-radius:10px;">请至少添加一个选项</div>'}</div>
+                        ` : `
+                            <div style="font-size:12px;color:var(--tm-secondary-text);padding:12px;border:1px dashed var(--tm-border-color);border-radius:10px;background:var(--tm-card-bg);line-height:1.6;">
+                                文本列不需要预设选项。创建后会像备注一样直接输入文本，并支持在表格、任务详情和 Excel 导出中使用。
+                            </div>
+                        `}
                         <div style="display:flex;align-items:${isCompact ? 'stretch' : 'center'};justify-content:space-between;gap:10px;flex-wrap:wrap;flex-direction:${isCompact ? 'column' : 'row'};border-top:1px solid var(--tm-border-color);padding-top:14px;">
                             <div style="font-size:12px;color:var(--tm-secondary-text);width:${isCompact ? '100%' : 'auto'};line-height:1.5;">${currentFieldId ? `当前编辑自定义列：${esc(String(draft.name || currentFieldId).trim() || currentFieldId)}` : '新的自定义列会自动加入列设置，可继续在外观里排序或隐藏'}</div>
                             <div style="display:${isCompact ? 'grid' : 'flex'};gap:8px;flex-wrap:wrap;width:${isCompact ? '100%' : 'auto'};${isCompact ? `grid-template-columns:${isPhone ? '1fr' : `repeat(${currentFieldId ? 3 : 2}, minmax(0,1fr))`};` : ''}">
@@ -55761,7 +58864,10 @@ async function __tmRefreshAfterWake(reason) {
                 const attrKeyInput = dialog.querySelector('[data-tm-custom-field-attr-key]');
                 draft.name = String(nameInput?.value || '').trim();
                 draft.attrKey = String(attrKeyInput?.value || '').trim();
-                draft.type = String(typeSelect?.value || 'single').trim() === 'multi' ? 'multi' : 'single';
+                const nextType = String(typeSelect?.value || 'single').trim();
+                draft.type = nextType === 'multi'
+                    ? 'multi'
+                    : (nextType === 'text' ? 'text' : 'single');
                 draft.options = (Array.isArray(draft.options) ? draft.options : []).map((option, index) => {
                     const nameEl = dialog.querySelector(`[data-tm-custom-field-option-name="${index}"]`);
                     const colorEl = dialog.querySelector(`[data-tm-custom-field-option-color="${index}"]`);
@@ -55783,12 +58889,12 @@ async function __tmRefreshAfterWake(reason) {
                 const others = currentDefs.filter((field) => String(field?.id || '').trim() !== currentFieldId);
                 let nextId = String(currentFieldId || '').trim();
                 if (!nextId) {
-                    const fallbackId = `field_${Date.now().toString(36)}`;
+                    const fallbackId = `field-${Date.now().toString(36)}`;
                     nextId = __tmNormalizeCustomFieldId(name, fallbackId);
                     let dedupe = 2;
                     const existingIds = new Set(others.map((field) => String(field?.id || '').trim()).filter(Boolean));
                     while (existingIds.has(nextId)) {
-                        nextId = `${__tmNormalizeCustomFieldId(name, fallbackId)}_${dedupe}`;
+                        nextId = `${__tmNormalizeCustomFieldId(name, fallbackId)}-${dedupe}`;
                         dedupe += 1;
                     }
                 }
@@ -55797,12 +58903,17 @@ async function __tmRefreshAfterWake(reason) {
                     hint('⚠️ 属性键名不能为空', 'warning');
                     return;
                 }
-                const optionsList = (Array.isArray(draft.options) ? draft.options : []).map((option, index) => ({
-                    id: String(option?.id || '').trim() || `option_${index + 1}`,
-                    name: String(option?.name || '').trim(),
-                    color: String(option?.color || __tmGetCustomFieldPresetColor(index)).trim() || __tmGetCustomFieldPresetColor(index),
-                })).filter((option) => option.name);
-                if (!optionsList.length) {
+                const draftType = String(draft.type || 'single').trim() === 'multi'
+                    ? 'multi'
+                    : (String(draft.type || '').trim() === 'text' ? 'text' : 'single');
+                const optionsList = draftType === 'text'
+                    ? []
+                    : (Array.isArray(draft.options) ? draft.options : []).map((option, index) => ({
+                        id: String(option?.id || '').trim() || `option_${index + 1}`,
+                        name: String(option?.name || '').trim(),
+                        color: String(option?.color || __tmGetCustomFieldPresetColor(index)).trim() || __tmGetCustomFieldPresetColor(index),
+                    })).filter((option) => option.name);
+                if (draftType !== 'text' && !optionsList.length) {
                     hint('⚠️ 请至少保留一个选项', 'warning');
                     return;
                 }
@@ -55821,7 +58932,7 @@ async function __tmRefreshAfterWake(reason) {
                         id: nextId,
                         name,
                         attrKey,
-                        type: draft.type === 'multi' ? 'multi' : 'single',
+                        type: draftType,
                         options: optionsList,
                         enabled: true,
                     };
@@ -55831,7 +58942,7 @@ async function __tmRefreshAfterWake(reason) {
                         id: nextId,
                         name,
                         attrKey,
-                        type: draft.type === 'multi' ? 'multi' : 'single',
+                        type: draftType,
                         options: optionsList,
                         enabled: true,
                     });
@@ -55877,6 +58988,12 @@ async function __tmRefreshAfterWake(reason) {
             });
             dialog.querySelector('[data-tm-custom-field-type]')?.addEventListener('change', () => {
                 readDraftFromDom();
+                if (draft.type !== 'text' && (!Array.isArray(draft.options) || draft.options.length === 0)) {
+                    draft.options = [
+                        { id: '', name: '选项1', color: __tmGetCustomFieldPresetColor(0) },
+                        { id: '', name: '选项2', color: __tmGetCustomFieldPresetColor(1) },
+                    ];
+                }
                 renderDialog();
             });
             dialog.querySelectorAll('[data-tm-custom-field-open]').forEach((button) => {
@@ -55989,6 +59106,7 @@ async function __tmRefreshAfterWake(reason) {
         const field = fieldId ? __tmGetCustomFieldDefMap().get(fieldId) : null;
         createItem('新增单选列', () => window.tmOpenCustomFieldDialog('', { type: 'single' }));
         createItem('新增多选列', () => window.tmOpenCustomFieldDialog('', { type: 'multi' }));
+        createItem('新增文本列', () => window.tmOpenCustomFieldDialog('', { type: 'text' }));
         createItem('管理自定义列', () => window.tmOpenCustomFieldDialog('', { manager: true }));
         if (field) {
             const divider = document.createElement('hr');
@@ -56985,6 +60103,100 @@ async function __tmRefreshAfterWake(reason) {
         return task;
     }
 
+    function __tmGetTaskRemainingTimeInfo(task, options = {}) {
+        const DAY_MS = 24 * 60 * 60 * 1000;
+        const parseToLocalDayBoundaryTs = (value, boundary = 'start') => {
+            const normalized = __tmNormalizeDateOnly(value);
+            if (normalized && /^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+                const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+                if (match) {
+                    const dt = boundary === 'end'
+                        ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 23, 59, 0, 0)
+                        : new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 0, 0, 0, 0);
+                    const ts = dt.getTime();
+                    return Number.isFinite(ts) ? ts : 0;
+                }
+            }
+            const parsedTs = __tmParseTimeToTs(value);
+            if (!Number.isFinite(parsedTs) || parsedTs <= 0) return 0;
+            const parsed = new Date(parsedTs);
+            const dt = boundary === 'end'
+                ? new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 23, 59, 0, 0)
+                : new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 0, 0, 0, 0);
+            const ts = dt.getTime();
+            return Number.isFinite(ts) ? ts : 0;
+        };
+        const nowTs = Number.isFinite(Number(options?.nowTs)) ? Number(options.nowTs) : Date.now();
+        const nowDate = new Date(nowTs);
+        const todayStartTs = Number.isFinite(Number(options?.todayStartTs))
+            ? Number(options.todayStartTs)
+            : new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), 0, 0, 0, 0).getTime();
+        const calcDayDiff = (targetDayStartTs) => {
+            if (!Number.isFinite(targetDayStartTs) || targetDayStartTs <= 0) return Infinity;
+            return Math.round((targetDayStartTs - todayStartTs) / DAY_MS);
+        };
+        const makeInfo = (label, color, sortPrefix, emphasis = false) => ({
+            label: String(label || '').trim() || '待定',
+            color: String(color || 'var(--tm-secondary-text)').trim() || 'var(--tm-secondary-text)',
+            sortPrefix: String(sortPrefix || '8').trim() || '8',
+            emphasis: !!emphasis,
+        });
+        const colors = {
+            overdue: __tmIsDarkMode()
+                ? (__tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorDark, '#ff6b6b') || '#ff6b6b')
+                : (__tmNormalizeHexColor(SettingsStore.data.timeGroupOverdueColorLight, '#d93025') || '#d93025'),
+            active: '#5fc25f',
+            activeStrong: '#05ba05',
+            waiting: '#999999',
+            pending: '#8e69c9',
+        };
+
+        const startStartTs = parseToLocalDayBoundaryTs(task?.startDate, 'start');
+        const startEndTs = parseToLocalDayBoundaryTs(task?.startDate, 'end');
+        const endStartTs = parseToLocalDayBoundaryTs(task?.completionTime, 'start');
+        const endEndTs = parseToLocalDayBoundaryTs(task?.completionTime, 'end');
+        const hasStart = Number.isFinite(startStartTs) && startStartTs > 0;
+        const hasEnd = Number.isFinite(endEndTs) && endEndTs > 0;
+
+        if (hasEnd) {
+            if (hasStart && nowTs < startStartTs) {
+                const daysUntilStart = calcDayDiff(startStartTs);
+                if (daysUntilStart <= 0) return makeInfo('开始', colors.active, '2', true);
+                if (daysUntilStart === 1) return makeInfo('明天→', colors.waiting, '4');
+                if (daysUntilStart === 2) return makeInfo('后天→', colors.waiting, '5');
+                if (daysUntilStart <= 7) return makeInfo(`${daysUntilStart}天后→`, colors.waiting, '6');
+                return makeInfo(`${daysUntilStart}天后→`, colors.waiting, '7');
+            }
+            const remainingDays = calcDayDiff(endStartTs);
+            if (remainingDays < 0 || nowTs > endEndTs) return makeInfo('过期', colors.overdue, '1', true);
+            if (remainingDays === 0) return makeInfo('今天', colors.activeStrong, '1', true);
+            if (remainingDays <= 7) return makeInfo(`余${remainingDays}天`, colors.active, '1', true);
+            return makeInfo(`余${remainingDays}天`, colors.active, '1');
+        }
+
+        if (hasStart) {
+            if (nowTs > startEndTs) return makeInfo('开始', colors.active, '2', true);
+            const daysUntilStart = calcDayDiff(startStartTs);
+            if (daysUntilStart <= 0) return makeInfo('今天', colors.activeStrong, '1', true);
+            if (daysUntilStart === 1) return makeInfo('明天→', colors.waiting, '4');
+            if (daysUntilStart === 2) return makeInfo('后天→', colors.waiting, '5');
+            if (daysUntilStart <= 7) return makeInfo(`${daysUntilStart}天后→`, colors.waiting, '6');
+            return makeInfo(`${daysUntilStart}天后→`, colors.waiting, '7');
+        }
+
+        return makeInfo('待定', colors.pending, '8');
+    }
+
+    function __tmRenderTaskRemainingTimeHtml(task, options = {}) {
+        const info = __tmGetTaskRemainingTimeInfo(task, options);
+        const weight = info.emphasis ? '700' : '500';
+        return `<span style="display:none;">${esc(info.sortPrefix)}</span><span style="color:${esc(info.color)};font-weight:${weight};">${esc(info.label)}</span>`;
+    }
+
+    function __tmGetTaskRemainingTimeLabel(task, options = {}) {
+        return __tmGetTaskRemainingTimeInfo(task, options).label;
+    }
+
     function __tmExcelGetTimeGroupLabel(task) {
         const info = __tmGetTaskTimePriorityInfo(task);
         const diffDays = Number(info?.diffDays);
@@ -57131,6 +60343,12 @@ async function __tmRefreshAfterWake(reason) {
                 wch: pxToWch(widthMap.completionTime, 14),
                 value: (task) => String(task?.completionTime || '').trim()
             },
+            remainingTime: {
+                key: 'remainingTime',
+                label: '剩余时间',
+                wch: pxToWch(widthMap.remainingTime, 14),
+                value: (task) => __tmGetTaskRemainingTimeLabel(task)
+            },
             duration: {
                 key: 'duration',
                 label: '时长',
@@ -57159,14 +60377,17 @@ async function __tmRefreshAfterWake(reason) {
             const fieldId = String(field?.id || '').trim();
             const colKey = __tmBuildCustomFieldColumnKey(fieldId);
             if (!fieldId || !colKey) return;
+            const fieldType = String(field?.type || '').trim();
             defs[colKey] = {
                 key: colKey,
                 label: String(field?.name || fieldId).trim() || fieldId,
-                wch: pxToWch(widthMap[colKey], String(field?.type || '').trim() === 'multi' ? 24 : 18),
-                value: (task) => __tmResolveCustomFieldSelectedOptions(field, __tmGetTaskCustomFieldValue(task, fieldId))
-                    .map((option) => String(option?.name || option?.id || '').trim())
-                    .filter(Boolean)
-                    .join(', ')
+                wch: pxToWch(widthMap[colKey], fieldType === 'multi' ? 24 : (fieldType === 'text' ? 28 : 18)),
+                value: (task) => fieldType === 'text'
+                    ? String(__tmNormalizeCustomFieldValue(field, __tmGetTaskCustomFieldValue(task, fieldId)) || '').trim()
+                    : __tmResolveCustomFieldSelectedOptions(field, __tmGetTaskCustomFieldValue(task, fieldId))
+                        .map((option) => String(option?.name || option?.id || '').trim())
+                        .filter(Boolean)
+                        .join(', ')
             };
         });
         return columnOrder.map((key) => defs[key]).filter(Boolean);
@@ -58220,6 +61441,16 @@ async function __tmRefreshAfterWake(reason) {
     window.updateMobileChecklistCompactTitleJump = async function(enabled) {
         SettingsStore.data.mobileChecklistCompactTitleJump = !!enabled;
         await SettingsStore.save();
+        showSettings();
+        if (state.modal && document.body.contains(state.modal)) {
+            try { render(); } catch (e) {}
+        }
+    };
+
+    window.updateChecklistCompactTitleOpenDetailPage = async function(enabled) {
+        SettingsStore.data.checklistCompactTitleOpenDetailPage = !!enabled;
+        await SettingsStore.save();
+        __tmDispatchDockSettingsChanged('checklist-compact-title-open-detail-page');
         showSettings();
         if (state.modal && document.body.contains(state.modal)) {
             try { render(); } catch (e) {}
@@ -60111,6 +63342,7 @@ async function __tmRefreshAfterWake(reason) {
 
     async function init() {
         const bindShellEntrances = !__tmIsDockHost();
+        try { __tmBindUndoShortcut(); } catch (e) {}
         if (bindShellEntrances) {
             try { __tmBindWakeReload(); } catch (e) {}
             try { __tmBindTabEnterAutoRefresh(); } catch (e) {}
@@ -60962,9 +64194,14 @@ async function __tmRefreshAfterWake(reason) {
         try { __tmUnbindMobileViewportAutoRefresh(); } catch (e) {}
         try { state.dockTaskPointerGestureCleanup?.(); } catch (e) {}
         try { state.dockTaskPointerDragAbort?.abort?.(); } catch (e) {}
+        try { state.multiSelectPointerGestureCleanup?.(); } catch (e) {}
+        try { state.multiSelectPointerSweepAbort?.abort?.(); } catch (e) {}
+        try { __tmCloseMultiSelectMoreMenu(); } catch (e) {}
         state.dockTaskPointerGestureCleanup = null;
         state.dockTaskPointerDragAbort = null;
         state.dockTaskPointerSuppressClickUntil = 0;
+        state.multiSelectPointerGestureCleanup = null;
+        state.multiSelectPointerSweepAbort = null;
 
         try {
             if (state.modal) {
@@ -61080,6 +64317,16 @@ async function __tmRefreshAfterWake(reason) {
                 SettingsStore.saveDirty = false;
                 SettingsStore.saving = false;
             } catch (e2) {}
+        } catch (e) {}
+
+        try {
+            if (__tmUndoState.keydownHandler) {
+                document.removeEventListener('keydown', __tmUndoState.keydownHandler, true);
+                __tmUndoState.keydownHandler = null;
+            }
+            __tmUndoState.undoStack = [];
+            __tmUndoState.redoStack = [];
+            __tmUndoState.applying = false;
         } catch (e) {}
 
         try { __tmStyleEl?.remove?.(); } catch (e) {}
@@ -61559,6 +64806,7 @@ async function __tmRefreshAfterWake(reason) {
     async function __tmQuickbarResolveConfiguredDocIds(forceRefresh = false) {
         const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
         const legacyIds = Array.isArray(SettingsStore.data.selectedDocIds) ? SettingsStore.data.selectedDocIds : [];
+        const quickAddDocId = String(SettingsStore.data.newTaskDocId || '').trim();
         const targetDocs = [];
         legacyIds.forEach((id) => {
             const did = String(id || '').trim();
@@ -61578,7 +64826,10 @@ async function __tmRefreshAfterWake(reason) {
                 };
             })
             .filter(Boolean);
-        const cacheKey = normalizedDocs.map((entry) => `${entry.kind}:${entry.id}:${entry.recursive ? 1 : 0}`).join('|');
+        const cacheKey = [
+            quickAddDocId && quickAddDocId !== '__dailyNote__' ? `quickAdd:${quickAddDocId}` : '',
+            ...normalizedDocs.map((entry) => `${entry.kind}:${entry.id}:${entry.recursive ? 1 : 0}`)
+        ].filter(Boolean).join('|');
         const now = Date.now();
         const cacheEnt = __tmQuickbarResolveConfiguredDocIds.__cache;
         if (!forceRefresh
@@ -61602,6 +64853,7 @@ async function __tmRefreshAfterWake(reason) {
             finalIds.push(id);
         };
         const resolvePromise = Promise.resolve().then(async () => {
+            if (quickAddDocId && quickAddDocId !== '__dailyNote__') pushDocId(quickAddDocId);
             await Promise.all(normalizedDocs.map((entry) => __tmExpandSourceEntryDocIds(entry, pushDocId)));
             const out = finalIds.slice();
             __tmQuickbarResolveConfiguredDocIds.__cache = { key: cacheKey, ids: out, t: Date.now() };
@@ -61749,6 +65001,9 @@ async function __tmRefreshAfterWake(reason) {
             return await window.tmCloseAiSidebar();
         }
     };
+    __tmNs.applyTaskAttrUpdateWithUndo = __tmApplyTaskAttrUpdateWithUndo;
+    __tmNs.applyTaskMetaPatchWithUndo = __tmApplyTaskMetaPatchWithUndo;
+    __tmNs.undoLastMutation = __tmUndoLastMutation;
 
     try {
         const now = Object.getOwnPropertyNames(window);
@@ -61785,12 +65040,7 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
 
         try {
-            await removePluginFile(WHITEBOARD_DATA_FILE_PATH);
-        } catch (e) {}
-
-        try {
             await Promise.all([
-                removePluginFile(`${PLUGIN_STORAGE_DIR}/calendar-events.json`),
                 removePluginFile(SEMANTIC_DATE_RECOGNIZED_FILE_PATH),
                 removePluginFile(`${PLUGIN_STORAGE_DIR}/ai-conversations.json`),
                 removePluginFile(`${PLUGIN_STORAGE_DIR}/ai-debug.json`),

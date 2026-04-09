@@ -1179,9 +1179,26 @@
     function buildTaskEventTitleNode(text, rangeText = '') {
         const title = document.createElement('span');
         title.className = 'tm-cal-task-event-title';
+        title.draggable = false;
         const titleText = document.createElement('span');
         titleText.className = 'tm-cal-task-event-title-text';
         titleText.textContent = String(text || '').trim() || '任务';
+        titleText.draggable = false;
+        const swallowDragStart = (ev) => {
+            try { ev.preventDefault?.(); } catch (e) {}
+            try { ev.stopPropagation?.(); } catch (e) {}
+        };
+        const swallowPointerStart = (ev) => {
+            try { ev.stopPropagation?.(); } catch (e) {}
+        };
+        title.addEventListener('pointerdown', swallowPointerStart);
+        title.addEventListener('mousedown', swallowPointerStart);
+        title.addEventListener('touchstart', swallowPointerStart, { passive: true });
+        title.addEventListener('dragstart', swallowDragStart);
+        titleText.addEventListener('pointerdown', swallowPointerStart);
+        titleText.addEventListener('mousedown', swallowPointerStart);
+        titleText.addEventListener('touchstart', swallowPointerStart, { passive: true });
+        titleText.addEventListener('dragstart', swallowDragStart);
         title.appendChild(titleText);
         const range = String(rangeText || '').trim();
         if (!range) return { title, titleText, timeText: null };
@@ -1189,6 +1206,11 @@
         const timeText = document.createElement('span');
         timeText.className = 'tm-cal-task-event-time';
         timeText.textContent = range;
+        timeText.draggable = false;
+        timeText.addEventListener('pointerdown', swallowPointerStart);
+        timeText.addEventListener('mousedown', swallowPointerStart);
+        timeText.addEventListener('touchstart', swallowPointerStart, { passive: true });
+        timeText.addEventListener('dragstart', swallowDragStart);
         title.appendChild(timeText);
         return { title, titleText, timeText };
     }
@@ -1860,6 +1882,29 @@
         };
     }
 
+    function shouldOpenTaskDetailOnCalendarTaskClick() {
+        const liveStore = state.settingsStore || state.sideDay?.settingsStore || null;
+        return !!liveStore?.data?.checklistCompactTitleOpenDetailPage;
+    }
+
+    async function openCalendarLinkedTask(taskId, ev) {
+        const tid = String(taskId || '').trim();
+        if (!tid) return false;
+        if (shouldOpenTaskDetailOnCalendarTaskClick() && typeof window.tmOpenTaskDetail === 'function') {
+            try {
+                const opened = await window.tmOpenTaskDetail(tid, ev);
+                if (opened !== false) return true;
+            } catch (e) {}
+        }
+        if (typeof window.tmJumpToTask === 'function') {
+            try {
+                await window.tmJumpToTask(tid, ev);
+                return true;
+            } catch (e) {}
+        }
+        return false;
+    }
+
     function modeLabel(mode) {
         const m = String(mode || '').trim();
         if (m === 'break' || m === 'stopwatch-break') return '休息';
@@ -2232,8 +2277,8 @@
                         <div class="tm-checklist-title-row">
                             <div class="tm-checklist-title-main">
                                 <div class="tm-checklist-title">
-                                    <span class="tm-checklist-title-button"${tooltipAttrs}>
-                                        <span class="tm-task-content-clickable" title="${esc(title)}">${esc(title)}</span>
+                                    <span class="tm-checklist-title-button">
+                                        <span class="tm-task-content-clickable" title="${esc(title)}"${tooltipAttrs}>${esc(title)}</span>
                                     </span>
                                 </div>
                             </div>
@@ -2439,9 +2484,7 @@
                 const taskId = getTaskIdFromEvent(e);
                 if (!taskId) return;
                 if (target.closest('.tm-task-content-clickable, .tm-cal-task-title--checklist')) {
-                    if (typeof window.tmJumpToTask === 'function') {
-                        try { window.tmJumpToTask(taskId, e); } catch (e2) {}
-                    }
+                    try { openCalendarLinkedTask(taskId, e); } catch (e2) {}
                     return;
                 }
                 if (getTaskRowFromEvent(e) && typeof window.tmRowClick === 'function') {
@@ -2997,6 +3040,17 @@
                 : (viewportHeight * 0.5);
             const bottomPanelTop = Math.max(boundsTop, viewportHeight - boundsBottom - panelHeight);
             const topPanelBottom = boundsTop + panelHeight;
+            const middlePanelTop = Math.max(
+                boundsTop,
+                Math.min(
+                    bottomPanelTop,
+                    Math.round(
+                        containerRect
+                            ? (containerRect.top + ((containerRect.height - panelHeight) / 2))
+                            : ((viewportHeight - panelHeight) / 2)
+                    )
+                )
+            );
             let preferTop = false;
             if (Number.isFinite(pointerYRaw)) {
                 const nearBottomPanel = pointerYRaw >= (bottomPanelTop - 28);
@@ -3010,7 +3064,7 @@
                 panel.style.right = `${boundsRight}px`;
                 panel.style.maxWidth = containerRect ? 'none' : '';
                 if (preferTop) {
-                    panel.style.top = `${boundsTop}px`;
+                    panel.style.top = `${middlePanelTop}px`;
                     panel.style.bottom = 'auto';
                 } else {
                     panel.style.top = 'auto';
@@ -3040,6 +3094,17 @@
             Math.min(viewportWidth - panelWidth - horizontalInset, Math.round((viewportWidth - panelWidth) / 2))
         );
         const bottomTop = Math.max(topInset, viewportHeight - panelHeight - bottomInset);
+        const middleTop = Math.max(
+            topInset,
+            Math.min(
+                bottomTop,
+                Math.round(
+                    containerRect
+                        ? (containerRect.top + ((containerRect.height - panelHeight) / 2))
+                        : ((viewportHeight - panelHeight) / 2)
+                )
+            )
+        );
         const centerZoneLeft = centeredLeft - 32;
         const centerZoneRight = centeredLeft + panelWidth + 32;
         const pointerNearBottomCenter = Number.isFinite(clientXRaw) && Number.isFinite(clientYRaw)
@@ -3053,7 +3118,7 @@
             panel.style.left = `${centeredLeft}px`;
             panel.style.right = 'auto';
             if (preferTop) {
-                panel.style.top = `${topInset}px`;
+                panel.style.top = `${middleTop}px`;
                 panel.style.bottom = 'auto';
             } else {
                 panel.style.top = 'auto';
@@ -6957,8 +7022,8 @@
                     applyTaskDoneVisual(wrapEl, titleText, done);
                     titleText.onclick = (ev) => {
                         try { ev.stopPropagation(); } catch (e) {}
-                        if (!tid || typeof window.tmJumpToTask !== 'function') return;
-                        try { window.tmJumpToTask(tid, ev); } catch (e) {}
+                        if (!tid) return;
+                        try { openCalendarLinkedTask(tid, ev); } catch (e) {}
                     };
                     if (cb) wrapEl.appendChild(cb);
                     wrapEl.appendChild(title);
@@ -6984,8 +7049,8 @@
                     applyTaskDoneVisual(wrapEl, titleText, !!ext.__tmReminderDone);
                     titleText.onclick = (ev) => {
                         try { ev.stopPropagation(); } catch (e) {}
-                        if (!tid || typeof window.tmJumpToTask !== 'function') return;
-                        try { window.tmJumpToTask(tid, ev); } catch (e) {}
+                        if (!tid) return;
+                        try { openCalendarLinkedTask(tid, ev); } catch (e) {}
                     };
                     wrapEl.appendChild(title);
                     return { domNodes: [wrapEl] };
@@ -7171,14 +7236,14 @@
                 if (source === 'taskdate') {
                     const tid = String(ext.__tmTaskId || '').trim();
                     try {
-                        if (tid && typeof window.tmJumpToTask === 'function') window.tmJumpToTask(tid, arg?.jsEvent);
+                        if (tid) openCalendarLinkedTask(tid, arg?.jsEvent);
                     } catch (e) {}
                     return;
                 }
                 if (source === 'reminder') {
                     const tid = String(ext.__tmReminderBlockId || '').trim();
                     try {
-                        if (tid && typeof window.tmJumpToTask === 'function') window.tmJumpToTask(tid, arg?.jsEvent);
+                        if (tid) openCalendarLinkedTask(tid, arg?.jsEvent);
                     } catch (e) {}
                     return;
                 }
@@ -9804,7 +9869,7 @@
         renderTaskPanel(wrap, s);
         renderTaskPage(wrap, s);
         setSidePage(wrap, state.sidePage);
-        if (isMobileDevice || isDockHost) setCalendarSidebarOpen(wrap, false);
+        if (isMobileDevice || isDockHost) setCalendarSidebarOpen(wrap, false, state.sidePage);
         else setCalendarSidebarOpen(wrap, !s.collapseDesktopSidebarDefault);
         bindSidebarResize(wrap);
         let calendar = null;
@@ -9975,8 +10040,8 @@
                                 if (dur > 500 || dist > 5) return;
                             }
                         }
-                        if (!tid || typeof window.tmJumpToTask !== 'function') return;
-                        try { window.tmJumpToTask(tid, ev); } catch (e) {}
+                        if (!tid) return;
+                        try { openCalendarLinkedTask(tid, ev); } catch (e) {}
                     };
                     if (cb) wrapEl.appendChild(cb);
                     wrapEl.appendChild(title);
@@ -10012,8 +10077,8 @@
                                 if (dur > 500 || dist > 5) return;
                             }
                         }
-                        if (!tid || typeof window.tmJumpToTask !== 'function') return;
-                        try { window.tmJumpToTask(tid, ev); } catch (e) {}
+                        if (!tid) return;
+                        try { openCalendarLinkedTask(tid, ev); } catch (e) {}
                     };
                     wrapEl.appendChild(title);
                     return { domNodes: [wrapEl] };
@@ -10328,14 +10393,14 @@
                 if (source === 'taskdate') {
                     const tid = String(ext.__tmTaskId || '').trim();
                     try {
-                        if (tid && typeof window.tmJumpToTask === 'function') window.tmJumpToTask(tid, arg?.jsEvent);
+                        if (tid) openCalendarLinkedTask(tid, arg?.jsEvent);
                     } catch (e) {}
                     return;
                 }
                 if (source === 'reminder') {
                     const tid = String(ext.__tmReminderBlockId || '').trim();
                     try {
-                        if (tid && typeof window.tmJumpToTask === 'function') window.tmJumpToTask(tid, arg?.jsEvent);
+                        if (tid) openCalendarLinkedTask(tid, arg?.jsEvent);
                     } catch (e) {}
                     return;
                 }
@@ -10886,21 +10951,19 @@
                     }
                     if (hitRect(titleEl)) {
                         try { e.preventDefault?.(); } catch (e2) {}
-                        if (typeof window.tmJumpToTask === 'function') {
-                            try { window.tmJumpToTask(tid, e); } catch (e2) {}
-                        }
+                        try { openCalendarLinkedTask(tid, e); } catch (e2) {}
                         return;
                     }
                 }
                 if (source === 'taskdate') {
-                    if (tid && typeof window.tmJumpToTask === 'function') {
-                        try { window.tmJumpToTask(tid, e); } catch (e2) {}
+                    if (tid) {
+                        try { openCalendarLinkedTask(tid, e); } catch (e2) {}
                     }
                     return;
                 }
                 if (source === 'reminder') {
-                    if (rid && typeof window.tmJumpToTask === 'function') {
-                        try { window.tmJumpToTask(rid, e); } catch (e2) {}
+                    if (rid) {
+                        try { openCalendarLinkedTask(rid, e); } catch (e2) {}
                     }
                     return;
                 }

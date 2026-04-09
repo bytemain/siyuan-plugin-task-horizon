@@ -175,7 +175,8 @@
 
     function isInlineMetaScopeStorageKey(key) {
         return key === 'tm_doc_groups'
-            || key === 'tm_selected_doc_ids';
+            || key === 'tm_selected_doc_ids'
+            || key === 'tm_new_task_doc_id';
     }
 
     function clearInlineMetaScopeDocCache() {
@@ -276,6 +277,27 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    }
+
+    function getRemarkMarkdownTools() {
+        const tools = globalThis.__tmRemarkMarkdownTools;
+        return tools && typeof tools === 'object' ? tools : null;
+    }
+
+    function normalizeRemarkMarkdown(value) {
+        const tools = getRemarkMarkdownTools();
+        if (tools && typeof tools.normalize === 'function') {
+            try { return String(tools.normalize(value) || ''); } catch (e) {}
+        }
+        return String(value || '').replace(/\r\n?/g, '\n').trim();
+    }
+
+    function stripRemarkMarkdown(value) {
+        const tools = getRemarkMarkdownTools();
+        if (tools && typeof tools.stripText === 'function') {
+            try { return String(tools.stripText(value) || ''); } catch (e) {}
+        }
+        return String(value || '').replace(/\r\n?/g, ' ').replace(/\s{2,}/g, ' ').trim();
     }
 
     function isInlineMetaEnabled() {
@@ -536,9 +558,10 @@
                 box-sizing: border-box;
             }
             .sy-custom-props-floatbar__prop--remark:not(.sy-custom-props-floatbar__prop--icon-only) {
-                height: auto;
+                height: 26px;
                 min-height: 26px;
-                line-height: 1.35;
+                line-height: 26px;
+                align-items: center;
             }
             .sy-custom-props-floatbar__prop--core .sy-custom-props-floatbar__prop-value {
                 display: inline-block;
@@ -739,6 +762,50 @@
             .sy-custom-props-floatbar__input-editor.is-visible {
                 display: block;
             }
+            .sy-custom-props-floatbar__input-editor.is-remark {
+                min-width: min(72vw, 240px);
+                max-width: min(72vw, 420px);
+            }
+            .sy-custom-props-floatbar__remark-toolbar {
+                display: none;
+                align-items: center;
+                gap: 6px;
+                flex-wrap: wrap;
+                margin-top: 10px;
+                padding: 8px 10px;
+                border-radius: 999px;
+                border: 1px solid var(--b3-border-color);
+                background: var(--b3-theme-surface);
+                box-shadow: var(--b3-dialog-shadow);
+            }
+            .sy-custom-props-floatbar__remark-toolbar.is-open {
+                display: inline-flex;
+            }
+            .sy-custom-props-floatbar__remark-tool {
+                width: 28px;
+                min-width: 28px;
+                height: 28px;
+                padding: 0;
+                border-radius: 8px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 13px;
+                font-weight: 700;
+            }
+            .sy-custom-props-floatbar__btn--remark-tools {
+                display: none;
+                min-width: 28px;
+                width: 28px;
+                padding: 0;
+                font-size: 18px;
+                font-weight: 500;
+            }
+            .sy-custom-props-floatbar__input-editor.is-remark .sy-custom-props-floatbar__btn--remark-tools {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
             .sy-custom-props-floatbar__input {
                 width: 100%;
                 box-sizing: border-box;
@@ -752,8 +819,34 @@
                 outline: none;
                 font-size: 13px;
             }
+            .sy-custom-props-floatbar__textarea {
+                width: 100%;
+                box-sizing: border-box;
+                min-height: 76px;
+                max-height: min(60vh, 560px);
+                padding: 6px 8px;
+                border-radius: 6px;
+                border: 1px solid var(--b3-border-color);
+                background: var(--b3-theme-surface);
+                color: var(--b3-theme-on-surface);
+                outline: none;
+                font-size: 13px;
+                line-height: 1.45;
+                resize: none;
+                overflow-y: hidden;
+                white-space: pre-wrap;
+                overflow-wrap: anywhere;
+                font-family: inherit;
+            }
             .sy-custom-props-floatbar__input:focus {
                 border-color: var(--b3-theme-primary);
+            }
+            .sy-custom-props-floatbar__textarea:focus {
+                border-color: var(--b3-theme-primary);
+            }
+            .sy-custom-props-floatbar__input.is-hidden,
+            .sy-custom-props-floatbar__textarea.is-hidden {
+                display: none;
             }
             .sy-custom-props-floatbar__input-actions {
                 display: flex;
@@ -913,7 +1006,17 @@
                 padding: 0 6px;
             }
             .sy-custom-props-inline-chip--remark {
+                display: inline-flex;
+                align-items: center;
+                min-width: 0;
                 max-width: min(34vw, 280px);
+            }
+            .sy-custom-props-inline-chip--remark .sy-custom-props-inline-chip-value {
+                display: block;
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
             .sy-custom-props-inline-chip--priority {
                 padding: 0;
@@ -965,7 +1068,18 @@
         inputEditor.className = 'sy-custom-props-floatbar__input-editor';
         inputEditor.innerHTML = `
             <input type="text" class="sy-custom-props-floatbar__input" placeholder="输入内容..." />
+            <textarea class="sy-custom-props-floatbar__textarea is-hidden" placeholder="输入内容..."></textarea>
+            <div class="sy-custom-props-floatbar__remark-toolbar" data-remark-toolbar hidden>
+                <button class="sy-custom-props-floatbar__btn sy-custom-props-floatbar__remark-tool" data-remark-tool="bullet"${buildTooltipAttrs('无序列表')}>•</button>
+                <button class="sy-custom-props-floatbar__btn sy-custom-props-floatbar__remark-tool" data-remark-tool="ordered"${buildTooltipAttrs('有序列表')}>1.</button>
+                <button class="sy-custom-props-floatbar__btn sy-custom-props-floatbar__remark-tool" data-remark-tool="bold"${buildTooltipAttrs('粗体')}>B</button>
+                <button class="sy-custom-props-floatbar__btn sy-custom-props-floatbar__remark-tool" data-remark-tool="italic"${buildTooltipAttrs('斜体')}>I</button>
+                <button class="sy-custom-props-floatbar__btn sy-custom-props-floatbar__remark-tool" data-remark-tool="code"${buildTooltipAttrs('行内代码')}>Code</button>
+                <button class="sy-custom-props-floatbar__btn sy-custom-props-floatbar__remark-tool" data-remark-tool="link"${buildTooltipAttrs('链接')}>∞</button>
+                <button class="sy-custom-props-floatbar__btn sy-custom-props-floatbar__remark-tool" data-remark-tool="quote"${buildTooltipAttrs('引用')}>❝</button>
+            </div>
             <div class="sy-custom-props-floatbar__input-actions">
+                <button class="sy-custom-props-floatbar__btn sy-custom-props-floatbar__btn--remark-tools" data-action="remark-tools">A</button>
                 <button class="sy-custom-props-floatbar__btn" data-action="cancel">取消</button>
                 <button class="sy-custom-props-floatbar__btn" data-action="save">确定</button>
             </div>
@@ -978,6 +1092,47 @@
         let currentProps = {};  // 当前块的所有自定义属性值
         let activePropConfig = null;  // 当前编辑的属性配置
         let inputResolve = null;  // 输入框Promise解析器
+
+        function getInputEditorControls() {
+            return {
+                input: inputEditor.querySelector('.sy-custom-props-floatbar__input'),
+                textarea: inputEditor.querySelector('.sy-custom-props-floatbar__textarea')
+            };
+        }
+
+        function syncInputEditorTextareaHeight(textarea, minHeight = 76) {
+            if (!(textarea instanceof HTMLTextAreaElement)) return;
+            const baseHeight = Math.max(34, Number(minHeight) || 76);
+            try { textarea.style.height = 'auto'; } catch (e) {}
+            const nextHeight = Math.max(baseHeight, Math.min(420, textarea.scrollHeight || 0));
+            textarea.style.height = `${nextHeight}px`;
+        }
+
+        function setInputEditorMode(mode = 'input') {
+            const { input, textarea } = getInputEditorControls();
+            const useTextarea = mode === 'textarea';
+            const remarkToolbar = inputEditor.querySelector('[data-remark-toolbar]');
+            if (input instanceof HTMLInputElement) {
+                input.classList.toggle('is-hidden', useTextarea);
+                input.disabled = useTextarea;
+                input.oninput = null;
+                input.onkeydown = null;
+                input.onchange = null;
+                input.onclick = null;
+            }
+            if (textarea instanceof HTMLTextAreaElement) {
+                textarea.classList.toggle('is-hidden', !useTextarea);
+                textarea.disabled = !useTextarea;
+                textarea.oninput = null;
+                textarea.onkeydown = null;
+            }
+            inputEditor.classList.toggle('is-remark', useTextarea);
+            if (remarkToolbar instanceof HTMLElement) {
+                remarkToolbar.classList.remove('is-open');
+                remarkToolbar.hidden = true;
+            }
+            return useTextarea ? textarea : input;
+        }
 
         function getBlockElById(blockId) {
             const id = String(blockId || '').trim();
@@ -1102,6 +1257,19 @@
                 console.error('设置块属性失败:', e);
                 return false;
             }
+        }
+
+        async function saveTaskAttrWithUndo(blockId, attrKey, value, options = {}) {
+            const id = String(blockId || '').trim();
+            const key = String(attrKey || '').trim();
+            if (!id || !key) return { success: false, viaSharedApi: false };
+            const success = await setBlockCustomAttrs(id, { [key]: value });
+            return {
+                success,
+                changed: success,
+                viaSharedApi: false,
+                value: value == null ? '' : String(value),
+            };
         }
 
         // 格式化日期（YYYY-MM-DD / ISO / 时间戳 -> YYYY-MM-DD）
@@ -1256,7 +1424,7 @@
             const rawValue = String(value ?? '').trim();
             if (!rawValue) return '';
             if (config?.type === 'date') return formatDate(rawValue);
-            if (attrKey === 'custom-remark') return rawValue;
+            if (attrKey === 'custom-remark') return truncateInlineValue(rawValue, 24);
             if (attrKey === 'custom-duration') return truncateInlineValue(rawValue, 12);
             return truncateInlineValue(rawValue, 15);
         }
@@ -1266,7 +1434,8 @@
             const rawValue = String(value ?? '').trim();
             const displayValue = String(opts.displayValue ?? getFloatbarCoreDisplayValue(config, rawValue));
             const hasValue = !!displayValue;
-            const tooltipText = rawValue ? `${String(config?.name || '').trim()}: ${rawValue}` : (config?.name || '');
+            const tooltipSource = rawValue;
+            const tooltipText = tooltipSource ? `${String(config?.name || '').trim()}: ${tooltipSource}` : (config?.name || '');
             const className = [
                 'sy-custom-props-floatbar__prop',
                 'sy-custom-props-floatbar__prop--core',
@@ -1365,7 +1534,9 @@
                 `.trim();
             }
             const isDate = config.type === 'date';
-            const displayValue = isDate ? formatDate(rawValue) : truncateInlineValue(rawValue, attrKey === 'custom-remark' ? 24 : 10);
+            const displayValue = isDate
+                ? formatDate(rawValue)
+                : truncateInlineValue(rawValue, attrKey === 'custom-remark' ? 24 : 10);
             if (!displayValue) return '';
             return `
                 <span class="sy-custom-props-inline-chip ${attrKey === 'custom-remark' ? 'sy-custom-props-inline-chip--remark' : ''}" data-inline-attr="${escapedAttr}" data-inline-type="${config.type}" data-inline-name="${escapedName}" data-inline-value="${escapedValue}" title="${escapedName}">
@@ -1723,23 +1894,23 @@
                 const newValue = optionEl.dataset.value;
                 const newLabel = optionEl.dataset.label;
 
-                // 更新属性
-                const success = await setBlockCustomAttrs(currentBlockId, {
-                    [config.attrKey]: newValue
+                const result = await saveTaskAttrWithUndo(currentBlockId, config.attrKey, newValue, {
+                    label: config.name,
                 });
 
-                if (success) {
+                if (result.success) {
                     currentProps[config.attrKey] = newValue;
                     renderFloatBar();
                     patchInlineMetaCache(currentBlockId, { [config.attrKey]: newValue });
                     refreshInlineMetaByTaskId(currentBlockId, false);
                     showMessage(`已更新${config.name}`, false, 1500);
-                    // 通知任务管理器刷新该任务
-                    try {
-                        window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
-                            detail: { taskId: currentBlockId, attrKey: config.attrKey, value: newValue }
-                        }));
-                    } catch (e) {}
+                    if (!result.viaSharedApi) {
+                        try {
+                            window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
+                                detail: { taskId: currentBlockId, attrKey: config.attrKey, value: newValue }
+                            }));
+                        } catch (e) {}
+                    }
                 } else {
                     showMessage('更新失败', true, 2000);
                 }
@@ -1757,10 +1928,10 @@
             }
             const saveDateValue = async (rawDateValue) => {
                 const newValue = rawDateValue ? parseDate(rawDateValue) : '';
-                const success = await setBlockCustomAttrs(blockIdAtOpen, {
-                    [config.attrKey]: newValue
+                const result = await saveTaskAttrWithUndo(blockIdAtOpen, config.attrKey, newValue, {
+                    label: config.name,
                 });
-                if (success) {
+                if (result.success) {
                     if (String(currentBlockId || '').trim() === blockIdAtOpen) {
                         currentProps[config.attrKey] = newValue;
                         renderFloatBar();
@@ -1768,12 +1939,13 @@
                     patchInlineMetaCache(blockIdAtOpen, { [config.attrKey]: newValue });
                     refreshInlineMetaByTaskId(blockIdAtOpen, false);
                     showMessage(`已更新${config.name}`, false, 1500);
-                    // 通知任务管理器刷新该任务
-                    try {
-                        window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
-                            detail: { taskId: blockIdAtOpen, attrKey: config.attrKey, value: newValue }
-                        }));
-                    } catch (e) {}
+                    if (!result.viaSharedApi) {
+                        try {
+                            window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
+                                detail: { taskId: blockIdAtOpen, attrKey: config.attrKey, value: newValue }
+                            }));
+                        } catch (e) {}
+                    }
                 } else {
                     showMessage('更新失败', true, 2000);
                 }
@@ -1827,10 +1999,12 @@
             }
 
             // 桌面端：保留输入框弹层，并支持“清除日期”
-            const input = inputEditor.querySelector('.sy-custom-props-floatbar__input');
+            const input = setInputEditorMode('input');
+            if (!(input instanceof HTMLInputElement)) return;
             const oldValue = currentValue ? formatDate(currentValue) : '';
             input.type = 'date';
             input.value = oldValue;
+            input.placeholder = '';
 
             const anchorRect = anchorEl.getBoundingClientRect();
             inputEditor.style.left = `${window.scrollX + anchorRect.left}px`;
@@ -1868,29 +2042,55 @@
 
         // 显示文本编辑器
         function showTextEditor(anchorEl, config, currentValue) {
-            const input = inputEditor.querySelector('.sy-custom-props-floatbar__input');
-            input.type = 'text';
-            input.value = currentValue || '';
-            input.placeholder = config.placeholder || '输入内容...';
+            const isRemark = String(config?.attrKey || '').trim() === 'custom-remark';
+            const remarkTools = getRemarkMarkdownTools();
+            const editorControl = setInputEditorMode(isRemark ? 'textarea' : 'input');
+            const input = editorControl instanceof HTMLInputElement ? editorControl : null;
+            const textarea = editorControl instanceof HTMLTextAreaElement ? editorControl : null;
+            const valueSource = isRemark ? textarea : input;
+            const remarkToolbar = inputEditor.querySelector('[data-remark-toolbar]');
+            const remarkToolsBtn = inputEditor.querySelector('[data-action="remark-tools"]');
+            if (!valueSource) return;
+            if (input instanceof HTMLInputElement) {
+                input.type = 'text';
+                input.value = currentValue || '';
+                input.placeholder = config.placeholder || '输入内容...';
+            }
+            if (textarea instanceof HTMLTextAreaElement) {
+                textarea.value = currentValue || '';
+                textarea.placeholder = config.placeholder || '输入内容...';
+            }
 
             // 计算位置
             const anchorRect = anchorEl.getBoundingClientRect();
             inputEditor.style.left = `${window.scrollX + anchorRect.left}px`;
             inputEditor.style.top = `${window.scrollY + anchorRect.bottom + 4}px`;
             inputEditor.classList.add('is-visible');
+            if (textarea instanceof HTMLTextAreaElement) {
+                syncInputEditorTextareaHeight(textarea, 76);
+                try {
+                    requestAnimationFrame(() => syncInputEditorTextareaHeight(textarea, 76));
+                } catch (e) {}
+            }
 
-            input.focus();
-            input.select();
+            valueSource.focus();
+            if (input instanceof HTMLInputElement) {
+                input.select();
+            } else if (textarea instanceof HTMLTextAreaElement) {
+                try { textarea.setSelectionRange(textarea.value.length, textarea.value.length); } catch (e) {}
+            }
 
             // 绑定事件
             const saveText = async () => {
-                const newValue = input.value.trim();
+                const newValue = isRemark
+                    ? normalizeRemarkMarkdown(valueSource.value || '')
+                    : String(valueSource.value || '').trim();
 
-                const success = await setBlockCustomAttrs(currentBlockId, {
-                    [config.attrKey]: newValue
+                const result = await saveTaskAttrWithUndo(currentBlockId, config.attrKey, newValue, {
+                    label: config.name,
                 });
 
-                if (success) {
+                if (result.success) {
                     currentProps[config.attrKey] = newValue;
                     renderFloatBar();
                     patchInlineMetaCache(currentBlockId, { [config.attrKey]: newValue });
@@ -1900,12 +2100,13 @@
                     } else {
                         showMessage(`已清除${config.name}`, false, 1500);
                     }
-                    // 通知任务管理器刷新该任务
-                    try {
-                        window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
-                            detail: { taskId: currentBlockId, attrKey: config.attrKey, value: newValue }
-                        }));
-                    } catch (e) {}
+                    if (!result.viaSharedApi) {
+                        try {
+                            window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
+                                detail: { taskId: currentBlockId, attrKey: config.attrKey, value: newValue }
+                            }));
+                        } catch (e) {}
+                    }
                 } else {
                     showMessage('更新失败', true, 2000);
                 }
@@ -1913,18 +2114,89 @@
                 inputEditor.classList.remove('is-visible');
             };
 
-            input.onkeydown = (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    saveText();
-                } else if (e.key === 'Escape') {
-                    e.preventDefault();
-                    inputEditor.classList.remove('is-visible');
+            if (textarea instanceof HTMLTextAreaElement) {
+                textarea.oninput = () => syncInputEditorTextareaHeight(textarea, 76);
+                textarea.onkeydown = (e) => {
+                    if (isRemark && remarkTools && typeof remarkTools.handleTextareaKeydown === 'function') {
+                        const handled = remarkTools.handleTextareaKeydown(textarea, e);
+                        if (handled) {
+                            syncInputEditorTextareaHeight(textarea, 76);
+                            return;
+                        }
+                    }
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                        e.preventDefault();
+                        saveText();
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        if (remarkToolbar instanceof HTMLElement && remarkToolbar.classList.contains('is-open')) {
+                            remarkToolbar.classList.remove('is-open');
+                            remarkToolbar.hidden = true;
+                            return;
+                        }
+                        inputEditor.classList.remove('is-visible');
+                    }
+                };
+            }
+            if (input instanceof HTMLInputElement) {
+                input.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveText();
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        inputEditor.classList.remove('is-visible');
+                    }
+                };
+            }
+
+            if (isRemark && textarea instanceof HTMLTextAreaElement && remarkToolbar instanceof HTMLElement) {
+                remarkToolbar.querySelectorAll('[data-remark-tool]').forEach((button) => {
+                    if (!(button instanceof HTMLButtonElement)) return;
+                    button.onmousedown = (e) => {
+                        e.preventDefault();
+                    };
+                    button.onclick = (e) => {
+                        e.preventDefault();
+                        const action = String(button.dataset.remarkTool || '').trim();
+                        if (!action || !remarkTools) return;
+                        if (action === 'bold' && typeof remarkTools.wrapSelection === 'function') remarkTools.wrapSelection(textarea, '**');
+                        else if (action === 'italic' && typeof remarkTools.wrapSelection === 'function') remarkTools.wrapSelection(textarea, '*');
+                        else if (action === 'code' && typeof remarkTools.wrapSelection === 'function') remarkTools.wrapSelection(textarea, '`');
+                        else if (action === 'link' && typeof remarkTools.insertLinkTemplate === 'function') remarkTools.insertLinkTemplate(textarea);
+                        else if (action === 'quote' && typeof remarkTools.toggleLinePrefix === 'function') remarkTools.toggleLinePrefix(textarea, '> ');
+                        else if (action === 'bullet' && typeof remarkTools.toggleLinePrefix === 'function') remarkTools.toggleLinePrefix(textarea, '- ');
+                        else if (action === 'ordered' && typeof remarkTools.toggleOrderedList === 'function') remarkTools.toggleOrderedList(textarea);
+                        syncInputEditorTextareaHeight(textarea, 76);
+                    };
+                });
+                if (remarkToolsBtn instanceof HTMLButtonElement) {
+                    remarkToolsBtn.onmousedown = (e) => {
+                        e.preventDefault();
+                    };
+                    remarkToolsBtn.onclick = (e) => {
+                        e.preventDefault();
+                        const nextOpen = !remarkToolbar.classList.contains('is-open');
+                        remarkToolbar.classList.toggle('is-open', nextOpen);
+                        remarkToolbar.hidden = !nextOpen;
+                        syncInputEditorTextareaHeight(textarea, 76);
+                        try {
+                            requestAnimationFrame(() => syncInputEditorTextareaHeight(textarea, 76));
+                        } catch (e2) {}
+                        try { textarea.focus({ preventScroll: true }); } catch (e2) { try { textarea.focus(); } catch (e3) {} }
+                    };
                 }
-            };
+            } else if (remarkToolsBtn instanceof HTMLButtonElement) {
+                remarkToolsBtn.onclick = null;
+                remarkToolsBtn.onmousedown = null;
+            }
 
             inputEditor.querySelector('[data-action="save"]').onclick = saveText;
             inputEditor.querySelector('[data-action="cancel"]').onclick = () => {
+                if (remarkToolbar instanceof HTMLElement) {
+                    remarkToolbar.classList.remove('is-open');
+                    remarkToolbar.hidden = true;
+                }
                 inputEditor.classList.remove('is-visible');
             };
         }
@@ -2171,7 +2443,9 @@
                 host.setAttribute('data-inline-meta-host', 'true');
                 host.setAttribute('data-block-id', blockId);
                 host.addEventListener('pointerdown', async (e) => {
-                    const chip = e.target.closest('.sy-custom-props-inline-chip');
+                    const rawTarget = e.target;
+                    const targetEl = rawTarget instanceof Element ? rawTarget : rawTarget?.parentElement;
+                    const chip = targetEl?.closest?.('.sy-custom-props-inline-chip');
                     if (!chip) return;
                     e.preventDefault();
                     e.stopPropagation();
