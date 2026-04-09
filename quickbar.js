@@ -362,6 +362,24 @@
         return el.closest?.('.li,[data-type="NodeListItem"],[data-node-id]') || el;
     }
 
+    function isBlockMarkerTarget(target) {
+        if (!target || target === document) return false;
+        if (target.closest?.('.protyle-gutters,.protyle-gutter,.protyle-gutter__icon,.protyle-gutter__item,[data-type="gutter"],[data-type="gutterBlock"]')) {
+            return true;
+        }
+        const iconLike = target.closest?.('.protyle-action,.protyle-icon');
+        if (!iconLike) return false;
+        return !!iconLike.closest?.('.protyle-gutters,.protyle-gutter,.protyle-gutter__icon,.protyle-gutter__item,[data-type="gutter"],[data-type="gutterBlock"]');
+    }
+
+    function shouldSuppressFloatBarForTarget(target, now = Date.now()) {
+        if (isBlockMarkerTarget(target)) return true;
+        const source = String(lastBlockMenuTrigger?.source || '').trim();
+        const ts = Number(lastBlockMenuTrigger?.ts || 0);
+        if (source !== 'gutter' || !ts) return false;
+        return (now - ts) < 240;
+    }
+
     function isMobileDevice() {
         try {
             if (window.siyuan?.config?.isMobile !== undefined) return !!window.siyuan.config.isMobile;
@@ -396,7 +414,7 @@
 
     const __tmQBOnPointerdownCapture = (e) => {
         const t = e.target;
-        const isGutterTrigger = !!t?.closest?.('.protyle-gutters,.protyle-gutter,.protyle-gutter__icon,.protyle-gutter__item,[data-type="gutter"],[data-type="gutterBlock"],.protyle-action,.protyle-icon');
+        const isGutterTrigger = isBlockMarkerTarget(t);
         if (!isGutterTrigger) return;
         markBlockMenuTrigger(t, 'gutter');
     };
@@ -2892,6 +2910,10 @@
 
             const target = e.target;
             if (target?.closest?.('.sy-custom-props-inline-host,.sy-custom-props-inline-chip')) return;
+            if (shouldSuppressFloatBarForTarget(target, now)) {
+                if (floatBar.style.display !== 'none') hideFloatBar();
+                return;
+            }
 
             // ========== 新增：检测是否选中了文字 ==========
             const selection = window.getSelection();

@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.1.1
+// @version      2.1.2
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -217,6 +217,42 @@
             box-shadow: var(--tm-shadow);
             padding: 14px;
             box-sizing: border-box;
+        }
+
+        .tm-color-picker-backdrop--mobile {
+            align-items: flex-end;
+            padding: 0;
+        }
+
+        .tm-color-picker-dialog--mobile {
+            width: min(100vw, 100%) !important;
+            max-width: min(100vw, 100%) !important;
+            max-height: min(84vh, calc(100vh - 8px)) !important;
+            border-radius: 18px 18px 0 0;
+            border-left: none;
+            border-right: none;
+            border-bottom: none;
+            padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+            box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.18);
+        }
+
+        .tm-color-picker-preview--mobile {
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .tm-color-picker-actions--mobile {
+            position: sticky;
+            bottom: 0;
+            padding-top: 12px;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            background: linear-gradient(to top, var(--tm-bg-color) 70%, color-mix(in srgb, var(--tm-bg-color) 70%, transparent));
+        }
+
+        .tm-color-picker-actions--mobile .tm-btn {
+            min-height: 42px;
+            padding: 0 16px;
+            font-size: 14px;
         }
 
         .tm-theme-import-backdrop {
@@ -5540,11 +5576,11 @@
         .tm-task-detail-remark,
         .bc-textarea.tm-task-detail-remark {
             width: 100%;
-            min-height: 30px;
-            height: 30px;
-            max-height: 30px;
-            padding: 4px 10px;
-            line-height: 1.25;
+            min-height: 34px;
+            height: auto;
+            max-height: none;
+            padding: 6px 10px;
+            line-height: 1.4;
             resize: none;
             box-sizing: border-box;
             overflow-y: hidden;
@@ -6220,6 +6256,26 @@
             height: 18px;
         }
 
+        .tm-modal.tm-modal--mobile .tm-checklist-pane--compact .tm-checklist-title-row:not(.tm-checklist-title-row--has-children) .tm-checklist-title-main,
+        .tm-modal.tm-modal--dock .tm-checklist-pane--compact .tm-checklist-title-row:not(.tm-checklist-title-row--has-children) .tm-checklist-title-main {
+            flex: 1 1 auto;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-checklist-pane--compact .tm-checklist-title-row:not(.tm-checklist-title-row--has-children):not(.tm-checklist-title-row--has-compact-meta),
+        .tm-modal.tm-modal--dock .tm-checklist-pane--compact .tm-checklist-title-row:not(.tm-checklist-title-row--has-children):not(.tm-checklist-title-row--has-compact-meta) {
+            gap: 8px;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-checklist-pane--compact .tm-checklist-title-row:not(.tm-checklist-title-row--has-children):not(.tm-checklist-title-row--has-compact-meta) .tm-status-tag,
+        .tm-modal.tm-modal--dock .tm-checklist-pane--compact .tm-checklist-title-row:not(.tm-checklist-title-row--has-children):not(.tm-checklist-title-row--has-compact-meta) .tm-status-tag {
+            margin-left: 0;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-checklist-pane--compact .tm-checklist-title-row:not(.tm-checklist-title-row--has-children) .tm-checklist-meta-compact,
+        .tm-modal.tm-modal--dock .tm-checklist-pane--compact .tm-checklist-title-row:not(.tm-checklist-title-row--has-children) .tm-checklist-meta-compact {
+            margin-left: 0;
+        }
+
         .tm-modal.tm-modal--mobile .tm-checklist-pane--compact .tm-status-tag,
         .tm-modal.tm-modal--dock .tm-checklist-pane--compact .tm-status-tag {
             margin-left: 0;
@@ -6570,10 +6626,11 @@
         .tm-modal.tm-modal--dock .tm-checklist-pane {
             --tm-checklist-pane-pad-right: 6px;
             --tm-checklist-pane-pad-left: 6px;
+            min-width: 220px;
         }
 
         .tm-box--with-cal-dock .tm-checklist-pane {
-            min-width: 240px;
+            min-width: 220px;
             --tm-checklist-pane-pad-right: 10px;
             --tm-checklist-pane-pad-left: 10px;
             --tm-checklist-scroll-gutter-fill: 0px;
@@ -6798,7 +6855,7 @@
 
         .tm-body--timeline .tm-timeline-table-left thead th {
             height: var(--tm-header-height);
-            padding: 0 4px;
+            padding: 0 4px 0 9px;
             line-height: var(--tm-header-height);
             vertical-align: middle;
         }
@@ -7489,6 +7546,22 @@
             vertical-align: baseline;
         }
         .tm-task-reminder-emoji svg {
+            width: 13px;
+            height: 13px;
+            display: block;
+        }
+
+        .tm-task-remark-emoji {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 4px;
+            line-height: 0;
+            white-space: nowrap;
+            vertical-align: baseline;
+            color: var(--tm-secondary-text);
+        }
+        .tm-task-remark-emoji svg {
             width: 13px;
             height: 13px;
             display: block;
@@ -8816,6 +8889,13 @@
     const __TM_CUSTOM_FIELD_ATTR_PREFIX = 'custom-tm-';
     const __TM_CUSTOM_FIELD_COLUMN_PREFIX = 'cf:';
     const __TM_CUSTOM_FIELD_COLOR_PRESETS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
+    const __TM_STATUS_COLOR_PALETTE_GROUPS = [
+        { id: 'macaron', label: '马卡龙色系', colors: ['#F78A8A', '#F7B9A6', '#FAD79A', '#BFDCCF', '#67C0D4', '#6A9EE8', '#B18AE6', '#EC6FAE'] },
+        { id: 'morandi', label: '莫兰迪色系', colors: ['#D57A63', '#F7C27A', '#DAD85A', '#A5C8B9', '#76C5CF', '#7FA2DA', '#A489C5', '#C779A0'] },
+        { id: 'rococo', label: '洛可可色系', colors: ['#C57B76', '#E58F27', '#E8CE75', '#7AAD94', '#5FB59E', '#4D8CC8', '#7F88B0', '#D08B93'] },
+        { id: 'classic', label: '经典色系', colors: ['#F15B5D', '#F7AC39', '#FFD35A', '#DDE23C', '#55C99A', '#499CE7', '#BF58EC', '#E668A6'] },
+        { id: 'memphis', label: '孟菲斯色系', colors: ['#FF2A21', '#FF7A52', '#FFCD57', '#12CFB3', '#38B5C8', '#7D59F0', '#BE72F0', '#EB59C0'] },
+    ];
     const __tmCustomFieldAttrBackfillInFlight = new Set();
 
     function __tmGetTaskHeadingColumnLabel() {
@@ -8882,6 +8962,41 @@
             : ['#3b82f6'];
         const idx = Math.abs(Number(index) || 0) % palette.length;
         return String(palette[idx] || '#3b82f6').trim() || '#3b82f6';
+    }
+
+    function __tmGetStatusColorPaletteGroups() {
+        return (Array.isArray(__TM_STATUS_COLOR_PALETTE_GROUPS) ? __TM_STATUS_COLOR_PALETTE_GROUPS : [])
+            .map((group, groupIndex) => {
+                const colors = (Array.isArray(group?.colors) ? group.colors : [])
+                    .map((color) => __tmNormalizeHexColor(color, ''))
+                    .filter(Boolean);
+                if (!colors.length) return null;
+                return {
+                    id: String(group?.id || `status-palette-${groupIndex + 1}`).trim() || `status-palette-${groupIndex + 1}`,
+                    label: String(group?.label || `色系 ${groupIndex + 1}`).trim() || `色系 ${groupIndex + 1}`,
+                    colors,
+                };
+            })
+            .filter(Boolean);
+    }
+
+    function __tmGetStatusPresetColor(index = 0) {
+        const palette = __tmGetStatusColorPaletteGroups().flatMap((group) => group.colors || []);
+        const fallbackPalette = palette.length ? palette : __TM_CUSTOM_FIELD_COLOR_PRESETS;
+        const idx = Math.abs(Number(index) || 0) % fallbackPalette.length;
+        return String(fallbackPalette[idx] || '#3b82f6').trim() || '#3b82f6';
+    }
+
+    function __tmBuildPresetColorPickerOptions(defaultColor, extra = {}) {
+        const normalizedDefault = __tmNormalizeHexColor(defaultColor, '#3b82f6') || '#3b82f6';
+        return {
+            defaultColor: normalizedDefault,
+            paletteGroups: __tmGetStatusColorPaletteGroups(),
+            customSectionLabel: '自定义颜色',
+            pickLabel: '+',
+            formatHint: '支持 HEX、RGBA、HSL/HSLA、透明色 transparent、var(--token) 等格式',
+            ...extra,
+        };
     }
 
     function __tmNormalizeCustomFieldOption(option, index = 0, seenIds = null) {
@@ -9518,6 +9633,7 @@
             calendarLastViewType: '',
             calendarLastDate: '',
             calendarSidebarWidth: 280,
+            calendarSidebarDefaultPage: 'calendar',
             calendarSidebarCollapsedDesktopDefault: false,
             calendarColumnWidths: { content: 140, duration: 60, spent: 60 },
             calendarSidebarCollapseCalendars: false,
@@ -9557,6 +9673,8 @@
                 { id: 'blocked', name: '阻塞', color: '#F44336' },
                 { id: 'review', name: '待审核', color: '#FF9800' }
             ],
+            checkboxDoneStatusId: 'done',
+            checkboxUndoneStatusId: 'todo',
             customFieldDefs: [],
             // 文档分组配置
             // 结构: [{ id: 'uuid', name: '分组名', docs: [{ id: 'docId', recursive: boolean }] }]
@@ -9884,6 +10002,7 @@
                                 if (typeof cloudData.calendarColorStopwatch === 'string') this.data.calendarColorStopwatch = cloudData.calendarColorStopwatch;
                                 if (typeof cloudData.calendarColorIdle === 'string') this.data.calendarColorIdle = cloudData.calendarColorIdle;
                                 if (typeof cloudData.calendarSidebarWidth === 'number') this.data.calendarSidebarWidth = cloudData.calendarSidebarWidth;
+                                if (typeof cloudData.calendarSidebarDefaultPage === 'string') this.data.calendarSidebarDefaultPage = cloudData.calendarSidebarDefaultPage;
                                 if (typeof cloudData.calendarSidebarCollapsedDesktopDefault === 'boolean') this.data.calendarSidebarCollapsedDesktopDefault = cloudData.calendarSidebarCollapsedDesktopDefault;
                                 if (cloudData.calendarColumnWidths && typeof cloudData.calendarColumnWidths === 'object') this.data.calendarColumnWidths = cloudData.calendarColumnWidths;
                                 if (typeof cloudData.calendarLastViewType === 'string') this.data.calendarLastViewType = cloudData.calendarLastViewType;
@@ -9968,6 +10087,8 @@
                                 if (typeof cloudData.tableBorderColorLight === 'string') this.data.tableBorderColorLight = cloudData.tableBorderColorLight;
                                 if (typeof cloudData.tableBorderColorDark === 'string') this.data.tableBorderColorDark = cloudData.tableBorderColorDark;
                                 if (Array.isArray(cloudData.customStatusOptions)) this.data.customStatusOptions = cloudData.customStatusOptions;
+                                if (typeof cloudData.checkboxDoneStatusId === 'string') this.data.checkboxDoneStatusId = cloudData.checkboxDoneStatusId;
+                                if (typeof cloudData.checkboxUndoneStatusId === 'string') this.data.checkboxUndoneStatusId = cloudData.checkboxUndoneStatusId;
                                 if (Array.isArray(cloudData.customFieldDefs)) this.data.customFieldDefs = cloudData.customFieldDefs;
                                 if (cloudData.columnWidths && typeof cloudData.columnWidths === 'object') {
                                     // 旧版本兼容：如果有 customTime 配置，迁移到 completionTime
@@ -10241,6 +10362,7 @@
             this.data.calendarColorStopwatch = Storage.get('tm_calendar_color_stopwatch', this.data.calendarColorStopwatch);
             this.data.calendarColorIdle = Storage.get('tm_calendar_color_idle', this.data.calendarColorIdle);
             this.data.calendarSidebarWidth = Storage.get('tm_calendar_sidebar_width', this.data.calendarSidebarWidth);
+            this.data.calendarSidebarDefaultPage = Storage.get('tm_calendar_sidebar_default_page', this.data.calendarSidebarDefaultPage);
             this.data.calendarSidebarCollapsedDesktopDefault = !!Storage.get('tm_calendar_sidebar_collapsed_desktop_default', this.data.calendarSidebarCollapsedDesktopDefault);
             this.data.calendarColumnWidths = Storage.get('tm_calendar_column_widths', this.data.calendarColumnWidths) || this.data.calendarColumnWidths;
             this.data.calendarLastViewType = Storage.get('tm_calendar_last_view_type', this.data.calendarLastViewType);
@@ -10260,6 +10382,8 @@
             this.data.docPinnedByGroup = Storage.get('tm_doc_pinned_by_group', this.data.docPinnedByGroup) || {};
             this.data.currentGroupId = Storage.get('tm_current_group_id', 'all');
             this.data.customStatusOptions = Storage.get('tm_custom_status_options', this.data.customStatusOptions);
+            this.data.checkboxDoneStatusId = String(Storage.get('tm_checkbox_done_status_id', this.data.checkboxDoneStatusId) || this.data.checkboxDoneStatusId || '');
+            this.data.checkboxUndoneStatusId = String(Storage.get('tm_checkbox_undone_status_id', this.data.checkboxUndoneStatusId) || this.data.checkboxUndoneStatusId || '');
             this.data.customFieldDefs = Storage.get('tm_custom_field_defs', this.data.customFieldDefs) || this.data.customFieldDefs;
             this.data.taskHeadingLevel = Storage.get('tm_task_heading_level', this.data.taskHeadingLevel);
             this.data.columnOrder = Storage.get('tm_column_order', this.data.columnOrder);
@@ -10335,6 +10459,7 @@
                 this.data.columnWidths = { ...this.data.columnWidths, ...savedWidths };
             }
             this.data.otherBlockRefs = __tmNormalizeOtherBlockRefs(this.data.otherBlockRefs);
+            __tmNormalizeCheckboxStatusBindingConfig(this.data);
             const validModes = new Set(['none', 'doc', 'time', 'quadrant', 'task']);
             if (!validModes.has(String(this.data.groupMode || ''))) {
                 // groupMode 无效时，根据标志位推导模式
@@ -10540,6 +10665,7 @@
             Storage.set('tm_calendar_color_stopwatch', String(this.data.calendarColorStopwatch || '').trim());
             Storage.set('tm_calendar_color_idle', String(this.data.calendarColorIdle || '').trim());
             Storage.set('tm_calendar_sidebar_width', Number(this.data.calendarSidebarWidth) || 280);
+            Storage.set('tm_calendar_sidebar_default_page', String(this.data.calendarSidebarDefaultPage || '').trim() === 'tasks' ? 'tasks' : 'calendar');
             Storage.set('tm_calendar_sidebar_collapsed_desktop_default', !!this.data.calendarSidebarCollapsedDesktopDefault);
             Storage.set('tm_calendar_column_widths', this.data.calendarColumnWidths || {});
             Storage.set('tm_calendar_last_view_type', String(this.data.calendarLastViewType || '').trim());
@@ -10560,7 +10686,10 @@
             else Storage.remove('tm_other_block_refs');
             Storage.set('tm_doc_pinned_by_group', this.data.docPinnedByGroup || {});
             Storage.set('tm_current_group_id', this.data.currentGroupId);
+            __tmNormalizeCheckboxStatusBindingConfig(this.data);
             Storage.set('tm_custom_status_options', this.data.customStatusOptions);
+            Storage.set('tm_checkbox_done_status_id', String(this.data.checkboxDoneStatusId || '').trim());
+            Storage.set('tm_checkbox_undone_status_id', String(this.data.checkboxUndoneStatusId || '').trim());
             Storage.set('tm_custom_field_defs', Array.isArray(this.data.customFieldDefs) ? this.data.customFieldDefs : []);
             Storage.set('tm_task_heading_level', String(this.data.taskHeadingLevel || 'h2').trim() || 'h2');
             Storage.set('tm_column_widths', this.data.columnWidths);
@@ -10714,6 +10843,7 @@
                 const calendarHourSlotHeightMode = String(this.data.calendarHourSlotHeightMode || '').trim();
                 this.data.calendarHourSlotHeightMode = validCalendarHourSlotHeightModes.has(calendarHourSlotHeightMode) ? calendarHourSlotHeightMode : 'normal';
             }
+            this.data.calendarSidebarDefaultPage = String(this.data.calendarSidebarDefaultPage || '').trim() === 'tasks' ? 'tasks' : 'calendar';
             {
                 const pos = Number(this.data.calendar3DayTodayPosition);
                 this.data.calendar3DayTodayPosition = (pos === 2 || pos === 3) ? pos : 1;
@@ -11451,7 +11581,7 @@
                     taskValue = raw;
                 } else {
                     const opts = Array.isArray(SettingsStore.data.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
-                    const fallback = String((opts[0] && opts[0].id) || 'todo').trim() || 'todo';
+                    const fallback = __tmGetDefaultUndoneStatusId(opts);
                     taskValue = fallback;
                 }
             }
@@ -11692,7 +11822,7 @@
             // 处理状态排序
             if (field === 'customStatus') {
                 const options = SettingsStore.data.customStatusOptions || [];
-                const fallback = String((options[0] && options[0].id) || 'todo').trim() || 'todo';
+                const fallback = __tmGetDefaultUndoneStatusId(options);
                 const normalizeStatus = (value) => {
                     const raw = String(value ?? '').trim();
                     return raw || fallback;
@@ -14128,6 +14258,14 @@
             return null;
         },
 
+        async getChildBlocks(blockId) {
+            const id = String(blockId || '').trim();
+            if (!id) return [];
+            const res = await this.call('/api/block/getChildBlocks', { id });
+            if (res.code === 0 && Array.isArray(res.data)) return res.data;
+            return [];
+        },
+
         async getFirstDirectChildListIdOfDoc(docId) {
             const id = String(docId || '').trim();
             if (!id) return null;
@@ -14265,6 +14403,107 @@
         customStatus: 'custom-status',
         pinned: 'custom-pinned'
     };
+
+    function __tmNormalizeCheckboxStatusBindingValue(value) {
+        const normalized = String(value ?? '').trim();
+        if (!normalized || normalized === '__none__') return '';
+        return normalized;
+    }
+
+    function __tmGetCheckboxStatusBindingFallbackId(done, statusOptionsInput = null) {
+        const statusOptions = Array.isArray(statusOptionsInput)
+            ? statusOptionsInput
+            : (Array.isArray(SettingsStore?.data?.customStatusOptions) ? SettingsStore.data.customStatusOptions : []);
+        if (done) {
+            const exists = statusOptions.some((item) => String(item?.id || '').trim() === 'done');
+            return exists ? 'done' : '';
+        }
+        const todoExists = statusOptions.some((item) => String(item?.id || '').trim() === 'todo');
+        if (todoExists) return 'todo';
+        return String(statusOptions[0]?.id || '').trim();
+    }
+
+    function __tmGetDefaultUndoneStatusId(statusOptionsInput = null) {
+        const statusOptions = Array.isArray(statusOptionsInput)
+            ? statusOptionsInput
+            : (Array.isArray(SettingsStore?.data?.customStatusOptions) ? SettingsStore.data.customStatusOptions : []);
+        const configured = __tmNormalizeCheckboxStatusBindingValue(SettingsStore?.data?.checkboxUndoneStatusId);
+        if (configured && statusOptions.some((item) => String(item?.id || '').trim() === configured)) return configured;
+        return __tmGetCheckboxStatusBindingFallbackId(false, statusOptions) || 'todo';
+    }
+
+    function __tmResolveUndoneStatusValue(value, statusOptionsInput = null) {
+        const raw = String(value ?? '').trim();
+        if (raw) return raw;
+        return __tmGetDefaultUndoneStatusId(statusOptionsInput);
+    }
+
+    function __tmNormalizeCheckboxStatusBindingConfig(target) {
+        const store = (target && typeof target === 'object') ? target : null;
+        if (!store) return target;
+        const statusOptions = Array.isArray(store.customStatusOptions) ? store.customStatusOptions : [];
+        const statusIds = new Set(statusOptions.map((item) => String(item?.id || '').trim()).filter(Boolean));
+        const normalizeOne = (rawValue, done) => {
+            const normalized = __tmNormalizeCheckboxStatusBindingValue(rawValue);
+            if (!normalized) return done ? '' : (__tmGetCheckboxStatusBindingFallbackId(false, statusOptions) || 'todo');
+            if (!statusIds.size || statusIds.has(normalized)) return normalized;
+            return __tmGetCheckboxStatusBindingFallbackId(done, statusOptions);
+        };
+        store.checkboxDoneStatusId = normalizeOne(store.checkboxDoneStatusId, true);
+        store.checkboxUndoneStatusId = normalizeOne(store.checkboxUndoneStatusId, false);
+        return store;
+    }
+
+    function __tmResolveCheckboxLinkedStatusId(done, statusOptionsInput = null) {
+        const statusOptions = Array.isArray(statusOptionsInput)
+            ? statusOptionsInput
+            : (Array.isArray(SettingsStore?.data?.customStatusOptions) ? SettingsStore.data.customStatusOptions : []);
+        const configured = __tmNormalizeCheckboxStatusBindingValue(done ? SettingsStore?.data?.checkboxDoneStatusId : SettingsStore?.data?.checkboxUndoneStatusId);
+        if (!configured) return '';
+        if (statusOptions.some((item) => String(item?.id || '').trim() === configured)) return configured;
+        return done ? __tmGetCheckboxStatusBindingFallbackId(true, statusOptions) : __tmGetDefaultUndoneStatusId(statusOptions);
+    }
+
+    function __tmBuildCheckboxStatusPatch(task, done, explicitPatch = null) {
+        const statusOptions = Array.isArray(SettingsStore?.data?.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
+        const inputPatch = (explicitPatch && typeof explicitPatch === 'object' && !Array.isArray(explicitPatch)) ? explicitPatch : null;
+        if (inputPatch && Object.keys(inputPatch).length > 0) {
+            const normalizedPatch = {};
+            Object.entries(inputPatch).forEach(([key, rawValue]) => {
+                const normalizedValue = __tmNormalizeQueueTaskValue(key, rawValue);
+                if (key === 'customStatus') {
+                    if (!normalizedValue) return;
+                    if (statusOptions.length && !statusOptions.some((item) => String(item?.id || '').trim() === normalizedValue)) return;
+                }
+                normalizedPatch[key] = normalizedValue;
+            });
+            return Object.keys(normalizedPatch).length ? normalizedPatch : null;
+        }
+        const nextStatusId = __tmResolveCheckboxLinkedStatusId(done, statusOptions);
+        if (!nextStatusId) return null;
+        const currentStatusId = String(task?.customStatus || '').trim();
+        if (currentStatusId === nextStatusId) return null;
+        return { customStatus: nextStatusId };
+    }
+
+    function __tmRenderCheckboxStatusBindingOptionsHtml(selectedValue, options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const allowNone = opts.allowNone !== false;
+        const normalizedSelected = __tmNormalizeCheckboxStatusBindingValue(selectedValue);
+        const statusOptions = Array.isArray(SettingsStore?.data?.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
+        const rows = [
+            ...(allowNone ? [{ id: '__none__', name: '不自动切换' }] : []),
+            ...statusOptions.map((item) => ({
+                id: String(item?.id || '').trim(),
+                name: String(item?.name || item?.id || '').trim() || String(item?.id || '').trim()
+            })).filter((item) => item.id)
+        ];
+        if (normalizedSelected && !rows.some((item) => item.id === normalizedSelected)) {
+            rows.push({ id: normalizedSelected, name: `当前值已删除：${normalizedSelected}` });
+        }
+        const selectedId = normalizedSelected || (allowNone ? '__none__' : __tmGetDefaultUndoneStatusId(statusOptions));
+        return rows.map((item) => `<option value="${esc(item.id)}" ${selectedId === item.id ? 'selected' : ''}>${esc(item.name)}</option>`).join('');
+    }
 
     function __tmBuildAttrPayloadFromPatch(patch) {
         const attrs = {};
@@ -14777,7 +15016,10 @@
             return await __tmDeleteTaskKernel(op?.data?.taskId);
         }
         if (type === 'setDone') {
-            return await __tmSetDoneKernel(op?.data?.taskId, !!op?.data?.done, null, { force: true });
+            return await __tmSetDoneKernel(op?.data?.taskId, !!op?.data?.done, null, {
+                force: true,
+                statusPatch: op?.data?.statusPatch,
+            });
         }
         if (type === 'moveTask') {
             const payload = (op?.data && typeof op.data === 'object') ? op.data : {};
@@ -14822,7 +15064,7 @@
             return;
         }
         if (type === 'setDone') {
-            __tmApplyDoneOptimisticLocal(op?.data?.taskId, !!op?.data?.done);
+            __tmApplyDoneOptimisticLocal(op?.data?.taskId, !!op?.data?.done, op?.data?.statusPatch);
             return;
         }
         if (type === 'moveTask') {
@@ -15867,6 +16109,12 @@
         const failures = [];
         const touchedDocIds = new Set();
         const appliedItems = [];
+        let docsToGroupMap = null;
+        try {
+            if (typeof __tmGetCalendarDocsToGroupMapSync === 'function') {
+                docsToGroupMap = __tmGetCalendarDocsToGroupMapSync();
+            }
+        } catch (e) {}
         let completionApplied = 0;
         let calendarApplied = 0;
         let calendarChanged = false;
@@ -15893,12 +16141,20 @@
                     if (!calendar?.addTaskSchedule) throw new Error('日历模块未加载');
                     const durationMin = 60;
                     const end = new Date(item.start.getTime() + durationMin * 60000);
+                    const taskDocId = String(item?.docId || task?.root_id || task?.docId || '').trim();
+                    const defaultCalendarId = String(SettingsStore?.data?.calendarDefaultCalendarId || 'default').trim() || 'default';
+                    let resolvedCalendarId = defaultCalendarId;
+                    if (docsToGroupMap instanceof Map && taskDocId) {
+                        const groupId = String(docsToGroupMap.get(taskDocId) || '').trim();
+                        if (groupId) resolvedCalendarId = `group:${groupId}`;
+                    }
                     await calendar.addTaskSchedule({
                         taskId,
                         title: taskTitle,
                         start: new Date(item.start.getTime()),
                         end,
-                        calendarId: String(SettingsStore?.data?.calendarDefaultCalendarId || 'default').trim() || 'default',
+                        calendarId: resolvedCalendarId,
+                        preferCalendarColor: true,
                         durationMin,
                         allDay: false,
                     });
@@ -17687,6 +17943,8 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     const __tmShouldShowCompactChecklistDocName = () => {
+        if (state.__tmCalendarSidebarChecklistRender === true) return false;
+        if (__tmHasCalendarSidebarChecklist(state.modal)) return false;
         if (__tmIsDockHost() && !__tmIsRuntimeMobileClient()) return false;
         return true;
     };
@@ -17768,11 +18026,13 @@ async function __tmRefreshAfterWake(reason) {
             try { el.removeAttribute('data-tm-floating-tooltip-label'); } catch (e) {}
             try { el.removeAttribute('data-tm-tooltip-side'); } catch (e) {}
             try { el.removeAttribute('data-tm-tooltip-align'); } catch (e) {}
+            try { el.removeAttribute('title'); } catch (e) {}
             return;
         }
         try { el.setAttribute('data-tm-floating-tooltip-label', text); } catch (e) {}
         try { el.setAttribute('data-tm-tooltip-side', side); } catch (e) {}
         try { el.setAttribute('data-tm-tooltip-align', align); } catch (e) {}
+        try { el.removeAttribute('title'); } catch (e) {}
     };
 
     function __tmHideFloatingTooltip() {
@@ -17851,7 +18111,8 @@ async function __tmRefreshAfterWake(reason) {
             tooltipEl.style.fontSize = '12px';
             tooltipEl.style.fontWeight = '600';
             tooltipEl.style.lineHeight = '1.35';
-            tooltipEl.style.whiteSpace = 'nowrap';
+            tooltipEl.style.whiteSpace = 'normal';
+            tooltipEl.style.wordBreak = 'break-word';
             tooltipEl.style.pointerEvents = 'none';
             tooltipEl.style.opacity = '0';
             tooltipEl.style.transition = 'opacity 120ms ease';
@@ -17875,6 +18136,7 @@ async function __tmRefreshAfterWake(reason) {
         if (!(modal instanceof Element)) return;
         modal.querySelectorAll('[data-tm-floating-tooltip-label]').forEach((el) => {
             if (!(el instanceof HTMLElement) || el.__tmFloatingTooltipBound) return;
+            try { el.removeAttribute('title'); } catch (e) {}
             const show = () => {
                 try {
                     const text = String(el.getAttribute('data-tm-floating-tooltip-label') || '').trim();
@@ -17900,6 +18162,15 @@ async function __tmRefreshAfterWake(reason) {
             el.__tmFloatingTooltipBound = true;
         });
     }
+
+    window.tmBindFloatingTooltipsForTaskModal = function(modalEl) {
+        try {
+            __tmBindFloatingTooltips(modalEl instanceof Element ? modalEl : state.modal);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
 
     function __tmSyncTopbarOverflowTooltips(modalEl) {
         const modal = modalEl instanceof Element ? modalEl : state.modal;
@@ -20365,8 +20636,8 @@ async function __tmRefreshAfterWake(reason) {
                                 ${__tmRenderTaskCheckbox(task.id, task, { checked: task.done, disabled: isGloballyLocked, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
                                     ${toggle}
                                 </span>
-                            <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}" title="${esc(task.content || '')}">
-                                <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)" title="${esc(task.content || '')}">${API.renderTaskContentHtml(task.markdown, task.content || '')}</span>
+                            <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}">
+                                <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, task.content || '')}</span>
                             </span>
                         </div>
                     </td>
@@ -20755,16 +21026,57 @@ async function __tmRefreshAfterWake(reason) {
             '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800',
             '#795548', '#9E9E9E', '#607D8B', '#000000', '#FFFFFF'
         ];
+        const paletteGroups = Array.isArray(options?.paletteGroups)
+            ? options.paletteGroups.map((group, groupIndex) => {
+                const colors = (Array.isArray(group?.colors) ? group.colors : [])
+                    .map((color) => __tmNormalizeHexColor(color, ''))
+                    .filter(Boolean);
+                if (!colors.length) return null;
+                return {
+                    id: String(group?.id || `palette-group-${groupIndex + 1}`).trim() || `palette-group-${groupIndex + 1}`,
+                    label: String(group?.label || `色系 ${groupIndex + 1}`).trim() || `色系 ${groupIndex + 1}`,
+                    colors,
+                };
+            }).filter(Boolean)
+            : [];
 
         const defaultColor = __tmNormalizeHexColor(options?.defaultColor, '#f44336') || '#f44336';
         let current = __tmNormalizeHexColor(initialColor, defaultColor) || defaultColor;
+        const isMobilePicker = (() => {
+            try {
+                if (typeof __tmIsRuntimeMobileClient === 'function' && __tmIsRuntimeMobileClient()) return true;
+            } catch (e) {}
+            try {
+                if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 768px)').matches) return true;
+            } catch (e) {}
+            return false;
+        })();
+        const swatchSize = isMobilePicker ? 32 : 32;
+        const swatchGap = isMobilePicker ? 8 : 10;
+        const maxPaletteColumns = isMobilePicker
+            ? 8
+            : (paletteGroups.length
+                ? Math.max(1, ...paletteGroups.map((group) => Array.isArray(group?.colors) ? group.colors.length : 0))
+                : 10);
 
         const backdrop = document.createElement('div');
         backdrop.id = 'tm-color-picker-backdrop';
         backdrop.className = 'tm-color-picker-backdrop';
+        if (isMobilePicker) backdrop.classList.add('tm-color-picker-backdrop--mobile');
 
         const dialog = document.createElement('div');
         dialog.className = 'tm-color-picker-dialog';
+        if (isMobilePicker) dialog.classList.add('tm-color-picker-dialog--mobile');
+        const dialogHorizontalPadding = isMobilePicker ? 32 : 28;
+        const gridWidth = maxPaletteColumns * swatchSize + Math.max(0, maxPaletteColumns - 1) * swatchGap;
+        const compactWidth = paletteGroups.length
+            ? Math.max(isMobilePicker ? 320 : 360, gridWidth + dialogHorizontalPadding)
+            : Math.max(isMobilePicker ? 320 : 420, gridWidth + dialogHorizontalPadding);
+        dialog.style.width = isMobilePicker ? '100vw' : `${compactWidth}px`;
+        dialog.style.maxWidth = isMobilePicker ? '100vw' : 'calc(100vw - 24px)';
+        dialog.style.minWidth = '0';
+        dialog.style.maxHeight = 'calc(100vh - 24px)';
+        dialog.style.overflow = 'auto';
 
         const title = document.createElement('div');
         title.textContent = String(titleText || '选择颜色');
@@ -20773,68 +21085,145 @@ async function __tmRefreshAfterWake(reason) {
 
         const preview = document.createElement('div');
         preview.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;';
+        if (isMobilePicker) preview.classList.add('tm-color-picker-preview--mobile');
         const previewBox = document.createElement('div');
         previewBox.style.cssText = `width:44px;height:28px;border-radius:8px;border:1px solid var(--tm-border-color);background:${current};flex:0 0 auto;`;
         const hexInput = document.createElement('input');
         hexInput.type = 'text';
         hexInput.value = __tmFormatColorDisplayValue(current);
-        hexInput.placeholder = '#RRGGBB / #RRGGBBAA / rgba() / var(--token)';
-        hexInput.style.cssText = 'flex:1;padding:8px 10px;border:1px solid var(--tm-input-border);border-radius:8px;background:var(--tm-input-bg);color:var(--tm-text-color);';
-        hexInput.oninput = () => {
-            const norm = __tmNormalizeHexColor(hexInput.value, '');
-            if (norm) {
-                current = norm;
-                previewBox.style.background = current;
-                hexInput.style.borderColor = 'var(--tm-input-border)';
-            } else {
-                hexInput.style.borderColor = 'var(--tm-danger-color)';
-            }
-        };
+        hexInput.placeholder = '#RRGGBB / rgba() / hsl() / var(--token)';
+        hexInput.style.cssText = 'flex:1;min-width:0;padding:8px 10px;border:1px solid var(--tm-input-border);border-radius:8px;background:var(--tm-input-bg);color:var(--tm-text-color);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;';
         preview.appendChild(previewBox);
         preview.appendChild(hexInput);
         dialog.appendChild(preview);
+        const formatHint = document.createElement('div');
+        formatHint.textContent = String(options?.formatHint || '支持 HEX、RGBA、HSL/HSLA、transparent、var(--token) 等格式');
+        formatHint.style.cssText = 'margin:-2px 0 12px;font-size:12px;line-height:1.6;color:var(--tm-secondary-text);white-space:normal;word-break:break-word;overflow-wrap:anywhere;';
+        dialog.appendChild(formatHint);
 
-        const grid = document.createElement('div');
-        grid.className = 'tm-color-grid-10';
         const pickColorInput = document.createElement('input');
         pickColorInput.type = 'color';
         pickColorInput.value = __tmNormalizeLiteralHexColor(current) || __tmNormalizeLiteralHexColor(defaultColor) || '#f44336';
-        pickColorInput.style.cssText = 'position:absolute;inset:0;opacity:0;cursor:pointer;border:none;padding:0;';
-        pickColorInput.oninput = () => {
-            const norm = __tmNormalizeHexColor(pickColorInput.value, '');
-            if (!norm) return;
-            current = norm;
+        pickColorInput.style.cssText = 'position:absolute;inset:0;opacity:0;cursor:pointer;border:none;padding:0;pointer-events:none;';
+        const swatchButtons = [];
+        const syncColorPreview = () => {
             hexInput.value = __tmFormatColorDisplayValue(current);
             hexInput.style.borderColor = 'var(--tm-input-border)';
             previewBox.style.background = current;
+            const literal = __tmNormalizeLiteralHexColor(current);
+            if (literal) pickColorInput.value = literal;
+            const normalizedCurrent = __tmNormalizeHexColor(current, '');
+            swatchButtons.forEach((entry) => {
+                const active = entry.color === normalizedCurrent;
+                entry.el.style.boxShadow = active
+                    ? '0 0 0 2px var(--tm-bg-color), 0 0 0 4px var(--tm-primary-color)'
+                    : 'none';
+                entry.el.style.transform = active ? 'translateY(-1px)' : 'none';
+            });
         };
-        swatches.forEach((c, index) => {
-            const norm = __tmNormalizeHexColor(c, '');
-            if (!norm) return;
+        const applyColorValue = (value) => {
+            const norm = __tmNormalizeHexColor(value, '');
+            if (!norm) return false;
+            current = norm;
+            syncColorPreview();
+            return true;
+        };
+        hexInput.oninput = () => {
+            if (applyColorValue(hexInput.value)) return;
+            hexInput.style.borderColor = 'var(--tm-danger-color)';
+        };
+        pickColorInput.oninput = () => {
+            applyColorValue(pickColorInput.value);
+        };
+        const openNativeColorPicker = () => {
+            try {
+                if (typeof pickColorInput.showPicker === 'function') pickColorInput.showPicker();
+                else pickColorInput.click();
+            } catch (e) {
+                try { pickColorInput.click(); } catch (e2) {}
+            }
+        };
+        const createSwatchButton = (norm, extraTitle = '') => {
             const btn = document.createElement('button');
             btn.type = 'button';
+            btn.style.cssText = `width:100%;aspect-ratio:1 / 1;border-radius:999px;border:1px solid var(--tm-border-color);padding:0;background:${norm};cursor:pointer;transition:transform .15s ease, box-shadow .15s ease;min-width:${swatchSize}px;min-height:${swatchSize}px;`;
             btn.style.background = norm;
+            btn.title = extraTitle ? `${extraTitle} ${__tmFormatColorDisplayValue(norm)}` : __tmFormatColorDisplayValue(norm);
             btn.onclick = () => {
-                current = norm;
-                pickColorInput.value = __tmNormalizeLiteralHexColor(current) || pickColorInput.value;
-                hexInput.value = __tmFormatColorDisplayValue(current);
-                hexInput.style.borderColor = 'var(--tm-input-border)';
-                previewBox.style.background = current;
+                applyColorValue(norm);
             };
-            if (index === swatches.length - 1) {
-                btn.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;background:conic-gradient(from 180deg,#ff4d4f,#ffa940,#fadb14,#73d13d,#36cfc9,#40a9ff,#9254de,#ff4d4f);overflow:hidden;';
-                const inner = document.createElement('span');
-                inner.textContent = 'pick';
-                inner.style.cssText = 'padding:2px 5px;border-radius:999px;background:rgba(255,255,255,0.92);color:#111827;font-size:10px;font-weight:700;line-height:1;text-transform:uppercase;pointer-events:none;box-shadow:0 1px 2px rgba(0,0,0,0.12);';
-                btn.appendChild(inner);
-                btn.appendChild(pickColorInput);
+            swatchButtons.push({ el: btn, color: norm });
+            return btn;
+        };
+        const createPickerButton = (labelText = 'pick') => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.style.cssText = `position:relative;width:100%;aspect-ratio:1 / 1;border-radius:999px;border:1px solid var(--tm-border-color);padding:0;background:conic-gradient(from 180deg,#ff4d4f,#ffa940,#fadb14,#73d13d,#36cfc9,#40a9ff,#9254de,#ff4d4f);overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;min-width:${swatchSize}px;min-height:${swatchSize}px;`;
+            btn.title = '选择自定义颜色';
+            btn.onclick = (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                openNativeColorPicker();
+            };
+            const inner = document.createElement('span');
+            inner.textContent = String(labelText || 'pick');
+            inner.style.cssText = 'padding:2px 5px;border-radius:999px;background:rgba(255,255,255,0.92);color:#111827;font-size:10px;font-weight:700;line-height:1;text-transform:uppercase;pointer-events:none;box-shadow:0 1px 2px rgba(0,0,0,0.12);';
+            btn.appendChild(inner);
+            btn.appendChild(pickColorInput);
+            return btn;
+        };
+        const paletteWrap = document.createElement('div');
+        paletteWrap.style.cssText = 'display:flex;flex-direction:column;gap:14px;';
+        if (paletteGroups.length) {
+            paletteGroups.forEach((group) => {
+                const section = document.createElement('div');
+                section.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
+                const label = document.createElement('div');
+                label.textContent = group.label;
+                label.style.cssText = 'font-size:12px;font-weight:700;color:var(--tm-text-color);';
+                const grid = document.createElement('div');
+                const columns = isMobilePicker ? Math.min(Math.max(1, group.colors.length), 8) : Math.max(1, group.colors.length);
+                grid.style.cssText = `display:grid;grid-template-columns:repeat(${columns}, ${swatchSize}px);gap:${swatchGap}px;width:max-content;max-width:100%;`;
+                group.colors.forEach((color) => {
+                    grid.appendChild(createSwatchButton(color, group.label));
+                });
+                section.appendChild(label);
+                section.appendChild(grid);
+                paletteWrap.appendChild(section);
+            });
+            if (!isMobilePicker) {
+                const customSection = document.createElement('div');
+                customSection.style.cssText = 'display:flex;flex-direction:column;gap:10px;';
+                const customLabel = document.createElement('div');
+                customLabel.textContent = String(options?.customSectionLabel || '自定义颜色');
+                customLabel.style.cssText = 'font-size:12px;font-weight:700;color:var(--tm-text-color);';
+                const customGrid = document.createElement('div');
+                customGrid.style.cssText = `display:grid;grid-template-columns:repeat(1, ${swatchSize}px);gap:${swatchGap}px;width:max-content;max-width:100%;`;
+                customGrid.appendChild(createPickerButton(String(options?.pickLabel || '+')));
+                customSection.appendChild(customLabel);
+                customSection.appendChild(customGrid);
+                paletteWrap.appendChild(customSection);
             }
-            grid.appendChild(btn);
-        });
-        dialog.appendChild(grid);
+        } else {
+            const grid = document.createElement('div');
+            grid.className = 'tm-color-grid-10';
+            swatches.forEach((c, index) => {
+                const norm = __tmNormalizeHexColor(c, '');
+                if (!norm) return;
+                if (index === swatches.length - 1) {
+                    grid.appendChild(createPickerButton('pick'));
+                    return;
+                }
+                grid.appendChild(createSwatchButton(norm));
+            });
+            paletteWrap.appendChild(grid);
+        }
+        dialog.appendChild(paletteWrap);
+        syncColorPreview();
 
         const actions = document.createElement('div');
         actions.className = 'tm-color-actions';
+        if (isMobilePicker) actions.classList.add('tm-color-picker-actions--mobile');
         const cancelBtn = document.createElement('button');
         cancelBtn.type = 'button';
         cancelBtn.className = 'tm-btn tm-btn-gray';
@@ -22133,6 +22522,78 @@ async function __tmRefreshAfterWake(reason) {
         try { setTimeout(restore, 30); } catch (e) {}
     }
 
+    function __tmGetCalendarSidebarChecklistHost(modalEl) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) return null;
+        const host = modal.querySelector?.('[data-tm-cal-role="task-page-list"]');
+        return host instanceof HTMLElement ? host : null;
+    }
+
+    function __tmHasCalendarSidebarChecklist(modalEl) {
+        if (String(state.viewMode || '').trim() !== 'calendar') return false;
+        const host = __tmGetCalendarSidebarChecklistHost(modalEl);
+        if (!(host instanceof HTMLElement)) return false;
+        return !!host.querySelector?.('.tm-body.tm-body--checklist, .tm-checklist-scroll, .tm-checklist-layout');
+    }
+
+    function __tmIsChecklistSelectionContext(modalEl) {
+        const viewMode = String(state.viewMode || '').trim();
+        if (viewMode === 'checklist' || viewMode === 'whiteboard') return true;
+        return __tmHasCalendarSidebarChecklist(modalEl);
+    }
+
+    function __tmRefreshCalendarSidebarChecklistPreserveScroll() {
+        const modal = state.modal instanceof Element ? state.modal : null;
+        const pane = modal?.querySelector?.('[data-tm-cal-role="task-page-list"] .tm-checklist-scroll');
+        const top = Number(pane?.scrollTop || 0);
+        const left = Number(pane?.scrollLeft || 0);
+        try {
+            if (globalThis.__tmCalendar?.refreshInPlace) globalThis.__tmCalendar.refreshInPlace({ hard: false });
+            else render();
+        } catch (e) {
+            try { render(); } catch (e2) {}
+        }
+        const restore = () => {
+            try {
+                const nextPane = state.modal?.querySelector?.('[data-tm-cal-role="task-page-list"] .tm-checklist-scroll');
+                if (!(nextPane instanceof HTMLElement)) return;
+                nextPane.scrollTop = top;
+                nextPane.scrollLeft = left;
+                try { nextPane.__tmChecklistScrollUpdateThumb?.(); } catch (e2) {}
+            } catch (e) {}
+        };
+        try { restore(); } catch (e) {}
+        try { requestAnimationFrame(restore); } catch (e) {}
+    }
+
+    window.tmRenderCalendarSidebarChecklistHtml = function() {
+        const renderBodyHtml = state.renderChecklistBodyHtml;
+        if (typeof renderBodyHtml !== 'function') return '';
+        const prevForce = !!state.__tmCalendarSidebarChecklistRender;
+        state.__tmCalendarSidebarChecklistRender = true;
+        try {
+            return String(renderBodyHtml() || '');
+        } catch (e) {
+            return '';
+        } finally {
+            state.__tmCalendarSidebarChecklistRender = prevForce;
+        }
+    };
+
+    window.tmAfterRenderCalendarSidebarChecklist = function() {
+        const modal = state.modal instanceof Element ? state.modal : null;
+        if (!(modal instanceof Element)) return false;
+        if (!__tmHasCalendarSidebarChecklist(modal)) return false;
+        try { __tmBindChecklistScrollVisibility(modal); } catch (e) {}
+        try { __tmBindFloatingTooltips(modal); } catch (e) {}
+        try { __tmRefreshChecklistSelectionInPlace(modal); } catch (e) {}
+        try { __tmApplyReminderTaskNameMarks(modal); } catch (e) {}
+        try { __tmScheduleReminderTaskNameMarksRefresh(modal); } catch (e) {}
+        try { __tmApplyTodayScheduledTaskNameMarks(modal); } catch (e) {}
+        try { __tmScheduleTodayScheduledTaskNameMarksRefresh(modal); } catch (e) {}
+        return true;
+    };
+
     function __tmBindChecklistScrollVisibility(modalEl) {
         const modal = modalEl instanceof Element ? modalEl : state.modal;
         const pane = modal?.querySelector?.('.tm-checklist-scroll');
@@ -22793,19 +23254,15 @@ async function __tmRefreshAfterWake(reason) {
     async function __tmFindDirectChildAnchorExcluding(docId, mode = 'first', excludeIds = []) {
         const did = String(docId || '').trim();
         if (!did) return '';
-        const excluded = Array.from(new Set((excludeIds || []).map((item) => String(item || '').trim()).filter(Boolean)));
-        const orderSql = String(mode || '').trim() === 'last'
-            ? 'ORDER BY sort DESC, created DESC, id DESC'
-            : 'ORDER BY sort ASC, created ASC, id ASC';
-        const excludeSql = excluded.length
-            ? ` AND id NOT IN (${excluded.map((id) => `'${id.replace(/'/g, "''")}'`).join(',')})`
-            : '';
-        const sql = `SELECT id FROM blocks WHERE parent_id = '${did.replace(/'/g, "''")}'${excludeSql} ${orderSql} LIMIT 1`;
-        const res = await API.call('/api/query/sql', { stmt: sql });
-        if (res.code === 0 && Array.isArray(res.data) && res.data.length > 0) {
-            return String(res.data[0]?.id || '').trim();
-        }
-        return '';
+        const excluded = new Set((excludeIds || []).map((item) => String(item || '').trim()).filter(Boolean));
+        const children = await API.getChildBlocks(did);
+        const filtered = children.filter((child) => {
+            const childId = String(child?.id || '').trim();
+            return childId && !excluded.has(childId);
+        });
+        if (!filtered.length) return '';
+        const target = String(mode || '').trim() === 'last' ? filtered[filtered.length - 1] : filtered[0];
+        return String(target?.id || '').trim();
     }
 
     async function __tmResolveDailyNoteNotebookIdForBlocks(blockIds, options = {}) {
@@ -26583,7 +27040,7 @@ async function __tmRefreshAfterWake(reason) {
                     map[id] = v;
                     try { await SettingsStore.save(); } catch (e) {}
                     __tmRefreshDocColorPresentation();
-                }, { defaultColor: initial });
+                }, __tmBuildPresetColorPickerOptions(initial));
             }));
 
             menu.appendChild(item(__tmRenderContextMenuLabel('arrow-clockwise', '恢复自动页签颜色'), async () => {
@@ -26602,7 +27059,7 @@ async function __tmRefreshAfterWake(reason) {
                         map[id] = v;
                         try { await SettingsStore.save(); } catch (e) {}
                         __tmRefreshDocColorPresentation();
-                    }, { defaultColor: initial });
+                    }, __tmBuildPresetColorPickerOptions(initial));
                 }));
                 children.push(item(__tmRenderContextMenuLabel('arrow-clockwise', '恢复当前文档自动颜色'), async () => {
                     if (map[id]) delete map[id];
@@ -28030,7 +28487,7 @@ async function __tmRefreshAfterWake(reason) {
             document.addEventListener('pointerup', onUp, true);
             document.addEventListener('pointercancel', onUp, true);
             window.addEventListener('blur', onUp, true);
-        }, { passive: false, signal: abort.signal });
+        }, { capture: true, passive: false, signal: abort.signal });
     }
 
     window.tmRowClick = async function(ev, taskId) {
@@ -28062,6 +28519,20 @@ async function __tmRefreshAfterWake(reason) {
         if (!id) return;
         const target = ev?.target;
         if (target?.closest?.('input,button,select,textarea,a,.tm-tree-toggle')) return;
+        const prevSelectedId = String(state.detailTaskId || '').trim();
+        if (prevSelectedId && prevSelectedId !== id) {
+            try {
+                const detailPanel = state.modal?.querySelector?.('#tmChecklistSheetPanel, #tmChecklistDetailPanel');
+                if (detailPanel instanceof HTMLElement) {
+                    await detailPanel.__tmTaskDetailFlushSave?.({
+                        showHint: false,
+                        closeAfterSave: false,
+                        preserveFocus: false,
+                        skipRerender: true,
+                    });
+                }
+            } catch (e) {}
+        }
         const task = state.flatTasks?.[id];
         const docId = String(task?.root_id || task?.docId || '').trim();
         if (docId) {
@@ -28137,9 +28608,20 @@ async function __tmRefreshAfterWake(reason) {
         return window.tmJumpToTask(id, ev);
     };
 
-    window.tmChecklistCloseSheet = function(ev) {
+    window.tmChecklistCloseSheet = async function(ev) {
         try { ev?.stopPropagation?.(); } catch (e) {}
         try { ev?.preventDefault?.(); } catch (e) {}
+        try {
+            const detailPanel = state.modal?.querySelector?.('#tmChecklistSheetPanel, #tmChecklistDetailPanel');
+            if (detailPanel instanceof HTMLElement) {
+                await detailPanel.__tmTaskDetailFlushSave?.({
+                    showHint: false,
+                    closeAfterSave: false,
+                    preserveFocus: false,
+                    skipRerender: true,
+                });
+            }
+        } catch (e) {}
         state.checklistDetailDismissed = true;
         state.checklistDetailSheetOpen = false;
         __tmRefreshChecklistSelectionInPlace(state.modal);
@@ -28402,7 +28884,14 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     function __tmRenderReminderIcon() {
-        return `<span class="tm-task-reminder-emoji" title="已添加提醒">${__tmLucideIconSvg('alarm-clock', { size: 13, className: 'tm-task-reminder-emoji__svg' })}</span>`;
+        return `<span class="tm-task-reminder-emoji"${__tmBuildTooltipAttrs('已添加提醒', { side: 'bottom', ariaLabel: false })}>${__tmLucideIconSvg('alarm-clock', { size: 13, className: 'tm-task-reminder-emoji__svg' })}</span>`;
+    }
+
+    function __tmRenderRemarkIcon(remark) {
+        const text = String(remark || '').trim();
+        if (!text) return '';
+        const tip = `备注: ${text}`;
+        return `<span class="tm-task-remark-emoji"${__tmBuildTooltipAttrs(tip, { side: 'bottom', ariaLabel: false })}>${__tmLucideIconSvg('square-pen', { size: 13, className: 'tm-task-remark-emoji__svg' })}</span>`;
     }
 
     function __tmRenderContextMenuLabel(iconName, text, options = {}) {
@@ -29041,22 +29530,29 @@ async function __tmRefreshAfterWake(reason) {
                 const activeCls = String(task.id) === activeId ? ' tm-checklist-item--active' : '';
                 const doneCls = task.done ? ' tm-checklist-item--done' : '';
                 const reminderHtml = __tmHasReminderMark(task) ? __tmRenderReminderIcon() : '';
+                const remarkIconHtml = __tmRenderRemarkIcon(task.remark);
                 const statusOptions = SettingsStore.data.customStatusOptions || [];
-                const currentStatus = String(task.customStatus || '').trim() || 'todo';
+                const currentStatus = __tmResolveUndoneStatusValue(task.customStatus, statusOptions);
                 const statusOption = statusOptions.find((o) => String(o?.id || '').trim() === currentStatus) || { name: currentStatus, color: '#757575' };
                 const statusChipStyle = __tmBuildStatusChipStyle(statusOption.color);
                 const indent = checklistCompact ? depth * 14 : depth * 22;
+                const showTaskDocName = __tmShouldShowCompactChecklistDocName();
                 const meta = [];
                 const priorityIcon = __tmRenderPriorityJira(task.priority, false);
-                if (task.docName) meta.push(`<span class="tm-checklist-meta-chip">${__tmRenderLucideIcon('file-text')} ${esc(String(task.docName || ''))}</span>`);
+                if (showTaskDocName && task.docName) meta.push(`<span class="tm-checklist-meta-chip">${__tmRenderLucideIcon('file-text')} ${esc(String(task.docName || ''))}</span>`);
                 if (task.h2) meta.push(`<span class="tm-checklist-meta-chip">${__tmRenderLucideIcon('puzzle')} ${esc(__tmNormalizeHeadingText(task.h2))}</span>`);
                 if (String(task.priority || '').trim() && String(task.priority || '').trim() !== 'none') meta.push(`<span class="tm-checklist-meta-chip">${priorityIcon}</span>`);
                 if (task.completionTime) meta.push(`<span class="tm-checklist-meta-chip">${esc(__tmFormatTaskTime(task.completionTime))}</span>`);
                 if (task.duration) meta.push(`<span class="tm-checklist-meta-chip">${__tmRenderLucideIcon('timer')} ${esc(String(task.duration || ''))}</span>`);
                 if (totalChildren > 0) meta.push(`<span class="tm-checklist-meta-chip">子任务 ${completedChildren}/${totalChildren}</span>`);
-                const compactMeta = checklistCompact
-                    ? `<div class="tm-checklist-meta-compact">${__tmShouldShowCompactChecklistDocName() && task.docName ? `<span class="tm-checklist-meta-compact-doc">${esc(String(task.docName || ''))}</span>` : ''}${task.completionTime ? `<span class="tm-checklist-meta-compact-time">${esc(__tmFormatTaskTimeCompact(task.completionTime))}</span>` : ''}</div>`
+                const compactMetaParts = [];
+                if (checklistCompact && showTaskDocName && task.docName) compactMetaParts.push(`<span class="tm-checklist-meta-compact-doc">${esc(String(task.docName || ''))}</span>`);
+                if (checklistCompact && task.completionTime) compactMetaParts.push(`<span class="tm-checklist-meta-compact-time">${esc(__tmFormatTaskTimeCompact(task.completionTime))}</span>`);
+                const hasCompactMeta = compactMetaParts.length > 0;
+                const compactMeta = hasCompactMeta
+                    ? `<div class="tm-checklist-meta-compact">${compactMetaParts.join('')}</div>`
                     : '';
+                const titleRowClass = `tm-checklist-title-row${hasChildren ? ' tm-checklist-title-row--has-children' : ''}${hasCompactMeta ? ' tm-checklist-title-row--has-compact-meta' : ''}`;
                 const itemIndentStyle = checklistCompact
                     ? `--tm-checklist-compact-indent:${indent}px;`
                     : `margin-left:${indent}px;`;
@@ -29069,8 +29565,8 @@ async function __tmRefreshAfterWake(reason) {
                             ${__tmRenderTaskCheckbox(String(task.id || ''), task, { checked: task.done, disabled: GlobalLock.isLocked(), extraClass: GlobalLock.isLocked() ? 'tm-operating' : '' })}
                         </div>
                         <div class="tm-checklist-item-main">
-                            <div class="tm-checklist-title-row">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" title="跳转到任务"><span draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}</div></div>
+                            <div class="${titleRowClass}">
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}><span draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}
@@ -29336,8 +29832,8 @@ async function __tmRefreshAfterWake(reason) {
                                 ${__tmRenderTaskCheckbox(task.id, task, { checked: task.done, disabled: isGloballyLocked, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
                                     ${toggle}
                                 </span>
-                                <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}" title="${esc(task.content || '')}">
-                                    <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)" title="${esc(task.content || '')}">${API.renderTaskContentHtml(task.markdown, task.content || '')}</span>
+                                <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}">
+                                    <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, task.content || '')}</span>
                                 </span>
                             </div>
                         </td>
@@ -29786,7 +30282,7 @@ async function __tmRefreshAfterWake(reason) {
                 if (!showDoneCol && !!task?.done) return;
                 let key = '';
                 if (!headingMode) {
-                    key = task?.done ? '__done__' : (String(task?.customStatus || '').trim() || 'todo');
+                    key = task?.done ? '__done__' : __tmResolveUndoneStatusValue(task?.customStatus, statusOptions);
                     if (!showDoneCol && key === '__done__') return;
                 } else if (showDoneCol && !!task?.done) {
                     key = '__done__';
@@ -29807,7 +30303,7 @@ async function __tmRefreshAfterWake(reason) {
                 const content = String(task?.content || '').trim();
                 const docId = String(task?.root_id || '').trim();
                 const docName = docNameById.get(docId) || '';
-                const st = String(task?.customStatus || '').trim() || 'todo';
+                const st = __tmResolveUndoneStatusValue(task?.customStatus, statusOptions);
                 const opt = statusOptionById.get(st) || (st === 'todo' ? todoOpt : { id: st, name: st, color: '#757575' });
                 const timeTxt = String(task?.completionTime || '').trim() || String(task?.startDate || '').trim();
                 const dateTxt = timeTxt ? __tmFormatTaskTime(timeTxt) : '';
@@ -29838,7 +30334,7 @@ async function __tmRefreshAfterWake(reason) {
                             <div class="tm-kanban-card-head">
                                 ${toggleHtml || ''}
                                     ${__tmRenderTaskCheckboxWrap(id, task, { checked: task?.done, disabled: isGloballyLocked, extraClass: isGloballyLocked ? 'tm-operating' : '', collapsed: !!(isParent && totalChildren > 0 && __tmKanbanGetCollapsedSet().has(id)) })}
-                                <span class="tm-kanban-card-title-inline tm-task-content-clickable" onclick="tmJumpToTask('${id}', event)" title="${esc((content || '(无内容)'))}">${API.renderTaskContentHtml(task.markdown, content || '(无内容)')}</span>
+                                <span class="tm-kanban-card-title-inline tm-task-content-clickable" onclick="tmJumpToTask('${id}', event)"${__tmBuildTooltipAttrs(String(content || '(无内容)').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, content || '(无内容)')}</span>
                             </div>
                             <button class="tm-kanban-more" onclick="tmOpenTaskDetail('${id}', event)" title="任务详情">${__tmRenderLucideIcon('dots-three')}</button>
                         </div>
@@ -30745,7 +31241,7 @@ async function __tmRefreshAfterWake(reason) {
                                 <div class="tm-whiteboard-stream-task">
                                     <div class="tm-whiteboard-stream-task-head" data-task-id="${esc(tid)}" data-id="${esc(tid)}" draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(tid)}')" ondragend="tmDragTaskEnd(event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(tid)}')" onclick="tmWhiteboardStreamTaskHeadClick('${escSq(tid)}', event)">
                                         ${__tmRenderTaskCheckboxWrap(tid, task, { checked: task?.done, stopMouseDown: true, stopClick: true, title: '完成状态' })}
-                                        <span class="tm-whiteboard-stream-task-title ${task?.done ? 'tm-task-done' : ''}" onpointerdown="tmWhiteboardStreamTaskTitlePointerDown(event)" onmousedown="tmWhiteboardStreamTaskTitleMouseDown(event)" ontouchstart="tmWhiteboardStreamTaskTitleTouchStart(event)" onclick="tmWhiteboardStreamTaskTitleClick('${escSq(tid)}', event)" title="${esc(content)}">${API.renderTaskContentHtml(task?.markdown, content)}</span>
+                                        <span class="tm-whiteboard-stream-task-title ${task?.done ? 'tm-task-done' : ''}" onpointerdown="tmWhiteboardStreamTaskTitlePointerDown(event)" onmousedown="tmWhiteboardStreamTaskTitleMouseDown(event)" ontouchstart="tmWhiteboardStreamTaskTitleTouchStart(event)" onclick="tmWhiteboardStreamTaskTitleClick('${escSq(tid)}', event)"${__tmBuildTooltipAttrs(String(content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task?.markdown, content)}</span>
                                         ${toggleHtml}
                                     </div>
                                 </div>
@@ -31039,7 +31535,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                     ` : '';
                     const ghostTip = isGhost ? `<span class="tm-kanban-chip tm-kanban-chip--muted" style="cursor:default;">快照</span>` : '';
-                    const st = String(task?.customStatus || '').trim() || 'todo';
+                    const st = __tmResolveUndoneStatusValue(task?.customStatus, statusOptions);
                     const opt = statusOptions.find(o => o.id === st) || (st === 'todo' ? todoOpt : { id: st, name: st, color: '#757575' });
                     const editableMeta = !isGhost;
                     const statusChipStyle = __tmBuildStatusChipStyle(opt.color || '#757575');
@@ -31066,7 +31562,7 @@ async function __tmRefreshAfterWake(reason) {
                                 ${toggleHtml}
                                 ${__tmRenderTaskCheckboxWrap(tid, task, { checked: task?.done, disabled: (GlobalLock.isLocked() || isGhost), extraClass: GlobalLock.isLocked() ? 'tm-operating' : '', title: isGhost ? '快照任务，当前不可直接勾选' : '', stopMouseDown: true, stopClick: true, collapsed: !!(collapsed && children.length) })}
                                 <div class="tm-whiteboard-card-title ${task?.done ? 'tm-task-done' : ''}">
-                                    <span class="tm-task-content-clickable" onclick="tmJumpToTask('${escSq(tid)}', event)" title="${esc(String(task?.content || '').trim() || '(无内容)')}">${API.renderTaskContentHtml(task?.markdown, String(task?.content || '').trim() || '(无内容)')}</span>
+                                    <span class="tm-task-content-clickable" onclick="tmJumpToTask('${escSq(tid)}', event)"${__tmBuildTooltipAttrs(String(task?.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task?.markdown, String(task?.content || '').trim() || '(无内容)')}</span>
                                 </div>
                                 ${opBtn}
                             </div>
@@ -31146,7 +31642,7 @@ async function __tmRefreshAfterWake(reason) {
                 }
                 return `
                     <section class="tm-whiteboard-doc" data-doc-id="${esc(docId)}" style="width:${Math.round(boardW)}px;min-width:${Math.round(boardW)}px;">
-                        <header class="tm-whiteboard-doc-head" onclick="tmSwitchDoc('${escSq(docId)}')" title="切换到该文档页签" style="cursor:pointer;">
+                        <header class="tm-whiteboard-doc-head" onclick="tmSwitchDoc('${escSq(docId)}')"${__tmBuildTooltipAttrs('切换到该文档页签', { side: 'bottom', ariaLabel: false })} style="cursor:pointer;">
                             <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;">${__tmRenderDocIcon(docId, { fallbackText: '📄', size: 14 })}<span>${esc(docNameById.get(docId) || '未知文档')}</span></span>
                             <span class="tm-badge tm-badge--count">${docTasks.length}</span>
                         </header>
@@ -31363,7 +31859,7 @@ async function __tmRefreshAfterWake(reason) {
                                             <div class="tm-whiteboard-pool-item${doneCls}${parentCls}${topCls}${lockedCls}${selectedCls}" data-task-id="${esc(tid)}" draggable="${draggableAttr}"${mouseDownAttr}${dragStartAttr}${dragEndAttr} title="${itemTitle}">
                                                 ${toggleHtml}
                                                 ${__tmRenderTaskCheckboxWrap(tid, t, { checked: t?.done, stopMouseDown: true, title: '完成状态', collapsed: !!collapsed })}
-                                                <span class="tm-whiteboard-pool-item-title"><span class="tm-task-content-clickable" onclick="tmJumpToTask('${escSq(tid)}', event)" title="${esc(String(t?.content || '').trim() || '(无内容)')}">${API.renderTaskContentHtml(t?.markdown, String(t?.content || '').trim() || '(无内容)')}</span></span>
+                                                <span class="tm-whiteboard-pool-item-title"><span class="tm-task-content-clickable" onclick="tmJumpToTask('${escSq(tid)}', event)"${__tmBuildTooltipAttrs(String(t?.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(t?.markdown, String(t?.content || '').trim() || '(无内容)')}</span></span>
                                             </div>
                                             ${kidsHtml}
                                         </div>
@@ -31752,7 +32248,7 @@ async function __tmRefreshAfterWake(reason) {
                      ondragover="tmDocTabDragOver(event)" 
                      ondrop="tmDocTabDrop(event, '')">
                     <div class="tm-doc-tabs-scroll" style="display:flex; gap:8px; overflow-x:auto; flex:1; align-items:center; padding: ${isMobile ? '4px 0 4px 0' : '4px 0 4px 0'};" ondragover="tmDocTabDragOver(event)" ondrop="tmDocTabDrop(event, '')">
-                        <div class="tm-doc-tab tm-doc-tab--all ${state.activeDocId === 'all' ? 'active' : ''}" onclick="tmHandleAllDocTabClick(event)" oncontextmenu="tmShowAllDocTabContextMenu(event)" ontouchstart="tmAllDocTabPressStart(event)" ontouchmove="tmAllDocTabPressMove(event)" ontouchend="tmAllDocTabPressEnd(event)" ontouchcancel="tmAllDocTabPressEnd(event)" title="${esc(__tmGetViewProfileSourceLabel(__tmGetEffectiveViewProfileForContext('all', currentGroupId).source))}: ${esc(__tmDescribeViewProfile(__tmGetEffectiveViewProfileForContext('all', currentGroupId).profile))}&#10;右键或长按查看当前分组全部页签">全部</div>
+                        <div class="tm-doc-tab tm-doc-tab--all ${state.activeDocId === 'all' ? 'active' : ''}" onclick="tmHandleAllDocTabClick(event)" oncontextmenu="tmShowAllDocTabContextMenu(event)" ontouchstart="tmAllDocTabPressStart(event)" ontouchmove="tmAllDocTabPressMove(event)" ontouchend="tmAllDocTabPressEnd(event)" ontouchcancel="tmAllDocTabPressEnd(event)"${__tmBuildTooltipAttrs(`${__tmGetViewProfileSourceLabel(__tmGetEffectiveViewProfileForContext('all', currentGroupId).source)}: ${__tmDescribeViewProfile(__tmGetEffectiveViewProfileForContext('all', currentGroupId).profile)} ｜ 右键或长按查看当前分组全部页签`, { side: 'bottom', ariaLabel: false })}>全部</div>
                         ${(() => {
                             const id = String(SettingsStore.data.newTaskDocId || '').trim();
                             if (!id || id === '__dailyNote__') return '';
@@ -31767,10 +32263,10 @@ async function __tmRefreshAfterWake(reason) {
                             const expectedPercent = __tmComputeDocExpectedProgressPercent(expectedMeta);
                             const expectedTip = __tmFormatDocExpectedProgressTip(expectedMeta);
                             const expectedPid = `tm-doc-expected-special-${id}`;
-                            const nameTip = alias && alias !== rawName ? `别名: ${esc(alias)}&#10;原名: ${esc(rawName)}&#10;` : '';
-                            const title = `${nameTip}全局新建文档&#10;${esc(source)}: ${esc(__tmDescribeViewProfile(p))}${expectedTip ? `&#10;预期进度: ${esc(expectedTip)}` : ''}`;
+                            const nameTip = alias && alias !== rawName ? `别名: ${alias} ｜ 原名: ${rawName} ｜ ` : '';
+                            const tip = `${nameTip}全局新建文档 ｜ ${source}: ${__tmDescribeViewProfile(p)}${expectedTip ? ` ｜ 预期进度: ${expectedTip}` : ''}`;
                             setTimeout(() => __tmUpdateDocTabProgress(id, '', expectedPid), 0);
-                            return `<div class="tm-doc-tab ${isActive ? 'active' : ''}" data-tm-doc-id="${esc(id)}" style="--tm-doc-color:${esc(c)}" oncontextmenu="tmShowDocTabContextMenu(event, '${id}')" onclick="tmSwitchDoc('${id}')" title="${title}"><div class="tm-doc-tab-expected${expectedPercent == null ? '' : ' is-visible'}" id="${expectedPid}" style="width:${expectedPercent || 0}%"></div><div class="tm-doc-tab-text">${__tmRenderDocIcon(id, { fallbackText: '📥', size: 14 })}<span>${esc(docName)}</span></div></div>`;
+                            return `<div class="tm-doc-tab ${isActive ? 'active' : ''}" data-tm-doc-id="${esc(id)}" style="--tm-doc-color:${esc(c)}" oncontextmenu="tmShowDocTabContextMenu(event, '${id}')" onclick="tmSwitchDoc('${id}')"${__tmBuildTooltipAttrs(tip, { side: 'bottom', ariaLabel: false })}><div class="tm-doc-tab-expected${expectedPercent == null ? '' : ' is-visible'}" id="${expectedPid}" style="width:${expectedPercent || 0}%"></div><div class="tm-doc-tab-text">${__tmRenderDocIcon(id, { fallbackText: '📥', size: 14 })}<span>${esc(docName)}</span></div></div>`;
                         })()}
                         ${showOtherBlocksTab ? (() => {
                             const isActive = __tmIsOtherBlockTabId(state.activeDocId);
@@ -31778,7 +32274,7 @@ async function __tmRefreshAfterWake(reason) {
                             const profile = __tmGetStoredDocViewProfile(__TM_OTHER_BLOCK_TAB_ID) || __tmGetStoredGroupViewProfile(currentGroupId) || __tmGetViewProfilesStore().global;
                             const profileSource = __tmGetStoredDocViewProfile(__TM_OTHER_BLOCK_TAB_ID) ? '页签自定义' : (__tmGetStoredGroupViewProfile(currentGroupId) ? '分组默认' : '全局默认');
                             const tip = `${profileSource}: ${__tmDescribeViewProfile(profile)}`;
-                            return `<div class="tm-doc-tab ${isActive ? 'active' : ''}" data-tm-doc-id="${esc(__TM_OTHER_BLOCK_TAB_ID)}" style="--tm-doc-color:${esc(c)}" onclick="tmSwitchDoc('${__TM_OTHER_BLOCK_TAB_ID}')" oncontextmenu="tmShowDocTabContextMenu(event, '${__TM_OTHER_BLOCK_TAB_ID}')" title="${esc(tip)}">🧩 ${esc(__TM_OTHER_BLOCK_TAB_NAME)}</div>`;
+                            return `<div class="tm-doc-tab ${isActive ? 'active' : ''}" data-tm-doc-id="${esc(__TM_OTHER_BLOCK_TAB_ID)}" style="--tm-doc-color:${esc(c)}" onclick="tmSwitchDoc('${__TM_OTHER_BLOCK_TAB_ID}')" oncontextmenu="tmShowDocTabContextMenu(event, '${__TM_OTHER_BLOCK_TAB_ID}')"${__tmBuildTooltipAttrs(tip, { side: 'bottom', ariaLabel: false })}>🧩 ${esc(__TM_OTHER_BLOCK_TAB_NAME)}</div>`;
                         })() : ''}
                         ${visibleDocs.map(doc => {
                             const isActive = state.activeDocId === doc.id;
@@ -31795,7 +32291,7 @@ async function __tmRefreshAfterWake(reason) {
                             const expectedPercent = __tmComputeDocExpectedProgressPercent(expectedMeta);
                             const expectedTip = __tmFormatDocExpectedProgressTip(expectedMeta);
                             const profileTip = `${alias && alias !== rawDocName ? `别名: ${alias}\n原名: ${rawDocName}\n` : ''}${profileSource}: ${__tmDescribeViewProfile(docProfile || groupProfile || __tmGetViewProfilesStore().global)}${expectedTip ? `\n预期进度: ${expectedTip}` : ''}`;
-                            const profileTitle = esc(profileTip).replace(/\n/g, '&#10;');
+                            const profileTipOneLine = profileTip.replace(/\s*\n+\s*/g, ' ｜ ');
                             // 预设宽度（如果缓存有值，直接渲染，减少闪烁）
                             const cachedPercent = __tmDocProgressCache?.get(doc.id) || 0;
                             // 调度异步更新
@@ -31810,7 +32306,7 @@ async function __tmRefreshAfterWake(reason) {
                                 ondragover="tmDocTabDragOver(event)" 
                                 ondrop="tmDocTabDrop(event, '${doc.id}')" 
                                 onclick="tmSwitchDoc('${doc.id}')"
-                                title="${profileTitle}">
+                                ${__tmBuildTooltipAttrs(profileTipOneLine, { side: 'bottom', ariaLabel: false })}>
                                 <div class="tm-doc-tab-expected${expectedPercent == null ? '' : ' is-visible'}" id="${expectedPid}" style="width:${expectedPercent || 0}%"></div>
                                 <div class="tm-doc-tab-bg" id="${pid}" style="width:${cachedPercent}%"></div>
                                 <div class="tm-doc-tab-text">${iconHtml}<span>${esc(docName)}</span></div>
@@ -37159,7 +37655,7 @@ async function __tmRefreshAfterWake(reason) {
                         <td style="${tableLayout.cellStyle('content')}">
                             <div class="tm-task-cell" style="padding-left:${depthPad}px;">
                                 <span class="tm-task-text">
-                                    <span class="tm-task-content-clickable" title="${esc(item.title)}">${contentHtml}</span>
+                                    <span class="tm-task-content-clickable"${__tmBuildTooltipAttrs(String(item.title || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${contentHtml}</span>
                                 </span>
                             </div>
                         </td>
@@ -38882,7 +39378,7 @@ async function __tmRefreshAfterWake(reason) {
 
             const t = state.flatTasks[id];
             if (!t) continue;
-            const prev = String(t.customStatus || '').trim() || 'todo';
+            const prev = __tmResolveUndoneStatusValue(t.customStatus);
             if (prev === st) continue;
             t.customStatus = st;
             try {
@@ -42175,7 +42671,7 @@ async function __tmRefreshAfterWake(reason) {
         if (Number.isFinite(impDelta)) score += w('importance') * impDelta;
 
         const statusDeltaMap = (cfg.statusDelta && typeof cfg.statusDelta === 'object') ? cfg.statusDelta : {};
-        const st = String(task?.customStatus || 'todo').trim() || 'todo';
+        const st = __tmResolveUndoneStatusValue(task?.customStatus);
         const stDelta = Number(statusDeltaMap[st] ?? 0);
         if (Number.isFinite(stDelta)) score += w('status') * stDelta;
 
@@ -44070,8 +44566,8 @@ async function __tmRefreshAfterWake(reason) {
         });
         const isOtherBlock = __tmIsCollectedOtherBlockTask(task);
         const statusOptions = __tmGetTaskDetailStatusOptions();
-        const curStatus = String(task?.customStatus || '').trim() || 'todo';
-        const curStatusOption = statusOptions.find((o) => o.id === curStatus) || statusOptions[0] || { id: 'todo', name: '待办', color: '#757575' };
+        const curStatus = __tmResolveUndoneStatusValue(task?.customStatus, statusOptions);
+        const curStatusOption = statusOptions.find((o) => o.id === curStatus) || { id: curStatus, name: curStatus || '待办', color: '#757575' };
         const curPriority = String(task?.priority || '').trim().toLowerCase();
         const curPinned = !!task?.pinned;
         const startValue = __tmNormalizeDateOnly(String(task?.startDate || '').trim());
@@ -44092,16 +44588,28 @@ async function __tmRefreshAfterWake(reason) {
         const children = Array.isArray(task?.children) ? task.children : [];
         const completedChildren = children.filter((child) => child?.done).length;
         const customFieldDefs = __tmGetCustomFieldDefs();
+        const visibleColumnOrder = Array.isArray(SettingsStore?.data?.columnOrder)
+            ? SettingsStore.data.columnOrder
+            : __tmGetDefaultColumnOrder();
+        const visibleColumnSet = new Set(
+            (Array.isArray(visibleColumnOrder) ? visibleColumnOrder : [])
+                .map((key) => String(key || '').trim())
+                .filter(Boolean)
+        );
+        const visibleCustomFieldDefs = customFieldDefs.filter((field) => {
+            const colKey = __tmBuildCustomFieldColumnKey(field?.id);
+            return !!colKey && visibleColumnSet.has(colKey);
+        });
         const priorityOptions = [
             { value: '', label: '无' },
             { value: 'low', label: '低' },
             { value: 'medium', label: '中' },
             { value: 'high', label: '高' },
         ];
-        const customFieldsHtml = customFieldDefs.length
+        const customFieldsHtml = visibleCustomFieldDefs.length
             ? `
                 <div class="tm-task-detail-custom-fields">
-                    ${customFieldDefs.map((field) => {
+                    ${visibleCustomFieldDefs.map((field) => {
                         const fieldId = String(field?.id || '').trim();
                         if (!fieldId) return '';
                         return `
@@ -44423,7 +44931,7 @@ async function __tmRefreshAfterWake(reason) {
                     {
                         const input = root.querySelector('input[type="hidden"][data-tm-detail="status"]');
                         if (input instanceof HTMLInputElement) {
-                            input.value = String(nextTask.customStatus || '').trim() || 'todo';
+                            input.value = __tmResolveUndoneStatusValue(nextTask.customStatus);
                         }
                     }
                     refreshStatusSelectUi();
@@ -44860,7 +45368,9 @@ async function __tmRefreshAfterWake(reason) {
             const updateTitleNode = (el) => {
                 if (!(el instanceof HTMLElement)) return;
                 try { el.innerHTML = html; } catch (e) {}
-                try { el.setAttribute('title', plainText); } catch (e) {}
+                try { el.removeAttribute('title'); } catch (e) {}
+                const tooltipTarget = el.closest('.tm-checklist-title-button') || el;
+                try { __tmApplyTooltipAttrsToElement(tooltipTarget, plainText, { side: 'bottom' }); } catch (e) {}
             };
             const contentSelectors = [
                 `#tmTaskTable tbody tr[data-id="${CSS.escape(tid)}"] .tm-task-content-clickable`,
@@ -45334,6 +45844,28 @@ async function __tmRefreshAfterWake(reason) {
                 requestAnimationFrame(() => syncAutoHeight(titleTextarea, 36));
             } catch (e) {}
         }
+        const remarkTextarea = root.querySelector('[data-tm-detail="remark"]');
+        if (remarkTextarea instanceof HTMLTextAreaElement) {
+            const syncRemarkHeight = () => syncAutoHeight(remarkTextarea, 34);
+            syncRemarkHeight();
+            on(remarkTextarea, 'input', () => {
+                syncRemarkHeight();
+                scheduleAutoSave();
+            });
+            on(remarkTextarea, 'focus', syncRemarkHeight);
+            on(remarkTextarea, 'blur', () => {
+                syncRemarkHeight();
+                flushAutoSaveNow({
+                    showHint: false,
+                    closeAfterSave: false,
+                    preserveFocus: false,
+                    skipRerender: true,
+                }).catch(() => null);
+            });
+            try {
+                requestAnimationFrame(syncRemarkHeight);
+            } catch (e) {}
+        }
         bindStatusSelect();
         bindPrioritySelect();
         bindCoreMetaControls();
@@ -45364,8 +45896,8 @@ async function __tmRefreshAfterWake(reason) {
                 if (field !== 'content' && field !== 'remark') {
                     on(el, 'input', scheduleAutoSave);
                 }
-                on(el, 'change', scheduleAutoSave);
-                if (field !== 'content') on(el, 'blur', scheduleAutoSave);
+                if (field !== 'remark') on(el, 'change', scheduleAutoSave);
+                if (field !== 'content' && field !== 'remark') on(el, 'blur', scheduleAutoSave);
             } else if (el.matches('input[type="checkbox"]')) {
                 on(el, 'change', scheduleAutoSave);
             }
@@ -45375,8 +45907,7 @@ async function __tmRefreshAfterWake(reason) {
     function __tmRefreshChecklistSelectionInPlace(modalEl) {
         const modal = modalEl instanceof Element ? modalEl : state.modal;
         if (!(modal instanceof Element)) return false;
-        const viewMode = String(state.viewMode || '').trim();
-        if (viewMode !== 'checklist' && viewMode !== 'whiteboard') return false;
+        if (!__tmIsChecklistSelectionContext(modal)) return false;
         const selectedId = String(state.detailTaskId || '').trim();
         const sheetMode = __tmChecklistUseSheetMode(modal);
         const items = modal.querySelectorAll('.tm-checklist-item[data-id]');
@@ -45422,7 +45953,7 @@ async function __tmRefreshAfterWake(reason) {
         const tid = String(taskId || '').trim();
         if (!tid) return false;
         let refreshed = false;
-        if ((String(state.viewMode || '').trim() === 'checklist' || String(state.viewMode || '').trim() === 'whiteboard') && String(state.detailTaskId || '').trim() === tid) {
+        if (__tmIsChecklistSelectionContext(state.modal) && String(state.detailTaskId || '').trim() === tid) {
             refreshed = !!__tmRefreshChecklistSelectionInPlace(state.modal) || refreshed;
         }
         if (String(state.viewMode || '').trim() === 'kanban' && String(state.kanbanDetailTaskId || '').trim() === tid) {
@@ -45610,6 +46141,8 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     function __tmChecklistUseSheetMode(modalEl) {
+        if (state.__tmCalendarSidebarChecklistRender === true) return true;
+        if (__tmHasCalendarSidebarChecklist(modalEl)) return true;
         if (String(state.viewMode || '').trim() === 'checklist' && __tmShouldShowCalendarSideDock()) {
             return true;
         }
@@ -45848,9 +46381,8 @@ async function __tmRefreshAfterWake(reason) {
                                 ${toggle}
                             </span>
                             <span class="tm-task-text ${done ? 'tm-task-done' : ''}"
-                                  data-level="${depth}"
-                                  title="${esc(content)}">
-                                <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)" title="${esc(content)}">${API.renderTaskContentHtml(task.markdown, content)}${__tmHasReminderMark(task) ? __tmRenderReminderIcon() : ''}</span>
+                                  data-level="${depth}">
+                                <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)"${__tmBuildTooltipAttrs(String(content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, content)}${__tmHasReminderMark(task) ? __tmRenderReminderIcon() : ''}</span>
                             </span>
                             <button class="tm-subtask-create-btn"
                                     type="button"
@@ -45893,7 +46425,7 @@ async function __tmRefreshAfterWake(reason) {
                     <td class="tm-cell-editable tm-task-meta-cell" style="${tableLayout.cellStyle('remark')}" title="${esc(remark || '')}" onclick="tmBeginCellEdit('${task.id}','remark',this,event)"><span class="tm-task-remark-text">${esc(remark || '')}</span></td>`,
                 status: () => {
                      const statusOptions = SettingsStore.data.customStatusOptions || [];
-                     const currentStatus = task.customStatus || 'todo';
+                     const currentStatus = __tmResolveUndoneStatusValue(task.customStatus, statusOptions);
                      const statusOption = statusOptions.find(o => o.id === currentStatus) || { name: currentStatus, color: '#757575' };
                      const chipStyle = __tmBuildStatusChipStyle(statusOption.color);
                      return `
@@ -46429,6 +46961,10 @@ async function __tmRefreshAfterWake(reason) {
         const step = Math.max(100, Math.min(1200, Number(state.listRenderStep) || 100));
         const next = Math.max(step, Number(state.listRenderLimit) || step) + step;
         state.listRenderLimit = Math.min(state.filteredTasks.length, next);
+        if (__tmHasCalendarSidebarChecklist(state.modal)) {
+            __tmRefreshCalendarSidebarChecklistPreserveScroll();
+            return;
+        }
         render();
     };
 
@@ -46654,6 +47190,76 @@ async function __tmRefreshAfterWake(reason) {
         return next;
     }
 
+    function __tmApplyQuickbarAttrUpdateInState(taskId, attrKey, attrValue) {
+        const tid = String(taskId || '').trim();
+        const key = String(attrKey || '').trim();
+        if (!tid || !key) return false;
+        const task = state.flatTasks?.[tid];
+        if (!task || typeof task !== 'object') return false;
+        const rawValue = attrValue == null ? '' : String(attrValue);
+        const trimmedValue = String(rawValue || '').trim();
+        let metaPatch = null;
+
+        switch (key) {
+            case 'custom-status':
+                task.customStatus = trimmedValue;
+                task.custom_status = trimmedValue;
+                metaPatch = { customStatus: trimmedValue };
+                break;
+            case 'custom-priority':
+                task.priority = trimmedValue;
+                task.custom_priority = trimmedValue;
+                metaPatch = { priority: trimmedValue };
+                break;
+            case 'custom-start-date':
+                task.startDate = trimmedValue;
+                task.start_date = trimmedValue;
+                metaPatch = { startDate: trimmedValue };
+                break;
+            case 'custom-completion-time':
+                task.completionTime = trimmedValue;
+                task.completion_time = trimmedValue;
+                metaPatch = { completionTime: trimmedValue };
+                break;
+            case 'custom-duration':
+                task.duration = trimmedValue;
+                metaPatch = { duration: trimmedValue };
+                break;
+            case 'custom-remark':
+                task.remark = rawValue;
+                metaPatch = { remark: rawValue };
+                break;
+            case 'custom-pinned':
+                {
+                    const pin = trimmedValue === '1' || trimmedValue.toLowerCase() === 'true';
+                    task.pinned = pin;
+                    task.custom_pinned = pin ? '1' : '';
+                    metaPatch = { pinned: pin ? '1' : '' };
+                }
+                break;
+            default:
+                {
+                    const field = __tmGetCustomFieldDefByAttrStorageKey(key);
+                    const fieldId = String(field?.id || '').trim();
+                    if (!field || !fieldId) return false;
+                    const normalizedValue = __tmNormalizeCustomFieldValue(field, rawValue);
+                    __tmApplyTaskCustomFieldValueLocally(task, field, normalizedValue);
+                    metaPatch = { customFieldValues: { [fieldId]: normalizedValue } };
+                }
+                break;
+        }
+
+        try {
+            __tmCacheTaskInState(task, {
+                docNameFallback: task.doc_name || task.docName || '未命名文档'
+            });
+        } catch (e) {}
+        try {
+            if (metaPatch && typeof metaPatch === 'object') MetaStore.set(tid, metaPatch);
+        } catch (e) {}
+        return true;
+    }
+
     async function __tmEnsureTaskInStateById(id) {
         const tid = String(id || '').trim();
         if (!tid) return null;
@@ -46862,6 +47468,7 @@ async function __tmRefreshAfterWake(reason) {
 
     async function __tmSetDoneKernel(id, done, ev, options = {}) {
         const opts = (options && typeof options === 'object') ? options : {};
+        const targetDone = !!done;
         if (ev) {
             ev.stopPropagation();
             ev.preventDefault();
@@ -46883,9 +47490,21 @@ async function __tmRefreshAfterWake(reason) {
             try { hint(done ? '✅ 已在插件内标记完成' : '✅ 已取消插件内完成', 'success'); } catch (e) {}
             return;
         }
+        const statusPatch = __tmBuildCheckboxStatusPatch(task, targetDone, opts.statusPatch);
         if (!task) {
             const ok = await __tmSetDoneByIdStateless(id, done);
             if (ok) {
+                if (statusPatch && Object.keys(statusPatch).length > 0) {
+                    try {
+                        await __tmPersistMetaAndAttrsKernel(String(id || '').trim(), statusPatch, {
+                            touchMetaStore: false,
+                            skipFlush: false,
+                        });
+                        MetaStore.set(String(id || '').trim(), statusPatch);
+                    } catch (statusErr) {
+                        try { console.error('[完成状态] 状态联动保存失败:', statusErr); } catch (e) {}
+                    }
+                }
                 try {
                     if (!state.doneOverrides || typeof state.doneOverrides !== 'object') state.doneOverrides = {};
                     state.doneOverrides[String(id)] = !!done;
@@ -46899,8 +47518,6 @@ async function __tmRefreshAfterWake(reason) {
             if (ev?.target) ev.target.checked = !done;
             return;
         }
-
-        const targetDone = !!done;
         const detailScrollSnapshot = __tmCaptureChecklistDetailScrollSnapshot();
 
         // 检查全局锁
@@ -46926,6 +47543,7 @@ async function __tmRefreshAfterWake(reason) {
         // 关键修改：先保存原始状态，然后保存到 MetaStore（保持原始状态，等点击完成后再更新）
         const originalMarkdown = task.markdown;
         const originalDone = task.done;
+        const originalCustomStatus = String(task.customStatus || '').trim();
 
         // 立即保存当前任务到 MetaStore（保持原始done状态）
         MetaStore.set(id, {
@@ -46934,6 +47552,7 @@ async function __tmRefreshAfterWake(reason) {
             remark: task.remark || '',
             completionTime: task.completionTime || '',
             customTime: task.customTime || '',
+            customStatus: originalCustomStatus,
             done: originalDone,
             content: task.content
         });
@@ -46950,6 +47569,7 @@ async function __tmRefreshAfterWake(reason) {
                     remark: t.remark || '',
                     completionTime: t.completionTime || '',
                     customTime: t.customTime || '',
+                    customStatus: t.customStatus || '',
                     done: t.done,
                     content: t.content
                 });
@@ -47110,6 +47730,25 @@ async function __tmRefreshAfterWake(reason) {
             // 因为我们已经模拟点击了思源的复选框，思源会正确处理状态变化
             const actualDone = targetDone;
 
+            let statusSyncError = null;
+            if (statusPatch && Object.keys(statusPatch).length > 0) {
+                try {
+                    await __tmPersistMetaAndAttrsKernel(id, statusPatch, {
+                        touchMetaStore: false,
+                        skipFlush: false,
+                    });
+                    __tmApplyAttrPatchLocally(id, statusPatch, { render: false, withFilters: false });
+                } catch (statusErr) {
+                    statusSyncError = statusErr;
+                    try { console.error('[完成状态] 状态联动保存失败:', statusErr); } catch (e) {}
+                    const restorePatch = {};
+                    if (Object.prototype.hasOwnProperty.call(statusPatch, 'customStatus')) restorePatch.customStatus = originalCustomStatus;
+                    if (Object.keys(restorePatch).length > 0) {
+                        try { __tmApplyAttrPatchLocally(id, restorePatch, { render: false, withFilters: false }); } catch (e) {}
+                    }
+                }
+            }
+
             // 保存到MetaStore
             MetaStore.set(id, {
                 priority: task.priority || '',
@@ -47158,7 +47797,8 @@ async function __tmRefreshAfterWake(reason) {
                 else __tmInvalidateAllSqlCaches();
             } catch (e) {}
 
-            hint(actualDone ? '✅ 任务已完成' : '✅ 已取消完成', 'success');
+            if (statusSyncError) hint(`${actualDone ? '✅ 任务已完成' : '✅ 已取消完成'}，但状态同步失败`, 'warning');
+            else hint(actualDone ? '✅ 任务已完成' : '✅ 已取消完成', 'success');
 
         } catch (err) {
             console.error('[完成操作失败]', err);
@@ -47166,6 +47806,7 @@ async function __tmRefreshAfterWake(reason) {
             // 恢复
             task.markdown = originalMarkdown;
             task.done = !targetDone;
+            task.customStatus = originalCustomStatus;
             try {
                 if (!state.doneOverrides || typeof state.doneOverrides !== 'object') state.doneOverrides = {};
                 state.doneOverrides[String(id)] = !targetDone;
@@ -47205,6 +47846,11 @@ async function __tmRefreshAfterWake(reason) {
         }
         const targetDone = !!done;
         if (!!task.done === targetDone) return;
+        const statusPatch = __tmBuildCheckboxStatusPatch(task, targetDone);
+        const inversePatch = {
+            done: !!task.done,
+            ...((statusPatch && Object.keys(statusPatch).length > 0) ? __tmCaptureTaskPatchInverse(tid, statusPatch) : {}),
+        };
         if (GlobalLock.isLocked()) {
             hint('⚠ 操作频繁，请稍后再试', 'warning');
             if (ev?.target) ev.target.checked = !targetDone;
@@ -47219,10 +47865,9 @@ async function __tmRefreshAfterWake(reason) {
                     taskId: tid,
                     done: targetDone,
                     docId: String(task.root_id || task.docId || '').trim(),
+                    statusPatch: statusPatch && Object.keys(statusPatch).length > 0 ? { ...statusPatch } : null,
                 },
-                inversePatch: {
-                    done: !!task.done,
-                },
+                inversePatch,
             }, { wait: true });
         } catch (e) {
             hint(`❌ 操作失败: ${e.message}`, 'error');
@@ -48804,8 +49449,9 @@ async function __tmRefreshAfterWake(reason) {
         return seedId;
     }
 
-    async function __tmPersistNewTaskAttrsWithRetry(taskId, patch, resolveId) {
+    async function __tmPersistNewTaskAttrsWithRetry(taskId, patch, resolveId, options = {}) {
         const payload = (patch && typeof patch === 'object') ? patch : {};
+        const opts = (options && typeof options === 'object') ? options : {};
         if (!Object.keys(payload).length) return String(taskId || '').trim();
         let currentId = String(taskId || '').trim();
         let lastErr = null;
@@ -48816,7 +49462,7 @@ async function __tmRefreshAfterWake(reason) {
                     if (nextId) currentId = nextId;
                 }
                 if (!currentId) throw new Error('未找到任务块');
-                await __tmPersistMetaAndAttrsAsync(currentId, payload);
+                await __tmPersistMetaAndAttrsAsync(currentId, payload, opts);
                 return currentId;
             } catch (e) {
                 lastErr = e;
@@ -49062,10 +49708,14 @@ async function __tmRefreshAfterWake(reason) {
         return true;
     }
 
-    function __tmApplyDoneOptimisticLocal(taskId, done) {
+    function __tmApplyDoneOptimisticLocal(taskId, done, statusPatch = null) {
         const tid = String(taskId || '').trim();
         const task = state.flatTasks?.[tid] || null;
         if (!task) return false;
+        const nextStatusPatch = (statusPatch && typeof statusPatch === 'object' && !Array.isArray(statusPatch)) ? statusPatch : null;
+        if (nextStatusPatch && Object.keys(nextStatusPatch).length > 0) {
+            __tmApplyAttrPatchLocally(tid, nextStatusPatch, { render: false, withFilters: true });
+        }
         task.done = !!done;
         try {
             if (!state.doneOverrides || typeof state.doneOverrides !== 'object') state.doneOverrides = {};
@@ -49081,7 +49731,13 @@ async function __tmRefreshAfterWake(reason) {
         const tid = String(taskId || '').trim();
         const task = state.flatTasks?.[tid] || null;
         if (!task) return false;
-        const prevDone = !!(inversePatch && Object.prototype.hasOwnProperty.call(inversePatch, 'done') ? inversePatch.done : task.done);
+        const prevPatch = (inversePatch && typeof inversePatch === 'object' && !Array.isArray(inversePatch)) ? inversePatch : {};
+        const prevDone = !!(Object.prototype.hasOwnProperty.call(prevPatch, 'done') ? prevPatch.done : task.done);
+        const prevStatusPatch = { ...prevPatch };
+        delete prevStatusPatch.done;
+        if (Object.keys(prevStatusPatch).length > 0) {
+            __tmRollbackAttrPatchLocally(tid, prevStatusPatch, { render: false, withFilters: true });
+        }
         task.done = prevDone;
         try {
             if (!state.doneOverrides || typeof state.doneOverrides !== 'object') state.doneOverrides = {};
@@ -49164,8 +49820,8 @@ async function __tmRefreshAfterWake(reason) {
             try { nextID = String(await API.getFirstDirectChildIdOfDoc(parentDocId) || '').trim(); } catch (e) { nextID = ''; }
         }
         const insertedId = appendToBottom && !atTop && !nextID
-            ? await API.appendBlock(parentDocId, md)
-            : await API.insertBlock(parentDocId, md, nextID || undefined);
+            ? await __tmAppendBlockWithRetry(parentDocId, md)
+            : await __tmInsertBlockWithRetry(parentDocId, md, nextID || undefined);
         // 某些端会返回外层列表块 ID，需要继续解析到真正的任务块。
         let taskId = await __tmResolveInsertedTaskBlockId(insertedId);
 
@@ -49326,6 +49982,64 @@ async function __tmRefreshAfterWake(reason) {
         }
     };
 
+    function __tmShouldRetryBlockMutationError(error) {
+        const msg = String(error?.message || error || '').toLowerCase();
+        return msg.includes('tree not found')
+            || msg.includes('invalid id argument')
+            || msg.includes('invalid id')
+            || msg.includes('id argument')
+            || msg.includes('not found')
+            || msg.includes('找不到');
+    }
+
+    async function __tmAppendBlockWithRetry(parentId, md, options = {}) {
+        const targetParentId = String(parentId || '').trim();
+        const markdown = String(md || '').trim();
+        const opts = (options && typeof options === 'object') ? options : {};
+        if (!targetParentId) throw new Error('未找到目标块');
+        if (!markdown) throw new Error('内容为空');
+        let lastErr = null;
+        const retryDelays = Array.isArray(opts.retryDelays) && opts.retryDelays.length
+            ? opts.retryDelays
+            : [120, 300, 520, 860, 1280];
+        for (let i = 0; i <= retryDelays.length; i += 1) {
+            try {
+                return await API.appendBlock(targetParentId, markdown);
+            } catch (e) {
+                lastErr = e;
+                const retryable = __tmShouldRetryBlockMutationError(e);
+                if (!retryable || i >= retryDelays.length) break;
+                try { await API.call('/api/sqlite/flushTransaction', {}); } catch (e2) {}
+                await new Promise((resolve) => setTimeout(resolve, retryDelays[i]));
+            }
+        }
+        throw lastErr || new Error('追加块失败');
+    }
+
+    async function __tmInsertBlockWithRetry(parentId, md, placement, options = {}) {
+        const targetParentId = String(parentId || '').trim();
+        const markdown = String(md || '').trim();
+        const opts = (options && typeof options === 'object') ? options : {};
+        if (!targetParentId) throw new Error('未找到目标块');
+        if (!markdown) throw new Error('内容为空');
+        let lastErr = null;
+        const retryDelays = Array.isArray(opts.retryDelays) && opts.retryDelays.length
+            ? opts.retryDelays
+            : [120, 300, 520, 860, 1280];
+        for (let i = 0; i <= retryDelays.length; i += 1) {
+            try {
+                return await API.insertBlock(targetParentId, markdown, placement);
+            } catch (e) {
+                lastErr = e;
+                const retryable = __tmShouldRetryBlockMutationError(e);
+                if (!retryable || i >= retryDelays.length) break;
+                try { await API.call('/api/sqlite/flushTransaction', {}); } catch (e2) {}
+                await new Promise((resolve) => setTimeout(resolve, retryDelays[i]));
+            }
+        }
+        throw lastErr || new Error('插入块失败');
+    }
+
     async function __tmCreateSubtaskForTaskKernel(parentTaskId, content) {
         const pid = String(parentTaskId || '').trim();
         const parentTask = state.flatTasks?.[pid];
@@ -49333,7 +50047,7 @@ async function __tmRefreshAfterWake(reason) {
         const text = String(content || '').trim();
         if (!text) throw new Error('请输入子任务内容');
 
-        const insertedId = await API.appendBlock(pid, `- [ ] ${text}`);
+        const insertedId = await __tmAppendBlockWithRetry(pid, `- [ ] ${text}`);
         const taskId = await __tmResolveInsertedTaskBlockId(insertedId);
         try { await __tmPersistMetaAndAttrsAsync(taskId, { pinned: false }); } catch (e) {}
         try {
@@ -49375,7 +50089,7 @@ async function __tmRefreshAfterWake(reason) {
         const listId = await __tmResolveTaskListBlockId(tid);
         if (!listId) throw new Error('未找到当前任务所在的任务列表');
 
-        const insertedId = await API.insertBlock(listId, `- [ ] ${text}`, { previousID: tid });
+        const insertedId = await __tmInsertBlockWithRetry(listId, `- [ ] ${text}`, { previousID: tid });
         const nextTaskId = await __tmResolveInsertedTaskBlockId(insertedId);
         try { await __tmPersistMetaAndAttrsAsync(nextTaskId, { pinned: false }); } catch (e) {}
         try {
@@ -49421,10 +50135,10 @@ async function __tmRefreshAfterWake(reason) {
         opPromise.then((result) => {
             try { state.collapsedTaskIds?.delete?.(pid); } catch (e) {}
             try { hooks.onSuccess?.(String(result?.realId || tempId).trim() || tempId); } catch (e) {}
-            hint('✅ 已新增', 'success');
+            if (hooks.silent !== true) hint('✅ 已新增', 'success');
         }).catch((e) => {
             try { hooks.onError?.(e); } catch (e2) {}
-            hint(`❌ 新建子任务失败: ${e.message}`, 'error');
+            if (hooks.silent !== true) hint(`❌ 新建子任务失败: ${e.message}`, 'error');
         }).finally(() => {
             try { hooks.onFinally?.(); } catch (e) {}
         });
@@ -49722,7 +50436,7 @@ async function __tmRefreshAfterWake(reason) {
         const initialDocId = configuredNewTaskDoc === '__dailyNote__' ? (docId || '') : docId;
 
         const stOptions = SettingsStore.data.customStatusOptions || [];
-        const defaultStatusId = String((stOptions[0] && stOptions[0].id) || 'todo').trim() || 'todo';
+        const defaultStatusId = __tmGetDefaultUndoneStatusId(stOptions);
         state.quickAdd = {
             docId: initialDocId,
             docMode: initialMode,
@@ -49884,8 +50598,8 @@ async function __tmRefreshAfterWake(reason) {
             const stBtn = document.getElementById('tmQuickAddStatusBtn');
             if (stBtn) {
                 const options = SettingsStore.data.customStatusOptions || [];
-                const id = String(qa.customStatus || '').trim() || 'todo';
-                const opt = options.find(o => o && o.id === id) || options[0] || { id: 'todo', name: '待办', color: '#757575' };
+                const id = __tmResolveUndoneStatusValue(qa.customStatus, options);
+                const opt = options.find(o => o && o.id === id) || { id, name: id || '待办', color: '#757575' };
                 const chipStyle = __tmBuildStatusChipStyle(opt.color);
                 const name = String(opt?.name || opt?.id || '待办');
                 stBtn.innerHTML = `<span class="tm-status-tag" style="${chipStyle};cursor:default;">${esc(name)}</span>`;
@@ -49993,7 +50707,7 @@ async function __tmRefreshAfterWake(reason) {
         const qa = state.quickAdd;
         let current = String(qa?.customStatus || '').trim();
         if (!options.some(o => String(o?.id || '').trim() === current)) {
-            current = String(options[0]?.id || 'todo').trim() || 'todo';
+            current = __tmGetDefaultUndoneStatusId(options);
             if (qa) qa.customStatus = current;
         }
     };
@@ -51480,33 +52194,40 @@ async function __tmRefreshAfterWake(reason) {
                 const activeCls = String(task.id) === activeId ? ' tm-checklist-item--active' : '';
                 const doneCls = task.done ? ' tm-checklist-item--done' : '';
                 const reminderHtml = __tmHasReminderMark(task) ? __tmRenderReminderIcon() : '';
+                const remarkIconHtml = __tmRenderRemarkIcon(task.remark);
                 const statusOptions = SettingsStore.data.customStatusOptions || [];
-                const currentStatus = String(task.customStatus || '').trim() || 'todo';
+                const currentStatus = __tmResolveUndoneStatusValue(task.customStatus, statusOptions);
                 const statusOption = statusOptions.find((o) => String(o?.id || '').trim() === currentStatus) || { name: currentStatus, color: '#757575' };
                 const statusChipStyle = __tmBuildStatusChipStyle(statusOption.color);
                 const indent = checklistCompact ? depth * 14 : depth * 22;
+                const showTaskDocName = __tmShouldShowCompactChecklistDocName();
                 const meta = [];
-                if (task.docName) meta.push(`<span class="tm-checklist-meta-chip">${__tmRenderLucideIcon('file-text')} ${esc(String(task.docName || ''))}</span>`);
+                if (showTaskDocName && task.docName) meta.push(`<span class="tm-checklist-meta-chip">${__tmRenderLucideIcon('file-text')} ${esc(String(task.docName || ''))}</span>`);
                 if (task.h2) meta.push(`<span class="tm-checklist-meta-chip">${__tmRenderLucideIcon('puzzle')} ${esc(__tmNormalizeHeadingText(task.h2))}</span>`);
                 if (task.completionTime) meta.push(`<span class="tm-checklist-meta-chip">${esc(__tmFormatTaskTime(task.completionTime))}</span>`);
                 if (task.duration) meta.push(`<span class="tm-checklist-meta-chip">${__tmRenderLucideIcon('timer')} ${esc(String(task.duration || ''))}</span>`);
                 if (totalChildren > 0) meta.push(`<span class="tm-checklist-meta-chip">子任务 ${completedChildren}/${totalChildren}</span>`);
-                const compactMeta = checklistCompact
-                    ? `<div class="tm-checklist-meta-compact">${__tmShouldShowCompactChecklistDocName() && task.docName ? `<span class="tm-checklist-meta-compact-doc">${esc(String(task.docName || ''))}</span>` : ''}${task.completionTime ? `<span class="tm-checklist-meta-compact-time">${esc(__tmFormatTaskTimeCompact(task.completionTime))}</span>` : ''}</div>`
+                const compactMetaParts = [];
+                if (checklistCompact && showTaskDocName && task.docName) compactMetaParts.push(`<span class="tm-checklist-meta-compact-doc">${esc(String(task.docName || ''))}</span>`);
+                if (checklistCompact && task.completionTime) compactMetaParts.push(`<span class="tm-checklist-meta-compact-time">${esc(__tmFormatTaskTimeCompact(task.completionTime))}</span>`);
+                const hasCompactMeta = compactMetaParts.length > 0;
+                const compactMeta = hasCompactMeta
+                    ? `<div class="tm-checklist-meta-compact">${compactMetaParts.join('')}</div>`
                     : '';
+                const titleRowClass = `tm-checklist-title-row${hasChildren ? ' tm-checklist-title-row--has-children' : ''}${hasCompactMeta ? ' tm-checklist-title-row--has-compact-meta' : ''}`;
                 const itemIndentStyle = checklistCompact
                     ? `--tm-checklist-compact-indent:${indent}px;`
                     : `margin-left:${indent}px;`;
                 return `
-                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}" style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')">
+                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}" draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')">
                         <div class="tm-checklist-leading${hasChildren ? ' tm-checklist-leading--branch' : ''}${hasChildren && collapsed ? ' tm-checklist-leading--collapsed' : ''}">
                             ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);">${__tmRenderToggleIcon(16, collapsed ? 0 : 90, 'tm-tree-toggle-icon')}</span>` : '<span class="tm-tree-toggle tm-tree-toggle--placeholder" aria-hidden="true"></span>'}
                             ${hasChildren && collapsed ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>' : ''}
                             ${__tmRenderTaskCheckbox(String(task.id || ''), task, { checked: task.done, disabled: GlobalLock.isLocked(), extraClass: GlobalLock.isLocked() ? 'tm-operating' : '' })}
                         </div>
                         <div class="tm-checklist-item-main" ondblclick="tmChecklistItemDblClick('${escSq(String(task.id || ''))}', event)">
-                            <div class="tm-checklist-title-row">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button" title="跳转到任务"><span draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}</div></div>
+                            <div class="${titleRowClass}">
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}><span draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)" onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)">${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}
@@ -52072,6 +52793,22 @@ async function __tmRefreshAfterWake(reason) {
                     <div class="tm-settings-panel" style="margin-bottom: 16px;">
                         <div class="tm-settings-section-title">🏷️ 状态选项</div>
                         <div class="tm-settings-section-desc">维护任务状态列表，影响任务状态菜单和相关视图显示。</div>
+                        ${renderSingleFieldSetting(
+                            '勾选完成时状态',
+                            '任务复选框被勾选为完成时，自动切换到这里设置的状态；可选择“不自动切换”。',
+                            `<select class="b3-select" onchange="updateCheckboxStatusBinding('done', this.value)" style="width:180px;">
+                                ${__tmRenderCheckboxStatusBindingOptionsHtml(SettingsStore.data.checkboxDoneStatusId)}
+                            </select>`,
+                            { style: 'margin-bottom:8px;' }
+                        )}
+                        ${renderSingleFieldSetting(
+                            '未完成状态默认状态',
+                            '未完成任务在取消勾选回退、快速新建默认状态、以及空状态显示回退时，统一使用这里设置的状态。',
+                            `<select class="b3-select" onchange="updateCheckboxStatusBinding('undone', this.value)" style="width:180px;">
+                                ${__tmRenderCheckboxStatusBindingOptionsHtml(SettingsStore.data.checkboxUndoneStatusId, { allowNone: false })}
+                            </select>`,
+                            { style: 'margin-bottom:10px;' }
+                        )}
                         <div id="tm-status-options-list">
                             ${renderStatusOptionsList()}
                         </div>
@@ -52436,6 +53173,17 @@ async function __tmRefreshAfterWake(reason) {
                     ` : ''}
 
                     ${activeTab === 'docs' ? `
+                    <div class="tm-settings-panel" style="margin-bottom: 16px;">
+                        <div class="tm-settings-section-title">📥 数据导入</div>
+                        <div class="tm-settings-section-desc">支持导入滴答清单导出的 CSV，并自动创建文档、二级标题和任务块。滴答清单 CSV 获取路径：网页版头像 → 设置 → 账户与安全 → 备份与还原 → 生成备份。</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+                            <button class="tm-btn tm-btn-primary" onclick="tmOpenTickTickImportDialog()" style="padding:6px 12px;font-size:12px;">导入滴答 CSV</button>
+                            <div style="font-size:12px;color:var(--tm-secondary-text);line-height:1.6;">
+                                仅导入 Status=0 的未完成任务；List Name -> 文档，Column Name -> 二级标题，Content -> 备注/子任务。
+                            </div>
+                        </div>
+                    </div>
+
                     <div style="margin-bottom: 16px; padding: 12px; background: var(--tm-section-bg); border-radius: 8px;">
                         <div style="font-weight: 600; margin-bottom: 8px;">📂 文档分组与管理</div>
                         <div style="font-size: 12px; color: var(--tm-secondary-text); line-height: 1.7; margin-bottom: 10px;">
@@ -53231,6 +53979,1102 @@ async function __tmRefreshAfterWake(reason) {
         render();
     };
 
+    function __tmTickTickNormalizeHeaderName(name) {
+        return String(name || '')
+            .replace(/^\uFEFF/, '')
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '');
+    }
+
+    function __tmParseCsvRows(text) {
+        const source = String(text || '').replace(/^\uFEFF/, '');
+        if (!source) return [];
+        const rows = [];
+        let row = [];
+        let field = '';
+        let inQuotes = false;
+        for (let i = 0; i < source.length; i += 1) {
+            const ch = source[i];
+            if (inQuotes) {
+                if (ch === '"') {
+                    if (source[i + 1] === '"') {
+                        field += '"';
+                        i += 1;
+                    } else {
+                        inQuotes = false;
+                    }
+                    continue;
+                }
+                field += ch;
+                continue;
+            }
+            if (ch === '"') {
+                inQuotes = true;
+                continue;
+            }
+            if (ch === ',') {
+                row.push(field);
+                field = '';
+                continue;
+            }
+            if (ch === '\r') {
+                row.push(field);
+                field = '';
+                rows.push(row);
+                row = [];
+                if (source[i + 1] === '\n') i += 1;
+                continue;
+            }
+            if (ch === '\n') {
+                row.push(field);
+                field = '';
+                rows.push(row);
+                row = [];
+                continue;
+            }
+            field += ch;
+        }
+        row.push(field);
+        rows.push(row);
+        while (rows.length > 0) {
+            const last = rows[rows.length - 1];
+            if (Array.isArray(last) && last.some((cell) => String(cell || '').trim())) break;
+            rows.pop();
+        }
+        return rows;
+    }
+
+    function __tmFindTickTickHeaderRowIndex(rows) {
+        const list = Array.isArray(rows) ? rows : [];
+        for (let i = 0; i < list.length; i += 1) {
+            const normalized = (Array.isArray(list[i]) ? list[i] : []).map(__tmTickTickNormalizeHeaderName);
+            if (normalized.includes('listname') && normalized.includes('title') && normalized.includes('status')) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    function __tmBuildTickTickCsvCellGetter(headerRow) {
+        const header = Array.isArray(headerRow) ? headerRow : [];
+        const indexMap = new Map();
+        header.forEach((cell, idx) => {
+            const key = __tmTickTickNormalizeHeaderName(cell);
+            if (key && !indexMap.has(key)) indexMap.set(key, idx);
+        });
+        return function getCell(row, aliases) {
+            const source = Array.isArray(row) ? row : [];
+            const names = Array.isArray(aliases) ? aliases : [aliases];
+            for (const alias of names) {
+                const key = __tmTickTickNormalizeHeaderName(alias);
+                if (!key || !indexMap.has(key)) continue;
+                return String(source[indexMap.get(key)] ?? '').trim();
+            }
+            return '';
+        };
+    }
+
+    function __tmTickTickParseNumericField(value) {
+        const text = String(value || '').trim();
+        const match = text.match(/-?\d+/);
+        return match ? Number(match[0]) : Number.NaN;
+    }
+
+    function __tmTickTickNormalizeTaskTitle(text) {
+        return String(text || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function __tmTickTickNormalizeTimezone(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        try {
+            Intl.DateTimeFormat('en-US', { timeZone: raw }).format(new Date());
+            return raw;
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function __tmTickTickFormatDateOnly(date, timezone) {
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+        const tz = __tmTickTickNormalizeTimezone(timezone)
+            || (() => {
+                try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; }
+            })()
+            || 'UTC';
+        try {
+            const parts = new Intl.DateTimeFormat('en-CA', {
+                timeZone: tz,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            }).formatToParts(date);
+            const get = (type) => String(parts.find((item) => item.type === type)?.value || '').trim();
+            const year = get('year');
+            const month = get('month');
+            const day = get('day');
+            if (year && month && day) return `${year}-${month}-${day}`;
+        } catch (e) {}
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function __tmTickTickParseDateOnly(value, timezone, options = {}) {
+        const text = String(value || '').trim();
+        if (!text) return '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+        const opts = (options && typeof options === 'object') ? options : {};
+        if (opts.floating === true) {
+            const floatingMatch = text.match(/^(\d{4}-\d{2}-\d{2})/);
+            if (floatingMatch) return floatingMatch[1];
+        }
+        const normalized = text.replace(/([+-]\d{2})(\d{2})$/, '$1:$2');
+        const parsed = new Date(normalized);
+        if (!Number.isNaN(parsed.getTime())) {
+            return __tmTickTickFormatDateOnly(parsed, timezone);
+        }
+        const fallbackMatch = text.match(/^(\d{4}-\d{2}-\d{2})/);
+        return fallbackMatch ? fallbackMatch[1] : '';
+    }
+
+    function __tmTickTickParseChecklistContent(content) {
+        const source = String(content || '').replace(/\r\n?/g, '\n');
+        if (!source.trim()) return { remark: '', inlineSubtasks: [] };
+        const inlineSubtasks = [];
+        source.split('\n').forEach((line) => {
+            const pieces = String(line || '')
+                .split(/(?=[▪▫•●·]\s*)/g)
+                .map((item) => String(item || '').trim())
+                .filter(Boolean);
+            const targets = pieces.length ? pieces : [String(line || '').trim()];
+            targets.forEach((item) => {
+                const normalized = String(item || '')
+                    .replace(/^[▪▫•●·]\s*/, '')
+                    .replace(/^[-*+]\s*/, '')
+                    .replace(/^(?:\[[ xX]\]|[xX])\s*/, '')
+                    .trim();
+                const title = __tmTickTickNormalizeTaskTitle(normalized);
+                if (title) inlineSubtasks.push(title);
+            });
+        });
+        return {
+            remark: '',
+            inlineSubtasks,
+        };
+    }
+
+    function __tmTickTickMapPriority(value) {
+        const raw = __tmTickTickParseNumericField(value);
+        if (raw >= 5) return 'high';
+        if (raw >= 3) return 'medium';
+        if (raw >= 1) return 'low';
+        return '';
+    }
+
+    function __tmBuildTickTickImportModel(csvText) {
+        const rows = __tmParseCsvRows(csvText);
+        if (!rows.length) throw new Error('CSV 文件为空');
+        const headerRowIndex = __tmFindTickTickHeaderRowIndex(rows);
+        if (headerRowIndex < 0) throw new Error('未识别到滴答清单表头，请确认导出的是原始 CSV');
+        const getCell = __tmBuildTickTickCsvCellGetter(rows[headerRowIndex]);
+        const entries = [];
+        let skippedCompleted = 0;
+        let skippedBlankTitle = 0;
+        for (let i = headerRowIndex + 1; i < rows.length; i += 1) {
+            const row = Array.isArray(rows[i]) ? rows[i] : [];
+            if (!row.some((cell) => String(cell || '').trim())) continue;
+            const title = __tmTickTickNormalizeTaskTitle(getCell(row, 'Title'));
+            if (!title) {
+                skippedBlankTitle += 1;
+                continue;
+            }
+            const status = __tmTickTickParseNumericField(getCell(row, 'Status'));
+            if (status !== 0) {
+                skippedCompleted += 1;
+                continue;
+            }
+            const kind = String(getCell(row, 'Kind')).trim().toLowerCase();
+            const timezone = getCell(row, ['Timezone', 'Time Zone']);
+            const floating = /^true$/i.test(getCell(row, ['Is Floating', 'IsFloating']));
+            const rawContent = getCell(row, 'Content');
+            const checklistInfo = kind === 'checklist'
+                ? __tmTickTickParseChecklistContent(rawContent)
+                : {
+                    remark: String(rawContent || '').replace(/\r\n?/g, '\n').trim(),
+                    inlineSubtasks: [],
+                };
+            const sourceTaskId = getCell(row, ['taskId', 'Task ID']);
+            const parentSourceId = getCell(row, ['parentId', 'Parent ID']);
+            entries.push({
+                internalId: sourceTaskId || `__row_${i}`,
+                sourceTaskId,
+                parentSourceId,
+                order: entries.length,
+                folderName: getCell(row, ['Folder Name', 'FolderName']),
+                docName: getCell(row, ['List Name', 'ListName']) || '未命名清单',
+                headingName: getCell(row, ['Column Name', 'ColumnName']),
+                title,
+                kind,
+                priority: __tmTickTickMapPriority(getCell(row, 'Priority')),
+                startDate: __tmTickTickParseDateOnly(getCell(row, ['Start Date', 'StartDate']), timezone, { floating }),
+                completionTime: __tmTickTickParseDateOnly(getCell(row, ['Due Date', 'DueDate']), timezone, { floating }),
+                remark: checklistInfo.remark,
+                inlineSubtasks: checklistInfo.inlineSubtasks,
+                children: [],
+            });
+        }
+        const bySourceId = new Map();
+        entries.forEach((entry) => {
+            const key = String(entry?.sourceTaskId || '').trim();
+            if (key && !bySourceId.has(key)) bySourceId.set(key, entry);
+        });
+        const roots = [];
+        let orphanSubtasks = 0;
+        entries.forEach((entry) => {
+            const parentKey = String(entry?.parentSourceId || '').trim();
+            if (!parentKey || parentKey === String(entry?.sourceTaskId || '').trim()) {
+                roots.push(entry);
+                return;
+            }
+            const parent = bySourceId.get(parentKey);
+            if (!parent) {
+                orphanSubtasks += 1;
+                roots.push(entry);
+                return;
+            }
+            parent.children.push(entry);
+        });
+        const buildImportTask = (entry, seen = new Set()) => {
+            const key = String(entry?.internalId || '').trim();
+            if (!entry || seen.has(key)) return null;
+            const nextSeen = new Set(seen);
+            if (key) nextSeen.add(key);
+            const explicitChildren = (Array.isArray(entry.children) ? entry.children : [])
+                .sort((a, b) => Number(a?.order) - Number(b?.order))
+                .map((child) => buildImportTask(child, nextSeen))
+                .filter(Boolean);
+            const inlineChildren = (Array.isArray(entry.inlineSubtasks) ? entry.inlineSubtasks : [])
+                .map((title, idx) => ({
+                    internalId: `${key || 'inline'}:inline:${idx}`,
+                    title: __tmTickTickNormalizeTaskTitle(title),
+                    priority: '',
+                    startDate: '',
+                    completionTime: '',
+                    remark: '',
+                    children: [],
+                }))
+                .filter((item) => item.title);
+            return {
+                internalId: key,
+                title: entry.title,
+                priority: String(entry.priority || '').trim(),
+                startDate: String(entry.startDate || '').trim(),
+                completionTime: String(entry.completionTime || '').trim(),
+                remark: String(entry.remark || '').trim(),
+                children: inlineChildren.concat(explicitChildren),
+                headingName: String(entry.headingName || '').trim(),
+                docName: String(entry.docName || '').trim() || '未命名清单',
+                folderName: String(entry.folderName || '').trim(),
+            };
+        };
+        const docs = [];
+        const docMap = new Map();
+        roots
+            .sort((a, b) => Number(a?.order) - Number(b?.order))
+            .forEach((entry) => {
+                const task = buildImportTask(entry);
+                if (!task || !task.title) return;
+                const docName = task.docName || '未命名清单';
+                let doc = docMap.get(docName);
+                if (!doc) {
+                    doc = {
+                        name: docName,
+                        folderName: task.folderName,
+                        rootTasks: [],
+                        headings: [],
+                    };
+                    docMap.set(docName, doc);
+                    docs.push(doc);
+                }
+                const headingName = String(task.headingName || '').trim();
+                if (!headingName) {
+                    doc.rootTasks.push(task);
+                    return;
+                }
+                let section = doc.headings.find((item) => String(item?.name || '').trim() === headingName);
+                if (!section) {
+                    section = { name: headingName, tasks: [] };
+                    doc.headings.push(section);
+                }
+                section.tasks.push(task);
+            });
+        const countTasks = (task, depth = 0) => {
+            const children = Array.isArray(task?.children) ? task.children : [];
+            return children.reduce((acc, child) => {
+                const childCount = countTasks(child, depth + 1);
+                acc.tasks += childCount.tasks;
+                acc.subtasks += childCount.subtasks;
+                return acc;
+            }, {
+                tasks: 1,
+                subtasks: depth > 0 ? 1 : 0,
+            });
+        };
+        const totals = docs.reduce((acc, doc) => {
+            doc.rootTasks.forEach((task) => {
+                const counts = countTasks(task, 0);
+                acc.tasks += counts.tasks;
+                acc.subtasks += counts.subtasks;
+            });
+            doc.headings.forEach((section) => {
+                acc.headings += 1;
+                section.tasks.forEach((task) => {
+                    const counts = countTasks(task, 0);
+                    acc.tasks += counts.tasks;
+                    acc.subtasks += counts.subtasks;
+                });
+            });
+            return acc;
+        }, { docs: docs.length, headings: 0, tasks: 0, subtasks: 0 });
+        return {
+            headerRowIndex,
+            docs,
+            summary: {
+                ...totals,
+                sourceRows: rows.length - (headerRowIndex + 1),
+                skippedCompleted,
+                skippedBlankTitle,
+                orphanSubtasks,
+            },
+        };
+    }
+
+    function __tmRenderTickTickImportSummary(model, options = {}) {
+        const data = (model && typeof model === 'object') ? model : null;
+        if (!data?.summary) return '尚未选择 CSV 文件。';
+        const opts = (options && typeof options === 'object') ? options : {};
+        const summary = data.summary;
+        const extra = [];
+        extra.push(`识别到 ${Number(summary.docs) || 0} 个文档、${Number(summary.headings) || 0} 个二级标题、${Number(summary.tasks) || 0} 条未完成任务`);
+        if (Number(summary.subtasks) > 0) extra.push(`其中子任务 ${Number(summary.subtasks)} 条`);
+        extra.push(`已跳过已完成/归档 ${Number(summary.skippedCompleted) || 0} 条`);
+        if (Number(summary.skippedBlankTitle) > 0) extra.push(`空标题 ${Number(summary.skippedBlankTitle)} 条`);
+        if (Number(summary.orphanSubtasks) > 0) extra.push(`找不到父任务的子任务 ${Number(summary.orphanSubtasks)} 条，已按根任务导入`);
+        if (opts.fileName) extra.unshift(`文件：${String(opts.fileName || '').trim()}`);
+        return extra.join('；');
+    }
+
+    function __tmTickTickSanitizeDocName(name) {
+        const trimmed = String(name || '').trim().replace(/[\\/:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim();
+        return trimmed || '未命名清单';
+    }
+
+    function __tmExtractCreatedDocId(data) {
+        if (typeof data === 'string') return String(data || '').trim();
+        if (data && typeof data === 'object') {
+            const candidates = [data.id, data.ID, data.docId, data.docID, data.docid];
+            for (const item of candidates) {
+                const id = String(item || '').trim();
+                if (id) return id;
+            }
+        }
+        return '';
+    }
+
+    async function __tmCreateTickTickImportDoc(notebookId, docName) {
+        const box = String(notebookId || '').trim();
+        if (!box) throw new Error('未选择目标笔记本');
+        const baseName = __tmTickTickSanitizeDocName(docName);
+        let lastErr = null;
+        for (let i = 0; i < 50; i += 1) {
+            const nextName = i === 0 ? baseName : `${baseName}（导入${i + 1}）`;
+            const path = `/${nextName}.sy`;
+            try {
+                const created = await API.createDocWithMd(box, path, '');
+                let docId = __tmExtractCreatedDocId(created);
+                if (!docId) {
+                    const docs = await API.getAllDocuments().catch(() => []);
+                    const hit = (Array.isArray(docs) ? docs : [])
+                        .filter((item) => String(item?.notebook || '').trim() === box && String(item?.name || '').trim() === nextName)
+                        .sort((a, b) => String(b?.created || '').localeCompare(String(a?.created || '')))[0];
+                    docId = String(hit?.id || '').trim();
+                }
+                if (!docId) throw new Error('文档已创建，但未拿到文档 ID');
+                await __tmWaitForTickTickImportDocReady(docId);
+                return { id: docId, name: nextName };
+            } catch (e) {
+                lastErr = e;
+                const msg = String(e?.message || e || '').toLowerCase();
+                if (i < 49 && (msg.includes('exist') || msg.includes('exists') || msg.includes('已存在') || msg.includes('duplicate'))) {
+                    continue;
+                }
+                if (i < 2) continue;
+                throw e;
+            }
+        }
+        throw lastErr || new Error('创建导入文档失败');
+    }
+
+    async function __tmWaitForTickTickImportDocReady(docId, options = {}) {
+        const did = String(docId || '').trim();
+        const opts = (options && typeof options === 'object') ? options : {};
+        if (!did) throw new Error('文档 ID 无效');
+        const retryDelays = Array.isArray(opts.retryDelays) && opts.retryDelays.length
+            ? opts.retryDelays
+            : [80, 160, 260, 420, 680, 1000];
+        let lastErr = null;
+        for (let i = 0; i <= retryDelays.length; i += 1) {
+            try {
+                const rows = await API.getBlocksByIds([did]);
+                const row = Array.isArray(rows) ? rows[0] : null;
+                if (String(row?.id || '').trim() === did && String(row?.type || '').trim() === 'd') {
+                    try { await API.getBlockKramdown(did); } catch (e) {}
+                    return did;
+                }
+                lastErr = new Error('文档尚未就绪');
+            } catch (e) {
+                lastErr = e;
+            }
+            if (i < retryDelays.length) {
+                try { await API.call('/api/sqlite/flushTransaction', {}); } catch (e2) {}
+                await new Promise((resolve) => setTimeout(resolve, retryDelays[i]));
+            }
+        }
+        throw lastErr || new Error('文档尚未就绪');
+    }
+
+    async function __tmEnsureTickTickImportTaskId(taskId, options = {}) {
+        let currentId = String(taskId || '').trim();
+        const opts = (options && typeof options === 'object') ? options : {};
+        if (!currentId) throw new Error('任务 ID 无效');
+        const retryDelays = Array.isArray(opts.retryDelays) && opts.retryDelays.length
+            ? opts.retryDelays
+            : [80, 160, 280, 420, 640, 900];
+        let lastErr = null;
+        for (let i = 0; i <= retryDelays.length; i += 1) {
+            try {
+                const rows = await API.getBlocksByIds([currentId]);
+                const row = Array.isArray(rows) ? rows[0] : null;
+                const isTask = String(row?.id || '').trim() === currentId
+                    && String(row?.type || '').trim() === 'i'
+                    && String(row?.subtype || '').trim() === 't';
+                if (isTask) return currentId;
+                const resolvedId = String(await __tmResolveInsertedTaskBlockId(currentId) || '').trim();
+                if (resolvedId) {
+                    if (resolvedId !== currentId) {
+                        try { __tmCommitOptimisticTaskId(currentId, resolvedId); } catch (e) {}
+                        currentId = resolvedId;
+                        continue;
+                    }
+                    const resolvedRows = await API.getBlocksByIds([resolvedId]);
+                    const resolvedRow = Array.isArray(resolvedRows) ? resolvedRows[0] : null;
+                    const resolvedIsTask = String(resolvedRow?.id || '').trim() === resolvedId
+                        && String(resolvedRow?.type || '').trim() === 'i'
+                        && String(resolvedRow?.subtype || '').trim() === 't';
+                    if (resolvedIsTask) return resolvedId;
+                }
+                lastErr = new Error('新建任务块尚未就绪');
+            } catch (e) {
+                lastErr = e;
+            }
+            if (i < retryDelays.length) {
+                try { await API.call('/api/sqlite/flushTransaction', {}); } catch (e2) {}
+                await new Promise((resolve) => setTimeout(resolve, retryDelays[i]));
+            }
+        }
+        try { console.warn('[TickTick 导入] 任务块就绪校验超时，继续使用当前 ID:', currentId, lastErr); } catch (e) {}
+        return currentId;
+    }
+
+    async function __tmEnsureTickTickImportHeadingId(headingId, options = {}) {
+        let currentId = String(headingId || '').trim();
+        const opts = (options && typeof options === 'object') ? options : {};
+        if (!currentId) return '';
+        const retryDelays = Array.isArray(opts.retryDelays) && opts.retryDelays.length
+            ? opts.retryDelays
+            : [80, 160, 280, 420, 640, 900];
+        let lastErr = null;
+        for (let i = 0; i <= retryDelays.length; i += 1) {
+            try {
+                const rows = await API.getBlocksByIds([currentId]);
+                const row = Array.isArray(rows) ? rows[0] : null;
+                const isHeading = String(row?.id || '').trim() === currentId
+                    && String(row?.type || '').trim() === 'h';
+                if (isHeading) return currentId;
+                lastErr = new Error('标题块尚未就绪');
+            } catch (e) {
+                lastErr = e;
+            }
+            if (i < retryDelays.length) {
+                try { await API.call('/api/sqlite/flushTransaction', {}); } catch (e2) {}
+                await new Promise((resolve) => setTimeout(resolve, retryDelays[i]));
+            }
+        }
+        try { console.warn('[TickTick 导入] 标题块就绪校验超时，继续使用当前 ID:', currentId, lastErr); } catch (e) {}
+        return currentId;
+    }
+
+    async function __tmAppendTickTickImportHeading(docId, headingName) {
+        const did = String(docId || '').trim();
+        const text = String(headingName || '').trim();
+        if (!did || !text) return '';
+        const headingLevel = __tmNormalizeHeadingLevel(SettingsStore.data.taskHeadingLevel || 'h2');
+        const levelNum = Number((String(headingLevel).match(/^h([1-6])$/) || [])[1]) || 2;
+        const hashes = '#'.repeat(Math.max(1, Math.min(6, levelNum)));
+        const insertedId = await __tmAppendBlockWithRetry(did, `${hashes} ${text}`);
+        const headingId = await __tmEnsureTickTickImportHeadingId(insertedId);
+        try { await __tmWarmKanbanDocHeadings([did], { force: true }); } catch (e) {}
+        return headingId;
+    }
+
+    async function __tmCreateTickTickImportTaskBlock(parentId, title, options = {}) {
+        const targetParentId = String(parentId || '').trim();
+        const text = __tmTickTickNormalizeTaskTitle(title || '');
+        const opts = (options && typeof options === 'object') ? options : {};
+        if (!targetParentId) throw new Error('未找到导入目标');
+        if (!text) throw new Error('任务内容为空');
+        const md = `- [ ] ${text}`;
+        let insertedId = '';
+        const previousID = String(opts.previousID || '').trim();
+        const nextID = String(opts.nextID || opts.insertBeforeId || '').trim();
+        if (previousID || nextID) {
+            const placement = {};
+            if (previousID) placement.previousID = previousID;
+            if (nextID) placement.nextID = nextID;
+            insertedId = await __tmInsertBlockWithRetry(targetParentId, md, placement);
+        } else if (opts.appendToBottom === true) {
+            insertedId = await __tmAppendBlockWithRetry(targetParentId, md);
+        } else {
+            insertedId = await __tmAppendBlockWithRetry(targetParentId, md);
+        }
+        const resolvedId = await __tmResolveInsertedTaskBlockId(insertedId);
+        return await __tmEnsureTickTickImportTaskId(resolvedId || insertedId);
+    }
+
+    function __tmThrowIfTickTickImportCancelled(options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const shouldCancel = typeof opts.shouldCancel === 'function' ? opts.shouldCancel : null;
+        if (!shouldCancel) return;
+        let cancelled = false;
+        try { cancelled = !!shouldCancel(); } catch (e) { cancelled = false; }
+        if (cancelled) {
+            const err = new Error('导入已取消');
+            err.__tmCancelled = true;
+            throw err;
+        }
+    }
+
+    async function __tmImportTickTickTaskNode(task, parentId, summary, depth = 0, options = {}) {
+        const targetParentId = String(parentId || '').trim();
+        const opts = (options && typeof options === 'object') ? options : {};
+        const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : null;
+        const title = __tmTickTickNormalizeTaskTitle(task?.title || '');
+        __tmThrowIfTickTickImportCancelled(opts);
+        if (!targetParentId) throw new Error('未找到导入目标');
+        if (!title) return '';
+        if (onProgress) {
+            try {
+                onProgress({
+                    current: depth > 0 ? `正在导入子任务：${title}` : `正在导入任务：${title}`,
+                    currentTaskTitle: title,
+                    currentDepth: depth,
+                });
+            } catch (e) {}
+        }
+        let taskId = await __tmCreateTickTickImportTaskBlock(
+            targetParentId,
+            title,
+            depth <= 0
+                ? {
+                    previousID: String(opts.previousID || '').trim(),
+                    nextID: String(opts.nextID || opts.insertBeforeId || '').trim(),
+                    appendToBottom: opts.appendToBottom !== false,
+                }
+                : { appendToBottom: true }
+        );
+        const patch = {};
+        if (task?.priority) patch.priority = String(task.priority).trim();
+        if (task?.startDate) patch.startDate = String(task.startDate).trim();
+        if (task?.completionTime) patch.completionTime = String(task.completionTime).trim();
+        if (task?.remark) patch.remark = String(task.remark).trim();
+        if (Object.keys(patch).length > 0) {
+            taskId = await __tmPersistNewTaskAttrsWithRetry(taskId, patch, null, { skipFlush: true });
+        }
+        if (summary && typeof summary === 'object') {
+            summary.tasks += 1;
+            if (depth > 0) summary.subtasks += 1;
+        }
+        if (onProgress) {
+            try {
+                onProgress({
+                    completedTasks: Number(summary?.tasks) || 0,
+                    current: depth > 0 ? `已导入子任务：${title}` : `已导入任务：${title}`,
+                    currentTaskTitle: title,
+                    currentDepth: depth,
+                });
+            } catch (e) {}
+        }
+        const children = Array.isArray(task?.children) ? task.children : [];
+        for (const child of children) {
+            __tmThrowIfTickTickImportCancelled(opts);
+            await __tmImportTickTickTaskNode(child, taskId, summary, depth + 1, opts);
+        }
+        return taskId;
+    }
+
+    async function __tmAttachNotebookToCurrentGroupForImport(notebookId) {
+        const nextNotebookId = String(notebookId || '').trim();
+        if (!nextNotebookId) return { attached: false, reason: 'no-notebook', groupId: '' };
+        const currentGroupId = String(SettingsStore.data.currentGroupId || 'all').trim() || 'all';
+        if (currentGroupId === 'all') return { attached: false, reason: 'all-group', groupId: '' };
+        const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
+        const idx = groups.findIndex((group) => String(group?.id || '').trim() === currentGroupId);
+        if (idx < 0) return { attached: false, reason: 'group-missing', groupId: currentGroupId };
+        const group = groups[idx] || {};
+        const prevNotebookId = String(group?.notebookId || '').trim();
+        if (prevNotebookId === nextNotebookId) {
+            return { attached: true, changed: false, reason: 'same-notebook', groupId: currentGroupId };
+        }
+        groups[idx] = {
+            ...group,
+            notebookId: nextNotebookId,
+        };
+        await SettingsStore.updateDocGroups(groups);
+        try { __tmDocExpandCache.clear(); } catch (e) {}
+        try { __tmResolvedDocIdsCache = null; } catch (e) {}
+        try { __tmResolvedDocIdsPromise = null; } catch (e) {}
+        return {
+            attached: true,
+            changed: prevNotebookId !== nextNotebookId,
+            reason: prevNotebookId ? 'replaced-notebook' : 'set-notebook',
+            groupId: currentGroupId,
+        };
+    }
+
+    async function __tmImportTickTickModel(model, notebookId, options = {}) {
+        const docs = Array.isArray(model?.docs) ? model.docs : [];
+        const opts = (options && typeof options === 'object') ? options : {};
+        const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : null;
+        const shouldCancel = typeof opts.shouldCancel === 'function' ? opts.shouldCancel : null;
+        if (!docs.length) throw new Error('没有可导入的未完成任务');
+        await SettingsStore.load();
+        await MetaStore.load();
+        const createdDocIds = [];
+        const summary = { docs: 0, headings: 0, tasks: 0, subtasks: 0 };
+        let progressState = {
+            totalDocs: Math.max(0, docs.length),
+            totalHeadings: Math.max(0, Number(model?.summary?.headings) || 0),
+            totalTasks: Math.max(0, Number(model?.summary?.tasks) || 0),
+            completedDocs: 0,
+            completedHeadings: 0,
+            completedTasks: 0,
+            completedUnits: 0,
+            totalUnits: 0,
+            percent: 0,
+            current: `准备导入 ${Math.max(0, docs.length)} 个文档...`,
+            currentDocName: '',
+            currentHeadingName: '',
+            currentTaskTitle: '',
+            currentDepth: 0,
+        };
+        progressState.totalUnits = Math.max(1, progressState.totalDocs + progressState.totalHeadings + progressState.totalTasks);
+        const emitProgress = (patch = {}) => {
+            progressState = {
+                ...progressState,
+                ...(patch && typeof patch === 'object' ? patch : {}),
+            };
+            progressState.completedDocs = Math.max(0, Math.min(progressState.totalDocs, Number(progressState.completedDocs) || 0));
+            progressState.completedHeadings = Math.max(0, Math.min(progressState.totalHeadings, Number(progressState.completedHeadings) || 0));
+            progressState.completedTasks = Math.max(0, Math.min(progressState.totalTasks, Number(progressState.completedTasks) || 0));
+            progressState.completedUnits = Math.max(
+                0,
+                Math.min(
+                    progressState.totalUnits,
+                    progressState.completedDocs + progressState.completedHeadings + progressState.completedTasks
+                )
+            );
+            progressState.percent = progressState.totalUnits > 0
+                ? Math.max(0, Math.min(100, Math.round((progressState.completedUnits / progressState.totalUnits) * 100)))
+                : 100;
+            if (onProgress) {
+                try { onProgress({ ...progressState }); } catch (e) {}
+            }
+        };
+        emitProgress();
+        for (const doc of docs) {
+            __tmThrowIfTickTickImportCancelled({ shouldCancel });
+            const currentDocName = String(doc?.name || '').trim() || '未命名清单';
+            emitProgress({
+                current: `正在创建文档：${currentDocName}`,
+                currentDocName,
+                currentHeadingName: '',
+                currentTaskTitle: '',
+                currentDepth: 0,
+            });
+            const createdDoc = await __tmCreateTickTickImportDoc(notebookId, doc?.name);
+            const docId = String(createdDoc?.id || '').trim();
+            if (!docId) throw new Error(`文档「${String(doc?.name || '')}」创建失败`);
+            createdDocIds.push(docId);
+            summary.docs += 1;
+            emitProgress({
+                completedDocs: Number(summary.docs) || 0,
+                current: `已创建文档：${currentDocName}`,
+                currentDocName,
+            });
+            const rootTasks = Array.isArray(doc?.rootTasks) ? doc.rootTasks : [];
+            for (const task of rootTasks) {
+                __tmThrowIfTickTickImportCancelled({ shouldCancel });
+                await __tmImportTickTickTaskNode(task, docId, summary, 0, {
+                    onProgress: emitProgress,
+                    currentDocName,
+                    shouldCancel,
+                });
+            }
+            const headings = Array.isArray(doc?.headings) ? doc.headings : [];
+            for (const section of headings) {
+                __tmThrowIfTickTickImportCancelled({ shouldCancel });
+                const headingName = String(section?.name || '').trim();
+                if (!headingName) continue;
+                emitProgress({
+                    current: `正在创建标题：${headingName}`,
+                    currentDocName,
+                    currentHeadingName: headingName,
+                    currentTaskTitle: '',
+                    currentDepth: 0,
+                });
+                const headingId = await __tmAppendTickTickImportHeading(docId, headingName);
+                summary.headings += 1;
+                emitProgress({
+                    completedHeadings: Number(summary.headings) || 0,
+                    current: `已创建标题：${headingName}`,
+                    currentDocName,
+                    currentHeadingName: headingName,
+                });
+                const sectionTasks = Array.isArray(section?.tasks) ? section.tasks : [];
+                let previousID = headingId;
+                for (const task of sectionTasks) {
+                    __tmThrowIfTickTickImportCancelled({ shouldCancel });
+                    previousID = await __tmImportTickTickTaskNode(task, docId, summary, 0, {
+                        docId,
+                        headingId,
+                        previousID,
+                        appendToBottom: false,
+                        onProgress: emitProgress,
+                        currentDocName,
+                        currentHeadingName: headingName,
+                        shouldCancel,
+                    });
+                }
+            }
+            try { __tmInvalidateTasksQueryCacheByDocId(docId); } catch (e) {}
+        }
+        try { await API.call('/api/sqlite/flushTransaction', {}); } catch (e) {}
+        try { await MetaStore.saveNow(); } catch (e) {}
+        try {
+            state.allDocuments = await API.getAllDocuments();
+        } catch (e) {}
+        const groupAttach = await __tmAttachNotebookToCurrentGroupForImport(notebookId);
+        state.selectedDocIds = SettingsStore.data.selectedDocIds;
+        await SettingsStore.save();
+        try {
+            await __tmLoadSelectedDocumentsPreserveChecklistScroll({
+                source: 'ticktick-import',
+                showInlineLoading: false,
+            });
+        } catch (e) {
+            try { __tmRefreshMainViewInPlace({ withFilters: true }); } catch (e2) {}
+        }
+        emitProgress({
+            completedDocs: Number(summary.docs) || 0,
+            completedHeadings: Number(summary.headings) || 0,
+            completedTasks: Number(summary.tasks) || 0,
+            current: '导入完成',
+            percent: 100,
+        });
+        return { createdDocIds, summary, groupAttach };
+    }
+
+    window.tmOpenTickTickImportDialog = async function() {
+        await SettingsStore.load();
+        await __tmRefreshNotebookCache();
+        if (!Array.isArray(state.notebooks) || state.notebooks.length === 0) {
+            hint('❌ 未找到可用笔记本', 'error');
+            return;
+        }
+        const existing = document.getElementById('tm-ticktick-import-modal');
+        try { existing?.remove(); } catch (e) {}
+
+        const modal = document.createElement('div');
+        modal.id = 'tm-ticktick-import-modal';
+        modal.className = 'tm-prompt-modal';
+
+        const box = document.createElement('div');
+        box.className = 'tm-prompt-box';
+        box.style.width = 'min(92vw, 680px)';
+
+        const title = document.createElement('div');
+        title.className = 'tm-prompt-title';
+        title.textContent = '导入滴答清单 CSV';
+        box.appendChild(title);
+
+        const desc = document.createElement('div');
+        desc.style.cssText = 'padding: 2px 0 10px; color: var(--tm-secondary-text); font-size: 13px; line-height: 1.7;';
+        desc.textContent = '按 List Name 创建文档，按 Column Name 创建二级标题，Title 创建任务，Start Date/ Due Date 写入开始日期和完成日期，Priority 映射重要性，只导入 Status=0 的未完成任务。';
+        box.appendChild(desc);
+
+        const notebookRow = document.createElement('label');
+        notebookRow.style.cssText = 'display:flex; flex-direction:column; gap:6px; padding: 2px 0 10px;';
+        notebookRow.innerHTML = '<span style="font-size:13px;color:var(--tm-text-color);font-weight:600;">目标笔记本</span>';
+        const notebookSelect = document.createElement('select');
+        notebookSelect.className = 'tm-prompt-input tm-prompt-select';
+        notebookSelect.style.width = '100%';
+        notebookSelect.innerHTML = (Array.isArray(state.notebooks) ? state.notebooks : []).map((item, idx) => {
+            const notebookId = String(item?.id || item?.box || '').trim();
+            const notebookName = __tmGetNotebookDisplayName(notebookId, item?.name || item?.title || `笔记本 ${idx + 1}`);
+            return `<option value="${esc(notebookId)}">${esc(notebookName)}</option>`;
+        }).join('');
+        notebookRow.appendChild(notebookSelect);
+        box.appendChild(notebookRow);
+
+        const helper = document.createElement('div');
+        helper.style.cssText = 'padding: 10px 12px; border: 1px solid var(--tm-border-color); border-radius: 10px; background: color-mix(in srgb, var(--tm-card-bg, var(--tm-bg-color)) 92%, var(--tm-primary-color) 8%); color: var(--tm-secondary-text); font-size: 12px; line-height: 1.7; white-space: pre-wrap;';
+        helper.textContent = '尚未选择 CSV 文件。';
+        box.appendChild(helper);
+
+        const progressWrap = document.createElement('div');
+        progressWrap.style.cssText = 'display:none; margin-top:10px; padding:10px 12px; border:1px solid var(--tm-border-color); border-radius:10px; background:var(--tm-card-bg, var(--tm-bg-color));';
+
+        const progressHead = document.createElement('div');
+        progressHead.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:12px; line-height:1.5; color:var(--tm-text-color);';
+
+        const progressTitle = document.createElement('div');
+        progressTitle.style.cssText = 'font-weight:600;';
+        progressTitle.textContent = '导入进度';
+        progressHead.appendChild(progressTitle);
+
+        const progressPercent = document.createElement('div');
+        progressPercent.style.cssText = 'font-variant-numeric: tabular-nums; color: var(--tm-secondary-text);';
+        progressPercent.textContent = '0%';
+        progressHead.appendChild(progressPercent);
+        progressWrap.appendChild(progressHead);
+
+        const progressTrack = document.createElement('div');
+        progressTrack.style.cssText = 'height:8px; margin-top:10px; border-radius:999px; background:color-mix(in srgb, var(--tm-border-color) 78%, transparent); overflow:hidden;';
+
+        const progressFill = document.createElement('div');
+        progressFill.style.cssText = 'width:0%; height:100%; border-radius:999px; background:var(--tm-primary-color); transition:width .2s ease;';
+        progressTrack.appendChild(progressFill);
+        progressWrap.appendChild(progressTrack);
+
+        const progressMeta = document.createElement('div');
+        progressMeta.style.cssText = 'margin-top:10px; font-size:12px; line-height:1.6; color:var(--tm-secondary-text); white-space:pre-wrap;';
+        progressMeta.textContent = '等待开始导入';
+        progressWrap.appendChild(progressMeta);
+        box.appendChild(progressWrap);
+
+        const actions = document.createElement('div');
+        actions.className = 'tm-prompt-buttons';
+        actions.style.marginTop = '14px';
+
+        const pickBtn = document.createElement('button');
+        pickBtn.className = 'tm-prompt-btn tm-prompt-btn-secondary';
+        pickBtn.textContent = '选择 CSV';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'tm-prompt-btn tm-prompt-btn-secondary';
+        cancelBtn.textContent = '取消';
+
+        const okBtn = document.createElement('button');
+        okBtn.className = 'tm-prompt-btn tm-prompt-btn-primary';
+        okBtn.textContent = '开始导入';
+        okBtn.disabled = true;
+        okBtn.style.opacity = '0.6';
+
+        actions.appendChild(pickBtn);
+        actions.appendChild(cancelBtn);
+        actions.appendChild(okBtn);
+        box.appendChild(actions);
+
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.csv,text/csv';
+        fileInput.style.display = 'none';
+
+        modal.appendChild(box);
+        modal.appendChild(fileInput);
+        document.body.appendChild(modal);
+        __tmApplyPopupOpenAnimation(modal, box);
+
+        const removeFromStack = __tmModalStackBind(() => cancelBtn.click());
+        let importModel = null;
+        let fileName = '';
+        let importInFlight = false;
+        let cancelRequested = false;
+
+        const refreshHelper = (text, isError = false) => {
+            helper.textContent = text;
+            helper.style.color = isError ? 'var(--tm-danger-color)' : 'var(--tm-secondary-text)';
+            try { helper.style.borderColor = isError ? 'var(--tm-danger-color)' : 'var(--tm-border-color)'; } catch (e) {}
+        };
+
+        const setProgressVisible = (visible) => {
+            progressWrap.style.display = visible ? 'block' : 'none';
+        };
+
+        const refreshProgress = (info = null) => {
+            if (!info || typeof info !== 'object') {
+                progressPercent.textContent = '0%';
+                progressFill.style.width = '0%';
+                progressMeta.textContent = '等待开始导入';
+                return;
+            }
+            const percent = Math.max(0, Math.min(100, Math.round(Number(info.percent) || 0)));
+            const completedUnits = Math.max(0, Number(info.completedUnits) || 0);
+            const totalUnits = Math.max(1, Number(info.totalUnits) || 1);
+            const totalDocs = Math.max(0, Number(info.totalDocs) || 0);
+            const totalHeadings = Math.max(0, Number(info.totalHeadings) || 0);
+            const totalTasks = Math.max(0, Number(info.totalTasks) || 0);
+            const completedDocs = Math.max(0, Number(info.completedDocs) || 0);
+            const completedHeadings = Math.max(0, Number(info.completedHeadings) || 0);
+            const completedTasks = Math.max(0, Number(info.completedTasks) || 0);
+            progressPercent.textContent = `${percent}%`;
+            progressFill.style.width = `${percent}%`;
+            const metaLines = [
+                `总进度：${completedUnits}/${totalUnits}`,
+                `文档 ${completedDocs}/${totalDocs} · 标题 ${completedHeadings}/${totalHeadings} · 任务 ${completedTasks}/${totalTasks}`,
+            ];
+            const current = String(info.current || '').trim();
+            if (current) metaLines.push(`当前：${current}`);
+            progressMeta.textContent = metaLines.join('\n');
+        };
+
+        const refreshSubmitState = () => {
+            if (importInFlight) {
+                okBtn.disabled = true;
+                okBtn.style.opacity = '0.6';
+                return;
+            }
+            const enabled = !!importModel && Array.isArray(importModel?.docs) && importModel.docs.length > 0;
+            okBtn.disabled = !enabled;
+            okBtn.style.opacity = enabled ? '1' : '0.6';
+        };
+
+        pickBtn.onclick = () => fileInput.click();
+        cancelBtn.onclick = () => {
+            if (importInFlight) {
+                cancelRequested = true;
+                cancelBtn.disabled = true;
+                cancelBtn.textContent = '正在停止...';
+                refreshHelper(`正在停止导入 ${fileName || 'CSV'}，请稍候...`);
+                return;
+            }
+            removeFromStack();
+            try { modal.remove(); } catch (e) {}
+        };
+
+        okBtn.onclick = async () => {
+            if (!importModel) return;
+            const notebookId = String(notebookSelect.value || '').trim();
+            if (!notebookId) {
+                refreshHelper('请先选择目标笔记本。', true);
+                return;
+            }
+            importInFlight = true;
+            cancelRequested = false;
+            pickBtn.disabled = true;
+            cancelBtn.disabled = false;
+            cancelBtn.textContent = '取消导入';
+            okBtn.disabled = true;
+            okBtn.style.opacity = '0.6';
+            refreshHelper(`正在导入 ${fileName || 'CSV'}，可能需要几分钟，请稍候...`);
+            setProgressVisible(true);
+            refreshProgress({
+                percent: 0,
+                completedUnits: 0,
+                totalUnits: Math.max(1, (Number(importModel?.summary?.docs) || 0) + (Number(importModel?.summary?.headings) || 0) + (Number(importModel?.summary?.tasks) || 0)),
+                totalDocs: Math.max(0, Number(importModel?.summary?.docs) || 0),
+                totalHeadings: Math.max(0, Number(importModel?.summary?.headings) || 0),
+                totalTasks: Math.max(0, Number(importModel?.summary?.tasks) || 0),
+                completedDocs: 0,
+                completedHeadings: 0,
+                completedTasks: 0,
+                current: `正在导入 ${fileName || 'CSV'}...`,
+            });
+            try {
+                const result = await __tmImportTickTickModel(importModel, notebookId, {
+                    onProgress: (progress) => {
+                        refreshProgress(progress);
+                    },
+                    shouldCancel: () => cancelRequested === true,
+                });
+                importInFlight = false;
+                removeFromStack();
+                try { modal.remove(); } catch (e) {}
+                const attach = result?.groupAttach;
+                const attachText = attach?.attached
+                    ? '，并已将导入笔记本绑定到当前分组'
+                    : '';
+                hint(`✅ 滴答 CSV 导入完成：新建 ${Number(result?.summary?.docs) || 0} 个文档，导入 ${Number(result?.summary?.tasks) || 0} 条任务${attachText}`, 'success');
+                if (state.settingsModal && document.body.contains(state.settingsModal)) {
+                    try { showSettings(); } catch (e) {}
+                }
+            } catch (e) {
+                importInFlight = false;
+                pickBtn.disabled = false;
+                cancelBtn.disabled = false;
+                cancelBtn.textContent = '取消';
+                const cancelled = !!(e && (e.__tmCancelled === true || String(e?.message || '').trim() === '导入已取消'));
+                if (cancelled) {
+                    refreshHelper('导入已取消。');
+                    try { hint('ℹ 滴答 CSV 导入已取消', 'info'); } catch (e2) {}
+                } else {
+                    refreshHelper(String(e?.message || e || '导入失败'), true);
+                }
+                setProgressVisible(true);
+                refreshSubmitState();
+            }
+        };
+
+        fileInput.onchange = () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            fileName = String(file.name || '').trim();
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    importModel = __tmBuildTickTickImportModel(String(reader.result || ''));
+                    refreshHelper(__tmRenderTickTickImportSummary(importModel, { fileName }));
+                    setProgressVisible(false);
+                    refreshProgress(null);
+                } catch (e) {
+                    importModel = null;
+                    refreshHelper(String(e?.message || e || 'CSV 解析失败'), true);
+                    setProgressVisible(false);
+                    refreshProgress(null);
+                }
+                refreshSubmitState();
+            };
+            reader.onerror = () => {
+                importModel = null;
+                refreshHelper('读取文件失败，请重试。', true);
+                setProgressVisible(false);
+                refreshProgress(null);
+                refreshSubmitState();
+            };
+            reader.readAsText(file, 'utf-8');
+        };
+
+        modal.onclick = (event) => {
+            if (event.target === modal) {
+                try { event.preventDefault?.(); } catch (e) {}
+                try { event.stopPropagation?.(); } catch (e) {}
+            }
+        };
+    };
+
     window.tmOpenThemeImportDialog = function() {
         __tmRemoveElementsById('tm-theme-import-backdrop');
         const currentConfig = __tmNormalizeThemeConfig(SettingsStore.data?.themeConfig);
@@ -53428,7 +55272,13 @@ async function __tmRefreshAfterWake(reason) {
         const options = SettingsStore.data.customStatusOptions || [];
         return options.map((opt, index) => `
             <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
-                <input type="color" value="${esc(opt.color)}" onchange="updateStatusOption(${index}, 'color', this.value)" style="width: 24px; height: 24px; border: none; padding: 0; background: none; cursor: pointer;" title="点击修改颜色">
+                <button
+                    type="button"
+                    data-tm-status-color-btn="${index}"
+                    onclick="tmPickStatusOptionColor(${index})"
+                    style="width: 24px; height: 24px; border: 1px solid var(--tm-border-color); padding: 0; background: ${esc(__tmNormalizeHexColor(opt?.color, __tmGetStatusPresetColor(index)) || __tmGetStatusPresetColor(index))}; cursor: pointer; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);"
+                    title="点击选择预置色系或自定义颜色"
+                ></button>
                 <input type="text" value="${esc(opt.name)}" onchange="updateStatusOption(${index}, 'name', this.value)" style="width: 100px; padding: 4px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px; font-size: 13px;" title="修改名称">
                 <input type="text" value="${esc(opt.id)}" onchange="updateStatusOption(${index}, 'id', this.value)" style="width: 120px; padding: 4px; border: 1px solid var(--tm-input-border); background: var(--tm-input-bg); color: var(--tm-text-color); border-radius: 4px; font-size: 12px; font-family: monospace;" title="修改ID（将同步更新任务状态）">
                 <div style="display: flex; gap: 2px;">
@@ -53438,6 +55288,17 @@ async function __tmRefreshAfterWake(reason) {
                 <button class="tm-btn tm-btn-danger" onclick="deleteStatusOption(${index})" style="padding: 2px 6px; font-size: 11px;">删除</button>
             </div>
         `).join('');
+    };
+
+    window.tmPickStatusOptionColor = function(index) {
+        const options = SettingsStore.data.customStatusOptions || [];
+        const option = options[index];
+        if (!option) return;
+        const fallback = __tmGetStatusPresetColor(index);
+        const current = __tmNormalizeHexColor(option?.color, fallback) || fallback;
+        __tmOpenColorPickerDialog('状态颜色', current, async (next) => {
+            await window.updateStatusOption?.(index, 'color', next);
+        }, __tmBuildPresetColorPickerOptions(fallback));
     };
 
     window.addStatusOption = async function() {
@@ -53452,10 +55313,8 @@ async function __tmRefreshAfterWake(reason) {
 
         const name = await showPrompt('添加状态', '请输入显示名称', '新状态');
         if (!name) return;
-        
-        const color = await showPrompt('添加状态', '请输入颜色代码 (如: #FF0000)', '#66ccff');
-        if (!color) return;
 
+        const color = __tmGetStatusPresetColor(options.length);
         options.push({ id, name, color });
         SettingsStore.data.customStatusOptions = options;
         await SettingsStore.save();
@@ -53607,7 +55466,34 @@ async function __tmRefreshAfterWake(reason) {
             patchRules(state.filterRules);
             patchRules(SettingsStore.data.filterRules);
         } catch (e) {}
+
+        try {
+            if (String(SettingsStore.data.checkboxDoneStatusId || '').trim() === oldId) SettingsStore.data.checkboxDoneStatusId = newId;
+            if (String(SettingsStore.data.checkboxUndoneStatusId || '').trim() === oldId) SettingsStore.data.checkboxUndoneStatusId = newId;
+        } catch (e) {}
     }
+
+    window.updateCheckboxStatusBinding = async function(kind, value) {
+        const mode = String(kind || '').trim();
+        const key = mode === 'done'
+            ? 'checkboxDoneStatusId'
+            : (mode === 'undone' ? 'checkboxUndoneStatusId' : '');
+        if (!key) return;
+        const options = Array.isArray(SettingsStore.data.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
+        let nextValue = __tmNormalizeCheckboxStatusBindingValue(value);
+        if (mode === 'undone' && !nextValue) {
+            nextValue = __tmGetDefaultUndoneStatusId(options);
+        }
+        if (nextValue && !options.some((item) => String(item?.id || '').trim() === nextValue)) {
+            hint('状态不存在，请重新选择', 'warning');
+            showSettings();
+            return;
+        }
+        SettingsStore.data[key] = nextValue;
+        __tmNormalizeCheckboxStatusBindingConfig(SettingsStore.data);
+        await SettingsStore.save();
+        render();
+    };
 
     window.updateStatusOption = async function(index, field, value) {
         const options = SettingsStore.data.customStatusOptions || [];
@@ -53637,9 +55523,24 @@ async function __tmRefreshAfterWake(reason) {
             return;
         }
 
-        options[index][field] = value;
+        if (field === 'color') {
+            const nextColor = __tmNormalizeHexColor(value, __tmGetStatusPresetColor(index)) || __tmGetStatusPresetColor(index);
+            options[index].color = nextColor;
+        } else {
+            options[index][field] = value;
+        }
         SettingsStore.data.customStatusOptions = options;
         await SettingsStore.save();
+        if (field === 'color') {
+            try {
+                const nextColor = String(options[index]?.color || '').trim();
+                const title = `点击选择预置色系或自定义颜色（当前 ${__tmFormatColorDisplayValue(nextColor)}）`;
+                document.querySelectorAll(`[data-tm-status-color-btn="${index}"]`).forEach((btn) => {
+                    btn.style.background = nextColor;
+                    btn.title = title;
+                });
+            } catch (e) {}
+        }
         // 不刷新整个界面，以免输入焦点丢失
         render(); // 刷新主界面
         try { window.tmQuickAddRefreshStatusSelect?.(); } catch (e) {}
@@ -53665,6 +55566,7 @@ async function __tmRefreshAfterWake(reason) {
         const options = SettingsStore.data.customStatusOptions || [];
         options.splice(index, 1);
         SettingsStore.data.customStatusOptions = options;
+        __tmNormalizeCheckboxStatusBindingConfig(SettingsStore.data);
         await SettingsStore.save();
         showSettings(); // 刷新界面
         render(); // 刷新主界面
@@ -54290,7 +56192,7 @@ async function __tmRefreshAfterWake(reason) {
 
     function __tmSummaryStatusName(task, statusMap) {
         if (task?.done) return '已完成';
-        const sid = String(task?.customStatus || '').trim() || 'todo';
+        const sid = __tmResolveUndoneStatusValue(task?.customStatus);
         return statusMap.get(sid) || sid || '未完成';
     }
 
@@ -54523,7 +56425,7 @@ async function __tmRefreshAfterWake(reason) {
             if (status === '__done__' && !task.done) return;
             if (status === '__undone__' && task.done) return;
             if (status !== '__all__' && status !== '__done__' && status !== '__undone__') {
-                const sid = String(task.customStatus || '').trim() || 'todo';
+                const sid = __tmResolveUndoneStatusValue(task.customStatus);
                 if (status === 'done') {
                     if (!task.done && sid !== 'done') return;
                 } else if (sid !== status) return;
@@ -54536,7 +56438,7 @@ async function __tmRefreshAfterWake(reason) {
                 id: String(task.id || '').trim(),
                 content: String(task.content || '').trim() || '无内容',
                 done: !!task.done,
-                customStatus: String(task.customStatus || '').trim() || 'todo',
+                customStatus: __tmResolveUndoneStatusValue(task.customStatus),
                 priority: p,
                 dateKey,
                 dueDate: String(task.completionTime || '').trim(),
@@ -56931,6 +58833,7 @@ async function __tmRefreshAfterWake(reason) {
             ev?.preventDefault?.();
         } catch (e) {}
         const isChecklist = String(state.viewMode || '').trim() === 'checklist';
+        const isCalendarSidebarChecklist = __tmHasCalendarSidebarChecklist(state.modal);
 
         const k0 = String(groupKey || '').trim();
         const action = state.collapsedGroups.has(k0) ? 'expand' : 'collapse';
@@ -56961,6 +58864,10 @@ async function __tmRefreshAfterWake(reason) {
             __tmRenderChecklistPreserveScroll();
             return;
         }
+        if (isCalendarSidebarChecklist) {
+            __tmRefreshCalendarSidebarChecklistPreserveScroll();
+            return;
+        }
         try { __tmUpdateToggleGlyphInDom({ kind: 'group', key: k0, action }); } catch (e) {}
         if (action === 'collapse') {
             if (state.modal && __tmApplyVisibilityFromState(state.modal)) {
@@ -56981,6 +58888,7 @@ async function __tmRefreshAfterWake(reason) {
             ev?.preventDefault?.();
         } catch (e) {}
         const isChecklist = String(state.viewMode || '').trim() === 'checklist';
+        const isCalendarSidebarChecklist = __tmHasCalendarSidebarChecklist(state.modal);
         const isListView = String(state.viewMode || '').trim() === 'list';
         const key = String(id || '');
         if (!key) return;
@@ -57013,6 +58921,10 @@ async function __tmRefreshAfterWake(reason) {
         try { SettingsStore.save(); } catch (e) {}
         if (isChecklist) {
             __tmRenderChecklistPreserveScroll();
+            return;
+        }
+        if (isCalendarSidebarChecklist) {
+            __tmRefreshCalendarSidebarChecklistPreserveScroll();
             return;
         }
         try { __tmUpdateToggleGlyphInDom({ kind: 'task', key, action }); } catch (e) {}
@@ -58218,7 +60130,7 @@ async function __tmRefreshAfterWake(reason) {
                 const taskId = String(e.detail.taskId || '').trim();
                 if (!taskId) return;
                 const attrKey = String(e.detail.attrKey || '').trim();
-                const attrValue = String(e.detail.value ?? '').trim();
+                const attrValue = String(e.detail.value ?? '');
                 
                 // 使用 localStorage 持久化存储，以便在插件重新加载后仍能检测到
                 try {
@@ -58232,6 +60144,18 @@ async function __tmRefreshAfterWake(reason) {
                 // 同时更新内存中的状态
                 state.quickbarModifiedTaskIds.add(taskId);
                 state.lastQuickbarUpdateTime = Date.now();
+                if (attrKey) {
+                    const applied = __tmApplyQuickbarAttrUpdateInState(taskId, attrKey, attrValue);
+                    if (!applied) {
+                        Promise.resolve(__tmResolveTaskIdFromAnyBlockId(taskId))
+                            .then((resolvedTaskId) => {
+                                const nextTaskId = String(resolvedTaskId || '').trim();
+                                if (!nextTaskId || nextTaskId === taskId) return;
+                                __tmApplyQuickbarAttrUpdateInState(nextTaskId, attrKey, attrValue);
+                            })
+                            .catch(() => null);
+                    }
+                }
                 if (attrKey === 'bookmark') {
                     try { __tmSetTaskReminderMark(taskId, attrValue.includes('⏰')); } catch (ex) {}
                     try {
