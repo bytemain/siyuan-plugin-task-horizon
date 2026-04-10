@@ -2366,6 +2366,8 @@
                         if (!text) return NodeFilter.FILTER_REJECT;
                         const parent = node.parentElement;
                         if (parent?.closest?.('.sy-custom-props-inline-host')) return NodeFilter.FILTER_REJECT;
+                        const ceFalse = parent?.closest?.('[contenteditable="false"]');
+                        if (ceFalse && !textAnchor.contains(ceFalse)) return NodeFilter.FILTER_REJECT;
                         if (parent?.closest?.('.protyle-attr,.protyle-custom')) return NodeFilter.FILTER_REJECT;
                         return NodeFilter.FILTER_ACCEPT;
                     }
@@ -2396,6 +2398,8 @@
                     acceptNode(node) {
                         const parent = node?.parentElement;
                         if (parent?.closest?.('.sy-custom-props-inline-host')) return NodeFilter.FILTER_REJECT;
+                        const ceFalse = parent?.closest?.('[contenteditable="false"]');
+                        if (ceFalse && !textAnchor.contains(ceFalse)) return NodeFilter.FILTER_REJECT;
                         if (parent?.closest?.('.protyle-attr,.protyle-custom')) return NodeFilter.FILTER_REJECT;
                         return NodeFilter.FILTER_ACCEPT;
                     }
