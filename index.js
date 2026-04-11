@@ -73,6 +73,14 @@ const getSiyuanRuntimeBackend = () => {
 };
 
 const hasOfficialMobileRuntimeSignal = () => {
+    let explicitIsMobile = null;
+    try {
+        if (window?.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
+    } catch (e) {}
+    try {
+        if (globalThis?.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!globalThis.siyuan.config.isMobile;
+    } catch (e) {}
+    if (explicitIsMobile === true) return true;
     try {
         if (window?.siyuan?.mobile && typeof window.siyuan.mobile === "object") return true;
     } catch (e) {}
@@ -86,26 +94,28 @@ const hasOfficialMobileRuntimeSignal = () => {
 };
 
 const isRuntimeMobileClient = (pluginInstance = null) => {
+    let explicitIsMobile = null;
     try {
         if (globalThis?.siyuan?.config?.isMobile !== undefined) {
-            return !!globalThis.siyuan.config.isMobile;
+            explicitIsMobile = !!globalThis.siyuan.config.isMobile;
         }
     } catch (e) {}
     try {
         if (window?.siyuan?.config?.isMobile !== undefined) {
-            return !!window.siyuan.config.isMobile;
+            explicitIsMobile = !!window.siyuan.config.isMobile;
         }
     } catch (e) {}
     try {
         if (pluginInstance && pluginInstance.isMobile !== undefined) {
-            return !!pluginInstance.isMobile;
+            explicitIsMobile = !!pluginInstance.isMobile;
         }
     } catch (e) {}
+    if (explicitIsMobile === true) return true;
     const backend = getSiyuanRuntimeBackend();
     if (MOBILE_RUNTIME_CONTAINERS.has(backend)) return true;
     if (hasOfficialMobileRuntimeSignal()) return true;
     const ua = navigator.userAgent || "";
-    if (/Android|iPhone|iPad|iPod|Mobile/i.test(ua)) return true;
+    if (/Android|iPhone|iPad|iPod|HarmonyOS|Mobile/i.test(ua)) return true;
     return false;
 };
 
@@ -376,17 +386,51 @@ module.exports = class TaskHorizonPlugin extends Plugin {
             init() {
                 // Use function syntax to preserve `this` as the tab instance
                 this.element.classList.add("tm-tab-root");
-                this.element.style.display = "flex";
-                this.element.style.flexDirection = "column";
-                this.element.style.height = "100%";
-                this.element.style.isolation = "isolate";
+                plugin.prepareTaskTabRoot(this.element);
                 globalThis.__taskHorizonTabElement = this.element;
-                plugin.tryMountTabRoot(this.element, {
-                    maxWaitMs: plugin.isRuntimeMobileClient() ? 7000 : 2600,
-                });
+                const mounted = plugin.tryImmediateMountTabRoot(this.element, { force: true });
+                if (!mounted) {
+                    plugin.tryMountTabRoot(this.element, {
+                        maxWaitMs: plugin.isRuntimeMobileClient() ? 7000 : 2600,
+                        skipFastMount: true,
+                    });
+                }
             },
         });
         this._tabRegistered = true;
+    }
+
+    prepareTaskTabRoot(element) {
+        if (!(element instanceof HTMLElement)) return;
+        try {
+            element.dataset.tmHostMode = "tab";
+            element.dataset.tmUiMode = "desktop";
+            element.style.display = "flex";
+            element.style.flexDirection = "column";
+            element.style.minWidth = "0";
+            element.style.minHeight = "0";
+            element.style.height = "100%";
+            element.style.overflow = "hidden";
+            element.style.overscrollBehavior = "none";
+            element.style.isolation = "isolate";
+        } catch (e) {}
+        try {
+            const containmentHosts = [
+                element.parentElement,
+                element.closest(".layout-tab-container"),
+            ];
+            const seen = new Set();
+            containmentHosts.forEach((host) => {
+                if (!(host instanceof HTMLElement) || seen.has(host)) return;
+                seen.add(host);
+                host.style.display = host.style.display || "flex";
+                host.style.flexDirection = host.style.flexDirection || "column";
+                host.style.minWidth = "0";
+                host.style.minHeight = "0";
+                host.style.overflow = "hidden";
+                host.style.overscrollBehavior = "none";
+            });
+        } catch (e) {}
     }
 
     hasMountedTabContent(element) {
@@ -405,8 +449,35 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         return element.dataset?.tmTaskHorizonMounted === token && this.hasMountedTabContent(element);
     }
 
+    tryImmediateMountTabRoot(element, options = {}) {
+        if (!(element instanceof HTMLElement)) return false;
+        this.prepareTaskTabRoot(element);
+        if (this.isTabRootMountedForCurrentToken(element)) return true;
+        const mountFn = globalThis.__taskHorizonMount;
+        if (typeof mountFn !== "function") return false;
+        const token = String(globalThis.__taskHorizonMountToken || this._mountToken || "");
+        const allowRepeat = options?.force === true;
+        try {
+            if (!allowRepeat && token && element.__tmTaskHorizonFastMountToken === token) {
+                return this.isTabRootMountedForCurrentToken(element);
+            }
+        } catch (e) {}
+        try {
+            element.__tmTaskHorizonFastMountToken = token || `fast:${Date.now()}`;
+        } catch (e) {}
+        try {
+            globalThis.__taskHorizonTabElement = element;
+            mountFn(element);
+            if (token) element.dataset.tmTaskHorizonMounted = token;
+        } catch (e) {}
+        return this.isTabRootMountedForCurrentToken(element);
+    }
+
     tryMountTabRoot(element, options = {}) {
         if (!(element instanceof HTMLElement)) return false;
+        if (!options?.skipFastMount && this.tryImmediateMountTabRoot(element, options)) {
+            return true;
+        }
         const maxWaitMs = Math.max(200, Number(options?.maxWaitMs) || 2600);
         const retryDelayMs = Math.max(80, Number(options?.retryDelayMs) || 180);
         const startedAt = Date.now();
@@ -454,6 +525,7 @@ module.exports = class TaskHorizonPlugin extends Plugin {
             if (roots.length) {
                 roots.forEach((el) => {
                     if (!(el instanceof HTMLElement)) return;
+                    this.prepareTaskTabRoot(el);
                     if (this.isTabRootMountedForCurrentToken(el)) {
                         mountedAny = true;
                         return;
@@ -494,6 +566,9 @@ module.exports = class TaskHorizonPlugin extends Plugin {
                 await new Promise((resolve) => setTimeout(resolve, 60));
                 continue;
             }
+            roots.forEach((el) => {
+                if (el instanceof HTMLElement) this.prepareTaskTabRoot(el);
+            });
             const isVisible = (el) => {
                 try {
                     const rect = el?.getBoundingClientRect?.();
@@ -729,6 +804,22 @@ module.exports = class TaskHorizonPlugin extends Plugin {
             element.style.minHeight = "0";
             element.style.height = "100%";
             element.style.overflow = "hidden";
+            element.style.overscrollBehavior = "none";
+        } catch (e) {}
+        try {
+            const containmentHosts = [
+                element.parentElement,
+                element.closest(".dock__panel"),
+            ];
+            const seen = new Set();
+            containmentHosts.forEach((host) => {
+                if (!(host instanceof HTMLElement) || seen.has(host)) return;
+                seen.add(host);
+                host.style.minWidth = "0";
+                host.style.minHeight = "0";
+                host.style.overflow = "hidden";
+                host.style.overscrollBehavior = "none";
+            });
         } catch (e) {}
         let root = null;
         try {
@@ -746,8 +837,11 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         root.style.minWidth = "0";
         root.style.minHeight = "0";
         root.style.flex = "1 1 auto";
+        root.style.display = "flex";
+        root.style.flexDirection = "column";
         root.style.position = "relative";
         root.style.overflow = "hidden";
+        root.style.overscrollBehavior = "none";
         root.style.isolation = "isolate";
         if (root.dataset.tmDockReactivateBound !== "1") {
             root.addEventListener("click", () => {

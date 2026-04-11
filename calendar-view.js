@@ -4558,9 +4558,11 @@
     }
 
     function hasOfficialMobileRuntimeSignal() {
+        let explicitIsMobile = null;
         try {
-            if (window?.siyuan?.config?.isMobile !== undefined) return !!window.siyuan.config.isMobile;
+            if (window?.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
         } catch (e) {}
+        if (explicitIsMobile === true) return true;
         try {
             if (window?.siyuan?.mobile && typeof window.siyuan.mobile === 'object') return true;
         } catch (e) {}
@@ -4574,20 +4576,21 @@
     }
 
     function isLikelyMobileRuntime() {
+        let explicitIsMobile = null;
         try {
             if (globalThis.__taskHorizonPluginIsMobile === true) return true;
         } catch (e) {}
         try {
-            if (window?.siyuan?.config?.isMobile !== undefined) return !!window.siyuan.config.isMobile;
+            if (window?.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
         } catch (e) {}
+        if (explicitIsMobile === true) return true;
         const backend = getRuntimeBackendType();
         if (backend === 'android' || backend === 'ios' || backend === 'harmony') return true;
         if (hasOfficialMobileRuntimeSignal()) return true;
         try {
             const ua = String(navigator?.userAgent || '');
             if (/^SiYuan\//i.test(ua) && (Number(navigator?.maxTouchPoints) || 0) > 0) return true;
-            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(ua)) return true;
-            if (/HarmonyOS/i.test(ua)) return true;
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|HarmonyOS/i.test(ua)) return true;
             if (/Huawei|HUAWEI/.test(ua) && !/Chrome|Chromium|EdgA|Firefox/.test(ua)) return true;
             if (window.matchMedia?.('(any-pointer:coarse)')?.matches) {
                 if (/Android|Linux/.test(ua) && !/Win|Mac|X11/.test(ua)) return true;

@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.1.6
+// @version      2.1.7
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -1515,6 +1515,7 @@
             align-items: stretch;
             justify-content: stretch;
             overflow: hidden;
+            overscroll-behavior: none;
             container-name: none;
             min-width: 0;
             min-height: 0;
@@ -1541,16 +1542,68 @@
         }
 
         [data-tm-host-mode="dock"],
+        [data-tm-host-mode="tab"],
         [data-tm-host-mode="dock"] .tm-modal,
+        [data-tm-host-mode="tab"] .tm-modal,
+        [data-tm-host-mode="dock"] .tm-box,
+        [data-tm-host-mode="tab"] .tm-box,
+        [data-tm-host-mode="dock"] .tm-main-stage,
+        [data-tm-host-mode="tab"] .tm-main-stage,
+        [data-tm-host-mode="dock"] .tm-main-body-with-cal-dock,
+        [data-tm-host-mode="tab"] .tm-main-body-with-cal-dock,
+        [data-tm-host-mode="dock"] .tm-list-pane,
+        [data-tm-host-mode="tab"] .tm-list-pane,
         [data-tm-host-mode="dock"] .tm-modal button,
+        [data-tm-host-mode="tab"] .tm-modal button,
         [data-tm-host-mode="dock"] .tm-modal input,
+        [data-tm-host-mode="tab"] .tm-modal input,
         [data-tm-host-mode="dock"] .tm-modal select,
-        [data-tm-host-mode="dock"] .tm-modal textarea {
+        [data-tm-host-mode="tab"] .tm-modal select,
+        [data-tm-host-mode="dock"] .tm-modal textarea,
+        [data-tm-host-mode="tab"] .tm-modal textarea {
             font-family: var(--b3-font-family-protyle, var(--b3-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif));
             font-style: inherit;
             font-feature-settings: inherit;
             font-variation-settings: inherit;
             font-variant-numeric: inherit;
+        }
+
+        [data-tm-host-mode="dock"],
+        [data-tm-host-mode="tab"] {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden !important;
+            overscroll-behavior: none;
+        }
+
+        [data-tm-host-mode="dock"] .tm-modal,
+        [data-tm-host-mode="tab"] .tm-modal,
+        [data-tm-host-mode="dock"] .tm-box,
+        [data-tm-host-mode="tab"] .tm-box,
+        [data-tm-host-mode="dock"] .tm-main-stage,
+        [data-tm-host-mode="tab"] .tm-main-stage,
+        [data-tm-host-mode="dock"] .tm-main-body-with-cal-dock,
+        [data-tm-host-mode="tab"] .tm-main-body-with-cal-dock,
+        [data-tm-host-mode="dock"] .tm-list-pane,
+        [data-tm-host-mode="tab"] .tm-list-pane {
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        [data-tm-host-mode="dock"] .tm-body,
+        [data-tm-host-mode="tab"] .tm-body {
+            overscroll-behavior: contain;
+        }
+
+        [data-tm-host-mode="dock"] .tm-filter-rule-bar,
+        [data-tm-host-mode="tab"] .tm-filter-rule-bar,
+        [data-tm-host-mode="dock"] .tm-doc-tabs,
+        [data-tm-host-mode="tab"] .tm-doc-tabs {
+            flex: 0 0 auto;
+            overscroll-behavior: none;
         }
 
         [data-tm-host-mode="dock"] #tmMobileMenu {
@@ -1890,7 +1943,12 @@
             height: 100%;
             z-index: auto;
             background: transparent;
-            display: block;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+            overscroll-behavior: none;
             /* 启用容器查询，使其可以检测自身宽度变化 */
             container-type: inline-size;
             container-name: tm-modal;
@@ -1903,6 +1961,9 @@
             max-height: none;
             border-radius: 0;
             box-shadow: none;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .tm-modal.tm-modal--tab .tm-body {
@@ -1910,6 +1971,7 @@
             /* Tab 模式下也需要启用滚动以支持表头固定 */
             overflow-y: auto;
             overflow-x: auto;
+            overscroll-behavior: contain;
         }
 
         .tm-modal.tm-modal--tab .tm-table th,
@@ -17726,6 +17788,14 @@
         return __tmGetMountHostMode() === 'dock';
     }
 
+    function __tmIsTabHost() {
+        return __tmGetMountHostMode() === 'tab';
+    }
+
+    function __tmUsesEmbeddedHostScrollIsolation() {
+        return __tmIsDockHost() || __tmIsTabHost();
+    }
+
     function __tmFindBestTabRoot() {
         try {
             const all = Array.from(document.querySelectorAll('.tm-tab-root')).filter(el => !!el && document.body.contains(el));
@@ -20130,9 +20200,11 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     const __tmHasOfficialMobileRuntimeSignal = () => {
+        let explicitIsMobile = null;
         try {
-            if (window.siyuan?.config?.isMobile !== undefined) return !!window.siyuan.config.isMobile;
+            if (window.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
         } catch (e) {}
+        if (explicitIsMobile === true) return true;
         try {
             if (window.siyuan?.mobile && typeof window.siyuan.mobile === 'object') return true;
         } catch (e) {}
@@ -20146,17 +20218,19 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     const __tmIsRuntimeMobileClient = () => {
+        let explicitIsMobile = null;
         try {
-            if (window.siyuan?.config?.isMobile !== undefined) return !!window.siyuan.config.isMobile;
+            if (window.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
         } catch (e) {}
         try {
             if (globalThis.__taskHorizonPluginIsMobile !== undefined) return !!globalThis.__taskHorizonPluginIsMobile;
         } catch (e) {}
+        if (explicitIsMobile === true) return true;
         const backend = __tmGetRuntimeBackendType();
         if (backend === 'android' || backend === 'ios' || backend === 'harmony') return true;
         if (__tmHasOfficialMobileRuntimeSignal()) return true;
         const ua = navigator.userAgent || '';
-        if (/Android|iPhone|iPad|iPod|Mobile/i.test(ua)) return true;
+        if (/Android|iPhone|iPad|iPod|HarmonyOS|Mobile/i.test(ua)) return true;
         return false;
     };
 
@@ -20513,6 +20587,70 @@ async function __tmRefreshAfterWake(reason) {
 
     function __tmOnTopbarOverflowTooltipWindowResize() {
         try { __tmSyncTopbarOverflowTooltips(state.modal); } catch (e) {}
+    }
+
+    function __tmResolveDockTopbarScrollTarget(modalEl) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) return null;
+        if (state.viewMode === 'timeline') {
+            return __tmGetTimelineGlobalScrollHost(modal) || modal.querySelector('#tmTimelineLeftBody');
+        }
+        if (state.viewMode === 'kanban') {
+            return modal.querySelector('.tm-body.tm-body--kanban');
+        }
+        if (state.viewMode === 'checklist') {
+            return modal.querySelector('.tm-checklist-scroll');
+        }
+        if (state.viewMode === 'whiteboard' && __tmIsWhiteboardAllTabsStreamMode()) {
+            return modal.querySelector('.tm-body.tm-body--whiteboard-stream');
+        }
+        if (state.viewMode === 'calendar') {
+            return modal.querySelector('.tm-body.tm-body--calendar');
+        }
+        return modal.querySelector('.tm-body');
+    }
+
+    function __tmBindDockScrollIsolation(modalEl) {
+        try {
+            state.dockScrollIsolationCleanup?.();
+        } catch (e) {}
+        state.dockScrollIsolationCleanup = null;
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element) || !__tmUsesEmbeddedHostScrollIsolation()) return;
+        const wheelRegions = Array.from(modal.querySelectorAll('.tm-filter-rule-bar, .tm-doc-tabs'))
+            .filter((el) => el instanceof HTMLElement);
+        if (!wheelRegions.length) return;
+        const onTopbarWheel = (event) => {
+            const absDeltaX = Math.abs(Number(event.deltaX) || 0);
+            const absDeltaY = Math.abs(Number(event.deltaY) || 0);
+            const preferHorizontal = absDeltaX > absDeltaY && !event.shiftKey;
+            try { event.stopPropagation(); } catch (e) {}
+            if (preferHorizontal) return;
+            const scrollTarget = __tmResolveDockTopbarScrollTarget(modal);
+            if (!(scrollTarget instanceof HTMLElement)) {
+                try { event.preventDefault(); } catch (e) {}
+                return;
+            }
+            const maxTop = Math.max(0, Number(scrollTarget.scrollHeight || 0) - Number(scrollTarget.clientHeight || 0));
+            if (maxTop <= 0) {
+                try { event.preventDefault(); } catch (e) {}
+                return;
+            }
+            const currentTop = Number(scrollTarget.scrollTop || 0);
+            const nextTop = Math.max(0, Math.min(maxTop, currentTop + (Number(event.deltaY) || 0)));
+            if (Math.abs(nextTop - currentTop) > 0.5) {
+                try { scrollTarget.scrollTop = nextTop; } catch (e) {}
+            }
+            try { event.preventDefault(); } catch (e) {}
+        };
+        wheelRegions.forEach((el) => {
+            try { el.addEventListener('wheel', onTopbarWheel, { passive: false }); } catch (e) {}
+        });
+        state.dockScrollIsolationCleanup = () => {
+            wheelRegions.forEach((el) => {
+                try { el.removeEventListener('wheel', onTopbarWheel); } catch (e) {}
+            });
+        };
     }
 
     function __tmBindTopbarOverflowTooltips(modalEl) {
@@ -31512,8 +31650,234 @@ async function __tmRefreshAfterWake(reason) {
         if (!__tmRefreshChecklistSelectionInPlace(state.modal)) render();
     };
 
-    window.tmChecklistTitlePointerDown = function(ev) {
+    function __tmIsTouchLikeChecklistPointer(ev) {
+        const pType = String(ev?.pointerType || '').trim().toLowerCase();
+        return pType === 'touch' || pType === 'pen' || (!pType && __tmIsRuntimeMobileClient());
+    }
+
+    function __tmResolveChecklistTouchDragSource(ev, taskId) {
+        const id = String(taskId || '').trim();
+        if (!id) return null;
+        const itemEl = ev?.currentTarget instanceof HTMLElement
+            ? ev.currentTarget.closest('.tm-checklist-item[data-id]')
+            : (ev?.target instanceof Element ? ev.target.closest('.tm-checklist-item[data-id]') : null);
+        if (!(itemEl instanceof HTMLElement)) return null;
+        return { taskId: id, itemEl };
+    }
+
+    function __tmStartChecklistTouchDrag(ev, taskId) {
+        if (state.viewMode !== 'checklist') return false;
+        if (__tmIsMultiSelectActive('checklist')) return false;
+        if (!__tmIsTouchLikeChecklistPointer(ev)) return false;
+        if (ev && typeof ev.button === 'number' && ev.button !== 0) return false;
+        try {
+            const draggableAttr = String(ev?.currentTarget?.getAttribute?.('draggable') || '').trim().toLowerCase();
+            if (draggableAttr === 'true') return false;
+        } catch (e) {}
+        const source = __tmResolveChecklistTouchDragSource(ev, taskId);
+        if (!source) return false;
+        const target = ev?.target;
+        if (target?.closest?.('input,button,select,textarea,a,.tm-tree-toggle,.tm-checklist-mobile-toggle,.tm-task-checkbox,.tm-task-checkbox-wrap,.tm-status-tag')) {
+            return false;
+        }
+
+        const id = source.taskId;
+        const itemEl = source.itemEl;
+        let dragMeta = null;
+        try {
+            if (typeof window.tmCalendarGetTaskDragMeta === 'function') {
+                dragMeta = window.tmCalendarGetTaskDragMeta(id);
+            }
+        } catch (e) {}
+        const payload = __tmBuildDockPointerTaskDragPayload(id, dragMeta);
+        const pointerId = Number.isFinite(Number(ev?.pointerId)) ? Number(ev.pointerId) : NaN;
+        const startX = Number(ev?.clientX) || 0;
+        const startY = Number(ev?.clientY) || 0;
+        const longPressMs = 340;
+        const longPressMoveTolerance = 14;
+        const floatingMiniRevealDistance = 18;
+        const floatingMiniRevealDelayMs = 120;
+        let lastX = startX;
+        let lastY = startY;
+        let ended = false;
+        let dragging = false;
+        let captured = false;
+        let longPressTimer = null;
+        let floatingMiniRevealTimer = null;
+        let ghostMeta = null;
+        let floatingMiniVisible = false;
+        let dragStartedAt = 0;
+        let dragStartX = NaN;
+        let dragStartY = NaN;
+        const resolvePointTarget = (x, y) => {
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+            try {
+                const hit = document.elementFromPoint(x, y);
+                return hit instanceof Element ? hit : null;
+            } catch (e) {
+                return null;
+            }
+        };
+        const samePointer = (e2) => {
+            if (!Number.isFinite(pointerId)) return true;
+            const cur = Number(e2?.pointerId);
+            if (!Number.isFinite(cur)) return true;
+            return cur === pointerId;
+        };
+        const capturePointer = () => {
+            if (captured || !Number.isFinite(pointerId) || typeof itemEl.setPointerCapture !== 'function') return;
+            try {
+                itemEl.setPointerCapture(pointerId);
+                captured = true;
+            } catch (e) {}
+        };
+        const cancelLongPress = () => {
+            if (!longPressTimer) return;
+            try { clearTimeout(longPressTimer); } catch (e) {}
+            longPressTimer = null;
+        };
+        const cancelFloatingMiniStart = () => {
+            if (!floatingMiniRevealTimer) return;
+            try { clearTimeout(floatingMiniRevealTimer); } catch (e) {}
+            floatingMiniRevealTimer = null;
+        };
+        const startFloatingMini = () => {
+            cancelFloatingMiniStart();
+            if (!dragging || ended || floatingMiniVisible) return false;
+            try {
+                floatingMiniVisible = !!__tmCalendarFloatingDragStart(id, dragMeta, {
+                    clientX: lastX,
+                    clientY: lastY,
+                    target: resolvePointTarget(lastX, lastY) || itemEl,
+                }, { mode: 'mobile', html5: false });
+            } catch (e) {
+                floatingMiniVisible = false;
+            }
+            return floatingMiniVisible;
+        };
+        const cleanup = (suppressClick) => {
+            if (ended) return;
+            ended = true;
+            cancelLongPress();
+            cancelFloatingMiniStart();
+            try { document.removeEventListener('pointermove', onMove, true); } catch (e) {}
+            try { document.removeEventListener('pointerup', onUp, true); } catch (e) {}
+            try { document.removeEventListener('pointercancel', onUp, true); } catch (e) {}
+            try { window.removeEventListener('blur', onBlur, true); } catch (e) {}
+            if (captured && Number.isFinite(pointerId) && typeof itemEl.releasePointerCapture === 'function') {
+                try { itemEl.releasePointerCapture(pointerId); } catch (e) {}
+            }
+            if (ghostMeta?.ghost instanceof HTMLElement) {
+                try { ghostMeta.ghost.remove(); } catch (e) {}
+            }
+            try { __tmSetCalendarSideDockDragHidden(false); } catch (e) {}
+            try { __tmCalendarFloatingDragEnd(); } catch (e) {}
+            if (String(state.draggingTaskId || '').trim() === id) state.draggingTaskId = '';
+            try { document.body.style.userSelect = ''; } catch (e) {}
+            try { document.body.style.cursor = ''; } catch (e) {}
+            if (suppressClick) {
+                __tmSuppressDockPointerTaskClick(260);
+            }
+        };
+        const startDrag = () => {
+            if (dragging || ended) return;
+            dragging = true;
+            dragStartedAt = Date.now();
+            dragStartX = lastX;
+            dragStartY = lastY;
+            capturePointer();
+            state.draggingTaskId = id;
+            try { __tmSetCalendarSideDockDragHidden(true); } catch (e) {}
+            try {
+                document.body.style.userSelect = 'none';
+                document.body.style.cursor = 'grabbing';
+            } catch (e) {}
+            ghostMeta = __tmBuildDockPointerTaskGhost(id, itemEl, payload, lastX, lastY);
+        };
+        const updateDrag = (x, y) => {
+            if (!dragging) return;
+            __tmPlaceDockPointerTaskGhost(ghostMeta, x, y);
+            if (!floatingMiniVisible) {
+                const dx0 = Number.isFinite(dragStartX) ? (x - dragStartX) : 0;
+                const dy0 = Number.isFinite(dragStartY) ? (y - dragStartY) : 0;
+                const movedEnough = (dx0 * dx0 + dy0 * dy0) >= (floatingMiniRevealDistance * floatingMiniRevealDistance);
+                if (movedEnough) {
+                    const elapsed = Math.max(0, Date.now() - dragStartedAt);
+                    if (elapsed >= floatingMiniRevealDelayMs) {
+                        startFloatingMini();
+                    } else if (!floatingMiniRevealTimer) {
+                        floatingMiniRevealTimer = setTimeout(() => {
+                            floatingMiniRevealTimer = null;
+                            startFloatingMini();
+                        }, Math.max(0, floatingMiniRevealDelayMs - elapsed));
+                    }
+                } else {
+                    cancelFloatingMiniStart();
+                }
+            }
+            try {
+                __tmCalendarFloatingDragMove({
+                    clientX: x,
+                    clientY: y,
+                    target: resolvePointTarget(x, y) || itemEl,
+                }, { mode: 'mobile' });
+            } catch (e) {}
+        };
+        const onMove = (e2) => {
+            if (ended || !samePointer(e2)) return;
+            lastX = Number(e2?.clientX) || lastX;
+            lastY = Number(e2?.clientY) || lastY;
+            if (!dragging) {
+                const dx = lastX - startX;
+                const dy = lastY - startY;
+                if ((dx * dx + dy * dy) >= (longPressMoveTolerance * longPressMoveTolerance)) {
+                    cleanup(false);
+                }
+                return;
+            }
+            updateDrag(lastX, lastY);
+            try { e2.preventDefault(); } catch (e) {}
+        };
+        const onUp = async (e2) => {
+            if (ended || !samePointer(e2)) return;
+            cancelLongPress();
+            cancelFloatingMiniStart();
+            lastX = Number(e2?.clientX) || lastX;
+            lastY = Number(e2?.clientY) || lastY;
+            try {
+                if (dragging) {
+                    try { e2.preventDefault(); } catch (e) {}
+                    await globalThis.__tmCalendar?.finalizeFloatingMiniCalendarTouchDrop?.({
+                        taskId: id,
+                        clientX: lastX,
+                        clientY: lastY,
+                        target: resolvePointTarget(lastX, lastY) || itemEl,
+                        mode: 'mobile',
+                    });
+                }
+            } finally {
+                cleanup(dragging);
+            }
+        };
+        const onBlur = () => {
+            cleanup(false);
+        };
+
+        longPressTimer = setTimeout(() => {
+            longPressTimer = null;
+            startDrag();
+        }, longPressMs);
+
+        document.addEventListener('pointermove', onMove, true);
+        document.addEventListener('pointerup', onUp, true);
+        document.addEventListener('pointercancel', onUp, true);
+        window.addEventListener('blur', onBlur, true);
+        return true;
+    }
+
+    window.tmChecklistTitlePointerDown = function(ev, taskId) {
         try { ev?.stopPropagation?.(); } catch (e) {}
+        try { __tmStartChecklistTouchDrag(ev, taskId); } catch (e) {}
     };
 
     window.tmChecklistTitleClick = function(taskId, ev) {
@@ -32580,16 +32944,9 @@ async function __tmRefreshAfterWake(reason) {
                 const itemIndentStyle = checklistCompact
                     ? `--tm-checklist-compact-indent:${indent}px;`
                     : `margin-left:${indent}px;`;
-                const runtimeMobile = __tmIsRuntimeMobileClient();
-                const itemDragAttrs = runtimeMobile
-                    ? 'draggable="false"'
-                    : `draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)"`;
-                const titleDragAttrs = runtimeMobile
-                    ? ''
-                    : `draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)"`;
-                const itemContextMenuAttr = runtimeMobile
-                    ? 'oncontextmenu="event.preventDefault();event.stopPropagation();return false;"'
-                    : `oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')"`;
+                const itemDragAttrs = `draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)"`;
+                const titleDragAttrs = `draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)"`;
+                const itemContextMenuAttr = `oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')"`; 
                 renderedChecklistTaskCount += 1;
                 return `
                     <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}${multiSelectCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}" ${itemDragAttrs} style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" ${itemContextMenuAttr}>
@@ -32600,7 +32957,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main">
                             <div class="${titleRowClass}">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span ${titleDragAttrs} onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span ${titleDragAttrs} onpointerdown="tmChecklistTitlePointerDown(event, '${escSq(String(task.id || ''))}')" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}
@@ -36141,6 +36498,7 @@ async function __tmRefreshAfterWake(reason) {
         const finalMountRoot = nextMountRoot || __tmGetMountRoot();
         finalMountRoot.appendChild(state.modal);
         try { __tmSyncInlineLoadingOverlay(state.modal); } catch (e) {}
+        try { __tmBindDockScrollIsolation(state.modal); } catch (e) {}
         try { __tmBindTopbarOverflowTooltips(state.modal); } catch (e) {}
         try { __tmBindResponsiveTableResize(state.modal); } catch (e) {}
         try { __tmBindFloatingTooltips(state.modal); } catch (e) {}
@@ -55431,7 +55789,12 @@ async function __tmRefreshAfterWake(reason) {
                 const ruleNeedsFlowRank = Array.isArray(rule0?.sort) && rule0.sort.some(s => String(s?.field || '').trim() === 'docSeq');
                 const needFlowRank = !!ruleNeedsFlowRank || (!__tmRuleHasExplicitSort(rule0) && (!!state.groupByDocName || isUngroup || !!state.groupByTaskName || !!state.groupByTime || !!state.quadrantEnabled));
                 const colOrder0 = Array.isArray(SettingsStore.data.columnOrder) ? SettingsStore.data.columnOrder : [];
-                const needH2 = colOrder0.includes('h2') || (Array.isArray(rule0?.sort) && rule0.sort.some(s => String(s?.field || '').trim() === 'h2'));
+                const docHeadingSubgroupActive = !!state.groupByDocName && SettingsStore.data.docH2SubgroupEnabled !== false;
+                const kanbanHeadingGroupingActive = !!SettingsStore.data.kanbanHeadingGroupMode;
+                const needH2 = colOrder0.includes('h2')
+                    || (Array.isArray(rule0?.sort) && rule0.sort.some(s => String(s?.field || '').trim() === 'h2'))
+                    || docHeadingSubgroupActive
+                    || kanbanHeadingGroupingActive;
                 const ruleNeedsH2Sort = Array.isArray(rule0?.sort) && rule0.sort.some(s => String(s?.field || '').trim() === 'h2');
                 const taskIds0 = res.tasks.map(t => String(t?.id || '').trim()).filter(Boolean);
                 const taskDocMap0 = new Map(res.tasks
@@ -55439,7 +55802,7 @@ async function __tmRefreshAfterWake(reason) {
                     .filter(([taskId, docId]) => taskId && docId));
                 const perfTuning = __tmGetPerfTuningOptions();
                 const deferEnhance = !!perfTuning.asyncEnhance && taskIds0.length >= Number(perfTuning.deferEnhanceThreshold || 180);
-                const h2StrictNeeded = !!ruleNeedsH2Sort || !!SettingsStore.data.docH2SubgroupEnabled || !!SettingsStore.data.kanbanHeadingGroupMode;
+                const h2StrictNeeded = !!ruleNeedsH2Sort || docHeadingSubgroupActive || kanbanHeadingGroupingActive;
                 const preferAsyncEnhance = !!(loadBudget.enabled || preferFastFirstPaint);
                 const deferH2Enhance = !!needH2 && !h2StrictNeeded && (deferEnhance || preferAsyncEnhance);
                 const deferFlowEnhance = !!needFlowRank && !ruleNeedsFlowRank && (deferEnhance || preferAsyncEnhance);
@@ -56297,17 +56660,14 @@ async function __tmRefreshAfterWake(reason) {
                     ? `--tm-checklist-compact-indent:${indent}px;`
                     : `margin-left:${indent}px;`;
                 const calendarSidebarChecklist = state.__tmCalendarSidebarChecklistRender === true;
-                const runtimeMobile = __tmIsRuntimeMobileClient();
-                const disableDesktopDragAndMenu = calendarSidebarChecklist || runtimeMobile;
+                const disableDesktopDragAndMenu = calendarSidebarChecklist;
                 const dragAttrs = disableDesktopDragAndMenu
                     ? ' draggable="false"'
                     : ` draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)"`;
                 const titleDragAttrs = disableDesktopDragAndMenu
                     ? ''
                     : ` draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)"`;
-                const contextMenuAttr = disableDesktopDragAndMenu
-                    ? ' oncontextmenu="event.preventDefault();event.stopPropagation();return false;"'
-                    : ` oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')"`
+                const contextMenuAttr = ` oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')"`
                 ;
                 return `
                     <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}"${dragAttrs} style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)"${contextMenuAttr}>
@@ -56318,7 +56678,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main" ondblclick="tmChecklistItemDblClick('${escSq(String(task.id || ''))}', event)">
                             <div class="${titleRowClass}">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span${titleDragAttrs} onpointerdown="tmChecklistTitlePointerDown(event)" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span${titleDragAttrs} onpointerdown="tmChecklistTitlePointerDown(event, '${escSq(String(task.id || ''))}')" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
                                 ${compactMeta}
                                 <span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}

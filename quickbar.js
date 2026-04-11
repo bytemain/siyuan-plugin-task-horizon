@@ -482,11 +482,26 @@
     }
 
     function isMobileDevice() {
+        let explicitIsMobile = null;
         try {
-            if (window.siyuan?.config?.isMobile !== undefined) return !!window.siyuan.config.isMobile;
+            if (window.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
+        } catch (e) {}
+        try {
+            if (globalThis.__taskHorizonPluginIsMobile !== undefined) explicitIsMobile = !!globalThis.__taskHorizonPluginIsMobile;
+        } catch (e) {}
+        if (explicitIsMobile === true) return true;
+        try {
+            if (window.siyuan?.mobile && typeof window.siyuan.mobile === 'object') return true;
+        } catch (e) {}
+        try {
+            const container = String(window?.siyuan?.config?.system?.container || globalThis?.siyuan?.config?.system?.container || '').trim().toLowerCase();
+            if (container === 'android' || container === 'ios' || container === 'harmony') return true;
+        } catch (e) {}
+        try {
+            if (globalThis?.JSAndroid || globalThis?.JSHarmony) return true;
         } catch (e) {}
         const ua = navigator.userAgent || '';
-        return /Mobile|Android|iPhone|iPad|iPod/i.test(ua) || (window.innerWidth || 0) <= 768;
+        return /Mobile|Android|iPhone|iPad|iPod|HarmonyOS/i.test(ua) || (window.innerWidth || 0) <= 768;
     }
 
     function isAiFeatureEnabled() {
@@ -1023,7 +1038,7 @@
                 vertical-align: middle;
                 white-space: nowrap;
                 max-width: min(48vw, 420px);
-                z-index: 2;
+                z-index: 1;
                 visibility: hidden;
                 opacity: 0;
                 pointer-events: none;
@@ -1123,7 +1138,7 @@
                 position: absolute;
                 inset: 0;
                 pointer-events: none;
-                z-index: 12;
+                z-index: 1;
                 overflow: visible;
             }
             .sy-custom-props-inline-layer.is-scrolling .sy-custom-props-inline-host {
@@ -2386,9 +2401,38 @@
                 const rect = content?.getBoundingClientRect?.();
                 if (!rect) return null;
                 if (rect.width <= 0 || rect.height <= 0) return null;
-                return rect;
+                const topOcclusionBottom = getInlineTopOcclusionBottom(blockEl, rect);
+                return {
+                    ...rect,
+                    top: Math.max(Math.round(rect.top), Math.round(topOcclusionBottom)),
+                };
             } catch (e) {
                 return null;
+            }
+        }
+
+        function getInlineTopOcclusionBottom(blockEl, contentRect = null) {
+            const baseTop = Math.max(0, Math.round(contentRect?.top ?? 0));
+            if (!blockEl) return baseTop;
+            try {
+                const root = blockEl.closest?.('.protyle');
+                if (!root) return baseTop;
+                let occlusionBottom = baseTop;
+                const blockers = Array.from(root.querySelectorAll('.protyle-title, .protyle-breadcrumb'));
+                blockers.forEach((el) => {
+                    if (!(el instanceof HTMLElement)) return;
+                    const rect = el.getBoundingClientRect?.();
+                    if (!rect || rect.width <= 0 || rect.height <= 0) return;
+                    if (rect.bottom <= baseTop) return;
+                    const style = window.getComputedStyle?.(el);
+                    const position = String(style?.position || '').toLowerCase();
+                    const stickyLike = position === 'sticky' || position === 'fixed' || rect.top <= (baseTop + rect.height + 24);
+                    if (!stickyLike) return;
+                    occlusionBottom = Math.max(occlusionBottom, Math.round(rect.bottom));
+                });
+                return occlusionBottom;
+            } catch (e) {
+                return baseTop;
             }
         }
 
