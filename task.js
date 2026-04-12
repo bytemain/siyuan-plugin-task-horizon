@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.1.7
+// @version      2.1.8
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -71,6 +71,13 @@
             --tm-row-height-max: 42px;
             --tm-row-height: clamp(var(--tm-row-height-min), calc(var(--tm-font-size) * var(--tm-row-height-scale) + var(--tm-row-height-offset)), var(--tm-row-height-max));
             --tm-gantt-bar-height: clamp(12px, calc(var(--tm-row-height) * 0.6), 22px);
+            --tm-gantt-card-height: clamp(28px, calc(var(--tm-row-height) - 6px), 36px);
+            --tm-gantt-card-radius: 12px;
+            --tm-gantt-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), 0 6px 18px rgba(15, 23, 42, 0.06);
+            --tm-gantt-card-border: rgba(148, 163, 184, 0.22);
+            --tm-gantt-card-overflow-fg: rgba(71, 85, 105, 0.68);
+            --tm-gantt-weekend-col-bg: rgba(15, 23, 42, 0.04);
+            --tm-gantt-month-start-bg: rgba(148, 163, 184, 0.09);
             --tm-task-content-wrap-lines: 3;
             --tm-task-remark-wrap-lines: 2;
             --tm-empty-cell-bg: #f1f3f4;
@@ -151,6 +158,10 @@
             --tm-table-border-color: #333333;
             --tm-hover-bg: #2d2d2d;
             --tm-gantt-weekend-bg: rgba(0,0,0,0.46);
+            --tm-gantt-card-border: rgba(148, 163, 184, 0.24);
+            --tm-gantt-card-overflow-fg: rgba(203, 213, 225, 0.56);
+            --tm-gantt-weekend-col-bg: rgba(255,255,255,0.048);
+            --tm-gantt-month-start-bg: rgba(255,255,255,0.05);
             --tm-secondary-text: #aaaaaa;
             --tm-modal-overlay: rgba(0,0,0,0.7);
             --tm-shadow: 0 10px 40px rgba(0,0,0,0.5);
@@ -2004,6 +2015,15 @@
             min-height: 0;
             display: flex;
             flex-direction: column;
+            --tm-view-bottom-inset: 0px;
+        }
+
+        .tm-main-stage.tm-main-stage--with-bottom-viewbar {
+            --tm-view-bottom-inset: calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 52px);
+        }
+
+        .tm-main-stage.tm-main-stage--timeline-mobile-toolbar {
+            --tm-view-bottom-inset: calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 112px);
         }
 
         .tm-main-stage > .tm-body,
@@ -3097,6 +3117,7 @@
             position: relative;
             /* 显式设置 overflow-y，确保 sticky 表头生效 */
             overflow-y: auto;
+            scroll-padding-bottom: var(--tm-view-bottom-inset, 0px);
         }
 
         .tm-body.tm-body--checklist {
@@ -3118,6 +3139,8 @@
             flex: 1 1 auto;
             min-width: 0;
             min-height: 0;
+            box-sizing: border-box;
+            padding-bottom: var(--tm-view-bottom-inset, 0px);
         }
 
         .tm-body.tm-body--list::-webkit-scrollbar {
@@ -3145,7 +3168,7 @@
         .tm-table-scrollbar {
             position: absolute;
             top: 10px;
-            bottom: 10px;
+            bottom: calc(10px + var(--tm-view-bottom-inset, 0px));
             right: 2px;
             width: 8px;
             pointer-events: none;
@@ -3174,6 +3197,8 @@
             overflow-y: hidden;
             display: flex;
             flex-direction: column;
+            box-sizing: border-box;
+            padding-bottom: var(--tm-view-bottom-inset, 0px);
         }
 
         .tm-body.tm-body--kanban {
@@ -3278,10 +3303,11 @@
             border-right: 1px solid var(--tm-border-color);
             background: var(--tm-section-bg);
             overflow: auto;
-            padding: 10px;
+            padding: 10px 10px calc(10px + var(--tm-view-bottom-inset, 0px));
             box-sizing: border-box;
             z-index: 8;
             transition: width 220ms ease, min-width 220ms ease, max-width 220ms ease, padding 220ms ease, opacity 180ms ease, border-color 220ms ease;
+            scroll-padding-bottom: var(--tm-view-bottom-inset, 0px);
         }
 
         .tm-whiteboard-layout.tm-whiteboard-layout--sidebar-collapsed .tm-whiteboard-sidebar {
@@ -3623,9 +3649,11 @@
         }
 
         .tm-body.tm-body--whiteboard-stream {
-            padding: 18px;
+            padding: 18px 18px calc(18px + var(--tm-view-bottom-inset, 0px));
             overflow-y: auto;
             overflow-x: hidden;
+            box-sizing: border-box;
+            scroll-padding-bottom: var(--tm-view-bottom-inset, 0px);
         }
 
         .tm-whiteboard-stream {
@@ -3926,7 +3954,7 @@
 
         @media (max-width: 768px) {
             .tm-body.tm-body--whiteboard-stream {
-                padding: 10px 8px 14px;
+                padding: 10px 8px calc(14px + var(--tm-view-bottom-inset, 0px));
             }
 
             .tm-whiteboard-stream-doc-head {
@@ -4385,15 +4413,16 @@
         }
 
         .tm-task-link-dot--timeline {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             top: 50%;
             z-index: 6;
             opacity: 0;
             pointer-events: none;
             transition: opacity .16s ease;
-            border-color: var(--tm-primary-color);
-            background: var(--tm-bg-color) !important;
+            border: none;
+            background: transparent !important;
+            overflow: visible;
         }
 
         .tm-task-link-dot--in {
@@ -4404,23 +4433,64 @@
             left: 100%;
         }
 
-        .tm-task-link-dot.tm-task-link-dot--out {
-            background: var(--tm-primary-color);
-            border-color: var(--tm-primary-color);
+        .tm-task-link-dot--timeline.tm-task-link-dot--out {
+            transform: translate(14px, -50%);
         }
 
-        .tm-task-link-dot.tm-task-link-dot--in {
+        .tm-task-link-dot--timeline.tm-task-link-dot--in {
+            transform: translate(calc(-100% - 14px), -50%);
+        }
+
+        .tm-task-link-dot--timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            height: 2px;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--tm-primary-color) 72%, rgba(255,255,255,0.65));
+            box-shadow: 0 0 0 1px color-mix(in srgb, var(--tm-bg-color) 88%, transparent);
+            transform: translateY(-50%);
+        }
+
+        .tm-task-link-dot--timeline::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--tm-primary-color);
             background: var(--tm-bg-color);
-            border-color: var(--tm-primary-color);
+            box-sizing: border-box;
+            transform: translateY(-50%);
+        }
+
+        .tm-task-link-dot--timeline.tm-task-link-dot--out::before {
+            right: 100%;
+            width: 14px;
+        }
+
+        .tm-task-link-dot--timeline.tm-task-link-dot--out::after {
+            left: 0;
+        }
+
+        .tm-task-link-dot--timeline.tm-task-link-dot--in::before {
+            left: 100%;
+            width: 14px;
+        }
+
+        .tm-task-link-dot--timeline.tm-task-link-dot--in::after {
+            left: 0;
         }
 
         .tm-task-link-dot.tm-task-link-dot--active {
             box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 24%, transparent);
         }
 
-        .tm-gantt-row:hover .tm-task-link-dot--timeline,
-        .tm-gantt-row.tm-gantt-row--dot-open .tm-task-link-dot--timeline,
-        .tm-gantt-row.tm-gantt-row--link-hover .tm-task-link-dot--timeline,
+        .tm-gantt-row.tm-gantt-row--selected .tm-task-link-dot--out.tm-task-link-dot--timeline,
+        .tm-gantt-row.tm-gantt-row--dot-open .tm-task-link-dot--out.tm-task-link-dot--timeline,
+        .tm-gantt-row.tm-gantt-row--link-hover .tm-task-link-dot--in.tm-task-link-dot--timeline,
         .tm-task-link-dot--timeline.tm-task-link-dot--active {
             opacity: 1;
             pointer-events: auto;
@@ -4448,7 +4518,7 @@
         .tm-whiteboard-bottom-toolbar {
             position: absolute;
             left: 50%;
-            bottom: 12px;
+            bottom: calc(12px + var(--tm-view-bottom-inset, 0px));
             transform: translateX(-50%);
             z-index: 9;
             display: inline-flex;
@@ -4651,7 +4721,7 @@
         }
 
         .tm-kanban-col-body {
-            padding: 10px;
+            padding: 10px 10px calc(10px + var(--tm-view-bottom-inset, 0px));
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -4661,6 +4731,7 @@
             overscroll-behavior: contain;
             scrollbar-width: none;
             -ms-overflow-style: none;
+            scroll-padding-bottom: var(--tm-view-bottom-inset, 0px);
         }
 
         .tm-kanban-col-body::-webkit-scrollbar {
@@ -6255,12 +6326,13 @@
             height: 100%;
             min-height: 0;
             overflow: auto;
-            padding: 14px var(--tm-checklist-pane-pad-right) 14px var(--tm-checklist-pane-pad-left);
+            padding: 14px var(--tm-checklist-pane-pad-right) calc(14px + var(--tm-view-bottom-inset, 0px)) var(--tm-checklist-pane-pad-left);
             box-sizing: border-box;
             scrollbar-width: none;
             -ms-overflow-style: none;
             overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
+            scroll-padding-bottom: var(--tm-view-bottom-inset, 0px);
         }
 
         .tm-checklist-scroll::-webkit-scrollbar {
@@ -6285,7 +6357,7 @@
         .tm-checklist-scrollbar {
             position: absolute;
             top: 10px;
-            bottom: 10px;
+            bottom: calc(10px + var(--tm-view-bottom-inset, 0px));
             right: 2px;
             width: 8px;
             pointer-events: none;
@@ -6573,6 +6645,10 @@
 
         .tm-checklist-pane--compact .tm-checklist-items {
             gap: 0;
+        }
+
+        .tm-checklist-pane--compact .tm-checklist-scroll {
+            padding-top: 7px;
         }
 
         .tm-checklist-pane--compact .tm-checklist-group-card {
@@ -7269,7 +7345,7 @@
             }
 
             .tm-checklist-scroll {
-                padding: 10px var(--tm-checklist-pane-pad-right) 10px var(--tm-checklist-pane-pad-left);
+                padding: 10px var(--tm-checklist-pane-pad-right) calc(10px + var(--tm-view-bottom-inset, 0px)) var(--tm-checklist-pane-pad-left);
             }
 
             .tm-checklist-items {
@@ -7376,6 +7452,8 @@
             display: flex;
             flex-direction: column;
             min-height: 0;
+            position: relative;
+            z-index: 6;
         }
 
         .tm-timeline-splitter {
@@ -7384,6 +7462,7 @@
             cursor: col-resize;
             background: transparent;
             position: relative;
+            z-index: 7;
         }
 
         .tm-timeline-splitter::before {
@@ -7407,6 +7486,7 @@
             min-height: 0;
             overflow: auto;
             position: relative;
+            z-index: 6;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
@@ -7422,6 +7502,8 @@
             display: flex;
             flex-direction: column;
             min-height: 0;
+            position: relative;
+            z-index: 1;
         }
 
         .tm-timeline-right-header {
@@ -7532,25 +7614,26 @@
         }
 
         .tm-gantt-month {
-            height: 20px;
-            line-height: 20px;
+            height: 24px;
+            line-height: 24px;
             font-size: 12px;
-            padding-left: 6px;
+            font-weight: 600;
+            padding-left: 10px;
             box-sizing: border-box;
             border-right: 1px solid var(--tm-border-color);
-            color: var(--tm-text-color);
-            opacity: 0.9;
+            color: color-mix(in srgb, var(--tm-text-color) 88%, var(--tm-secondary-text));
+            opacity: 0.92;
         }
 
         .tm-gantt-day {
-            height: 24px;
-            line-height: 24px;
+            height: 28px;
+            line-height: 28px;
             font-size: 12px;
             text-align: center;
             box-sizing: border-box;
             border-right: 1px solid var(--tm-border-color);
-            color: var(--tm-text-color);
-            opacity: 0.9;
+            color: color-mix(in srgb, var(--tm-text-color) 76%, var(--tm-secondary-text));
+            opacity: 0.92;
         }
 
         .tm-gantt-day--weekend {
@@ -7563,6 +7646,29 @@
 
         .tm-gantt-body-inner {
             position: relative;
+        }
+
+        .tm-gantt-day-bg-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            display: flex;
+            flex-direction: row;
+        }
+
+        .tm-gantt-day-bg {
+            flex: 0 0 auto;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .tm-gantt-day-bg--weekend {
+            background: var(--tm-gantt-weekend-col-bg);
+        }
+
+        .tm-gantt-day-bg--month-start {
+            background-image: linear-gradient(180deg, var(--tm-gantt-month-start-bg), transparent 42%);
         }
 
         .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline {
@@ -7632,11 +7738,6 @@
             width: 14px;
             height: 14px;
             display: block;
-        }
-
-        .tm-main-stage.tm-main-stage--timeline-mobile-toolbar > .tm-body.tm-body--timeline {
-            padding-bottom: calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 112px);
-            box-sizing: border-box;
         }
 
         .tm-timeline-mobile-toolbar {
@@ -7711,6 +7812,10 @@
             pointer-events: none;
         }
 
+        .tm-gantt-dep-wrap {
+            pointer-events: none;
+        }
+
         .tm-gantt-dep {
             fill: none;
             stroke: #6d88b6;
@@ -7726,6 +7831,51 @@
 
         .tm-gantt-dep.tm-gantt-dep--manual {
             stroke: var(--tm-primary-color);
+            pointer-events: stroke;
+            cursor: pointer;
+        }
+
+        .tm-gantt-dep.tm-gantt-dep--selected {
+            stroke-width: 2.2;
+            opacity: 1;
+            filter: drop-shadow(0 0 1px color-mix(in srgb, var(--tm-primary-color) 40%, transparent));
+        }
+
+        .tm-gantt-dep-remove {
+            display: none;
+            overflow: visible;
+            pointer-events: none;
+        }
+
+        .tm-gantt-dep-wrap:hover .tm-gantt-dep-remove,
+        .tm-gantt-dep-wrap.tm-gantt-dep-wrap--selected .tm-gantt-dep-remove {
+            display: block;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-gantt-dep-wrap:hover .tm-gantt-dep-remove {
+            display: none;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-gantt-dep-wrap.tm-gantt-dep-wrap--selected .tm-gantt-dep-remove {
+            display: block;
+        }
+
+        .tm-gantt-dep-remove-btn {
+            width: 20px;
+            height: 20px;
+            border: none;
+            border-radius: 999px;
+            background: #e37b6a;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.16);
+            pointer-events: auto;
         }
 
         .tm-gantt-row {
@@ -7733,7 +7883,8 @@
             height: var(--tm-row-height);
             box-sizing: border-box;
             border-bottom: none;
-            box-shadow: inset 0 -1px 0 var(--tm-border-color);
+            box-shadow: none;
+            overflow: visible;
         }
 
         .tm-gantt-row.tm-gantt-row--multi-selected {
@@ -7742,6 +7893,12 @@
 
         .tm-gantt-row.tm-gantt-row--multi-selected .tm-gantt-bar {
             outline: 2px solid var(--tm-primary-color);
+            outline-offset: 1px;
+        }
+
+        .tm-gantt-row.tm-gantt-row--selected .tm-gantt-bar,
+        .tm-gantt-row.tm-gantt-row--dot-open .tm-gantt-bar {
+            outline: 2px solid color-mix(in srgb, var(--tm-primary-color) 68%, transparent);
             outline-offset: 1px;
         }
 
@@ -7756,72 +7913,394 @@
             width: 2px;
             background: rgba(255, 82, 82, 0.55);
             pointer-events: none;
-            z-index: 7;
+            z-index: 2;
         }
 
         .tm-gantt-bar {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            height: var(--tm-gantt-bar-height);
-            background: var(--tm-primary-color);
-            border-radius: calc(var(--tm-gantt-bar-height) / 2);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+            height: var(--tm-gantt-card-height);
+            min-width: 22px;
+            background: transparent;
+            border-radius: var(--tm-gantt-card-radius);
+            box-shadow: none;
             cursor: grab;
             z-index: 4;
+            overflow: visible;
+            pointer-events: none;
+            --tm-gantt-bar-fill: var(--tm-primary-color);
+            --tm-gantt-bar-border: color-mix(in srgb, var(--tm-gantt-bar-fill) 42%, var(--tm-gantt-card-border));
+            --tm-gantt-bar-surface: color-mix(in srgb, var(--tm-bg-color) 82%, var(--tm-gantt-bar-fill) 18%);
+            --tm-gantt-bar-fg: color-mix(in srgb, var(--tm-text-color) 78%, var(--tm-gantt-bar-fill) 22%);
+            --tm-gantt-bar-overflow-fg: color-mix(in srgb, var(--tm-gantt-card-overflow-fg) 76%, var(--tm-gantt-bar-fill) 24%);
         }
 
         .tm-gantt-bar:active {
             cursor: grabbing;
         }
 
+        .tm-gantt-bar:hover {
+            --tm-gantt-bar-surface: color-mix(in srgb, var(--tm-bg-color) 76%, var(--tm-gantt-bar-fill) 24%);
+            --tm-gantt-bar-border: color-mix(in srgb, var(--tm-gantt-bar-fill) 58%, var(--tm-gantt-card-border));
+            --tm-gantt-bar-fg: color-mix(in srgb, var(--tm-text-color) 74%, var(--tm-gantt-bar-fill) 26%);
+        }
+
+        .tm-gantt-row.tm-gantt-row--selected .tm-gantt-bar,
+        .tm-gantt-row.tm-gantt-row--dot-open .tm-gantt-bar {
+            --tm-gantt-bar-surface: color-mix(in srgb, var(--tm-bg-color) 68%, var(--tm-gantt-bar-fill) 32%);
+            --tm-gantt-bar-border: color-mix(in srgb, var(--tm-gantt-bar-fill) 72%, var(--tm-gantt-card-border));
+            --tm-gantt-bar-fg: color-mix(in srgb, var(--tm-text-color) 68%, var(--tm-gantt-bar-fill) 32%);
+        }
+
+        .tm-gantt-bar__surface {
+            position: absolute;
+            inset: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            min-width: 100%;
+            height: 100%;
+            padding: 0 10px;
+            box-sizing: border-box;
+            border-radius: var(--tm-gantt-card-radius);
+            border: 1px solid var(--tm-gantt-bar-border);
+            background: var(--tm-gantt-bar-surface);
+            box-shadow: var(--tm-gantt-card-shadow);
+            color: var(--tm-gantt-bar-fg);
+            white-space: nowrap;
+            pointer-events: auto;
+        }
+
+        .tm-gantt-bar__label-layer {
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: max-content;
+            min-width: 100%;
+            max-width: none;
+            height: 100%;
+            padding: 0 10px;
+            box-sizing: border-box;
+            color: var(--tm-gantt-bar-fg);
+            white-space: nowrap;
+            word-break: keep-all;
+            writing-mode: horizontal-tb;
+            text-orientation: mixed;
+            pointer-events: none;
+            overflow: visible;
+            -webkit-mask-image: none;
+            mask-image: none;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+        }
+
+        .tm-gantt-bar:hover .tm-gantt-bar__label-layer,
+        .tm-gantt-row.tm-gantt-row--selected .tm-gantt-bar__label-layer,
+        .tm-gantt-row.tm-gantt-row--dot-open .tm-gantt-bar__label-layer {
+            -webkit-mask-image: linear-gradient(
+                90deg,
+                rgba(0, 0, 0, 1) 0,
+                rgba(0, 0, 0, 1) var(--tm-gantt-fade-start, 0px),
+                rgba(0, 0, 0, 0.34) var(--tm-gantt-fade-start, 0px),
+                rgba(0, 0, 0, 0.34) 100%
+            );
+            mask-image: linear-gradient(
+                90deg,
+                rgba(0, 0, 0, 1) 0,
+                rgba(0, 0, 0, 1) var(--tm-gantt-fade-start, 0px),
+                rgba(0, 0, 0, 0.34) var(--tm-gantt-fade-start, 0px),
+                rgba(0, 0, 0, 0.34) 100%
+            );
+        }
+
+        .tm-gantt-bar__surface::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.28);
+            pointer-events: none;
+        }
+
+        .tm-gantt-bar__lead {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            min-width: 16px;
+            color: color-mix(in srgb, var(--tm-gantt-bar-fill) 74%, var(--tm-text-color) 26%);
+            line-height: 0;
+            flex: 0 0 auto;
+        }
+
+        .tm-gantt-bar__lead .tm-lucide-emoji svg,
+        .tm-gantt-milestone__icon .tm-lucide-emoji svg,
+        .tm-gantt-milestone .tm-lucide-emoji svg {
+            width: 14px;
+            height: 14px;
+            display: block;
+        }
+
+        .tm-gantt-bar__content,
+        .tm-gantt-bar__overflow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            max-width: 100%;
+            pointer-events: none;
+            white-space: nowrap;
+            word-break: keep-all;
+            writing-mode: horizontal-tb;
+            text-orientation: mixed;
+        }
+
+        .tm-gantt-bar__content {
+            flex: 1 1 auto;
+            overflow: hidden;
+        }
+
+        .tm-gantt-bar__overflow {
+            position: absolute;
+            left: calc(100% + 10px);
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--tm-gantt-bar-overflow-fg);
+            width: max-content;
+            min-width: max-content;
+            max-width: min(280px, calc(100vw - 120px));
+        }
+
+        .tm-gantt-bar__overflow--muted .tm-status-tag,
+        .tm-gantt-bar__overflow .tm-gantt-bar__lead {
+            opacity: 0.7;
+        }
+
+        .tm-gantt-bar__title {
+            display: inline-block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 14px;
+            font-weight: 600;
+            color: inherit;
+            white-space: nowrap;
+            word-break: keep-all;
+            writing-mode: horizontal-tb;
+            text-orientation: mixed;
+        }
+
+        .tm-gantt-bar__content .tm-gantt-bar__title {
+            flex: 1 1 auto;
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        .tm-gantt-bar__overflow .tm-gantt-bar__title {
+            flex: 0 1 auto;
+            min-width: max-content;
+            max-width: min(220px, calc(100vw - 180px));
+        }
+
+        .tm-gantt-bar__status {
+            display: inline-flex;
+            align-items: center;
+            min-width: 0;
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        .tm-gantt-bar__status .tm-status-tag {
+            cursor: default;
+            font-size: 12px;
+            line-height: 1.1;
+            padding: 3px 8px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .tm-gantt-bar__menu-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            border: 1px solid color-mix(in srgb, var(--tm-gantt-bar-fill) 34%, var(--tm-gantt-card-border));
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--tm-bg-color) 92%, var(--tm-gantt-bar-fill) 8%);
+            color: color-mix(in srgb, var(--tm-text-color) 72%, var(--tm-gantt-bar-fill) 28%);
+            box-sizing: border-box;
+            pointer-events: auto;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .tm-gantt-bar__menu-btn-text {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1;
+            transform: translateY(-1px);
+        }
+
+        .tm-gantt-bar__edge {
+            display: none;
+            flex: 0 0 auto;
+            width: 6px;
+            min-width: 6px;
+            height: 18px;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--tm-gantt-bar-fill) 82%, rgba(255,255,255,0.22));
+            opacity: 0.9;
+        }
+
+        .tm-gantt-bar__drag-label {
+            position: absolute;
+            top: -6px;
+            bottom: -6px;
+            width: 3px;
+            border-radius: 999px;
+            background: rgba(17, 24, 39, 0.92);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.34);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(-50%);
+        }
+
+        .tm-gantt-bar__date-hint {
+            position: absolute;
+            top: 50%;
+            z-index: 10;
+            display: inline-flex;
+            align-items: center;
+            height: 32px;
+            padding: 0 12px;
+            border-radius: 10px;
+            background: rgba(17, 24, 39, 0.96);
+            color: rgba(255,255,255,0.96);
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(10px, -50%);
+        }
+
+        .tm-gantt-bar--hint-start .tm-gantt-bar__date-hint {
+            transform: translate(calc(-100% - 10px), -50%);
+        }
+
+        .tm-gantt-bar.tm-gantt-bar--dragging .tm-gantt-bar__drag-label,
+        .tm-gantt-bar.tm-gantt-bar--dragging .tm-gantt-bar__date-hint {
+            opacity: 1;
+        }
+
         .tm-gantt-milestone {
             position: absolute;
             top: 50%;
             transform: translate(-50%, -50%);
-            color: #e53935;
-            font-size: 18px;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            border-radius: 999px;
+            border: 1px solid color-mix(in srgb, var(--tm-primary-color) 26%, var(--tm-gantt-card-border));
+            background: color-mix(in srgb, var(--tm-bg-color) 94%, var(--tm-primary-color) 6%);
+            color: color-mix(in srgb, var(--tm-primary-color) 68%, var(--tm-text-color) 32%);
+            font-size: 11px;
             line-height: 1;
             cursor: pointer;
             z-index: 8;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            box-shadow: var(--tm-gantt-card-shadow);
             user-select: none;
+        }
+
+        .tm-gantt-milestone__label {
+            font-weight: 600;
         }
 
         .tm-gantt-bar-handle {
             position: absolute;
             top: 0;
-            width: 10px;
+            width: 16px;
             height: 100%;
-            background: rgba(255,255,255,0.35);
             cursor: ew-resize;
+            z-index: 6;
+            opacity: 0;
+            transition: opacity 0.16s ease;
+            pointer-events: auto;
         }
 
         .tm-gantt-bar-handle--start {
-            left: 0;
-            border-top-left-radius: 9px;
-            border-bottom-left-radius: 9px;
+            left: -6px;
         }
 
         .tm-gantt-bar-handle--end {
-            right: 0;
-            border-top-right-radius: 9px;
-            border-bottom-right-radius: 9px;
+            right: -6px;
         }
 
-        .tm-gantt-drag-tip {
-            position: fixed;
-            z-index: 1000002;
-            padding: 6px 10px;
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.78);
-            color: #fff;
+        .tm-gantt-bar:hover .tm-gantt-bar-handle,
+        .tm-gantt-row.tm-gantt-row--selected .tm-gantt-bar-handle,
+        .tm-gantt-row.tm-gantt-row--dot-open .tm-gantt-bar-handle,
+        .tm-gantt-bar.tm-gantt-bar--dragging .tm-gantt-bar-handle {
+            opacity: 1;
+        }
+
+        .tm-gantt-bar:hover .tm-gantt-bar-handle::before,
+        .tm-gantt-row.tm-gantt-row--selected .tm-gantt-bar-handle::before,
+        .tm-gantt-row.tm-gantt-row--dot-open .tm-gantt-bar-handle::before,
+        .tm-gantt-bar.tm-gantt-bar--dragging .tm-gantt-bar-handle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: calc(100% - 8px);
+            border-radius: 999px;
+            background: rgba(17, 24, 39, 0.92);
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.38);
+        }
+
+        .tm-modal.tm-modal--mobile .tm-gantt-bar-handle {
+            width: 24px;
+            opacity: 0;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-gantt-bar-handle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: calc(100% - 8px);
+            border-radius: 999px;
+            background: rgba(17, 24, 39, 0.22);
+            transform: translate(-50%, -50%);
+        }
+
+        .tm-modal.tm-modal--mobile .tm-gantt-row.tm-gantt-row--selected .tm-gantt-bar__menu-btn,
+        .tm-modal.tm-modal--mobile .tm-gantt-row.tm-gantt-row--dot-open .tm-gantt-bar__menu-btn {
+            display: inline-flex;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-gantt-bar__date-hint {
             font-size: 12px;
-            line-height: 1;
-            pointer-events: none;
-            transform: translate(10px, -18px);
-            white-space: nowrap;
-            font-variant-numeric: inherit;
+            height: 30px;
+            padding: 0 10px;
         }
 
         .tm-table {
@@ -12955,6 +13434,211 @@
         };
     }
 
+    function __tmGetTaskMetaAttrStorageKeys() {
+        const tomatoEnabled = !!SettingsStore.data.enableTomatoIntegration;
+        const tomatoMinutesKey = __tmSafeAttrName(SettingsStore.data.tomatoSpentAttrKeyMinutes, 'custom-tomato-minutes');
+        const tomatoHoursKey = __tmSafeAttrName(SettingsStore.data.tomatoSpentAttrKeyHours, 'custom-tomato-time');
+        return Array.from(new Set([
+            'custom-priority',
+            'custom-duration',
+            'custom-remark',
+            'custom-start-date',
+            'custom-completion-time',
+            'custom-milestone-event',
+            'custom-time',
+            'custom-status',
+            'custom-pinned',
+            ...(tomatoEnabled ? [tomatoMinutesKey, tomatoHoursKey] : [])
+        ].map((item) => String(item || '').trim()).filter(Boolean)));
+    }
+
+    async function __tmQueryTaskMetaAttrRowsByBlockIds(blockIds) {
+        const safeBlockIds = Array.from(new Set((Array.isArray(blockIds) ? blockIds : [])
+            .map((id) => String(id || '').trim())
+            .filter((id) => /^[0-9]+-[a-zA-Z0-9]+$/.test(id))));
+        if (!safeBlockIds.length) return [];
+        const attrNames = __tmGetTaskMetaAttrStorageKeys();
+        if (!attrNames.length) return [];
+        const nameList = attrNames.map((name) => `'${name.replace(/'/g, "''")}'`).join(',');
+        const rows = [];
+        const chunkSize = 400;
+        for (let i = 0; i < safeBlockIds.length; i += chunkSize) {
+            const chunk = safeBlockIds.slice(i, i + chunkSize);
+            if (!chunk.length) continue;
+            const idList = chunk.map((id) => `'${id.replace(/'/g, "''")}'`).join(',');
+            const sql = `
+                SELECT block_id, name, value
+                FROM attributes
+                WHERE block_id IN (${idList})
+                  AND name IN (${nameList})
+            `;
+            const res = await API.call('/api/query/sql', { stmt: sql });
+            if (res.code === 0 && Array.isArray(res.data)) rows.push(...res.data);
+        }
+        return rows;
+    }
+
+    async function __tmQueryTaskSiblingCountsByParentIds(parentIds) {
+        const safeParentIds = Array.from(new Set((Array.isArray(parentIds) ? parentIds : [])
+            .map((id) => String(id || '').trim())
+            .filter((id) => /^[0-9]+-[a-zA-Z0-9]+$/.test(id))));
+        const countMap = new Map();
+        if (!safeParentIds.length) return countMap;
+        const chunkSize = 400;
+        for (let i = 0; i < safeParentIds.length; i += chunkSize) {
+            const chunk = safeParentIds.slice(i, i + chunkSize);
+            if (!chunk.length) continue;
+            const idList = chunk.map((id) => `'${id.replace(/'/g, "''")}'`).join(',');
+            const sql = `
+                SELECT parent_id, COUNT(*) AS task_count
+                FROM blocks
+                WHERE parent_id IN (${idList})
+                  AND type = 'i'
+                  AND subtype = 't'
+                GROUP BY parent_id
+            `;
+            const res = await API.call('/api/query/sql', { stmt: sql });
+            if (res.code !== 0 || !Array.isArray(res.data)) continue;
+            res.data.forEach((row) => {
+                const parentId = String(row?.parent_id || '').trim();
+                const taskCount = Number(row?.task_count || 0);
+                if (!parentId) return;
+                countMap.set(parentId, taskCount);
+            });
+        }
+        return countMap;
+    }
+
+    async function __tmPopulateTaskAttrHostIds(tasks) {
+        const list = Array.isArray(tasks) ? tasks.filter((task) => task && typeof task === 'object') : [];
+        if (!list.length) return list;
+        const parentIds = Array.from(new Set(list
+            .map((task) => String(task?.parent_id || '').trim())
+            .filter((id) => /^[0-9]+-[a-zA-Z0-9]+$/.test(id))));
+        const parentMap = new Map();
+        const chunkSize = 400;
+        for (let i = 0; i < parentIds.length; i += chunkSize) {
+            const chunk = parentIds.slice(i, i + chunkSize);
+            if (!chunk.length) continue;
+            let rows = [];
+            try { rows = await API.getBlocksByIds(chunk); } catch (e) { rows = []; }
+            (Array.isArray(rows) ? rows : []).forEach((row) => {
+                const id = String(row?.id || '').trim();
+                if (!id) return;
+                parentMap.set(id, row);
+            });
+        }
+        const taskCountMap = await __tmQueryTaskSiblingCountsByParentIds(parentIds);
+        list.forEach((task) => {
+            const taskId = String(task?.id || '').trim();
+            const parentId = String(task?.parent_id || '').trim();
+            let attrHostId = taskId;
+            const parentRow = parentMap.get(parentId);
+            const parentType = String(parentRow?.type || '').trim().toLowerCase();
+            const parentSubtype = String(parentRow?.subtype || '').trim().toLowerCase();
+            if (parentId && parentType === 'l' && parentSubtype === 't' && Number(taskCountMap.get(parentId) || 0) === 1) {
+                attrHostId = parentId;
+            }
+            task.attrHostId = attrHostId || taskId;
+            task.attr_host_id = task.attrHostId;
+        });
+        return list;
+    }
+
+    function __tmApplyTaskMetaAttrRow(task, attrs) {
+        const target = (task && typeof task === 'object') ? task : null;
+        const row = (attrs && typeof attrs === 'object') ? attrs : null;
+        if (!target || !row) return target;
+        if (Object.prototype.hasOwnProperty.call(row, 'custom-priority')) {
+            const value = String(row['custom-priority'] ?? '');
+            target.custom_priority = value;
+            target.priority = value;
+        }
+        if (Object.prototype.hasOwnProperty.call(row, 'custom-duration')) {
+            const value = String(row['custom-duration'] ?? '');
+            target.duration = value;
+            target.custom_duration = value;
+        }
+        if (Object.prototype.hasOwnProperty.call(row, 'custom-remark')) {
+            const value = String(row['custom-remark'] ?? '');
+            target.remark = value;
+            target.custom_remark = value;
+        }
+        if (Object.prototype.hasOwnProperty.call(row, 'custom-start-date')) {
+            const value = String(row['custom-start-date'] ?? '');
+            target.startDate = value;
+            target.start_date = value;
+        }
+        if (Object.prototype.hasOwnProperty.call(row, 'custom-completion-time')) {
+            const value = String(row['custom-completion-time'] ?? '');
+            target.completionTime = value;
+            target.completion_time = value;
+        }
+        if (Object.prototype.hasOwnProperty.call(row, 'custom-milestone-event')) {
+            const value = String(row['custom-milestone-event'] ?? '');
+            target.milestone = value;
+            target.custom_milestone = value;
+        }
+        if (Object.prototype.hasOwnProperty.call(row, 'custom-time')) {
+            const value = String(row['custom-time'] ?? '');
+            target.customTime = value;
+            target.custom_time = value;
+        }
+        if (Object.prototype.hasOwnProperty.call(row, 'custom-status')) {
+            const value = String(row['custom-status'] ?? '');
+            target.customStatus = value;
+            target.custom_status = value;
+        }
+        if (Object.prototype.hasOwnProperty.call(row, 'custom-pinned')) {
+            const value = String(row['custom-pinned'] ?? '');
+            target.pinned = value;
+            target.custom_pinned = value;
+        }
+        if (Object.prototype.hasOwnProperty.call(row, String(__tmSafeAttrName(SettingsStore.data.tomatoSpentAttrKeyMinutes, 'custom-tomato-minutes')))) {
+            const value = String(row[__tmSafeAttrName(SettingsStore.data.tomatoSpentAttrKeyMinutes, 'custom-tomato-minutes')] ?? '');
+            target.tomato_minutes = value;
+            target.tomatoMinutes = value;
+        }
+        if (Object.prototype.hasOwnProperty.call(row, String(__tmSafeAttrName(SettingsStore.data.tomatoSpentAttrKeyHours, 'custom-tomato-time')))) {
+            const value = String(row[__tmSafeAttrName(SettingsStore.data.tomatoSpentAttrKeyHours, 'custom-tomato-time')] ?? '');
+            target.tomato_hours = value;
+            target.tomatoHours = value;
+        }
+        return target;
+    }
+
+    async function __tmApplyTaskAttrHostOverrides(tasks) {
+        const list = Array.isArray(tasks) ? tasks.filter((task) => task && typeof task === 'object') : [];
+        if (!list.length) return list;
+        await __tmPopulateTaskAttrHostIds(list);
+        const hostIds = Array.from(new Set(list
+            .map((task) => {
+                const taskId = String(task?.id || '').trim();
+                const hostId = String(task?.attrHostId || task?.attr_host_id || taskId).trim();
+                if (!hostId || hostId === taskId) return '';
+                return hostId;
+            })
+            .filter(Boolean)));
+        if (!hostIds.length) return list;
+        const rows = await __tmQueryTaskMetaAttrRowsByBlockIds(hostIds);
+        if (!rows.length) return list;
+        const rowMap = new Map();
+        rows.forEach((row) => {
+            const blockId = String(row?.block_id || '').trim();
+            const name = String(row?.name || '').trim();
+            if (!blockId || !name) return;
+            if (!rowMap.has(blockId)) rowMap.set(blockId, {});
+            rowMap.get(blockId)[name] = String(row?.value ?? '');
+        });
+        list.forEach((task) => {
+            const taskId = String(task?.id || '').trim();
+            const hostId = String(task?.attrHostId || task?.attr_host_id || taskId).trim();
+            if (!hostId || hostId === taskId || !rowMap.has(hostId)) return;
+            __tmApplyTaskMetaAttrRow(task, rowMap.get(hostId));
+        });
+        return list;
+    }
+
     async function __tmQueryCustomFieldAttrRowsByTaskIds(taskIds) {
         const defs = __tmGetCustomFieldDefs();
         if (!defs.length) return [];
@@ -12986,25 +13670,53 @@
     async function __tmAttachCustomFieldAttrsToTasks(tasks) {
         const list = Array.isArray(tasks) ? tasks.filter((task) => task && typeof task === 'object') : [];
         if (!list.length) return list;
-        const rows = await __tmQueryCustomFieldAttrRowsByTaskIds(list.map((task) => task.id));
+        const hostToTaskIds = new Map();
+        const taskIdSet = new Set();
+        list.forEach((task) => {
+            const taskId = String(task?.id || '').trim();
+            const hostId = String(task?.attrHostId || task?.attr_host_id || taskId).trim();
+            if (!taskId || !hostId) return;
+            taskIdSet.add(taskId);
+            if (!hostToTaskIds.has(hostId)) hostToTaskIds.set(hostId, []);
+            hostToTaskIds.get(hostId).push(taskId);
+        });
+        const rows = await __tmQueryCustomFieldAttrRowsByTaskIds(Array.from(new Set([
+            ...hostToTaskIds.keys(),
+            ...taskIdSet,
+        ])));
         if (!rows.length) {
             list.forEach((task) => {
                 if (!task.__customFieldRawValues || typeof task.__customFieldRawValues !== 'object') task.__customFieldRawValues = {};
             });
             return list;
         }
-        const byTask = new Map();
+        const hostValuesByTask = new Map();
+        const selfValuesByTask = new Map();
+        const assignFieldValue = (targetMap, taskId, fieldId, value) => {
+            if (!taskId || !fieldId) return;
+            if (!targetMap.has(taskId)) targetMap.set(taskId, {});
+            targetMap.get(taskId)[fieldId] = value;
+        };
         rows.forEach((row) => {
-            const taskId = String(row?.block_id || '').trim();
+            const hostId = String(row?.block_id || '').trim();
             const field = __tmGetCustomFieldDefByAttrStorageKey(row?.name);
             const fieldId = String(field?.id || '').trim();
-            if (!taskId || !fieldId) return;
-            if (!byTask.has(taskId)) byTask.set(taskId, {});
-            byTask.get(taskId)[fieldId] = String(row?.value ?? '');
+            if (!fieldId) return;
+            const taskIds = hostToTaskIds.get(hostId) || [];
+            if (taskIds.length) {
+                taskIds.forEach((taskId) => assignFieldValue(hostValuesByTask, taskId, fieldId, String(row?.value ?? '')));
+            }
+            if (taskIdSet.has(hostId)) {
+                assignFieldValue(selfValuesByTask, hostId, fieldId, String(row?.value ?? ''));
+            }
         });
         list.forEach((task) => {
             const tid = String(task?.id || '').trim();
-            task.__customFieldRawValues = tid && byTask.has(tid) ? { ...byTask.get(tid) } : {};
+            if (tid && hostValuesByTask.has(tid)) {
+                task.__customFieldRawValues = { ...hostValuesByTask.get(tid) };
+                return;
+            }
+            task.__customFieldRawValues = tid && selfValuesByTask.has(tid) ? { ...selfValuesByTask.get(tid) } : {};
         });
         return list;
     }
@@ -14390,6 +15102,7 @@
                 return { tasks: [], queryTime };
             }
             const tasks = Array.isArray(res.data) ? res.data : [];
+            try { await __tmApplyTaskAttrHostOverrides(tasks); } catch (e) {}
             try { await __tmAttachCustomFieldAttrsToTasks(tasks); } catch (e) {}
             // 注意：这里不能提前过滤已完成任务。
             // 子任务进度条、父子层级和“父任务未完成时显示已完成子任务”的规则，都依赖完整树结构。
@@ -14549,6 +15262,7 @@
                 }
             }
             const tasks = __tmCloneTaskQueryRows(Array.isArray(res.data) ? res.data : []);
+            try { await __tmApplyTaskAttrHostOverrides(tasks); } catch (e) {}
             try { await __tmAttachCustomFieldAttrsToTasks(tasks); } catch (e) {}
             // 注意：这里不能提前过滤已完成任务。
             // 子任务进度条、父子层级和“父任务未完成时显示已完成子任务”的规则，都依赖完整树结构。
@@ -14608,6 +15322,7 @@
             const res = await this.call('/api/query/sql', { stmt: sql });
             if (res.code === 0 && res.data && res.data.length > 0) {
                 const row = res.data[0];
+                try { await __tmApplyTaskAttrHostOverrides([row]); } catch (e) {}
                 try { await __tmAttachCustomFieldAttrsToTasks([row]); } catch (e) {}
                 return row;
             }
@@ -15513,6 +16228,42 @@
         return done ? __tmGetCheckboxStatusBindingFallbackId(true, statusOptions) : __tmGetDefaultUndoneStatusId(statusOptions);
     }
 
+    function __tmResolveTaskStatusDisplayOption(task, statusOptionsInput = null, options = {}) {
+        const statusOptions = Array.isArray(statusOptionsInput)
+            ? statusOptionsInput
+            : (Array.isArray(SettingsStore?.data?.customStatusOptions) ? SettingsStore.data.customStatusOptions : []);
+        const opts = (options && typeof options === 'object') ? options : {};
+        const done = !!task?.done;
+        const configuredStatus = String(task?.customStatus ?? task?.custom_status ?? '').trim();
+        const resolvedId = done
+            ? String(__tmResolveCheckboxLinkedStatusId(true, statusOptions) || configuredStatus || '').trim()
+            : __tmResolveUndoneStatusValue(configuredStatus, statusOptions);
+        const matched = resolvedId
+            ? (statusOptions.find((item) => String(item?.id || '').trim() === resolvedId) || null)
+            : null;
+        const fallbackColor = String(opts.fallbackColor || (done ? '#9e9e9e' : '#757575')).trim() || (done ? '#9e9e9e' : '#757575');
+        const fallbackName = String(opts.fallbackName || (done ? '完成' : '待办')).trim() || (done ? '完成' : '待办');
+        if (matched) {
+            return {
+                id: String(matched.id || resolvedId || '').trim(),
+                name: String(matched.name || matched.id || fallbackName).trim() || fallbackName,
+                color: String(matched.color || fallbackColor).trim() || fallbackColor,
+            };
+        }
+        if (resolvedId) {
+            return {
+                id: resolvedId,
+                name: resolvedId,
+                color: fallbackColor,
+            };
+        }
+        return {
+            id: done ? '__done__' : 'todo',
+            name: fallbackName,
+            color: fallbackColor,
+        };
+    }
+
     function __tmBuildCheckboxStatusPatch(task, done, explicitPatch = null) {
         const statusOptions = Array.isArray(SettingsStore?.data?.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
         const inputPatch = (explicitPatch && typeof explicitPatch === 'object' && !Array.isArray(explicitPatch)) ? explicitPatch : null;
@@ -15580,10 +16331,19 @@
         if (opts.touchMetaStore !== false) MetaStore.set(id, patch);
         const attrs = __tmBuildAttrPayloadFromPatch(patch);
         if (Object.keys(attrs).length === 0) return true;
+        let attrTargetId = String(opts.attrTargetId || '').trim();
+        if (!attrTargetId) {
+            const task = state.flatTasks?.[String(id || '').trim()] || state.pendingInsertedTasks?.[String(id || '').trim()] || null;
+            attrTargetId = __tmGetTaskAttrHostId(task);
+        }
+        if (!attrTargetId) {
+            try { attrTargetId = await __tmResolveTaskAttrHostIdFromAnyBlockId(id); } catch (e) { attrTargetId = ''; }
+        }
+        if (!attrTargetId) attrTargetId = String(id || '').trim();
         let lastErr = null;
         for (let i = 0; i < 3; i++) {
             try {
-                await API.setAttrs(id, attrs);
+                await API.setAttrs(attrTargetId, attrs);
                 if (opts.skipFlush !== true) {
                     try { await API.call('/api/sqlite/flushTransaction', {}); } catch (e) {}
                     try { await MetaStore.saveNow(); } catch (e) {}
@@ -15764,6 +16524,7 @@
         whiteboardSelectedLinkId: '',
         whiteboardSelectedLinkDocId: '',
         timelineLinkHoverTaskId: '',
+        timelineSelectedLinkId: '',
         whiteboardSelectedTaskId: '',
         whiteboardSelectedNoteId: '',
         whiteboardMultiSelectedTaskIds: [],
@@ -15998,8 +16759,58 @@
                 applyCustomValues(pending);
                 return;
             }
-            if (task && typeof task === 'object') task[key] = value;
-            if (pending && typeof pending === 'object') pending[key] = value;
+            const applyOne = (target) => {
+                if (!(target && typeof target === 'object')) return;
+                target[key] = value;
+                switch (key) {
+                    case 'customStatus':
+                        target.customStatus = String(value ?? '').trim();
+                        target.custom_status = target.customStatus;
+                        break;
+                    case 'priority':
+                        target.priority = String(value ?? '').trim();
+                        target.custom_priority = target.priority;
+                        break;
+                    case 'startDate':
+                        target.startDate = String(value ?? '').trim();
+                        target.start_date = target.startDate;
+                        break;
+                    case 'completionTime':
+                        target.completionTime = String(value ?? '').trim();
+                        target.completion_time = target.completionTime;
+                        break;
+                    case 'customTime':
+                        target.customTime = String(value ?? '').trim();
+                        target.custom_time = target.customTime;
+                        break;
+                    case 'duration':
+                        target.duration = String(value ?? '').trim();
+                        target.custom_duration = target.duration;
+                        break;
+                    case 'remark':
+                        target.remark = String(value ?? '');
+                        target.custom_remark = target.remark;
+                        break;
+                    case 'pinned':
+                        {
+                            const pin = !!(value === true || value === '1' || value === 1 || String(value || '').trim().toLowerCase() === 'true');
+                            target.pinned = pin;
+                            target.custom_pinned = pin ? '1' : '';
+                        }
+                        break;
+                    case 'milestone':
+                        {
+                            const milestone = !!(value === true || value === '1' || value === 1 || String(value || '').trim().toLowerCase() === 'true');
+                            target.milestone = milestone;
+                            target.custom_milestone = milestone ? '1' : '';
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            };
+            applyOne(task);
+            applyOne(pending);
         });
         try { MetaStore.set(tid, nextPatch); } catch (e) {}
         if (options.render !== false) {
@@ -16047,8 +16858,58 @@
                 applyCustomValues(pending);
                 return;
             }
-            if (task && typeof task === 'object') task[key] = value;
-            if (pending && typeof pending === 'object') pending[key] = value;
+            const applyOne = (target) => {
+                if (!(target && typeof target === 'object')) return;
+                target[key] = value;
+                switch (key) {
+                    case 'customStatus':
+                        target.customStatus = String(value ?? '').trim();
+                        target.custom_status = target.customStatus;
+                        break;
+                    case 'priority':
+                        target.priority = String(value ?? '').trim();
+                        target.custom_priority = target.priority;
+                        break;
+                    case 'startDate':
+                        target.startDate = String(value ?? '').trim();
+                        target.start_date = target.startDate;
+                        break;
+                    case 'completionTime':
+                        target.completionTime = String(value ?? '').trim();
+                        target.completion_time = target.completionTime;
+                        break;
+                    case 'customTime':
+                        target.customTime = String(value ?? '').trim();
+                        target.custom_time = target.customTime;
+                        break;
+                    case 'duration':
+                        target.duration = String(value ?? '').trim();
+                        target.custom_duration = target.duration;
+                        break;
+                    case 'remark':
+                        target.remark = String(value ?? '');
+                        target.custom_remark = target.remark;
+                        break;
+                    case 'pinned':
+                        {
+                            const pin = !!(value === true || value === '1' || value === 1 || String(value || '').trim().toLowerCase() === 'true');
+                            target.pinned = pin;
+                            target.custom_pinned = pin ? '1' : '';
+                        }
+                        break;
+                    case 'milestone':
+                        {
+                            const milestone = !!(value === true || value === '1' || value === 1 || String(value || '').trim().toLowerCase() === 'true');
+                            target.milestone = milestone;
+                            target.custom_milestone = milestone ? '1' : '';
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            };
+            applyOne(task);
+            applyOne(pending);
         });
         try { MetaStore.set(tid, prevPatch); } catch (e) {}
         if (options.render !== false) {
@@ -16235,6 +17096,19 @@
             target.nextRunAt = 0;
             return true;
         }
+        if (String(target.type || '').trim() === 'setDone' && String(nextOp.type || '').trim() === 'setDone') {
+            target.data = {
+                ...(target.data && typeof target.data === 'object' ? target.data : {}),
+                ...(nextOp.data && typeof nextOp.data === 'object' ? nextOp.data : {}),
+            };
+            target.inversePatch = (target.inversePatch && typeof target.inversePatch === 'object')
+                ? { ...target.inversePatch }
+                : { ...(nextOp.inversePatch && typeof nextOp.inversePatch === 'object' ? nextOp.inversePatch : {}) };
+            target.docId = String(nextOp.docId || target.docId || '').trim();
+            target.laneKey = String(nextOp.laneKey || target.laneKey || '').trim() || 'setDone:global';
+            target.nextRunAt = 0;
+            return true;
+        }
         return false;
     }
 
@@ -16245,6 +17119,11 @@
         while (__tmOpQueue.activeCount < __tmOpQueue.maxParallel) {
             const nextOp = __tmOpQueue.items.find((op) => {
                 if (!op || op.status !== 'queued') return false;
+                const opType = String(op.type || '').trim();
+                if (opType === 'setDone') {
+                    const hasRunningSetDone = __tmOpQueue.items.some((item) => item && item !== op && item.status === 'running' && String(item.type || '').trim() === 'setDone');
+                    if (hasRunningSetDone) return false;
+                }
                 const laneKey = String(op.laneKey || '').trim() || 'default';
                 if (__tmOpQueue.activeLanes.has(laneKey)) return false;
                 const runAt = Math.max(0, Number(op.nextRunAt) || 0);
@@ -18852,6 +19731,15 @@
     let __tmDocTreeMenuHandler = null;
     let __tmBlockIconMenuHandler = null;
     let __tmDocMenuObserver = null;
+    let __tmNativeDocCheckboxSyncClickHandler = null;
+    let __tmNativeDocCheckboxSyncObserver = null;
+    const __tmNativeDocCheckboxReconcileTimers = new Map();
+    const __tmNativeDocCheckboxReconcileVersions = new Map();
+    const __tmNativeDocCheckboxSyncQueue = [];
+    let __tmNativeDocCheckboxSyncQueueRunning = false;
+    const __tmNativeDocCheckboxPendingBatch = new Map();
+    let __tmNativeDocCheckboxBatchTimer = null;
+    let __tmNativeDocCheckboxBatchSeq = 0;
     let __tmLastRightClickedTitleProtyle = null;
     let __tmLastRightClickedTitleAtMs = 0;
     let __tmLastRightClickedBlockEl = null;
@@ -22456,6 +23344,15 @@ async function __tmRefreshAfterWake(reason) {
             __tmRenderChecklistPreserveScroll();
             return;
         }
+        if (String(state.viewMode || '').trim() === 'timeline') {
+            try {
+                const id0 = Number(state.__tmCollapseRafId) || 0;
+                if (id0) cancelAnimationFrame(id0);
+                state.__tmCollapseRafId = 0;
+            } catch (e) {}
+            if (!__tmRerenderCollapseInPlace()) render();
+            return;
+        }
         try {
             const id0 = Number(state.__tmCollapseRafId) || 0;
             if (id0) cancelAnimationFrame(id0);
@@ -22986,6 +23883,20 @@ async function __tmRefreshAfterWake(reason) {
         return Number.isFinite(scrollWidth) && scrollWidth > 0 ? scrollWidth : 0;
     }
 
+    function __tmBindTimelineLeftCollapseInteractions(leftBodyEl) {
+        const leftBody = leftBodyEl instanceof HTMLElement ? leftBodyEl : null;
+        if (!leftBody) return;
+        const prev = leftBody.__tmTimelineLeftCollapseHandler;
+        if (prev && typeof prev === 'object') {
+            try {
+                if (typeof prev.onPointerDown === 'function') leftBody.removeEventListener('pointerdown', prev.onPointerDown, true);
+            } catch (e) {}
+        } else if (typeof prev === 'function') {
+            try { leftBody.removeEventListener('click', prev, true); } catch (e) {}
+        }
+        try { leftBody.__tmTimelineLeftCollapseHandler = null; } catch (e) {}
+    }
+
     function __tmRerenderTimelineInPlace(modalEl) {
         const modal = modalEl instanceof Element ? modalEl : state.modal;
         if (!modal) return false;
@@ -23075,6 +23986,7 @@ async function __tmRefreshAfterWake(reason) {
                     ? 'tm-timer-focus'
                     : (tomatoFocusModeEnabled ? 'tm-timer-dim' : ''))
                 : '';
+            const finalRowClass = [rowClass, isMultiSelected ? 'tm-task-row--multi-selected' : ''].filter(Boolean).join(' ');
 
             const allChildren = task.children || [];
             const totalChildren = allChildren.length;
@@ -23099,7 +24011,7 @@ async function __tmRefreshAfterWake(reason) {
                                 ${treeGuides}
                                 <span class="${leadingClass}">
                                     ${leadingRing}
-                                ${__tmRenderTaskCheckbox(task.id, task, { checked: task.done, disabled: isGloballyLocked, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
+                                ${__tmRenderTaskCheckbox(task.id, task, { checked: task.done, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
                                     ${toggle}
                                 </span>
                             <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}">
@@ -23155,6 +24067,7 @@ async function __tmRefreshAfterWake(reason) {
         }
         const html = leftRows.join('') || `<tr><td colspan="3" style="text-align:center; padding:40px; color:var(--tm-secondary-text);">暂无任务</td></tr>`;
         try { tbody.innerHTML = html; } catch (e) { return false; }
+        try { __tmBindTimelineLeftCollapseInteractions(leftBody); } catch (e) {}
 
         const view = globalThis.__TaskHorizonGanttView;
         if (view && typeof view.render === 'function' && ganttHeader && ganttBody) {
@@ -32953,7 +33866,7 @@ async function __tmRefreshAfterWake(reason) {
                         <div class="tm-checklist-leading${hasChildren ? ' tm-checklist-leading--branch' : ''}${hasChildren && collapsed ? ' tm-checklist-leading--collapsed' : ''}">
                             ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);">${__tmRenderToggleIcon(16, collapsed ? 0 : 90, 'tm-tree-toggle-icon')}</span>` : '<span class="tm-tree-toggle tm-tree-toggle--placeholder" aria-hidden="true"></span>'}
                             ${hasChildren && collapsed ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>' : ''}
-                            ${__tmRenderTaskCheckbox(String(task.id || ''), task, { checked: task.done, disabled: GlobalLock.isLocked(), extraClass: GlobalLock.isLocked() ? 'tm-operating' : '' })}
+                            ${__tmRenderTaskCheckbox(String(task.id || ''), task, { checked: task.done, extraClass: GlobalLock.isLocked() ? 'tm-operating' : '' })}
                         </div>
                         <div class="tm-checklist-item-main">
                             <div class="${titleRowClass}">
@@ -33222,7 +34135,7 @@ async function __tmRefreshAfterWake(reason) {
                                 ${treeGuides}
                                 <span class="${leadingClass}">
                                     ${leadingRing}
-                                ${__tmRenderTaskCheckbox(task.id, task, { checked: task.done, disabled: isGloballyLocked, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
+                                ${__tmRenderTaskCheckbox(task.id, task, { checked: task.done, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
                                     ${toggle}
                                 </span>
                                 <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}">
@@ -33329,7 +34242,6 @@ async function __tmRefreshAfterWake(reason) {
             const statusOptions = statusOptionsRaw
                 .map(o => ({ id: String(o?.id || '').trim(), name: String(o?.name || '').trim(), color: String(o?.color || '').trim() }))
                 .filter(o => o.id);
-            const statusOptionById = new Map(statusOptions.map((o) => [o.id, o]));
             const todoOpt = statusOptions.find(o => o.id === 'todo') || { id: 'todo', name: '待办', color: '#757575' };
             const doneOpt = { id: '__done__', name: '已完成', color: '#9e9e9e', kind: 'status' };
             const colsStatus = showDoneCol
@@ -33696,15 +34608,17 @@ async function __tmRefreshAfterWake(reason) {
                 const content = String(task?.content || '').trim();
                 const docId = String(task?.root_id || '').trim();
                 const docName = docNameById.get(docId) || '';
-                const st = __tmResolveUndoneStatusValue(task?.customStatus, statusOptions);
-                const opt = statusOptionById.get(st) || (st === 'todo' ? todoOpt : { id: st, name: st, color: '#757575' });
+                const opt = __tmResolveTaskStatusDisplayOption(task, statusOptions, {
+                    fallbackColor: task?.done ? '#9e9e9e' : '#757575',
+                    fallbackName: task?.done ? '完成' : (todoOpt?.name || '待办'),
+                });
                 const timeTxt = String(task?.completionTime || '').trim() || String(task?.startDate || '').trim();
                 const dateTxt = timeTxt ? __tmFormatTaskTime(timeTxt) : '';
                 const directChildStats = getDirectChildStats(task);
                 const totalChildren = directChildStats.total;
                 const statusChipStyle = __tmBuildStatusChipStyle(opt.color || '#757575');
                 const statusChip = task?.done
-                    ? `<span class="tm-status-tag" style="${__tmBuildStatusChipStyle('#9e9e9e')};cursor:default;">完成</span>`
+                    ? `<span class="tm-status-tag" style="${statusChipStyle};cursor:default;">${esc(opt.name || '完成')}</span>`
                     : `<span class="tm-status-tag" style="${statusChipStyle}" onclick="tmKanbanOpenStatusSelect('${id}', this, event)">${esc(opt.name || '')}</span>`;
                 const priorityChipStyle = __tmBuildPriorityChipStyle(task?.priority);
                 const priorityChip = `<span class="tm-kanban-priority-chip" style="${priorityChipStyle}" onclick="tmPickPriority('${id}', this, event)">${__tmRenderPriorityJira(task?.priority, false)}</span>`;
@@ -33728,7 +34642,7 @@ async function __tmRefreshAfterWake(reason) {
                         <div class="tm-kanban-card-top">
                             <div class="tm-kanban-card-head">
                                 ${toggleHtml || ''}
-                                    ${__tmRenderTaskCheckboxWrap(id, task, { checked: task?.done, disabled: isGloballyLocked, extraClass: isGloballyLocked ? 'tm-operating' : '', collapsed: !!(isParent && totalChildren > 0 && __tmKanbanGetCollapsedSet().has(id)) })}
+                                    ${__tmRenderTaskCheckboxWrap(id, task, { checked: task?.done, extraClass: isGloballyLocked ? 'tm-operating' : '', collapsed: !!(isParent && totalChildren > 0 && __tmKanbanGetCollapsedSet().has(id)) })}
                                 <span class="tm-kanban-card-title-inline tm-task-content-clickable" onclick="tmJumpToTask('${id}', event)"${__tmBuildTooltipAttrs(String(content || '(无内容)').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, content || '(无内容)')}</span>
                             </div>
                             <button class="tm-kanban-more" onclick="tmOpenTaskDetail('${id}', event)" title="任务详情">${__tmRenderLucideIcon('dots-three')}</button>
@@ -34931,12 +35845,14 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                     ` : '';
                     const ghostTip = isGhost ? `<span class="tm-kanban-chip tm-kanban-chip--muted" style="cursor:default;">快照</span>` : '';
-                    const st = __tmResolveUndoneStatusValue(task?.customStatus, statusOptions);
-                    const opt = statusOptions.find(o => o.id === st) || (st === 'todo' ? todoOpt : { id: st, name: st, color: '#757575' });
+                    const opt = __tmResolveTaskStatusDisplayOption(task, statusOptions, {
+                        fallbackColor: task?.done ? '#9e9e9e' : '#757575',
+                        fallbackName: task?.done ? '完成' : (todoOpt?.name || '待办'),
+                    });
                     const editableMeta = !isGhost;
                     const statusChipStyle = __tmBuildStatusChipStyle(opt.color || '#757575');
                     const statusChip = task?.done
-                        ? `<span class="tm-status-tag" style="${__tmBuildStatusChipStyle('#9e9e9e')};cursor:default;">完成</span>`
+                        ? `<span class="tm-status-tag" style="${statusChipStyle};cursor:default;">${esc(opt.name || '完成')}</span>`
                         : `<span class="tm-status-tag" style="${statusChipStyle};cursor:${editableMeta ? 'pointer' : 'default'};" ${editableMeta ? `onclick="tmWhiteboardEditStatus('${escSq(tid)}', this, event)"` : ''}>${esc(opt.name || '')}</span>`;
                     const priorityChipStyle = __tmBuildPriorityChipStyle(task?.priority);
                     const priorityChip = `<span class="tm-kanban-priority-chip" style="${priorityChipStyle};cursor:${editableMeta ? 'pointer' : 'default'};" ${editableMeta ? `onclick="tmWhiteboardEditPriority('${escSq(tid)}', this, event)"` : ''}>${__tmRenderPriorityJira(task?.priority, false)}</span>`;
@@ -34956,7 +35872,7 @@ async function __tmRefreshAfterWake(reason) {
                             ${collapseProxyDot}
                             <div class="tm-whiteboard-card-head">
                                 ${toggleHtml}
-                                ${__tmRenderTaskCheckboxWrap(tid, task, { checked: task?.done, disabled: (GlobalLock.isLocked() || isGhost), extraClass: GlobalLock.isLocked() ? 'tm-operating' : '', title: isGhost ? '快照任务，当前不可直接勾选' : '', stopMouseDown: true, stopClick: true, collapsed: !!(collapsed && children.length) })}
+                                ${__tmRenderTaskCheckboxWrap(tid, task, { checked: task?.done, disabled: isGhost, extraClass: GlobalLock.isLocked() ? 'tm-operating' : '', title: isGhost ? '快照任务，当前不可直接勾选' : '', stopMouseDown: true, stopClick: true, collapsed: !!(collapsed && children.length) })}
                                 <div class="tm-whiteboard-card-title ${task?.done ? 'tm-task-done' : ''}">
                                     <span class="tm-task-content-clickable" onclick="tmJumpToTask('${escSq(tid)}', event)"${__tmBuildTooltipAttrs(String(task?.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task?.markdown, String(task?.content || '').trim() || '(无内容)')}</span>
                                 </div>
@@ -35400,6 +36316,11 @@ async function __tmRefreshAfterWake(reason) {
         const timelineMobileFloatingToolbarHtml = showMobileTimelineFloatingToolbar
             ? `<div class="tm-timeline-mobile-toolbar"><div class="tm-timeline-mobile-toolbar__inner">${__tmRenderTimelineToolbarButtons({ buttonClass: 'tm-timeline-mobile-toolbar__btn', interactionAttrs: ' onpointerdown=\"tmTouchTimelineMobileToolbarButton(event)\" ontouchstart=\"tmTouchTimelineMobileToolbarButton(event)\"', clickPrefix: 'tmTouchTimelineMobileToolbarButton(event);' })}</div></div>`
             : '';
+        const mainStageBottomInset = showMobileTimelineFloatingToolbar
+            ? 'calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 112px)'
+            : (showMobileBottomViewBar
+                ? 'calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 52px)'
+                : '0px');
         const bodyWithSideDockHtml = (showCalendarSideDock || showAiSideDock)
             ? `
                 <div class="tm-main-body-with-cal-dock">
@@ -36468,7 +37389,7 @@ async function __tmRefreshAfterWake(reason) {
                     }
                 </style>
                 
-                <div class="tm-main-stage${stageAnimClass}${showMobileTimelineFloatingToolbar ? ' tm-main-stage--timeline-mobile-toolbar' : ''}">
+                <div class="tm-main-stage${stageAnimClass}${showMobileBottomViewBar ? ' tm-main-stage--with-bottom-viewbar' : ''}${showMobileTimelineFloatingToolbar ? ' tm-main-stage--timeline-mobile-toolbar' : ''}" style="--tm-view-bottom-inset:${mainStageBottomInset};">
                     ${timelineMobileFloatingToolbarHtml}
                     ${bodyWithSideDockHtml}
                     ${multiSelectBarHtml}
@@ -36579,6 +37500,7 @@ async function __tmRefreshAfterWake(reason) {
                 const ganttHeader = state.modal.querySelector('#tmGanttHeader');
                 const timelineScrollHost = __tmGetTimelineGlobalScrollHost(state.modal);
                 const useGlobalScroll = !!timelineScrollHost;
+                try { __tmBindTimelineLeftCollapseInteractions(leftBody); } catch (e) {}
                 
                 if (useGlobalScroll) {
                     try { if (leftBody) leftBody.scrollTop = 0; } catch (e) {}
@@ -40773,6 +41695,26 @@ async function __tmRefreshAfterWake(reason) {
         return window.tmWhiteboardRemoveLink(id, ev);
     };
 
+    window.tmTimelineSelectLink = function(linkId, ev) {
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        const id = String(linkId || '').trim();
+        if (!id) return;
+        state.timelineSelectedLinkId = String(state.timelineSelectedLinkId || '').trim() === id ? '' : id;
+        try { state.__tmTimelineRenderDeps?.(); } catch (e) {}
+    };
+
+    window.tmTimelineRemoveLink = async function(linkId, ev) {
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        const id = String(linkId || '').trim();
+        if (!id) return;
+        const manual = __tmGetManualTaskLinks().filter((x) => String(x?.id || '').trim() !== id);
+        __tmSetManualTaskLinks(manual);
+        if (String(state.timelineSelectedLinkId || '').trim() === id) state.timelineSelectedLinkId = '';
+        try { await SettingsStore.save(); } catch (e) {}
+        try { state.__tmTimelineRenderDeps?.(); } catch (e) {}
+        render();
+    };
+
     window.tmWhiteboardToggleSidebar = async function(ev) {
         try { ev?.stopPropagation?.(); } catch (e) {}
         const next = !SettingsStore.data.whiteboardSidebarCollapsed;
@@ -41909,13 +42851,17 @@ async function __tmRefreshAfterWake(reason) {
         return out;
     }
 
-    async function __tmKanbanWaitForUnlock(timeoutMs = 8000) {
+    async function __tmWaitForGlobalUnlock(timeoutMs = 8000) {
         const start = Date.now();
         while (GlobalLock.isLocked()) {
             if (Date.now() - start > timeoutMs) return false;
             await new Promise(r => setTimeout(r, 32));
         }
         return true;
+    }
+
+    async function __tmKanbanWaitForUnlock(timeoutMs = 8000) {
+        return await __tmWaitForGlobalUnlock(timeoutMs);
     }
 
     function __tmNormalizeHeadingLevel(v) {
@@ -44280,27 +45226,28 @@ async function __tmRefreshAfterWake(reason) {
 
             const docId = String(task?.docId || task?.root_id || '').trim();
             const isDark = __tmIsDarkMode();
-            const baseColor = __tmGetDocColorHex(docId, isDark);
-            const done = !!task?.done;
-            const barColor = done
-                ? __tmDesaturateHex(__tmDarkenHex(baseColor, isDark ? 0.48 : 0.36), isDark ? 0.36 : 0.26)
-                : baseColor;
-
-            const title = `${String(task?.content || '').trim()}\n${view.formatDateOnlyFromTs(aTs)} ~ ${view.formatDateOnlyFromTs(bTs)}`;
-            const milestoneTitle = `${String(task?.content || '').trim()}\n里程碑：${view.formatDateOnlyFromTs(bTs)}`;
+            const barLayout = {
+                left,
+                width,
+                dayWidth: dayWidth0,
+                startTs: aTs,
+                endTs: bTs,
+                isDark,
+            };
 
             if (isMilestone && bTs) {
                 if (bar) bar.remove();
                 if (marker) {
                     marker.style.left = `${milestoneLeft}px`;
-                    marker.title = milestoneTitle;
+                    marker.innerHTML = `${__tmRenderLucideIcon('flag', '', { size: 12 })}<span class="tm-gantt-milestone__label">里程碑</span>`;
+                    marker.title = `${String(task?.content || '').trim() || '(无内容)'}\n里程碑：${view.formatDateOnlyFromTs(bTs)}`;
                     return;
                 }
                 const markerEl = document.createElement('div');
                 markerEl.className = 'tm-gantt-milestone';
                 markerEl.style.left = `${milestoneLeft}px`;
-                markerEl.title = milestoneTitle;
-                markerEl.textContent = '🚩';
+                markerEl.title = `${String(task?.content || '').trim() || '(无内容)'}\n里程碑：${view.formatDateOnlyFromTs(bTs)}`;
+                markerEl.innerHTML = `${__tmRenderLucideIcon('flag', '', { size: 12 })}<span class="tm-gantt-milestone__label">里程碑</span>`;
                 rowEl.appendChild(markerEl);
                 return;
             }
@@ -44308,31 +45255,12 @@ async function __tmRefreshAfterWake(reason) {
             if (marker) marker.remove();
 
             if (bar) {
-                bar.style.left = `${left}px`;
-                bar.style.width = `${width}px`;
-                bar.style.background = barColor;
-                bar.style.top = '50%';
-                bar.style.transform = 'translateY(-50%)';
-                bar.title = title;
+                view.applyTimelineTaskBarElement?.(bar, task, barLayout);
                 return;
             }
 
             const barEl = document.createElement('div');
-            barEl.className = 'tm-gantt-bar';
-            barEl.style.left = `${left}px`;
-            barEl.style.width = `${width}px`;
-            barEl.style.background = barColor;
-            barEl.style.top = '50%';
-            barEl.style.transform = 'translateY(-50%)';
-            barEl.title = title;
-            const h1 = document.createElement('div');
-            h1.className = 'tm-gantt-bar-handle tm-gantt-bar-handle--start';
-            h1.setAttribute('data-handle', 'start');
-            const h2 = document.createElement('div');
-            h2.className = 'tm-gantt-bar-handle tm-gantt-bar-handle--end';
-            h2.setAttribute('data-handle', 'end');
-            barEl.appendChild(h1);
-            barEl.appendChild(h2);
+            view.applyTimelineTaskBarElement?.(barEl, task, barLayout);
             rowEl.appendChild(barEl);
         } catch (e) {}
     }
@@ -44432,6 +45360,8 @@ async function __tmRefreshAfterWake(reason) {
         const rawDocName = String(task.rawDocName || task.raw_doc_name || task.doc_name || task.docName || docNameFallback || '未知文档').trim() || '未知文档';
         task.rawDocName = rawDocName;
         task.docName = __tmGetDocDisplayName(resolvedDocId ? { id: resolvedDocId, name: rawDocName } : { name: rawDocName }, rawDocName);
+        task.attrHostId = String(task.attrHostId || task.attr_host_id || task.id || '').trim();
+        task.attr_host_id = task.attrHostId;
         task.parentTaskId = task.parentTaskId || task.parent_task_id || null;
         task.docId = resolvedDocId || null;
         task.docSeq = Number.isFinite(Number(task.docSeq ?? task.doc_seq)) ? Number(task.docSeq ?? task.doc_seq) : Number.POSITIVE_INFINITY;
@@ -48169,7 +49099,7 @@ async function __tmRefreshAfterWake(reason) {
                 <div class="tm-task-detail-subtask" style="--tm-task-detail-depth:${depth};">
                     <div class="tm-task-detail-subtask-row" data-tm-detail-subtask-menu="${esc(tid)}">
                         <div class="tm-task-detail-subtask-main">
-                            ${__tmRenderTaskCheckbox(tid, viewTask, { checked: viewTask?.done, disabled: GlobalLock.isLocked(), extraClass: GlobalLock.isLocked() ? 'tm-operating' : '', stopMouseDown: true, stopClick: true, priority: canonicalPriority })}
+                            ${__tmRenderTaskCheckbox(tid, viewTask, { checked: viewTask?.done, extraClass: GlobalLock.isLocked() ? 'tm-operating' : '', stopMouseDown: true, stopClick: true, priority: canonicalPriority })}
                             <textarea class="tm-task-detail-subtask-title${viewTask?.done ? ' is-done' : ''}" data-tm-detail-subtask-content="${esc(tid)}" rows="1" ${readOnly ? 'readonly' : ''} title="${readOnly ? '其他块内容请回原文档编辑' : '直接编辑子任务内容'}">${esc(String(viewTask?.content || '').trim() || '')}</textarea>
                         </div>
                         <div class="tm-task-detail-subtask-trailing">
@@ -50458,7 +51388,7 @@ async function __tmRefreshAfterWake(reason) {
                             ${treeGuides}
                             <span class="${leadingClass}">
                                 ${leadingRing}
-                                ${__tmRenderTaskCheckbox(task.id, task, { checked: done, disabled: isGloballyLocked, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
+                                ${__tmRenderTaskCheckbox(task.id, task, { checked: done, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
                                 ${toggle}
                             </span>
                             <span class="tm-task-text ${done ? 'tm-task-done' : ''}"
@@ -51194,10 +52124,11 @@ async function __tmRefreshAfterWake(reason) {
                     if (!task.customStatus && saved.data.customStatus) task.customStatus = saved.data.customStatus;
 
                     // 恢复MetaStore映射
-                    if (saved.oldId !== task.id) {
-                        MetaStore.remapId(saved.oldId, task.id);
-                    }
+                if (saved.oldId !== task.id) {
+                    MetaStore.remapId(saved.oldId, task.id);
                 }
+
+            }
 
                 // 递归恢复子任务
                 if (task.children && task.children.length > 0) {
@@ -51262,12 +52193,27 @@ async function __tmRefreshAfterWake(reason) {
         if (!task.remark && saved.remark) task.remark = saved.remark;
         if (!task.completionTime && saved.completionTime) task.completionTime = saved.completionTime;
         if (!task.customTime && saved.customTime) task.customTime = saved.customTime;
+        if (!task.customStatus && saved.customStatus) {
+            task.customStatus = String(saved.customStatus || '').trim();
+            task.custom_status = task.customStatus;
+        }
         if (saved.customFieldValues && typeof saved.customFieldValues === 'object') {
             const current = (task.customFieldValues && typeof task.customFieldValues === 'object') ? task.customFieldValues : {};
             task.customFieldValues = __tmNormalizeTaskCustomFieldValues(current, saved.customFieldValues);
         }
 
         return task;
+    }
+
+    function __tmRestoreTaskTreeFromMeta(tasks) {
+        const list = Array.isArray(tasks) ? tasks : [];
+        list.forEach((task) => {
+            restoreTaskFromMeta(task);
+            if (Array.isArray(task?.children) && task.children.length > 0) {
+                __tmRestoreTaskTreeFromMeta(task.children);
+            }
+        });
+        return list;
     }
 
     function __tmCacheTaskInState(task, options = {}) {
@@ -51373,47 +52319,114 @@ async function __tmRefreshAfterWake(reason) {
         });
     }
 
-    async function __tmResolveTaskIdFromAnyBlockId(id) {
+    function __tmGetTaskAttrHostId(task) {
+        return String(task?.attrHostId || task?.attr_host_id || task?.id || '').trim();
+    }
+
+    async function __tmResolveTaskBindingFromAnyBlockId(id) {
         const bid = String(id || '').trim();
-        if (!bid) return '';
-        if (state.flatTasks?.[bid]) return bid;
+        if (!bid) return null;
+        const fromState = state.flatTasks?.[bid] || state.pendingInsertedTasks?.[bid] || null;
+        if (fromState) {
+            return {
+                taskId: String(fromState.id || '').trim(),
+                attrHostId: __tmGetTaskAttrHostId(fromState) || String(fromState.id || '').trim(),
+                task: fromState,
+            };
+        }
         const direct = await API.getTaskById(bid).catch(() => null);
-        if (direct && typeof direct === 'object') return bid;
+        if (direct && typeof direct === 'object') {
+            return {
+                taskId: String(direct.id || bid).trim(),
+                attrHostId: __tmGetTaskAttrHostId(direct) || String(direct.id || bid).trim(),
+                task: direct,
+            };
+        }
+
+        const readBlockRow = async (blockId) => {
+            try {
+                const rows = await API.getBlocksByIds([blockId]);
+                return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+            } catch (e) {
+                return null;
+            }
+        };
+
+        const resolveTaskAttrHostIdByTask = async (taskId, parentListId = '') => {
+            const tid = String(taskId || '').trim();
+            const listId = String(parentListId || '').trim();
+            if (!tid) return '';
+            if (!listId) return tid;
+            const parentList = await readBlockRow(listId);
+            const parentType = String(parentList?.type || '').trim().toLowerCase();
+            const parentSubtype = String(parentList?.subtype || '').trim().toLowerCase();
+            if (parentType !== 'l' || parentSubtype !== 't') return tid;
+            let taskIds = [];
+            try { taskIds = await API.getTaskIdsInList(listId); } catch (e) { taskIds = []; }
+            if (taskIds.length === 1 && String(taskIds[0] || '').trim() === tid) return listId;
+            return tid;
+        };
+
         let cur = bid;
         for (let depth = 0; depth < 30; depth++) {
-            let row = null;
-            try {
-                const rows = await API.getBlocksByIds([cur]);
-                row = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
-            } catch (e) {
-                row = null;
-            }
-            if (!row || typeof row !== 'object') return '';
+            const row = await readBlockRow(cur);
+            if (!row || typeof row !== 'object') return null;
             const type = String(row.type || '').trim().toLowerCase();
             const subtype = String(row.subtype || '').trim().toLowerCase();
-            if (type === 'i' && subtype === 't') return String(row.id || '').trim();
+            const rowId = String(row.id || cur).trim();
+            if (type === 'i' && subtype === 't') {
+                const attrHostId = await resolveTaskAttrHostIdByTask(rowId, row.parent_id);
+                return { taskId: rowId, attrHostId: attrHostId || rowId, task: null };
+            }
+            if (type === 'l' && subtype === 't') {
+                let taskIds = [];
+                try { taskIds = await API.getTaskIdsInList(rowId); } catch (e) { taskIds = []; }
+                if (taskIds.length === 1) {
+                    const taskId = String(taskIds[0] || '').trim();
+                    if (taskId) return { taskId, attrHostId: rowId, task: null };
+                }
+            }
             const parentId = String(row.parent_id || '').trim();
-            if (!parentId || parentId === cur) return '';
+            if (!parentId || parentId === cur) return null;
             cur = parentId;
         }
-        return '';
+        return null;
+    }
+
+    async function __tmResolveTaskAttrHostIdFromAnyBlockId(id) {
+        const resolved = await __tmResolveTaskBindingFromAnyBlockId(id);
+        return String(resolved?.attrHostId || '').trim();
+    }
+
+    async function __tmResolveTaskIdFromAnyBlockId(id) {
+        const resolved = await __tmResolveTaskBindingFromAnyBlockId(id);
+        return String(resolved?.taskId || '').trim();
     }
 
     async function __tmBuildTaskLikeFromBlockId(id) {
         const bid = String(id || '').trim();
         if (!bid) return null;
+        let resolvedTaskId = '';
+        let attrHostId = '';
+        try {
+            const binding = await __tmResolveTaskBindingFromAnyBlockId(bid);
+            resolvedTaskId = String(binding?.taskId || '').trim();
+            attrHostId = String(binding?.attrHostId || '').trim();
+        } catch (e) {}
+        const sourceId = resolvedTaskId || bid;
+        const attrsId = attrHostId || sourceId;
         let km = '';
-        try { km = await API.getBlockKramdown(bid); } catch (e) { km = ''; }
+        try { km = await API.getBlockKramdown(sourceId); } catch (e) { km = ''; }
         let parsed = { done: false, content: '' };
         try { parsed = API.parseTaskStatus(km || ''); } catch (e) {}
         let attrs = {};
         try {
-            const res = await API.call('/api/attr/getBlockAttrs', { id: bid });
+            const res = await API.call('/api/attr/getBlockAttrs', { id: attrsId });
             if (res && res.code === 0 && res.data && typeof res.data === 'object') attrs = res.data;
         } catch (e) {}
         let blockRow = null;
         try {
-            const safeId = bid.replace(/'/g, "''");
+            const safeId = sourceId.replace(/'/g, "''");
             const res = await API.call('/api/query/sql', {
                 stmt: `SELECT b.root_id, b.parent_id, b.path, b.sort, b.created, b.updated, doc.content AS doc_name, doc.hpath AS doc_path FROM blocks b LEFT JOIN blocks doc ON doc.id = b.root_id WHERE b.id = '${safeId}' LIMIT 1`
             });
@@ -51421,7 +52434,7 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
         const docName = String(blockRow?.doc_name || '').trim() || '当前块';
         const row = {
-            id: bid,
+            id: sourceId,
             markdown: km || '',
             raw_content: String(parsed?.content || '').trim() || '(无内容)',
             content: String(parsed?.content || '').trim() || '(无内容)',
@@ -51439,6 +52452,8 @@ async function __tmRefreshAfterWake(reason) {
             milestone: String(attrs['custom-milestone-event'] || '').trim(),
             custom_time: String(attrs['custom-time'] || '').trim(),
             customTime: String(attrs['custom-time'] || '').trim(),
+            attrHostId: attrsId,
+            attr_host_id: attrsId,
             parent_id: String(blockRow?.parent_id || '').trim(),
             parent_task_id: '',
             root_id: String(blockRow?.root_id || '').trim(),
@@ -51627,9 +52642,15 @@ async function __tmRefreshAfterWake(reason) {
 
         // 检查全局锁
         if (GlobalLock.isLocked()) {
-            if (opts.suppressHint !== true) hint('⚠ 操作频繁，请等待10ms后再试', 'warning');
-            if (ev?.target) ev.target.checked = !targetDone;
-            return;
+            const waited = opts.force === true ? await __tmWaitForGlobalUnlock(12000) : false;
+            if (!waited) {
+                if (opts.force === true) {
+                    throw new Error('完成状态操作仍在进行中，请稍后重试');
+                }
+                if (opts.suppressHint !== true) hint('⚠ 操作频繁，请等待当前勾选完成后再试', 'warning');
+                if (ev?.target) ev.target.checked = !targetDone;
+                return;
+            }
         }
 
         if (task.done === targetDone && opts.force !== true) return;
@@ -51828,12 +52849,24 @@ async function __tmRefreshAfterWake(reason) {
                 }
             }
 
+            if (!apiSuccess && !clickSuccess) {
+                throw new Error('未能更新任务复选框状态');
+            }
+
             // 等待思源处理完成
             await new Promise(r => setTimeout(r, 150));
 
-            // 直接使用 targetDone 作为实际状态
-            // 因为我们已经模拟点击了思源的复选框，思源会正确处理状态变化
-            const actualDone = targetDone;
+            let actualDone = targetDone;
+            if (!apiSuccess) {
+                const domDoneAfter = __tmReadNativeDocTaskDoneFromDom(id);
+                if (domDoneAfter === null) {
+                    throw new Error('无法确认任务复选框状态');
+                }
+                actualDone = !!domDoneAfter;
+                if (actualDone !== targetDone) {
+                    throw new Error('任务复选框状态未同步成功');
+                }
+            }
 
             let statusSyncError = null;
             if (statusPatch && Object.keys(statusPatch).length > 0) {
@@ -51917,11 +52950,19 @@ async function __tmRefreshAfterWake(reason) {
 
             // 恢复
             task.markdown = originalMarkdown;
-            task.done = !targetDone;
+            task.done = originalDone;
             task.customStatus = originalCustomStatus;
+            task.custom_status = originalCustomStatus;
             try {
                 if (!state.doneOverrides || typeof state.doneOverrides !== 'object') state.doneOverrides = {};
-                state.doneOverrides[String(id)] = !targetDone;
+                state.doneOverrides[String(id)] = originalDone;
+            } catch (e) {}
+            try {
+                MetaStore.set(String(id || '').trim(), {
+                    done: originalDone,
+                    customStatus: originalCustomStatus,
+                    content: task.content,
+                });
             } catch (e) {}
 
             // 尝试恢复树状态
@@ -51931,9 +52972,10 @@ async function __tmRefreshAfterWake(reason) {
 
             recalcStats();
             if (useCalendarLocalRefresh) {
-                try { globalThis.__tmCalendar?.syncTaskDoneInPlace?.(id, !targetDone, { allowRefetch: true }); } catch (e) {}
+                try { globalThis.__tmCalendar?.syncTaskDoneInPlace?.(id, originalDone, { allowRefetch: true }); } catch (e) {}
                 __tmRestoreChecklistDetailScrollSnapshot(detailScrollSnapshot);
             } else {
+                try { applyFilters(); } catch (e) {}
                 render();
                 __tmRestoreChecklistDetailScrollSnapshot(detailScrollSnapshot);
             }
@@ -51969,16 +53011,12 @@ async function __tmRefreshAfterWake(reason) {
             done: !!task.done,
             ...((statusPatch && Object.keys(statusPatch).length > 0) ? __tmCaptureTaskPatchInverse(tid, statusPatch) : {}),
         };
-        if (GlobalLock.isLocked()) {
-            hint('⚠ 操作频繁，请稍后再试', 'warning');
-            if (ev?.target) ev.target.checked = !targetDone;
-            return;
-        }
         try {
             await __tmEnqueueQueuedOp({
                 type: 'setDone',
                 docId: String(task.root_id || task.docId || '').trim(),
-                laneKey: String(task.root_id || task.docId || '').trim() ? `doc:${String(task.root_id || task.docId || '').trim()}` : `task:${tid}`,
+                laneKey: 'setDone:global',
+                coalesceKey: `setDone:${tid}`,
                 data: {
                     taskId: tid,
                     done: targetDone,
@@ -52331,6 +53369,7 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         TreeProtector.restoreTree(rootTasks);
+        __tmRestoreTaskTreeFromMeta(rootTasks);
 
         // 4. 恢复折叠状态
         TreeProtector.restoreCollapsedState();
@@ -54626,6 +55665,14 @@ async function __tmRefreshAfterWake(reason) {
         __tmModifiedTaskIds.clear();
     };
 
+    globalThis.__taskHorizonBuildTaskLikeFromBlockId = async (blockId) => {
+        try {
+            return await __tmBuildTaskLikeFromBlockId(blockId);
+        } catch (e) {
+            return null;
+        }
+    };
+
     window.tmQuickAddClose = function() {
         state.__quickAddDocPickerUnstack?.();
         state.__quickAddDocPickerUnstack = null;
@@ -56674,7 +57721,7 @@ async function __tmRefreshAfterWake(reason) {
                         <div class="tm-checklist-leading${hasChildren ? ' tm-checklist-leading--branch' : ''}${hasChildren && collapsed ? ' tm-checklist-leading--collapsed' : ''}">
                             ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);">${__tmRenderToggleIcon(16, collapsed ? 0 : 90, 'tm-tree-toggle-icon')}</span>` : '<span class="tm-tree-toggle tm-tree-toggle--placeholder" aria-hidden="true"></span>'}
                             ${hasChildren && collapsed ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>' : ''}
-                            ${__tmRenderTaskCheckbox(String(task.id || ''), task, { checked: task.done, disabled: GlobalLock.isLocked(), extraClass: GlobalLock.isLocked() ? 'tm-operating' : '' })}
+                            ${__tmRenderTaskCheckbox(String(task.id || ''), task, { checked: task.done, extraClass: GlobalLock.isLocked() ? 'tm-operating' : '' })}
                         </div>
                         <div class="tm-checklist-item-main" ondblclick="tmChecklistItemDblClick('${escSq(String(task.id || ''))}', event)">
                             <div class="${titleRowClass}">
@@ -63666,27 +64713,36 @@ async function __tmRefreshAfterWake(reason) {
         SettingsStore.data.collapsedGroups = [...state.collapsedGroups];
         // 直接同步到本地存储，不等待云端同步，避免延迟
         try { Storage.set('tm_collapsed_groups', SettingsStore.data.collapsedGroups); } catch (e) {}
-        // 同步到云端设置，避免下次加载时被旧云端配置覆盖
-        try { SettingsStore.save(); } catch (e) {}
+        const persistCollapsedGroups = () => {
+            try {
+                const p = SettingsStore.save();
+                if (p && typeof p.catch === 'function') p.catch(() => null);
+            } catch (e) {}
+        };
         if (isChecklist) {
+            persistCollapsedGroups();
             __tmRenderChecklistPreserveScroll();
             return;
         }
         if (isCalendarSidebarChecklist) {
+            persistCollapsedGroups();
             __tmRefreshCalendarSidebarChecklistPreserveScroll();
             return;
         }
         try { __tmUpdateToggleGlyphInDom({ kind: 'group', key: k0, action }); } catch (e) {}
         if (action === 'collapse') {
             if (state.modal && __tmApplyVisibilityFromState(state.modal)) {
+                persistCollapsedGroups();
                 if (!skipAnim) {
                     try { queueMicrotask(() => { try { __tmRunFlipAnimation(state.modal); } catch (e) {} }); } catch (e) {}
                 }
                 return;
             }
+            persistCollapsedGroups();
             __tmScheduleCollapseRerender();
             return;
         }
+        persistCollapsedGroups();
         __tmScheduleCollapseRerender();
     };
 
@@ -63725,28 +64781,40 @@ async function __tmRefreshAfterWake(reason) {
         // 直接同步到本地存储，不等待云端同步，避免延迟
         SettingsStore.data.collapsedTaskIds = [...state.collapsedTaskIds];
         try { Storage.set('tm_collapsed_task_ids', SettingsStore.data.collapsedTaskIds); } catch (e) {}
-        // 同步到云端设置，避免下次加载时被旧云端配置覆盖
-        try { SettingsStore.save(); } catch (e) {}
+        const persistCollapsedTasks = () => {
+            try {
+                const p = SettingsStore.save();
+                if (p && typeof p.catch === 'function') p.catch(() => null);
+            } catch (e) {}
+        };
         if (isChecklist) {
+            persistCollapsedTasks();
             __tmRenderChecklistPreserveScroll();
             return;
         }
         if (isCalendarSidebarChecklist) {
+            persistCollapsedTasks();
             __tmRefreshCalendarSidebarChecklistPreserveScroll();
             return;
         }
         try { __tmUpdateToggleGlyphInDom({ kind: 'task', key, action }); } catch (e) {}
         if (action === 'collapse') {
-            if (useFastListCollapse && state.modal && __tmTryCollapseTaskBranchInList(state.modal, key)) return;
+            if (useFastListCollapse && state.modal && __tmTryCollapseTaskBranchInList(state.modal, key)) {
+                persistCollapsedTasks();
+                return;
+            }
             if (state.modal && __tmApplyVisibilityFromState(state.modal)) {
+                persistCollapsedTasks();
                 if (!skipAnim) {
                     try { queueMicrotask(() => { try { __tmRunFlipAnimation(state.modal); } catch (e) {} }); } catch (e) {}
                 }
                 return;
             }
+            persistCollapsedTasks();
             __tmScheduleCollapseRerender();
             return;
         }
+        persistCollapsedTasks();
         __tmScheduleCollapseRerender();
     };
 
@@ -64919,12 +65987,472 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
     }
 
+    const __TM_NATIVE_DOC_CHECKBOX_SYNC_DELAY_MS = 260;
+
+    function __tmFindNativeDocTaskListItem(target) {
+        try {
+            const node = target instanceof Element ? target : target?.parentElement || null;
+            if (!node || !node.closest) return null;
+            if ((node.matches?.('[data-type="NodeListItem"]') || node.matches?.('.li[data-node-id]')) && node.querySelector?.('.protyle-action--task')) {
+                return node;
+            }
+            const toggle = node.closest('.protyle-action--task');
+            if (!(toggle instanceof Element)) return null;
+            if (!toggle.closest('.protyle')) return null;
+            const listItem = toggle.closest('[data-type="NodeListItem"], .li[data-node-id]');
+            if (!(listItem instanceof Element)) return null;
+            if (!listItem.querySelector('.protyle-action--task')) return null;
+            return listItem;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function __tmResolveNativeDocTaskBlockId(target) {
+        try {
+            const listItem = __tmFindNativeDocTaskListItem(target);
+            if (!(listItem instanceof Element)) return '';
+            return String(__tmResolveAnyBlockIdFromElement(listItem) || '').trim();
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function __tmReadNativeDocTaskDoneFromListItem(listItem) {
+        try {
+            if (!(listItem instanceof Element)) return null;
+            if (listItem.classList?.contains?.('protyle-task--done')) return true;
+            const useEl = listItem.querySelector('.protyle-action--task use');
+            const href = String(useEl?.getAttribute?.('xlink:href') || useEl?.getAttribute?.('href') || '').trim();
+            if (href === '#iconCheck') return true;
+            if (href === '#iconUncheck') return false;
+            const checkboxInput = listItem.querySelector('input[type="checkbox"]');
+            if (checkboxInput instanceof HTMLInputElement) return !!checkboxInput.checked;
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function __tmReadNativeDocTaskDoneFromDom(blockId) {
+        const rawId = String(blockId || '').trim();
+        if (!rawId) return null;
+        const selectors = [
+            `[data-type="NodeListItem"][data-node-id="${rawId}"]`,
+            `.li[data-node-id="${rawId}"]`,
+            `[data-id="${rawId}"][data-type="NodeListItem"]`,
+            `[data-id="${rawId}"].li`,
+        ];
+        for (const selector of selectors) {
+            let listItem = null;
+            try { listItem = document.querySelector(selector); } catch (e) { listItem = null; }
+            if (!(listItem instanceof Element)) continue;
+            return __tmReadNativeDocTaskDoneFromListItem(listItem);
+        }
+        return null;
+    }
+
+    function __tmFindNativeDocTaskListItemsByIds(blockIds) {
+        const ids = Array.from(new Set((Array.isArray(blockIds) ? blockIds : [blockIds]).map((item) => String(item || '').trim()).filter(Boolean)));
+        const out = [];
+        const seen = new Set();
+        ids.forEach((rawId) => {
+            const selectors = [
+                `[data-type="NodeListItem"][data-node-id="${rawId}"]`,
+                `.li[data-node-id="${rawId}"]`,
+                `[data-id="${rawId}"][data-type="NodeListItem"]`,
+                `[data-id="${rawId}"].li`,
+            ];
+            selectors.forEach((selector) => {
+                let listItem = null;
+                try { listItem = document.querySelector(selector); } catch (e) { listItem = null; }
+                if (!(listItem instanceof Element)) return;
+                const itemId = __tmResolveAnyBlockIdFromElement(listItem) || rawId;
+                if (!itemId || seen.has(itemId)) return;
+                seen.add(itemId);
+                out.push(listItem);
+            });
+        });
+        return out;
+    }
+
+    function __tmMirrorNativeDocTaskStatusAttr(blockIds, customStatus) {
+        const ids = Array.from(new Set((Array.isArray(blockIds) ? blockIds : [blockIds]).map((item) => String(item || '').trim()).filter(Boolean)));
+        const nextStatus = String(customStatus || '').trim();
+        if (!ids.length) return false;
+        const listItems = __tmFindNativeDocTaskListItemsByIds(ids);
+        if (!listItems.length) return false;
+        let changed = false;
+        listItems.forEach((listItem) => {
+            const beforeStatus = String(listItem.getAttribute('custom-status') || '').trim();
+            try {
+                if (nextStatus) listItem.setAttribute('custom-status', nextStatus);
+                else listItem.removeAttribute('custom-status');
+            } catch (e) {}
+            const afterStatus = String(listItem.getAttribute('custom-status') || '').trim();
+            if (beforeStatus !== afterStatus) changed = true;
+        });
+        return changed;
+    }
+
+    function __tmBumpNativeDocCheckboxReconcileVersion(blockId) {
+        const rawId = String(blockId || '').trim();
+        if (!rawId) return 0;
+        const nextVersion = (Number(__tmNativeDocCheckboxReconcileVersions.get(rawId)) || 0) + 1;
+        __tmNativeDocCheckboxReconcileVersions.set(rawId, nextVersion);
+        return nextVersion;
+    }
+
+    function __tmIsNativeDocCheckboxReconcileVersionCurrent(blockId, version) {
+        const rawId = String(blockId || '').trim();
+        if (!rawId) return false;
+        return (Number(__tmNativeDocCheckboxReconcileVersions.get(rawId)) || 0) === (Number(version) || 0);
+    }
+
+    function __tmClearNativeDocCheckboxReconcileTimers(blockId) {
+        const rawId = String(blockId || '').trim();
+        if (!rawId) return;
+        try {
+            const timers = __tmNativeDocCheckboxReconcileTimers.get(rawId);
+            if (Array.isArray(timers)) timers.forEach((timer) => clearTimeout(timer));
+        } catch (e) {}
+        try { __tmNativeDocCheckboxReconcileTimers.delete(rawId); } catch (e) {}
+    }
+
+    function __tmMirrorDocCheckboxStatusPatch(taskId, patch) {
+        const tid = String(taskId || '').trim();
+        if (!tid || !patch || typeof patch !== 'object') return;
+        const value = String(patch.customStatus || '').trim();
+        if (!value) return;
+        try {
+            const task = state.flatTasks?.[tid];
+            if (task && typeof task === 'object') {
+                task.customStatus = value;
+                task.custom_status = value;
+            }
+        } catch (e) {}
+        try {
+            const pending = state.pendingInsertedTasks?.[tid];
+            if (pending && typeof pending === 'object') {
+                pending.customStatus = value;
+                pending.custom_status = value;
+            }
+        } catch (e) {}
+    }
+
+    async function __tmReadDocCheckboxBlockAttrs(blockId) {
+        const rawId = String(blockId || '').trim();
+        if (!rawId) return null;
+        let attrTargetId = rawId;
+        try {
+            const resolvedAttrId = await __tmResolveTaskAttrHostIdFromAnyBlockId(rawId);
+            if (resolvedAttrId) attrTargetId = resolvedAttrId;
+        } catch (e) {}
+        try {
+            const res = await API.call('/api/attr/getBlockAttrs', { id: attrTargetId });
+            if (!(res && res.code === 0 && res.data && typeof res.data === 'object')) return null;
+            const attrs = res.data;
+            return String(attrs['custom-status'] || '').trim();
+        } catch (e) {
+            return '';
+        }
+    }
+
+    async function __tmReconcileNativeDocCheckboxStatus(blockId, taskId, statusPatch, expectedDone, syncVersion = 0) {
+        const rawId = String(blockId || '').trim();
+        const tid = String(taskId || '').trim();
+        const expectedStatus = String(statusPatch?.customStatus || '').trim();
+        const done = !!expectedDone;
+        if (!rawId || !tid || !expectedStatus || !__tmIsNativeDocCheckboxReconcileVersionCurrent(rawId, syncVersion)) return false;
+        const domDone = __tmReadNativeDocTaskDoneFromDom(rawId);
+        const beforeStatus = await __tmReadDocCheckboxBlockAttrs(tid);
+        if (!__tmIsNativeDocCheckboxReconcileVersionCurrent(rawId, syncVersion)) return false;
+        if (domDone !== done || beforeStatus === expectedStatus) return false;
+        __tmMirrorNativeDocTaskStatusAttr([rawId, tid], expectedStatus);
+        await __tmPersistMetaAndAttrsKernel(tid, statusPatch, {
+            touchMetaStore: false,
+            skipFlush: false,
+        });
+        if (!__tmIsNativeDocCheckboxReconcileVersionCurrent(rawId, syncVersion)) return false;
+        const afterStatus = await __tmReadDocCheckboxBlockAttrs(tid);
+        return afterStatus === expectedStatus;
+    }
+
+    function __tmScheduleNativeDocCheckboxStatusReconcile(blockId, taskId, statusPatch, expectedDone, syncVersion) {
+        const rawId = String(blockId || '').trim();
+        const tid = String(taskId || '').trim();
+        if (!rawId || !tid || !statusPatch || typeof statusPatch !== 'object') return;
+        __tmClearNativeDocCheckboxReconcileTimers(rawId);
+        const timers = [260, 900].map((delayMs) => setTimeout(() => {
+            if (!__tmIsNativeDocCheckboxReconcileVersionCurrent(rawId, syncVersion)) return;
+            __tmReconcileNativeDocCheckboxStatus(rawId, tid, statusPatch, expectedDone, syncVersion).catch(() => null);
+        }, delayMs));
+        __tmNativeDocCheckboxReconcileTimers.set(rawId, timers);
+    }
+
+    function __tmApplyNativeDocCheckboxLocalState(taskId, done, statusValue = '', taskLike = null) {
+        const tid = String(taskId || '').trim();
+        const nextDone = !!done;
+        const nextStatus = String(statusValue || '').trim();
+        if (!tid) return false;
+        try {
+            const liveTask = state.flatTasks?.[tid];
+            if (liveTask && typeof liveTask === 'object') {
+                liveTask.done = nextDone;
+                if (nextStatus) {
+                    liveTask.customStatus = nextStatus;
+                    liveTask.custom_status = nextStatus;
+                }
+            }
+        } catch (e) {}
+        try {
+            const pendingTask = state.pendingInsertedTasks?.[tid];
+            if (pendingTask && typeof pendingTask === 'object') {
+                pendingTask.done = nextDone;
+                if (nextStatus) {
+                    pendingTask.customStatus = nextStatus;
+                    pendingTask.custom_status = nextStatus;
+                }
+            }
+        } catch (e) {}
+        try {
+            if (!state.doneOverrides || typeof state.doneOverrides !== 'object') state.doneOverrides = {};
+            state.doneOverrides[tid] = nextDone;
+        } catch (e) {}
+        try {
+            const content = String(taskLike?.content || state.flatTasks?.[tid]?.content || state.pendingInsertedTasks?.[tid]?.content || '').trim();
+            const metaPatch = { done: nextDone, content };
+            if (nextStatus) metaPatch.customStatus = nextStatus;
+            MetaStore.set(tid, metaPatch);
+        } catch (e) {}
+        return true;
+    }
+
+    async function __tmSyncNativeDocCheckboxLinkedStatus(blockId) {
+        const rawId = String(blockId || '').trim();
+        if (!rawId) return false;
+        const syncVersion = __tmBumpNativeDocCheckboxReconcileVersion(rawId);
+        try {
+            await __tmFlushSqlTransactionsSafe('native-doc-checkbox-status-sync');
+        } catch (e) {}
+
+        const domDone = __tmReadNativeDocTaskDoneFromDom(rawId);
+        if (domDone === null) return false;
+
+        let taskId = '';
+        try { taskId = await __tmResolveTaskIdFromAnyBlockId(rawId); } catch (e) { taskId = ''; }
+        const tid = String(taskId || rawId || '').trim();
+        if (!tid) return false;
+
+        let task = null;
+        try { task = state.flatTasks?.[tid] ? { ...state.flatTasks[tid] } : null; } catch (e) { task = null; }
+        if (!task || typeof task !== 'object') {
+            try { task = await API.getTaskById(tid); } catch (e) { task = null; }
+        }
+        if (!task || typeof task !== 'object') {
+            try { task = await __tmBuildTaskLikeFromBlockId(tid); } catch (e) { task = null; }
+        }
+        if (!task || typeof task !== 'object') return false;
+        try { normalizeTaskFields(task, String(task.doc_name || task.docName || '').trim()); } catch (e) {}
+
+        const expectedStatus = String(__tmResolveCheckboxLinkedStatusId(!!domDone) || '').trim();
+        const currentStatus = String(task.customStatus || '').trim();
+        const persistedStatusBefore = String(await __tmReadDocCheckboxBlockAttrs(tid) || '').trim();
+        const shouldPersistStatus = !!expectedStatus && persistedStatusBefore !== expectedStatus;
+        const shouldSyncLocalStatus = !!expectedStatus && currentStatus !== expectedStatus;
+        const statusPatch = shouldPersistStatus ? { customStatus: expectedStatus } : (shouldSyncLocalStatus ? { customStatus: expectedStatus } : null);
+        if (!statusPatch || Object.keys(statusPatch).length === 0) {
+            const resolvedStatus = String(expectedStatus || persistedStatusBefore || currentStatus || '').trim();
+            __tmApplyNativeDocCheckboxLocalState(tid, !!domDone, resolvedStatus, task);
+            try {
+                const docId = String(task.root_id || task.docId || '').trim();
+                if (docId) __tmInvalidateTasksQueryCacheByDocId(docId);
+            } catch (e) {}
+            try {
+                if (typeof __tmIsPluginVisibleNow === 'function' && __tmIsPluginVisibleNow()) {
+                    __tmScheduleRender({ withFilters: true });
+                }
+            } catch (e) {}
+            try { globalThis.__taskHorizonQuickbarRefreshInline?.(); } catch (e) {}
+            try { globalThis.__taskHorizonQuickbarRefresh?.(); } catch (e) {}
+            return true;
+        }
+
+        let persistedStatus = persistedStatusBefore;
+        if (shouldPersistStatus) {
+            __tmMirrorNativeDocTaskStatusAttr([rawId, tid], String(statusPatch.customStatus || '').trim());
+            await __tmPersistMetaAndAttrsKernel(tid, statusPatch, {
+                touchMetaStore: false,
+                skipFlush: false,
+            });
+            persistedStatus = await __tmReadDocCheckboxBlockAttrs(tid);
+            if (persistedStatus !== expectedStatus && __tmIsNativeDocCheckboxReconcileVersionCurrent(rawId, syncVersion)) {
+                await __tmReconcileNativeDocCheckboxStatus(rawId, tid, statusPatch, !!domDone, syncVersion);
+                persistedStatus = await __tmReadDocCheckboxBlockAttrs(tid);
+            }
+        }
+        try {
+            __tmApplyAttrPatchLocally(tid, statusPatch, {
+                render: false,
+                withFilters: false,
+            });
+            __tmMirrorDocCheckboxStatusPatch(tid, statusPatch);
+        } catch (e) {}
+        __tmApplyNativeDocCheckboxLocalState(tid, !!domDone, expectedStatus, task);
+        try {
+            const docId = String(task.root_id || task.docId || '').trim();
+            if (docId) __tmInvalidateTasksQueryCacheByDocId(docId);
+        } catch (e) {}
+        try {
+            if (typeof __tmIsPluginVisibleNow === 'function' && __tmIsPluginVisibleNow()) {
+                __tmScheduleRender({ withFilters: true });
+            }
+        } catch (e) {}
+        try {
+            __tmDispatchTaskAttrPatchUpdated(rawId, statusPatch, {
+                resolvedTaskId: tid,
+                source: 'native-doc-checkbox-sync',
+            });
+        } catch (e) {}
+        try { globalThis.__taskHorizonQuickbarRefreshInline?.(); } catch (e) {}
+        try { globalThis.__taskHorizonQuickbarRefresh?.(); } catch (e) {}
+        __tmScheduleNativeDocCheckboxStatusReconcile(rawId, tid, statusPatch, !!domDone, syncVersion);
+        return true;
+    }
+
+    function __tmDrainNativeDocCheckboxSyncQueue() {
+        if (__tmNativeDocCheckboxSyncQueueRunning) return;
+        __tmNativeDocCheckboxSyncQueueRunning = true;
+        Promise.resolve().then(async () => {
+            try {
+                while (__tmNativeDocCheckboxSyncQueue.length > 0) {
+                    const nextBlockId = String(__tmNativeDocCheckboxSyncQueue.shift() || '').trim();
+                    if (!nextBlockId) continue;
+                    try {
+                        await __tmSyncNativeDocCheckboxLinkedStatus(nextBlockId);
+                    } catch (e) {}
+                }
+            } finally {
+                __tmNativeDocCheckboxSyncQueueRunning = false;
+                if (__tmNativeDocCheckboxSyncQueue.length > 0) {
+                    __tmDrainNativeDocCheckboxSyncQueue();
+                }
+            }
+        }).catch(() => {
+            __tmNativeDocCheckboxSyncQueueRunning = false;
+        });
+    }
+
+    function __tmEnqueueNativeDocCheckboxStatusSync(blockId) {
+        const rawId = String(blockId || '').trim();
+        if (!rawId) return;
+        __tmNativeDocCheckboxSyncQueue.push(rawId);
+        __tmDrainNativeDocCheckboxSyncQueue();
+    }
+
+    function __tmScheduleNativeDocCheckboxStatusSync(blockId) {
+        const rawId = String(blockId || '').trim();
+        if (!rawId) return;
+        try {
+            __tmNativeDocCheckboxPendingBatch.set(rawId, ++__tmNativeDocCheckboxBatchSeq);
+        } catch (e) {}
+        try {
+            if (__tmNativeDocCheckboxBatchTimer) clearTimeout(__tmNativeDocCheckboxBatchTimer);
+        } catch (e) {}
+        __tmNativeDocCheckboxBatchTimer = setTimeout(() => {
+            let batchIds = [];
+            try {
+                batchIds = Array.from(__tmNativeDocCheckboxPendingBatch.entries())
+                    .sort((a, b) => Number(a[1]) - Number(b[1]))
+                    .map(([id]) => String(id || '').trim())
+                    .filter(Boolean);
+                __tmNativeDocCheckboxPendingBatch.clear();
+            } catch (e) {
+                batchIds = rawId ? [rawId] : [];
+            }
+            __tmNativeDocCheckboxBatchTimer = null;
+            batchIds.forEach((id) => __tmEnqueueNativeDocCheckboxStatusSync(id));
+        }, __TM_NATIVE_DOC_CHECKBOX_SYNC_DELAY_MS);
+    }
+
+    function __tmBindNativeDocCheckboxStatusSync() {
+        try {
+            if (__tmNativeDocCheckboxSyncClickHandler) {
+                document.removeEventListener('click', __tmNativeDocCheckboxSyncClickHandler, true);
+                document.removeEventListener('pointerup', __tmNativeDocCheckboxSyncClickHandler, true);
+            }
+        } catch (e) {}
+        try {
+            __tmNativeDocCheckboxSyncObserver?.disconnect?.();
+            __tmNativeDocCheckboxSyncObserver = null;
+        } catch (e) {}
+
+        __tmNativeDocCheckboxSyncClickHandler = (event) => {
+            if (!event || event.isTrusted !== true) return;
+            const blockId = __tmResolveNativeDocTaskBlockId(event.target);
+            if (!blockId) return;
+            __tmScheduleNativeDocCheckboxStatusSync(blockId);
+        };
+
+        try { document.addEventListener('click', __tmNativeDocCheckboxSyncClickHandler, true); } catch (e) {}
+        try { document.addEventListener('pointerup', __tmNativeDocCheckboxSyncClickHandler, true); } catch (e) {}
+        try {
+            __tmNativeDocCheckboxSyncObserver = new MutationObserver((mutations) => {
+                const touched = new Set();
+                const collect = (target) => {
+                    const blockId = __tmResolveNativeDocTaskBlockId(target);
+                    if (blockId) touched.add(blockId);
+                };
+                (Array.isArray(mutations) ? mutations : []).forEach((mutation) => {
+                    const target = mutation?.target;
+                    const type = String(mutation?.type || '').trim();
+                    if (type === 'attributes') {
+                        const targetEl = target instanceof Element ? target : null;
+                        const attrName = String(mutation?.attributeName || '').trim();
+                        if (!targetEl) return;
+                        if (attrName === 'class') {
+                            if (!(targetEl.matches?.('.protyle-action--task, [data-type="NodeListItem"], .li[data-node-id]') || targetEl.closest?.('.protyle-action--task, [data-type="NodeListItem"], .li[data-node-id]'))) return;
+                        } else if (attrName === 'href' || attrName === 'xlink:href') {
+                            if (!(targetEl.matches?.('use') || targetEl.closest?.('.protyle-action--task'))) return;
+                        } else {
+                            return;
+                        }
+                        collect(targetEl);
+                        return;
+                    }
+                    const targetEl = target instanceof Element ? target : null;
+                    if (targetEl?.matches?.('.protyle-action--task') || targetEl?.closest?.('.protyle-action--task')) {
+                        collect(targetEl);
+                    }
+                    if (type === 'childList') {
+                        try {
+                            (Array.from(mutation?.addedNodes || [])).forEach((node) => {
+                                const el = node instanceof Element ? node : null;
+                                if (el?.matches?.('.protyle-action--task, .protyle-action--task *') || el?.closest?.('.protyle-action--task')) {
+                                    collect(el);
+                                }
+                            });
+                        } catch (e) {}
+                    }
+                });
+                touched.forEach((blockId) => __tmScheduleNativeDocCheckboxStatusSync(blockId));
+            });
+            __tmNativeDocCheckboxSyncObserver.observe(document.body, {
+                subtree: true,
+                childList: true,
+                attributes: true,
+                attributeFilter: ['class', 'href', 'xlink:href'],
+            });
+        } catch (e) {}
+    }
+
     async function init() {
         const bindShellEntrances = !__tmIsDockHost();
         try { __tmBindUndoShortcut(); } catch (e) {}
         if (bindShellEntrances) {
             try { __tmBindWakeReload(); } catch (e) {}
             try { __tmBindTabEnterAutoRefresh(); } catch (e) {}
+            try { __tmBindNativeDocCheckboxStatusSync(); } catch (e) {}
         }
         try { __tmBindCalendarScheduleUpdated(); } catch (e) {}
         if (bindShellEntrances) {
@@ -65488,6 +67016,32 @@ async function __tmRefreshAfterWake(reason) {
             }
         } catch (e) {}
         try {
+            if (__tmNativeDocCheckboxSyncClickHandler) {
+                document.removeEventListener('click', __tmNativeDocCheckboxSyncClickHandler, true);
+                document.removeEventListener('pointerup', __tmNativeDocCheckboxSyncClickHandler, true);
+                __tmNativeDocCheckboxSyncClickHandler = null;
+            }
+            if (__tmNativeDocCheckboxSyncObserver) {
+                __tmNativeDocCheckboxSyncObserver.disconnect();
+                __tmNativeDocCheckboxSyncObserver = null;
+            }
+            if (__tmNativeDocCheckboxBatchTimer) {
+                try { clearTimeout(__tmNativeDocCheckboxBatchTimer); } catch (e2) {}
+                __tmNativeDocCheckboxBatchTimer = null;
+            }
+            __tmNativeDocCheckboxPendingBatch.clear();
+            __tmNativeDocCheckboxReconcileTimers.forEach((timers) => {
+                try {
+                    (Array.isArray(timers) ? timers : []).forEach((timer) => clearTimeout(timer));
+                } catch (e2) {}
+            });
+            __tmNativeDocCheckboxReconcileTimers.clear();
+            __tmNativeDocCheckboxReconcileVersions.clear();
+            __tmNativeDocCheckboxSyncQueue.length = 0;
+            __tmNativeDocCheckboxSyncQueueRunning = false;
+            __tmNativeDocCheckboxBatchSeq = 0;
+        } catch (e) {}
+        try {
             if (__tmSqlCacheInvalidationHandler) {
                 window.removeEventListener('tm:sql-cache-invalidate', __tmSqlCacheInvalidationHandler);
                 __tmSqlCacheInvalidationHandler = null;
@@ -65602,6 +67156,7 @@ async function __tmRefreshAfterWake(reason) {
             if (globalThis.__taskHorizonOnPinnedChanged) delete globalThis.__taskHorizonOnPinnedChanged;
             __tmPinnedListenerAdded = false;
         } catch (e) {}
+        try { delete globalThis.__taskHorizonBuildTaskLikeFromBlockId; } catch (e) {}
 
         try {
             if (__tmDomReadyHandler) {
@@ -66829,6 +68384,139 @@ async function __tmRefreshAfterWake(reason) {
         function getDayIndexByTs(startTs, ts) {
             return Math.round((startOfDayTs(ts) - startTs) / DAY_MS);
         }
+
+        function formatTimelineHintDate(ts) {
+            const d = new Date(ts);
+            if (Number.isNaN(d.getTime())) return '';
+            return `${d.getMonth() + 1}月${d.getDate()}日`;
+        }
+
+        function buildTimelineDayBgHtml(startTs, dayCount, dayWidth) {
+            const cells = [];
+            let lastMonthKey = '';
+            for (let i = 0; i < dayCount; i++) {
+                const ts = startTs + i * DAY_MS;
+                const d = new Date(ts);
+                const monthKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
+                const isNewMonth = monthKey !== lastMonthKey;
+                if (isNewMonth) lastMonthKey = monthKey;
+                const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                const cls = `tm-gantt-day-bg${isWeekend ? ' tm-gantt-day-bg--weekend' : ''}${isNewMonth ? ' tm-gantt-day-bg--month-start' : ''}`;
+                cells.push(`<div class="${cls}" style="width:${dayWidth}px"></div>`);
+            }
+            return cells.join('');
+        }
+
+        function getTimelineTaskVisualMeta(task, isDark) {
+            const docId = String(task?.docId || task?.root_id || '').trim();
+            const baseColor = __tmGetDocColorHex(docId, isDark);
+            const done = !!task?.done;
+            const barColor = done
+                ? __tmDesaturateHex(__tmDarkenHex(baseColor, isDark ? 0.48 : 0.36), isDark ? 0.36 : 0.26)
+                : baseColor;
+            const statusOptions = Array.isArray(SettingsStore?.data?.customStatusOptions) ? SettingsStore.data.customStatusOptions : [];
+            const configuredStatus = String(task?.customStatus ?? task?.custom_status ?? '').trim();
+            const fallbackStatus = done
+                ? (__tmResolveCheckboxLinkedStatusId(true, statusOptions) || configuredStatus)
+                : __tmResolveUndoneStatusValue(configuredStatus, statusOptions);
+            const statusId = String(configuredStatus || fallbackStatus || '').trim();
+            const statusOption = statusId
+                ? (statusOptions.find((item) => String(item?.id || '').trim() === statusId) || null)
+                : null;
+            const statusLabel = String(statusOption?.name || '').trim();
+            const statusChipStyle = statusLabel ? __tmBuildStatusChipStyle(statusOption?.color || '#9ca3af') : '';
+            const taskTitle = String(task?.content || '').trim() || '(无内容)';
+            return {
+                barColor,
+                statusLabel,
+                statusChipStyle,
+                taskTitle,
+                docId,
+                done,
+            };
+        }
+
+        function estimateTimelineBarContentWidth(visualMeta) {
+            const visual = (visualMeta && typeof visualMeta === 'object') ? visualMeta : {};
+            const titleLen = Array.from(String(visual.taskTitle || '').trim() || '(无内容)').length;
+            const statusLen = Array.from(String(visual.statusLabel || '').trim()).length;
+            const titleWidth = Math.min(260, Math.max(64, titleLen * 14));
+            const statusWidth = statusLen ? Math.min(104, Math.max(54, statusLen * 12 + 26)) : 0;
+            return 36 + titleWidth + (statusWidth ? (statusWidth + 10) : 0);
+        }
+
+        function resolveTimelineBarLayout(width, dayWidth, visualMeta = null) {
+            const safeWidth = Math.max(0, Number(width) || 0);
+            const safeDayWidth = Math.max(1, Number(dayWidth) || 1);
+            const estimatedContentWidth = estimateTimelineBarContentWidth(visualMeta);
+            const innerWidth = Math.max(0, safeWidth - 22);
+            const wideThreshold = Math.max(220, safeDayWidth * 8, Math.min(estimatedContentWidth + 18, 296));
+            const midThreshold = Math.max(156, safeDayWidth * 5, Math.min(Math.round(estimatedContentWidth * 0.72), 208));
+            if (safeWidth >= wideThreshold && innerWidth >= estimatedContentWidth) return { mode: 'wide', overflow: false };
+            if (safeWidth >= midThreshold && innerWidth >= Math.min(estimatedContentWidth, 152)) return { mode: 'mid', overflow: false };
+            if (safeWidth >= Math.max(72, safeDayWidth * 2.4)) return { mode: 'narrow', overflow: true };
+            return { mode: 'tiny', overflow: true };
+        }
+
+        function buildTimelineTaskBarInnerHtml(task, layout, visualMeta = null) {
+            const visual = visualMeta || getTimelineTaskVisualMeta(task, !!layout?.isDark);
+            const iconName = visual.done ? 'circle-check-big' : 'blocks';
+            const leadHtml = `<span class="tm-gantt-bar__lead">${__tmRenderLucideIcon(iconName, '', { size: 14 })}</span>`;
+            const titleHtml = `<span class="tm-gantt-bar__title">${esc(visual.taskTitle)}</span>`;
+            const statusHtml = visual.statusLabel
+                ? `<span class="tm-gantt-bar__status"><span class="tm-status-tag" style="${visual.statusChipStyle}">${esc(visual.statusLabel)}</span></span>`
+                : '';
+            const menuBtnHtml = `<button class="tm-gantt-bar__menu-btn" type="button" aria-label="时间轴菜单" title="时间轴菜单"><span class="tm-gantt-bar__menu-btn-text">···</span></button>`;
+            return `
+                <div class="tm-gantt-bar__surface">
+                    <span class="tm-gantt-bar__edge tm-gantt-bar__edge--end"></span>
+                    <div class="tm-gantt-bar__drag-label" hidden></div>
+                    <div class="tm-gantt-bar__date-hint" hidden></div>
+                </div>
+                <span class="tm-gantt-bar__label-layer">${leadHtml}${titleHtml}${statusHtml}${menuBtnHtml}</span>
+                <div class="tm-gantt-bar-handle tm-gantt-bar-handle--start" data-handle="start"></div>
+                <div class="tm-gantt-bar-handle tm-gantt-bar-handle--end" data-handle="end"></div>
+            `;
+        }
+
+        function buildTimelineTaskBarHtml(task, layout) {
+            const visual = getTimelineTaskVisualMeta(task, !!layout?.isDark);
+            const resolved = resolveTimelineBarLayout(layout?.width, layout?.dayWidth, visual);
+            const mode = String(layout?.mode || resolved.mode || 'wide');
+            const isOverflow = typeof layout?.overflow === 'boolean' ? layout.overflow : !!resolved.overflow;
+            const barWidth = Math.max(1, Number(layout?.width) || 0);
+            const fadeStart = barWidth;
+            const title = `${visual.taskTitle}\n${formatDateOnlyFromTs(layout?.startTs)} ~ ${formatDateOnlyFromTs(layout?.endTs)}`;
+            return `<div class="tm-gantt-bar tm-gantt-bar--${mode}${isOverflow ? ' tm-gantt-bar--overflowing' : ''}" style="left:${Number(layout?.left) || 0}px;width:${barWidth}px;--tm-gantt-bar-fill:${visual.barColor};--tm-gantt-fade-start:${fadeStart}px;" title="${esc(title)}">${buildTimelineTaskBarInnerHtml(task, { ...layout, mode, overflow: isOverflow }, visual)}</div>`;
+        }
+
+        function buildTimelineMilestoneHtml(task, layout) {
+            const title = `${String(task?.content || '').trim() || '(无内容)'}\n里程碑：${formatDateOnlyFromTs(layout?.endTs)}`;
+            return `<div class="tm-gantt-milestone" style="left:${Number(layout?.left) || 0}px;" title="${esc(title)}"><span class="tm-gantt-milestone__icon">${__tmRenderLucideIcon('flag', '', { size: 12 })}</span><span class="tm-gantt-milestone__label">里程碑</span></div>`;
+        }
+
+        function applyTimelineTaskBarElement(barEl, task, layout) {
+            if (!(barEl instanceof HTMLElement)) return null;
+            const visual = getTimelineTaskVisualMeta(task, !!layout?.isDark);
+            const resolved = resolveTimelineBarLayout(layout?.width, layout?.dayWidth, visual);
+            const mode = String(layout?.mode || resolved.mode || 'wide');
+            const isOverflow = typeof layout?.overflow === 'boolean' ? layout.overflow : !!resolved.overflow;
+            const left = Number(layout?.left) || 0;
+            const width = Math.max(1, Number(layout?.width) || 0);
+            const fadeStart = width;
+            const title = `${visual.taskTitle}\n${formatDateOnlyFromTs(layout?.startTs)} ~ ${formatDateOnlyFromTs(layout?.endTs)}`;
+            barEl.className = `tm-gantt-bar tm-gantt-bar--${mode}${isOverflow ? ' tm-gantt-bar--overflowing' : ''}`;
+            barEl.style.left = `${left}px`;
+            barEl.style.width = `${width}px`;
+            barEl.style.top = '50%';
+            barEl.style.transform = 'translateY(-50%)';
+            try { barEl.style.removeProperty('background'); } catch (e) {}
+            barEl.style.setProperty('--tm-gantt-bar-fill', visual.barColor);
+            barEl.style.setProperty('--tm-gantt-fade-start', `${fadeStart}px`);
+            barEl.title = title;
+            barEl.innerHTML = buildTimelineTaskBarInnerHtml(task, { ...layout, mode, overflow: isOverflow }, visual);
+            return barEl;
+        }
     
         function renderGantt(opts) {
             const headerEl = opts?.headerEl;
@@ -66984,11 +68672,6 @@ async function __tmRefreshAfterWake(reason) {
                     currentGroupBg = (enableGroupBg && taskDocColor) ? (__tmGroupBgFromLabelColor(taskDocColor, isDark) || '') : '';
                 }
                 
-                const baseColor = __tmGetDocColorHex(docId, isDark);
-                const done = !!task?.done;
-                const barColor = done
-                    ? __tmDesaturateHex(__tmDarkenHex(baseColor, isDark ? 0.48 : 0.36), isDark ? 0.36 : 0.26)
-                    : baseColor;
                 const sTs0 = parseDateOnlyToTs(task?.startDate);
                 const eTs0 = parseDateOnlyToTs(task?.completionTime);
                 const aTs = sTs0 || eTs0;
@@ -66999,11 +68682,14 @@ async function __tmRefreshAfterWake(reason) {
                     : ['1', 'true'].includes(String(milestoneRaw || '').trim().toLowerCase());
                 const resolvedGroupBg = currentGroupBg || resolvePinnedTaskGroupBg(task);
                 const rowBgStyle = (enableGroupBg && resolvedGroupBg) ? `background:${resolvedGroupBg};` : '';
-                const dotOpenCls = String(state.timelineDotPinnedTaskId || '').trim() === String(r.id) ? ' tm-gantt-row--dot-open' : '';
+                const isPinnedSelected = String(state.timelineDotPinnedTaskId || '').trim() === String(r.id);
+                const selectedCls = isPinnedSelected ? ' tm-gantt-row--selected tm-gantt-row--dot-open' : '';
                 const dotHoverCls = String(state.timelineLinkHoverTaskId || '').trim() === String(r.id) ? ' tm-gantt-row--link-hover' : '';
                 const multiSelCls = timelineMultiSelectedSet.has(String(r.id)) ? ' tm-gantt-row--multi-selected' : '';
+                const rowAttrs = `data-id="${String(r.id)}" data-doc-id="${docId}" style="width:${totalWidth}px;${rowBgStyle}" ondragenter="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragover="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragleave="tmTimelineLinkRowDragLeave(event, '${escSq(String(r.id))}')"`;
+                const buildDotHtml = (kind, leftPx) => `<span class="tm-task-link-dot tm-task-link-dot--timeline tm-task-link-dot--${kind}${state.whiteboardLinkFromTaskId === String(r.id) ? ' tm-task-link-dot--active' : ''}" style="left:${leftPx}px;" draggable="true" onmousedown="tmTaskLinkDotPressStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragstart="tmTaskLinkDotDragStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragend="tmTaskLinkDotDragEnd(event)" ondragover="tmTaskLinkDotDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondrop="tmTaskLinkDotDrop(event, '${escSq(String(r.id))}', '${escSq(docId)}')" title="连接${kind === 'in' ? '输入' : '输出'}点"></span>`;
                 if (!aTs && !bTs) {
-                    rowsHtml.push(`<div class="tm-gantt-row${dotOpenCls}${dotHoverCls}${multiSelCls}" data-id="${String(r.id)}" data-doc-id="${docId}" style="width:${totalWidth}px;${rowBgStyle}" ondragenter="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragover="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragleave="tmTimelineLinkRowDragLeave(event, '${escSq(String(r.id))}')"></div>`);
+                    rowsHtml.push(`<div class="tm-gantt-row${selectedCls}${dotHoverCls}${multiSelCls}" ${rowAttrs}></div>`);
                     continue;
                 }
                 if (isMilestone && eTs0) {
@@ -67012,10 +68698,10 @@ async function __tmRefreshAfterWake(reason) {
                     const inLeft = Math.max(6, markerLeft - 16);
                     const outLeft = Math.min(totalWidth - 6, markerLeft + 16);
                     rowsHtml.push(`
-                        <div class="tm-gantt-row${dotOpenCls}${dotHoverCls}${multiSelCls}" data-id="${String(r.id)}" data-doc-id="${docId}" style="width:${totalWidth}px;${rowBgStyle}" ondragenter="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragover="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragleave="tmTimelineLinkRowDragLeave(event, '${escSq(String(r.id))}')">
-                            <div class="tm-gantt-milestone" style="left:${markerLeft}px;" title="${esc(String(task?.content || '').trim())}\\n里程碑：${esc(formatDateOnlyFromTs(eTs0))}">🚩</div>
-                            <span class="tm-task-link-dot tm-task-link-dot--timeline tm-task-link-dot--in${state.whiteboardLinkFromTaskId === String(r.id) ? ' tm-task-link-dot--active' : ''}" style="left:${inLeft}px;" draggable="true" onmousedown="tmTaskLinkDotPressStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragstart="tmTaskLinkDotDragStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragend="tmTaskLinkDotDragEnd(event)" ondragover="tmTaskLinkDotDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondrop="tmTaskLinkDotDrop(event, '${escSq(String(r.id))}', '${escSq(docId)}')" title="连接输入点"></span>
-                            <span class="tm-task-link-dot tm-task-link-dot--timeline tm-task-link-dot--out${state.whiteboardLinkFromTaskId === String(r.id) ? ' tm-task-link-dot--active' : ''}" style="left:${outLeft}px;" draggable="true" onmousedown="tmTaskLinkDotPressStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragstart="tmTaskLinkDotDragStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragend="tmTaskLinkDotDragEnd(event)" ondragover="tmTaskLinkDotDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondrop="tmTaskLinkDotDrop(event, '${escSq(String(r.id))}', '${escSq(docId)}')" title="连接输出点"></span>
+                        <div class="tm-gantt-row${selectedCls}${dotHoverCls}${multiSelCls}" ${rowAttrs}>
+                            ${buildTimelineMilestoneHtml(task, { left: markerLeft, endTs: eTs0 })}
+                            ${buildDotHtml('in', inLeft)}
+                            ${buildDotHtml('out', outLeft)}
                         </div>
                     `);
                     continue;
@@ -67027,21 +68713,19 @@ async function __tmRefreshAfterWake(reason) {
                 const inLeft = left;
                 const outLeft = left + width;
                 rowsHtml.push(`
-                    <div class="tm-gantt-row${dotOpenCls}${dotHoverCls}${multiSelCls}" data-id="${String(r.id)}" data-doc-id="${docId}" style="width:${totalWidth}px;${rowBgStyle}" ondragenter="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragover="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragleave="tmTimelineLinkRowDragLeave(event, '${escSq(String(r.id))}')">
-                        <div class="tm-gantt-bar" style="left:${left}px;width:${width}px;background:${barColor};" title="${esc(String(task?.content || '').trim())}\\n${esc(formatDateOnlyFromTs(aTs))} ~ ${esc(formatDateOnlyFromTs(bTs))}">
-                            <div class="tm-gantt-bar-handle tm-gantt-bar-handle--start" data-handle="start"></div>
-                            <div class="tm-gantt-bar-handle tm-gantt-bar-handle--end" data-handle="end"></div>
-                        </div>
-                        <span class="tm-task-link-dot tm-task-link-dot--timeline tm-task-link-dot--in${state.whiteboardLinkFromTaskId === String(r.id) ? ' tm-task-link-dot--active' : ''}" style="left:${inLeft}px;" draggable="true" onmousedown="tmTaskLinkDotPressStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragstart="tmTaskLinkDotDragStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragend="tmTaskLinkDotDragEnd(event)" ondragover="tmTaskLinkDotDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondrop="tmTaskLinkDotDrop(event, '${escSq(String(r.id))}', '${escSq(docId)}')" title="连接输入点"></span>
-                        <span class="tm-task-link-dot tm-task-link-dot--timeline tm-task-link-dot--out${state.whiteboardLinkFromTaskId === String(r.id) ? ' tm-task-link-dot--active' : ''}" style="left:${outLeft}px;" draggable="true" onmousedown="tmTaskLinkDotPressStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragstart="tmTaskLinkDotDragStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragend="tmTaskLinkDotDragEnd(event)" ondragover="tmTaskLinkDotDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondrop="tmTaskLinkDotDrop(event, '${escSq(String(r.id))}', '${escSq(docId)}')" title="连接输出点"></span>
+                    <div class="tm-gantt-row${selectedCls}${dotHoverCls}${multiSelCls}" ${rowAttrs}>
+                        ${buildTimelineTaskBarHtml(task, { left, width, dayWidth, startTs: aTs, endTs: bTs, isDark })}
+                        ${buildDotHtml('in', inLeft)}
+                        ${buildDotHtml('out', outLeft)}
                     </div>
                 `);
             }
     
             bodyEl.innerHTML = `
                 <div class="tm-gantt-body-inner" style="width:${totalWidth}px">
-                    <svg class="tm-gantt-deps" aria-hidden="true"></svg>
+                    <div class="tm-gantt-day-bg-layer">${buildTimelineDayBgHtml(startTs, dayCount, dayWidth)}</div>
                     <div class="tm-gantt-today" style="left:${todayLeft}px"></div>
+                    <svg class="tm-gantt-deps" aria-hidden="true"></svg>
                     ${rowsHtml.join('')}
                 </div>
             `;
@@ -67059,21 +68743,59 @@ async function __tmRefreshAfterWake(reason) {
 
                 const links = __tmGetAllTaskLinks({ includeAuto: true });
                 const rootRect = inner.getBoundingClientRect();
+                const selectedTimelineLinkId = String(state.timelineSelectedLinkId || '').trim();
                 const getPt = (taskId, kind) => {
                     const id = String(taskId || '').trim();
                     if (!id) return null;
                     const row = inner.querySelector(`.tm-gantt-row[data-id="${CSS.escape(id)}"]`);
                     if (!(row instanceof Element)) return null;
-                    const sel = kind === 'from'
-                        ? '.tm-task-link-dot--timeline.tm-task-link-dot--out'
-                        : '.tm-task-link-dot--timeline.tm-task-link-dot--in';
-                    const dot = row.querySelector(sel);
-                    if (!(dot instanceof Element)) return null;
-                    const rect = dot.getBoundingClientRect();
+                    const bar = row.querySelector('.tm-gantt-bar, .tm-gantt-milestone');
+                    const rect = bar instanceof Element ? bar.getBoundingClientRect() : null;
+                    if (!rect) return null;
                     return {
-                        x: rect.left - rootRect.left + (rect.width / 2),
+                        x: kind === 'from'
+                            ? (rect.right - rootRect.left)
+                            : (rect.left - rootRect.left),
                         y: rect.top - rootRect.top + (rect.height / 2),
                     };
+                };
+                const pointsToSmoothPathD = (pts, radius = 10) => {
+                    const list = Array.isArray(pts) ? pts.filter((p) => Number.isFinite(p?.x) && Number.isFinite(p?.y)) : [];
+                    if (list.length < 2) return '';
+                    if (list.length === 2) {
+                        return `M ${list[0].x.toFixed(2)} ${list[0].y.toFixed(2)} L ${list[1].x.toFixed(2)} ${list[1].y.toFixed(2)}`;
+                    }
+                    const parts = [`M ${list[0].x.toFixed(2)} ${list[0].y.toFixed(2)}`];
+                    for (let i = 1; i < list.length - 1; i += 1) {
+                        const prev = list[i - 1];
+                        const curr = list[i];
+                        const next = list[i + 1];
+                        const dx1 = curr.x - prev.x;
+                        const dy1 = curr.y - prev.y;
+                        const dx2 = next.x - curr.x;
+                        const dy2 = next.y - curr.y;
+                        const len1 = Math.hypot(dx1, dy1);
+                        const len2 = Math.hypot(dx2, dy2);
+                        if (len1 < 0.01 || len2 < 0.01) {
+                            parts.push(`L ${curr.x.toFixed(2)} ${curr.y.toFixed(2)}`);
+                            continue;
+                        }
+                        const r = Math.min(radius, len1 * 0.5, len2 * 0.5);
+                        const p1 = { x: curr.x - (dx1 / len1) * r, y: curr.y - (dy1 / len1) * r };
+                        const p2 = { x: curr.x + (dx2 / len2) * r, y: curr.y + (dy2 / len2) * r };
+                        parts.push(`L ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}`);
+                        parts.push(`Q ${curr.x.toFixed(2)} ${curr.y.toFixed(2)} ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`);
+                    }
+                    const last = list[list.length - 1];
+                    parts.push(`L ${last.x.toFixed(2)} ${last.y.toFixed(2)}`);
+                    return parts.join(' ');
+                };
+                const buildTimelineDep = (from, to) => {
+                    const gap = Math.max(14, Math.min(28, Math.abs(to.x - from.x) * 0.35));
+                    const x1 = from.x + gap;
+                    const x2 = to.x - gap;
+                    const pts = [from, { x: x1, y: from.y }, { x: x2, y: to.y }, to];
+                    return { d: pointsToSmoothPathD(pts, 10), pts };
                 };
                 const markerIdIn = `tmTlArrowIn`;
                 const markerIdOut = `tmTlArrowOut`;
@@ -67091,12 +68813,25 @@ async function __tmRefreshAfterWake(reason) {
                     const from = getPt(link.from, 'from');
                     const to = getPt(link.to, 'to');
                     if (!from || !to) return '';
-                    const gap = Math.max(10, Math.min(24, Math.abs(to.x - from.x) * 0.35));
-                    const x1 = from.x + gap;
-                    const x2 = to.x - gap;
-                    const d = `M ${from.x.toFixed(2)} ${from.y.toFixed(2)} L ${x1.toFixed(2)} ${from.y.toFixed(2)} L ${x2.toFixed(2)} ${to.y.toFixed(2)} L ${to.x.toFixed(2)} ${to.y.toFixed(2)}`;
-                    const cls = link.manual ? 'tm-gantt-dep tm-gantt-dep--manual' : 'tm-gantt-dep tm-gantt-dep--auto';
-                    return `<path class="${cls}" d="${d}" marker-end="url(#${markerIdOut})"></path>`;
+                    const routed = buildTimelineDep(from, to);
+                    const d = routed.d;
+                    const isSelected = !!link.manual && String(link.id || '').trim() === selectedTimelineLinkId;
+                    const cls = link.manual
+                        ? `tm-gantt-dep tm-gantt-dep--manual${isSelected ? ' tm-gantt-dep--selected' : ''}`
+                        : 'tm-gantt-dep tm-gantt-dep--auto';
+                    if (!link.manual) return `<path class="${cls}" d="${d}" marker-end="url(#${markerIdOut})"></path>`;
+                    const idEsc = String(link.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                    const dir = (to.x - from.x) >= 0 ? 1 : -1;
+                    const btnX = to.x - (dir * 12) - 10;
+                    const btnY = to.y - 10;
+                    return `
+                        <g class="tm-gantt-dep-wrap${isSelected ? ' tm-gantt-dep-wrap--selected' : ''}">
+                            <path class="${cls}" d="${d}" marker-end="url(#${markerIdOut})" onclick="tmTimelineSelectLink('${idEsc}', event)"></path>
+                            <foreignObject class="tm-gantt-dep-remove" x="${btnX.toFixed(2)}" y="${btnY.toFixed(2)}" width="20" height="20">
+                                <button xmlns="http://www.w3.org/1999/xhtml" class="tm-gantt-dep-remove-btn" type="button" title="删除连线" onclick="tmTimelineRemoveLink('${idEsc}', event)">×</button>
+                            </foreignObject>
+                        </g>
+                    `;
                 }).join('');
                 let previewPath = '';
                 const fromTaskId = String(state.whiteboardLinkFromTaskId || '').trim();
@@ -67115,10 +68850,7 @@ async function __tmRefreshAfterWake(reason) {
                             }
                         }
                         if (to) {
-                            const gap = Math.max(10, Math.min(24, Math.abs(to.x - from.x) * 0.35));
-                            const x1 = from.x + gap;
-                            const x2 = to.x - gap;
-                            const d = `M ${from.x.toFixed(2)} ${from.y.toFixed(2)} L ${x1.toFixed(2)} ${from.y.toFixed(2)} L ${x2.toFixed(2)} ${to.y.toFixed(2)} L ${to.x.toFixed(2)} ${to.y.toFixed(2)}`;
+                            const d = buildTimelineDep(from, to).d;
                             previewPath = `<path class="tm-gantt-dep tm-gantt-dep--manual" d="${d}" marker-end="url(#${markerIdOut})"></path>`;
                         }
                     }
@@ -67131,15 +68863,149 @@ async function __tmRefreshAfterWake(reason) {
             const setTimelineDraggingX = (on) => {
                 try { bodyEl.classList.toggle('tm-gantt-body--dragging-x', !!on); } catch (e) {}
             };
+
+            const openGanttTaskContextMenu = (taskId, anchor) => {
+                if (!onUpdateTaskDates && !onUpdateTaskMeta) return;
+                const taskIdText = String(taskId || '').trim();
+                if (!taskIdText) return;
+                const rowEl = bodyEl.querySelector(`.tm-gantt-row[data-id="${CSS.escape(taskIdText)}"]`);
+                if (!(rowEl instanceof Element) || rowEl.classList.contains('tm-gantt-row--group')) return;
+                const task = getTaskById(taskIdText);
+                if (!task) return;
+                const milestoneRaw = task?.milestone;
+                const isMilestone = typeof milestoneRaw === 'boolean'
+                    ? milestoneRaw
+                    : ['1', 'true'].includes(String(milestoneRaw || '').trim().toLowerCase());
+                const x0 = Number(anchor?.x);
+                const y0 = Number(anchor?.y);
+                const x = Number.isFinite(x0) ? x0 : 12;
+                const y = Number.isFinite(y0) ? y0 : 12;
+
+                const existingMenu = document.getElementById('tm-task-context-menu');
+                if (existingMenu) existingMenu.remove();
+                try { window.tmHideDocTabMenu?.(); } catch (e2) {}
+                try {
+                    if (state.ganttContextMenuCloseBindTimer) {
+                        clearTimeout(state.ganttContextMenuCloseBindTimer);
+                        state.ganttContextMenuCloseBindTimer = null;
+                    }
+                    if (state.ganttContextMenuCloseHandler) {
+                        __tmClearOutsideCloseHandler(state.ganttContextMenuCloseHandler);
+                        state.ganttContextMenuCloseHandler = null;
+                    }
+                } catch (e2) {}
+
+                const menu = document.createElement('div');
+                menu.id = 'tm-task-context-menu';
+                menu.style.cssText = `
+                    position: fixed;
+                    top: ${y}px;
+                    left: ${x}px;
+                    background: var(--b3-theme-background);
+                    border: 1px solid var(--b3-theme-surface-light);
+                    border-radius: 4px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    padding: 4px 0;
+                    z-index: 200000;
+                    min-width: 160px;
+                    user-select: none;
+                `;
+
+                const createItem = (label, onClick, isDanger) => {
+                    const item = document.createElement('div');
+                    const labelText = String(label || '');
+                    if (/<[a-z][\s\S]*>/i.test(labelText)) item.innerHTML = labelText;
+                    else item.textContent = labelText;
+                    item.style.cssText = `
+                        padding: 6px 12px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        color: ${isDanger ? 'var(--b3-theme-error)' : 'var(--b3-theme-on-background)'};
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    `;
+                    item.onmouseenter = () => item.style.backgroundColor = 'var(--b3-theme-surface-light)';
+                    item.onmouseleave = () => item.style.backgroundColor = 'transparent';
+                    item.onclick = (ev) => {
+                        ev.stopPropagation();
+                        menu.remove();
+                        onClick?.();
+                    };
+                    return item;
+                };
+
+                menu.appendChild(createItem('🧹 清除时间轴（清空起止）', async () => {
+                    try {
+                        await onUpdateTaskDates(String(taskIdText), { startDate: '', completionTime: '' });
+                        try { hint('✅ 已清除时间轴', 'success'); } catch (e3) {}
+                    } catch (e2) {
+                        try { hint(`❌ 清除失败: ${e2?.message || String(e2)}`, 'error'); } catch (e3) {}
+                    }
+                }, true));
+
+                if (onUpdateTaskMeta && !isMilestone) {
+                    menu.appendChild(createItem('🚩 设为里程碑事件', async () => {
+                        try {
+                            const endDate = String(task?.completionTime || '').trim();
+                            if (!endDate) {
+                                hint('⚠️ 请先设置完成日期后再设为里程碑', 'error');
+                                return;
+                            }
+                            await onUpdateTaskMeta(String(taskIdText), { milestone: true });
+                            try { hint('✅ 已设为里程碑', 'success'); } catch (e3) {}
+                        } catch (e2) {
+                            try { hint(`❌ 设置失败: ${e2?.message || String(e2)}`, 'error'); } catch (e3) {}
+                        }
+                    }));
+                }
+
+                if (onUpdateTaskMeta && isMilestone) {
+                    menu.appendChild(createItem('↩ 还原普通时间轴', async () => {
+                        try {
+                            await onUpdateTaskMeta(String(taskIdText), { milestone: false });
+                            try { hint('✅ 已还原普通时间轴', 'success'); } catch (e3) {}
+                        } catch (e2) {
+                            try { hint(`❌ 还原失败: ${e2?.message || String(e2)}`, 'error'); } catch (e3) {}
+                        }
+                    }));
+                }
+
+                document.body.appendChild(menu);
+                try { __tmClampFloatingMenuToViewport(menu, x, y, { margin: 8 }); } catch (e2) {}
+
+                const closeHandler = (ev) => {
+                    try {
+                        if (menu.contains(ev?.target)) return;
+                    } catch (e2) {}
+                    try { menu.remove(); } catch (e2) {}
+                    try { __tmClearOutsideCloseHandler(closeHandler); } catch (e2) {}
+                    if (state.ganttContextMenuCloseHandler === closeHandler) state.ganttContextMenuCloseHandler = null;
+                    if (state.ganttContextMenuCloseBindTimer) {
+                        try { clearTimeout(state.ganttContextMenuCloseBindTimer); } catch (e2) {}
+                        state.ganttContextMenuCloseBindTimer = null;
+                    }
+                };
+                state.ganttContextMenuCloseHandler = closeHandler;
+                state.ganttContextMenuCloseBindTimer = setTimeout(() => {
+                    __tmScheduleBindOutsideCloseHandler(closeHandler);
+                    if (state.ganttContextMenuCloseBindTimer) {
+                        try { clearTimeout(state.ganttContextMenuCloseBindTimer); } catch (e2) {}
+                        state.ganttContextMenuCloseBindTimer = null;
+                    }
+                }, 0);
+            };
     
             const onPointerDown = (e) => {
                 if (!onUpdateTaskDates) return;
                 const target = e.target;
                 if (!(target instanceof Element)) return;
                 if (target.closest('.tm-task-link-dot')) return;
+                if (target.closest('.tm-gantt-bar__menu-btn')) return;
                 const handleEl = target.closest('.tm-gantt-bar-handle');
                 const barEl = target.closest('.tm-gantt-bar');
                 if (!barEl) return;
+                if (isMobileTimelineGlobal && !handleEl) return;
                 const rowEl = barEl.closest('.tm-gantt-row');
                 const taskId = String(rowEl?.getAttribute?.('data-id') || '').trim();
                 if (!taskId) return;
@@ -67172,6 +69038,7 @@ async function __tmRefreshAfterWake(reason) {
                     return;
                 }
 
+                const activeTask = getTaskById(taskId);
                 const rect = bodyEl.getBoundingClientRect();
                 const startX = e.clientX;
                 const baseScrollLeft = bodyEl.scrollLeft;
@@ -67185,6 +69052,64 @@ async function __tmRefreshAfterWake(reason) {
                 let lastEndIdx = initialEndIdx;
                 let raf = 0;
                 let dragging = true;
+                const setBarDragState = (targetBar, enabled, dragAction = action) => {
+                    if (!(targetBar instanceof HTMLElement)) return;
+                    try {
+                        targetBar.classList.toggle('tm-gantt-bar--dragging', !!enabled);
+                        targetBar.classList.toggle('tm-gantt-bar--resizing-start', !!enabled && dragAction === 'start');
+                        targetBar.classList.toggle('tm-gantt-bar--resizing-end', !!enabled && dragAction === 'end');
+                        targetBar.classList.toggle('tm-gantt-bar--hint-start', !!enabled && dragAction === 'start');
+                    } catch (e2) {}
+                };
+                const syncSingleBar = (targetBar, taskObj, sIdx, eIdx) => {
+                    if (!(targetBar instanceof HTMLElement) || !taskObj) return;
+                    const leftPx = sIdx * dayWidth0;
+                    const widthPx = (eIdx - sIdx + 1) * dayWidth0;
+                    globalThis.__TaskHorizonGanttView?.applyTimelineTaskBarElement?.(targetBar, taskObj, {
+                        left: leftPx,
+                        width: widthPx,
+                        dayWidth: dayWidth0,
+                        startTs: startTs0 + sIdx * DAY_MS,
+                        endTs: startTs0 + eIdx * DAY_MS,
+                        isDark,
+                    });
+                };
+                const updateBarDateHint = () => {
+                    const hintEl = barEl.querySelector('.tm-gantt-bar__date-hint');
+                    const lineEl = barEl.querySelector('.tm-gantt-bar__drag-label');
+                    if (!(hintEl instanceof HTMLElement) || !(lineEl instanceof HTMLElement)) return;
+                    let text = '';
+                    if (groupMove && groupItems.length > 1) {
+                        const first = groupItems[0];
+                        const delta = first.lastStartIdx - first.initialStartIdx;
+                        text = `整体偏移 ${delta >= 0 ? '+' : ''}${delta} 天`;
+                    } else if (action === 'start') {
+                        text = formatTimelineHintDate(startTs0 + lastStartIdx * DAY_MS);
+                    } else if (action === 'end') {
+                        text = formatTimelineHintDate(startTs0 + lastEndIdx * DAY_MS);
+                    } else {
+                        const startLabel = formatTimelineHintDate(startTs0 + lastStartIdx * DAY_MS);
+                        const endLabel = formatTimelineHintDate(startTs0 + lastEndIdx * DAY_MS);
+                        text = `${startLabel} - ${endLabel}`;
+                    }
+                    const widthPx = Number.parseFloat(String(barEl.style.width || '').replace('px', '')) || initialWidthPx;
+                    const lineLeft = action === 'start' ? 0 : widthPx;
+                    lineEl.hidden = false;
+                    lineEl.style.left = `${lineLeft}px`;
+                    hintEl.hidden = false;
+                    hintEl.textContent = text;
+                };
+                const clearBarDateHint = () => {
+                    const hintEl = barEl.querySelector('.tm-gantt-bar__date-hint');
+                    const lineEl = barEl.querySelector('.tm-gantt-bar__drag-label');
+                    if (hintEl instanceof HTMLElement) {
+                        hintEl.hidden = true;
+                        hintEl.textContent = '';
+                    }
+                    if (lineEl instanceof HTMLElement) {
+                        lineEl.hidden = true;
+                    }
+                };
 
                 const groupItems = [];
                 const groupMove = (action === 'move') && selectedSet.size > 1 && selectedSet.has(taskId);
@@ -67208,10 +69133,7 @@ async function __tmRefreshAfterWake(reason) {
                     const e2 = clamp(Math.max(sIdx, eIdx), 0, dayCount0 - 1);
                     lastStartIdx = s;
                     lastEndIdx = e2;
-                    const left = s * dayWidth0;
-                    const width = (e2 - s + 1) * dayWidth0;
-                    barEl.style.left = `${left}px`;
-                    barEl.style.width = `${width}px`;
+                    syncSingleBar(barEl, activeTask, s, e2);
                 };
 
                 const onMove = (ev) => {
@@ -67246,49 +69168,13 @@ async function __tmRefreshAfterWake(reason) {
                     }
                 };
 
-                const tip = document.createElement('div');
-                tip.className = 'tm-gantt-drag-tip';
-                tip.textContent = '';
-                try {
-                    tip.style.position = 'fixed';
-                    tip.style.zIndex = '1000002';
-                    tip.style.padding = '6px 10px';
-                    tip.style.borderRadius = '8px';
-                    tip.style.background = 'rgba(0, 0, 0, 0.78)';
-                    tip.style.color = '#fff';
-                    tip.style.fontSize = '12px';
-                    tip.style.lineHeight = '1';
-                    tip.style.pointerEvents = 'none';
-                    tip.style.transform = 'translate(10px, -18px)';
-                    tip.style.whiteSpace = 'nowrap';
-                    tip.style.fontVariantNumeric = 'inherit';
-                } catch (e4) {}
-                try {
-                    const host = bodyEl?.ownerDocument?.body || document.body || bodyEl;
-                    host.appendChild(tip);
-                } catch (e4) {}
-
-                const updateTip = (ev) => {
-                    if (groupMove && groupItems.length > 1) {
-                        const first = groupItems[0];
-                        const delta = first.lastStartIdx - first.initialStartIdx;
-                        tip.textContent = `整体偏移 ${delta >= 0 ? '+' : ''}${delta} 天`;
-                    } else {
-                        const sDate = formatDateOnlyFromTs(startTs0 + lastStartIdx * DAY_MS);
-                        const eDate = formatDateOnlyFromTs(startTs0 + lastEndIdx * DAY_MS);
-                        tip.textContent = action === 'start' ? sDate : action === 'end' ? eDate : `${sDate} ~ ${eDate}`;
-                    }
-                    tip.style.left = `${ev.clientX}px`;
-                    tip.style.top = `${ev.clientY}px`;
-                };
-
                 const onWinPointerMove = (ev) => {
                     if (!dragging) return;
                     if (raf) return;
                     raf = requestAnimationFrame(() => {
                         raf = 0;
                         onMove(ev);
-                        updateTip(ev);
+                        updateBarDateHint();
                     });
                 };
 
@@ -67296,12 +69182,14 @@ async function __tmRefreshAfterWake(reason) {
                     if (!dragging) return;
                     dragging = false;
                     setTimelineDraggingX(false);
+                    setBarDragState(barEl, false);
+                    clearBarDateHint();
+                    groupItems.forEach((it) => setBarDragState(it.barEl, false));
                     try { window.removeEventListener('pointermove', onWinPointerMove, true); } catch (e) {}
                     try { window.removeEventListener('pointerup', onUp, true); } catch (e) {}
                     try { window.removeEventListener('pointercancel', onUp, true); } catch (e) {}
                     try { window.removeEventListener('blur', onUp, true); } catch (e) {}
                     if (raf) cancelAnimationFrame(raf);
-                    try { tip.remove(); } catch (e) {}
 
                     if (groupMove && groupItems.length > 1) {
                         for (const it of groupItems) {
@@ -67334,6 +69222,8 @@ async function __tmRefreshAfterWake(reason) {
                 window.addEventListener('pointercancel', onUp, true);
                 window.addEventListener('blur', onUp, true);
                 setTimelineDraggingX(true);
+                setBarDragState(barEl, true);
+                groupItems.forEach((it) => setBarDragState(it.barEl, true, 'move'));
 
                 try { e.preventDefault(); } catch (e3) {}
                 try { e.stopPropagation(); } catch (e3) {}
@@ -67345,7 +69235,7 @@ async function __tmRefreshAfterWake(reason) {
                     bodyEl.scrollLeft = newScroll;
                 }
 
-                updateTip(e);
+                updateBarDateHint();
             };
     
             const onPanPointerDown = (e) => {
@@ -67353,7 +69243,8 @@ async function __tmRefreshAfterWake(reason) {
                 if (!(target instanceof Element)) return;
                 if (e && typeof e.button === 'number' && e.button !== 0) return;
                 if (target.closest('.tm-task-link-dot')) return;
-                if (target.closest('.tm-gantt-bar, .tm-gantt-bar-handle')) return;
+                if (target.closest('.tm-gantt-bar__menu-btn')) return;
+                if (target.closest('.tm-gantt-bar, .tm-gantt-bar-handle, .tm-gantt-milestone')) return;
     
                 const startX = e.clientX;
                 const startY = e.clientY;
@@ -67409,7 +69300,8 @@ async function __tmRefreshAfterWake(reason) {
                 if (!onUpdateTaskDates) return;
                 const target = e.target;
                 if (!(target instanceof Element)) return;
-                if (target.closest('.tm-gantt-bar, .tm-gantt-bar-handle, .tm-task-link-dot')) return;
+                if (target.closest('.tm-gantt-bar__menu-btn')) return;
+                if (target.closest('.tm-gantt-bar, .tm-gantt-bar-handle, .tm-gantt-milestone, .tm-task-link-dot')) return;
                 const rowEl = target.closest('.tm-gantt-row');
                 const taskId = rowEl?.getAttribute?.('data-id');
                 if (!taskId) return;
@@ -67443,148 +69335,54 @@ async function __tmRefreshAfterWake(reason) {
             };
 
             const onContextMenu = (e) => {
-                if (!onUpdateTaskDates && !onUpdateTaskMeta) return;
                 const target = e.target;
                 if (!(target instanceof Element)) return;
                 if (target.closest('.tm-task-link-dot')) return;
+                if (isMobileTimelineGlobal) {
+                    if (target.closest('.tm-gantt-row, .tm-gantt-bar, .tm-gantt-bar-handle, .tm-gantt-milestone')) {
+                        try { e.preventDefault(); } catch (e2) {}
+                        try { e.stopPropagation(); } catch (e2) {}
+                    }
+                    return;
+                }
                 const rowEl = target.closest('.tm-gantt-row');
                 const taskId = rowEl?.getAttribute?.('data-id');
                 if (!taskId) return;
-                if (rowEl.classList.contains('tm-gantt-row--group')) return;
-                const task = getTaskById(taskId);
-                if (!task) return;
-                const milestoneRaw = task?.milestone;
-                const isMilestone = typeof milestoneRaw === 'boolean'
-                    ? milestoneRaw
-                    : ['1', 'true'].includes(String(milestoneRaw || '').trim().toLowerCase());
-
                 try { e.preventDefault(); } catch (e2) {}
                 try { e.stopPropagation(); } catch (e2) {}
-
-                const existingMenu = document.getElementById('tm-task-context-menu');
-                if (existingMenu) existingMenu.remove();
-                try { window.tmHideDocTabMenu?.(); } catch (e2) {}
-                try {
-                    if (state.ganttContextMenuCloseBindTimer) {
-                        clearTimeout(state.ganttContextMenuCloseBindTimer);
-                        state.ganttContextMenuCloseBindTimer = null;
-                    }
-                    if (state.ganttContextMenuCloseHandler) {
-                        __tmClearOutsideCloseHandler(state.ganttContextMenuCloseHandler);
-                        state.ganttContextMenuCloseHandler = null;
-                    }
-                } catch (e2) {}
-
-                const menu = document.createElement('div');
-                menu.id = 'tm-task-context-menu';
-                menu.style.cssText = `
-                    position: fixed;
-                    top: ${e.clientY}px;
-                    left: ${e.clientX}px;
-                    background: var(--b3-theme-background);
-                    border: 1px solid var(--b3-theme-surface-light);
-                    border-radius: 4px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                    padding: 4px 0;
-                    z-index: 200000;
-                    min-width: 160px;
-                    user-select: none;
-                `;
-
-                const createItem = (label, onClick, isDanger) => {
-                    const item = document.createElement('div');
-                    const labelText = String(label || '');
-                    if (/<[a-z][\s\S]*>/i.test(labelText)) item.innerHTML = labelText;
-                    else item.textContent = labelText;
-                    item.style.cssText = `
-                        padding: 6px 12px;
-                        cursor: pointer;
-                        font-size: 13px;
-                        color: ${isDanger ? 'var(--b3-theme-error)' : 'var(--b3-theme-on-background)'};
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    `;
-                    item.onmouseenter = () => item.style.backgroundColor = 'var(--b3-theme-surface-light)';
-                    item.onmouseleave = () => item.style.backgroundColor = 'transparent';
-                    item.onclick = (ev) => {
-                        ev.stopPropagation();
-                        menu.remove();
-                        onClick?.();
-                    };
-                    return item;
-                };
-
-                menu.appendChild(createItem('🧹 清除时间轴（清空起止）', async () => {
-                    try {
-                        await onUpdateTaskDates(String(taskId), { startDate: '', completionTime: '' });
-                        try { hint('✅ 已清除时间轴', 'success'); } catch (e3) {}
-                    } catch (e2) {
-                        try { hint(`❌ 清除失败: ${e2?.message || String(e2)}`, 'error'); } catch (e3) {}
-                    }
-                }, true));
-
-                if (onUpdateTaskMeta && !isMilestone) {
-                    menu.appendChild(createItem('🚩 设为里程碑事件', async () => {
-                        try {
-                            const endDate = String(task?.completionTime || '').trim();
-                            if (!endDate) {
-                                hint('⚠️ 请先设置完成日期后再设为里程碑', 'error');
-                                return;
-                            }
-                            await onUpdateTaskMeta(String(taskId), { milestone: true });
-                            try { hint('✅ 已设为里程碑', 'success'); } catch (e3) {}
-                        } catch (e2) {
-                            try { hint(`❌ 设置失败: ${e2?.message || String(e2)}`, 'error'); } catch (e3) {}
-                        }
-                    }));
-                }
-
-                if (onUpdateTaskMeta && isMilestone) {
-                    menu.appendChild(createItem('↩ 还原普通时间轴', async () => {
-                        try {
-                            await onUpdateTaskMeta(String(taskId), { milestone: false });
-                            try { hint('✅ 已还原普通时间轴', 'success'); } catch (e3) {}
-                        } catch (e2) {
-                            try { hint(`❌ 还原失败: ${e2?.message || String(e2)}`, 'error'); } catch (e3) {}
-                        }
-                    }));
-                }
-
-                document.body.appendChild(menu);
-
-                const closeHandler = (ev) => {
-                    try {
-                        if (menu.contains(ev?.target)) return;
-                    } catch (e2) {}
-                    try { menu.remove(); } catch (e2) {}
-                    try { __tmClearOutsideCloseHandler(closeHandler); } catch (e2) {}
-                    if (state.ganttContextMenuCloseHandler === closeHandler) state.ganttContextMenuCloseHandler = null;
-                    if (state.ganttContextMenuCloseBindTimer) {
-                        try { clearTimeout(state.ganttContextMenuCloseBindTimer); } catch (e2) {}
-                        state.ganttContextMenuCloseBindTimer = null;
-                    }
-                };
-                state.ganttContextMenuCloseHandler = closeHandler;
-                state.ganttContextMenuCloseBindTimer = setTimeout(() => {
-                    __tmScheduleBindOutsideCloseHandler(closeHandler);
-                    if (state.ganttContextMenuCloseBindTimer) {
-                        try { clearTimeout(state.ganttContextMenuCloseBindTimer); } catch (e2) {}
-                        state.ganttContextMenuCloseBindTimer = null;
-                    }
-                }, 0);
+                openGanttTaskContextMenu(taskId, { x: e.clientX, y: e.clientY });
             };
 
             const onClick = (e) => {
                 const target = e.target;
                 if (!(target instanceof Element)) return;
+                if (!target.closest('.tm-gantt-dep-wrap, .tm-gantt-dep, .tm-gantt-dep-remove-btn')
+                    && String(state.timelineSelectedLinkId || '').trim()) {
+                    state.timelineSelectedLinkId = '';
+                    try { state.__tmTimelineRenderDeps?.(); } catch (e2) {}
+                }
                 if (target.closest('.tm-task-link-dot')) return;
+                const menuBtn = target.closest('.tm-gantt-bar__menu-btn');
+                if (menuBtn) {
+                    const rowEl0 = menuBtn.closest('.tm-gantt-row');
+                    const taskId0 = String(rowEl0?.getAttribute?.('data-id') || '').trim();
+                    if (taskId0) {
+                        try { e.preventDefault(); } catch (e2) {}
+                        try { e.stopPropagation(); } catch (e2) {}
+                        const rect = menuBtn.getBoundingClientRect();
+                        openGanttTaskContextMenu(taskId0, {
+                            x: Math.round(rect.right - 8),
+                            y: Math.round(rect.bottom + 8),
+                        });
+                    }
+                    return;
+                }
                 const withMultiModifier = !!(e?.ctrlKey || e?.metaKey);
                 const rowEl = target.closest('.tm-gantt-row');
                 if (!(rowEl instanceof Element) || rowEl.classList.contains('tm-gantt-row--group')) {
                     if (String(state.timelineDotPinnedTaskId || '').trim()) {
                         state.timelineDotPinnedTaskId = '';
-                        try { bodyEl.querySelectorAll('.tm-gantt-row--dot-open').forEach(el => el.classList.remove('tm-gantt-row--dot-open')); } catch (e2) {}
+                        try { bodyEl.querySelectorAll('.tm-gantt-row--dot-open,.tm-gantt-row--selected').forEach(el => { el.classList.remove('tm-gantt-row--dot-open'); el.classList.remove('tm-gantt-row--selected'); }); } catch (e2) {}
                     }
                     return;
                 }
@@ -67595,7 +69393,7 @@ async function __tmRefreshAfterWake(reason) {
                 if (!isBarClick) {
                     if (String(state.timelineDotPinnedTaskId || '').trim()) {
                         state.timelineDotPinnedTaskId = '';
-                        try { bodyEl.querySelectorAll('.tm-gantt-row--dot-open').forEach(el => el.classList.remove('tm-gantt-row--dot-open')); } catch (e2) {}
+                        try { bodyEl.querySelectorAll('.tm-gantt-row--dot-open,.tm-gantt-row--selected').forEach(el => { el.classList.remove('tm-gantt-row--dot-open'); el.classList.remove('tm-gantt-row--selected'); }); } catch (e2) {}
                     }
                     if (!withMultiModifier) {
                         state.timelineMultiSelectedTaskIds = [];
@@ -67636,14 +69434,14 @@ async function __tmRefreshAfterWake(reason) {
                 const prev = String(state.timelineDotPinnedTaskId || '').trim();
                 const next = prev === taskId ? '' : taskId;
                 state.timelineDotPinnedTaskId = next;
-                try { bodyEl.querySelectorAll('.tm-gantt-row--dot-open').forEach(el => el.classList.remove('tm-gantt-row--dot-open')); } catch (e2) {}
+                try { bodyEl.querySelectorAll('.tm-gantt-row--dot-open,.tm-gantt-row--selected').forEach(el => { el.classList.remove('tm-gantt-row--dot-open'); el.classList.remove('tm-gantt-row--selected'); }); } catch (e2) {}
                 if (next) {
-                    try { rowEl.classList.add('tm-gantt-row--dot-open'); } catch (e2) {}
+                    try { rowEl.classList.add('tm-gantt-row--dot-open', 'tm-gantt-row--selected'); } catch (e2) {}
                 }
             };
     
+            bodyEl.addEventListener('pointerdown', onPointerDown, { passive: false });
             if (!isMobileTimelineGlobal) {
-                bodyEl.addEventListener('pointerdown', onPointerDown, { passive: false });
                 bodyEl.addEventListener('pointerdown', onPanPointerDown, { passive: false });
             }
             bodyEl.addEventListener('dblclick', onDblClick);
@@ -67667,8 +69465,13 @@ async function __tmRefreshAfterWake(reason) {
             render: renderGantt,
             parseDateOnlyToTs,
             formatDateOnlyFromTs,
+            formatTimelineHintDate,
             startOfDayTs,
             DAY_MS,
+            resolveTimelineBarLayout,
+            buildTimelineTaskBarHtml,
+            buildTimelineMilestoneHtml,
+            applyTimelineTaskBarElement,
         };
     })();
 

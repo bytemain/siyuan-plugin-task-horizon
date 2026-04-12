@@ -428,30 +428,93 @@
 
         function getTaskTitleFromBlockEl(blockEl) {
             if (!blockEl) return '';
-            const textAnchor = getInlineTextAnchor(blockEl);
-            const text = textAnchor ? getInlinePlainText(textAnchor) : blockEl.textContent;
-            return String(text || '').replace(/\s+/g, ' ').trim();
+            try {
+                const paragraph = blockEl.querySelector?.(':scope > .p') || blockEl.querySelector?.('.p') || null;
+                const textAnchor = paragraph?.querySelector?.(':scope > [contenteditable="true"]')
+                    || paragraph?.querySelector?.('[contenteditable="true"]')
+                    || paragraph
+                    || blockEl;
+                const parts = [];
+                const walker = document.createTreeWalker(textAnchor, NodeFilter.SHOW_TEXT, {
+                    acceptNode(node) {
+                        const parent = node?.parentElement;
+                        if (parent?.closest?.('.sy-custom-props-inline-host')) return NodeFilter.FILTER_REJECT;
+                        if (parent?.closest?.('[contenteditable="false"],.protyle-attr,.protyle-custom')) return NodeFilter.FILTER_REJECT;
+                        const text = String(node?.nodeValue || '').replace(/\u200b/g, '').trim();
+                        return text ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+                    }
+                });
+                while (walker.nextNode()) {
+                    const text = String(walker.currentNode?.nodeValue || '').replace(/\u200b/g, ' ').trim();
+                    if (text) parts.push(text);
+                }
+                const text = parts.length ? parts.join(' ') : String(textAnchor?.textContent || blockEl.textContent || '');
+                return String(text || '').replace(/\s+/g, ' ').trim();
+            } catch (e) {
+                return String(blockEl?.textContent || '').replace(/\s+/g, ' ').trim();
+            }
         }
 
-        function resolveTaskNodeIdForDetail(blockEl) {
+        function resolveTaskBindingFromBlockEl(blockEl) {
             const readId = (el) => String(el?.dataset?.nodeId || el?.getAttribute?.('data-node-id') || '').trim();
+            const getDirectTaskListItems = (listEl) => {
+                if (!listEl || !(listEl instanceof Element)) return [];
+                return Array.from(listEl.children || []).filter((child) => {
+                    if (!(child instanceof Element)) return false;
+                    if (!child.matches?.('.li,[data-type="NodeListItem"]')) return false;
+                    if (!readId(child)) return false;
+                    return isTaskBlockElement(child);
+                });
+            };
+            const resolveTaskBindingFromTaskLi = (taskLi) => {
+                if (!taskLi || !(taskLi instanceof Element)) return null;
+                const taskId = readId(taskLi);
+                if (!taskId) return null;
+                const parentList = taskLi.parentElement instanceof Element
+                    && taskLi.parentElement.matches?.('.list,[data-type="NodeList"]')
+                    ? taskLi.parentElement
+                    : null;
+                const listId = readId(parentList);
+                const listSubtype = String(parentList?.getAttribute?.('data-subtype') || parentList?.dataset?.subtype || '').trim().toLowerCase();
+                const directTaskItems = getDirectTaskListItems(parentList);
+                const attrHostId = (listId && listSubtype === 't' && directTaskItems.length === 1 && directTaskItems[0] === taskLi)
+                    ? listId
+                    : taskId;
+                return { taskId, attrHostId };
+            };
             const pickTaskLi = (root) => {
                 if (!root || !(root instanceof Element)) return null;
                 const li = root.matches?.('.li,[data-type="NodeListItem"]')
                     ? root
                     : root.closest?.('.li,[data-type="NodeListItem"]');
                 if (li && readId(li) && isTaskBlockElement(li)) return li;
+                const list = root.matches?.('.list,[data-type="NodeList"]')
+                    ? root
+                    : root.closest?.('.list,[data-type="NodeList"]');
+                const directTaskItems = getDirectTaskListItems(list);
+                if (directTaskItems.length === 1) return directTaskItems[0];
                 const inner = root.querySelector?.('.li[data-node-id],[data-type="NodeListItem"][data-node-id]');
                 if (inner && readId(inner) && isTaskBlockElement(inner)) return inner;
                 return null;
             };
-            if (!blockEl) return '';
+            if (!blockEl) return { taskId: '', attrHostId: '' };
+            const selfTaskLi = pickTaskLi(blockEl);
+            if (selfTaskLi) return resolveTaskBindingFromTaskLi(selfTaskLi) || { taskId: '', attrHostId: '' };
             const id0 = readId(blockEl);
-            if (id0 && isTaskBlockElement(blockEl)) return id0;
-            const li = pickTaskLi(blockEl);
-            if (li) return readId(li);
+            if (id0 && isTaskBlockElement(blockEl)) return { taskId: id0, attrHostId: id0 };
             const p = blockEl.closest?.('[data-node-id]');
-            return readId(p) || id0;
+            const fallbackId = readId(p) || id0;
+            return { taskId: fallbackId, attrHostId: fallbackId };
+        }
+
+        function resolveTaskNodeIdForDetail(blockEl) {
+            const binding = resolveTaskBindingFromBlockEl(blockEl);
+            return String(binding?.taskId || '').trim();
+        }
+
+        function resolveTaskAttrNodeIdForDetail(blockEl) {
+            const binding = resolveTaskBindingFromBlockEl(blockEl);
+            return String(binding?.attrHostId || binding?.taskId || '').trim();
         }
 
     function getSelectedBlockElementForMenu() {
@@ -1183,6 +1246,8 @@
         // 状态变量
         let currentBlockEl = null;
         let currentBlockId = '';
+        let currentTaskId = '';
+        let currentTaskName = '';
         let currentProps = {};  // 当前块的所有自定义属性值
         let activePropConfig = null;  // 当前编辑的属性配置
         let inputResolve = null;  // 输入框Promise解析器
@@ -1234,16 +1299,141 @@
             return document.querySelector(`.li[data-node-id="${id}"],[data-type="NodeListItem"][data-node-id="${id}"],[data-node-id="${id}"]`);
         }
 
+        function updateCurrentTaskContext(blockEl, attrHostId = '') {
+            currentBlockEl = blockEl || null;
+            let binding = null;
+            try {
+                binding = resolveTaskBindingFromBlockEl(blockEl);
+            } catch (e) {
+                binding = null;
+            }
+            const fallbackId = String(blockEl?.dataset?.nodeId || '').trim();
+            const taskId = String(binding?.taskId || fallbackId).trim();
+            const hostId = String(attrHostId || binding?.attrHostId || taskId || fallbackId).trim();
+            currentBlockId = hostId || fallbackId;
+            currentTaskId = taskId || currentBlockId;
+            try {
+                currentTaskName = getTaskTitleFromBlockEl(blockEl);
+            } catch (e) {
+                currentTaskName = '';
+            }
+        }
+
         function resolveCurrentTaskId() {
+            if (String(currentTaskId || '').trim()) return String(currentTaskId).trim();
             const blockEl = currentBlockEl || getBlockElById(currentBlockId) || null;
             const resolvedId = String(resolveTaskNodeIdForDetail(blockEl) || '').trim();
             if (resolvedId) return resolvedId;
             return String(currentBlockId || '').trim();
         }
 
+        function dispatchTaskAttrUpdated(attrHostId, attrKey, value) {
+            const key = String(attrKey || '').trim();
+            const hostId = String(attrHostId || currentBlockId || '').trim();
+            const blockEl = getBlockElById(hostId) || currentBlockEl || null;
+            const taskId = String(resolveTaskNodeIdForDetail(blockEl) || resolveCurrentTaskId() || hostId).trim();
+            if (!key || (!taskId && !hostId)) return;
+            try {
+                window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
+                    detail: {
+                        taskId: taskId || hostId,
+                        attrHostId: hostId || taskId,
+                        attrKey: key,
+                        value: value == null ? '' : String(value),
+                    }
+                }));
+            } catch (e) {}
+        }
+
         function resolveCurrentTaskName() {
+            if (String(currentTaskName || '').trim()) return String(currentTaskName).trim();
             const blockEl = currentBlockEl || getBlockElById(currentBlockId) || null;
             return getTaskTitleFromBlockEl(blockEl);
+        }
+
+        function normalizeReminderTaskName(value) {
+            let text = String(value || '').split(/\r?\n/)[0].trim();
+            if (!text) return '任务';
+            text = text.replace(/^[\s>*-]*\[[xX ]\]\s*/, '').trim();
+            text = text.replace(/\{\:\s*[^}]*\}/g, '');
+            text = text.replace(/<span[^>]*>[\s\S]*?<\/span>/gi, '');
+            text = text.replace(/<[^>]+>/g, '');
+            text = text.replace(/\s{2,}/g, ' ').trim();
+            return text || '任务';
+        }
+
+        async function openReminderDialogForCurrentTask() {
+            const showDialog = globalThis.__tomatoReminder?.showDialog;
+            if (typeof showDialog !== 'function') {
+                if (typeof window.tmReminder === 'function') {
+                    const fallbackTaskId = String(resolveCurrentTaskId() || currentBlockId || '').trim();
+                    if (!fallbackTaskId) {
+                        showMessage('未找到任务', true, 1800);
+                        return;
+                    }
+                    Promise.resolve(window.tmReminder(fallbackTaskId)).catch(() => {
+                        showMessage('未检测到提醒功能，请确认番茄插件已启用', true, 2000);
+                    });
+                    return;
+                }
+                showMessage('未检测到提醒功能，请确认番茄插件已启用', true, 2000);
+                return;
+            }
+
+            const fallbackId = String(resolveCurrentTaskId() || currentBlockId || '').trim();
+            const fallbackName = normalizeReminderTaskName(resolveCurrentTaskName());
+            let taskLike = null;
+            const buildTaskLike = globalThis.__taskHorizonBuildTaskLikeFromBlockId;
+            if (typeof buildTaskLike === 'function' && fallbackId) {
+                try { taskLike = await buildTaskLike(fallbackId); } catch (e) { taskLike = null; }
+            }
+
+            const candidateIds = [];
+            const pushCandidateId = (value) => {
+                const id = String(value || '').trim();
+                if (!id) return;
+                if (candidateIds.includes(id)) return;
+                candidateIds.push(id);
+            };
+
+            pushCandidateId(taskLike?.id);
+            pushCandidateId(fallbackId);
+            pushCandidateId(currentTaskId);
+            pushCandidateId(currentBlockId);
+            pushCandidateId(resolveTaskNodeIdForDetail(currentBlockEl));
+            pushCandidateId(resolveTaskAttrNodeIdForDetail(currentBlockEl));
+            pushCandidateId(currentBlockEl?.dataset?.nodeId);
+
+            if (!candidateIds.length) {
+                showMessage('未找到任务', true, 1800);
+                return;
+            }
+
+            const candidateNameMap = new Map();
+            const normalizedTaskLikeName = normalizeReminderTaskName(taskLike?.content || taskLike?.raw_content || '');
+            candidateIds.forEach((id) => {
+                candidateNameMap.set(id, normalizedTaskLikeName || fallbackName || '任务');
+            });
+            if (fallbackId && fallbackName) candidateNameMap.set(fallbackId, fallbackName);
+
+            const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+            const hasReminderDialog = () => !!document.getElementById('tomato-reminder-backdrop');
+
+            try {
+                document.getElementById('tomato-reminder-dialog')?.remove();
+                document.getElementById('tomato-reminder-backdrop')?.remove();
+            } catch (e) {}
+
+            for (const candidateId of candidateIds) {
+                const name = String(candidateNameMap.get(candidateId) || fallbackName || '任务').trim() || '任务';
+                for (let attempt = 0; attempt < 2; attempt += 1) {
+                    try { showDialog(candidateId, name); } catch (e) {}
+                    await wait(attempt === 0 ? 120 : 180);
+                    if (hasReminderDialog()) return;
+                }
+            }
+
+            showMessage('未能打开提醒设置，请确认任务块与番茄钟插件状态', true, 2400);
         }
 
         async function resolveCurrentTaskIdForAi() {
@@ -1683,7 +1873,7 @@
         function prefetchInlineMetaProps(blocks, maxCount = 220) {
             const list = Array.isArray(blocks) ? blocks : [];
             for (let i = 0; i < list.length && i < maxCount; i += 1) {
-                const blockId = String(list[i]?.dataset?.nodeId || '').trim();
+                const blockId = String(resolveTaskAttrNodeIdForDetail(list[i]) || list[i]?.dataset?.nodeId || '').trim();
                 if (!blockId) continue;
                 if (inlineMetaCache.has(blockId) || inlineMetaPropsInflight.has(blockId)) continue;
                 Promise.resolve(ensureTaskPropsReady(blockId, false)).catch(() => null);
@@ -1822,18 +2012,7 @@
                 if (actionEl) {
                     const action = String(actionEl.dataset.action || '');
                     if (action === 'reminder') {
-                        const showDialog = globalThis.__tomatoReminder?.showDialog;
-                        if (typeof showDialog === 'function') {
-                            const taskId = resolveCurrentTaskId();
-                            if (!taskId) {
-                                showMessage('未找到任务', true, 1800);
-                                return;
-                            }
-                            const name = resolveCurrentTaskName();
-                            showDialog(taskId, name || '任务');
-                        } else {
-                            showMessage('未检测到提醒功能，请确认番茄插件已启用', true, 2000);
-                        }
+                        openReminderDialogForCurrentTask();
                         return;
                     }
                     if (action === 'ai-title') {
@@ -1991,11 +2170,7 @@
                     refreshInlineMetaByTaskId(currentBlockId, false);
                     showMessage(`已更新${config.name}`, false, 1500);
                     if (!result.viaSharedApi) {
-                        try {
-                            window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
-                                detail: { taskId: currentBlockId, attrKey: config.attrKey, value: newValue }
-                            }));
-                        } catch (e) {}
+                        dispatchTaskAttrUpdated(currentBlockId, config.attrKey, newValue);
                     }
                 } else {
                     showMessage('更新失败', true, 2000);
@@ -2026,11 +2201,7 @@
                     refreshInlineMetaByTaskId(blockIdAtOpen, false);
                     showMessage(`已更新${config.name}`, false, 1500);
                     if (!result.viaSharedApi) {
-                        try {
-                            window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
-                                detail: { taskId: blockIdAtOpen, attrKey: config.attrKey, value: newValue }
-                            }));
-                        } catch (e) {}
+                        dispatchTaskAttrUpdated(blockIdAtOpen, config.attrKey, newValue);
                     }
                 } else {
                     showMessage('更新失败', true, 2000);
@@ -2187,11 +2358,7 @@
                         showMessage(`已清除${config.name}`, false, 1500);
                     }
                     if (!result.viaSharedApi) {
-                        try {
-                            window.dispatchEvent(new CustomEvent('tm-task-attr-updated', {
-                                detail: { taskId: currentBlockId, attrKey: config.attrKey, value: newValue }
-                            }));
-                        } catch (e) {}
+                        dispatchTaskAttrUpdated(currentBlockId, config.attrKey, newValue);
                     }
                 } else {
                     showMessage('更新失败', true, 2000);
@@ -2328,8 +2495,7 @@
 
         // 显示悬浮条
         async function showFloatBar(blockEl) {
-            currentBlockEl = blockEl;
-            currentBlockId = blockEl.dataset.nodeId;
+            updateCurrentTaskContext(blockEl);
 
             // 读取当前块的自定义属性
             await refreshBlockAttrs();
@@ -2349,6 +2515,8 @@
             hideAllPopups();
             currentBlockEl = null;
             currentBlockId = '';
+            currentTaskId = '';
+            currentTaskName = '';
             currentProps = {};
         }
 
@@ -2571,7 +2739,7 @@
         function ensureInlineHost(blockEl) {
             const layer = ensureInlineMetaLayer(blockEl);
             if (!layer) return null;
-            const blockId = String(resolveTaskNodeIdForDetail(blockEl) || blockEl?.dataset?.nodeId || '').trim();
+            const blockId = String(resolveTaskAttrNodeIdForDetail(blockEl) || blockEl?.dataset?.nodeId || '').trim();
             if (!blockId) return null;
             let host = layer.querySelector(`.sy-custom-props-inline-host[data-block-id="${blockId}"]`);
             if (!host) {
@@ -2594,8 +2762,7 @@
                     const attrKey = String(chip.dataset.inlineAttr || '').trim();
                     const config = getInlineFieldConfig(attrKey);
                     if (!blockRef || !config) return;
-                    currentBlockEl = blockRef;
-                    currentBlockId = blockId || String(blockRef.dataset.nodeId || '').trim();
+                    updateCurrentTaskContext(blockRef, blockId || String(blockRef.dataset.nodeId || '').trim());
                     currentProps = await getTaskCustomProps(currentBlockId, false);
                     activePropConfig = config;
                     const currentValue = String(chip.dataset.inlineValue || currentProps[attrKey] || '').trim();
@@ -3082,7 +3249,7 @@
 
         async function renderInlineMetaForBlock(blockEl, forceRefresh = false, visibilityBuffer = 0) {
             if (!isInlineMetaEnabled()) return;
-            const taskId = String(resolveTaskNodeIdForDetail(blockEl) || blockEl?.dataset?.nodeId || '').trim();
+            const taskId = String(resolveTaskAttrNodeIdForDetail(blockEl) || blockEl?.dataset?.nodeId || '').trim();
             if (!taskId) return;
             const isInScope = await isInlineMetaScopeAllowedForBlock(blockEl);
             if (!isInScope) {
@@ -3591,4 +3758,5 @@
             body: JSON.stringify({ "msg": message, "timeout": delay })
         });
     }
+
 })();
