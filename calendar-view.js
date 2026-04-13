@@ -320,6 +320,16 @@
         if (key) acc[key] = String(item?.label || key);
         return acc;
     }, Object.create(null));
+    const SCHEDULE_EDITOR_MORANDI_PRESET_COLORS = Object.freeze([
+        '#D57A63',
+        '#F7C27A',
+        '#DAD85A',
+        '#A5C8B9',
+        '#76C5CF',
+        '#7FA2DA',
+        '#A489C5',
+        '#C779A0',
+    ]);
 
     function getMainCalendarViewTypeFromButton(buttonEl) {
         if (!(buttonEl instanceof HTMLElement)) return '';
@@ -375,6 +385,18 @@
 
     function esc(s) {
         return String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch] || ch));
+    }
+
+    function normalizeColorInputHex(value, fallback = '#7FA2DA') {
+        const normalize = (input) => {
+            const raw = String(input || '').trim();
+            const match = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(raw);
+            if (!match) return '';
+            let hex = String(match[1] || '').trim();
+            if (hex.length === 3) hex = hex.split('').map((ch) => `${ch}${ch}`).join('');
+            return `#${hex.toUpperCase()}`;
+        };
+        return normalize(value) || normalize(fallback) || '#7FA2DA';
     }
 
     function syncMainCalendarViewSelectWidth(selectWrap, selectEl, label) {
@@ -4692,46 +4714,37 @@
     }
 
     function hasOfficialMobileRuntimeSignal() {
-        let explicitIsMobile = null;
+        const backend = getRuntimeBackendType();
+        if (backend !== 'android' && backend !== 'ios' && backend !== 'harmony') return false;
         try {
-            if (window?.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
-        } catch (e) {}
-        if (explicitIsMobile === true) return true;
-        try {
-            if (window?.siyuan?.mobile && typeof window.siyuan.mobile === 'object') return true;
+            if (backend === 'android') return !!globalThis?.JSAndroid;
         } catch (e) {}
         try {
-            if (globalThis?.siyuan?.mobile && typeof globalThis.siyuan.mobile === 'object') return true;
+            if (backend === 'harmony') return !!globalThis?.JSHarmony;
         } catch (e) {}
         try {
-            if (globalThis?.JSAndroid || globalThis?.JSHarmony) return true;
+            if (backend === 'ios') return !!globalThis?.webkit?.messageHandlers;
+        } catch (e) {}
+        return false;
+    }
+
+    function isMobileBrowserViewport() {
+        try {
+            const ua = String(navigator?.userAgent || '');
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|HarmonyOS/i.test(ua)) return true;
+            if (/Huawei|HUAWEI/.test(ua) && !/Chrome|Chromium|EdgA|Firefox/.test(ua)) return true;
+        } catch (e) {}
+        try {
+            const maxTouchPoints = Number(navigator?.maxTouchPoints) || 0;
+            const width = Number(window?.innerWidth) || 0;
+            if (maxTouchPoints > 0 && width > 0 && width <= 768) return true;
         } catch (e) {}
         return false;
     }
 
     function isLikelyMobileRuntime() {
-        let explicitIsMobile = null;
-        try {
-            if (globalThis.__taskHorizonPluginIsMobile === true) return true;
-        } catch (e) {}
-        try {
-            if (window?.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
-        } catch (e) {}
-        if (explicitIsMobile === true) return true;
-        const backend = getRuntimeBackendType();
-        if (backend === 'android' || backend === 'ios' || backend === 'harmony') return true;
         if (hasOfficialMobileRuntimeSignal()) return true;
-        try {
-            const ua = String(navigator?.userAgent || '');
-            if (/^SiYuan\//i.test(ua) && (Number(navigator?.maxTouchPoints) || 0) > 0) return true;
-            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|HarmonyOS/i.test(ua)) return true;
-            if (/Huawei|HUAWEI/.test(ua) && !/Chrome|Chromium|EdgA|Firefox/.test(ua)) return true;
-            if (window.matchMedia?.('(any-pointer:coarse)')?.matches) {
-                if (/Android|Linux/.test(ua) && !/Win|Mac|X11/.test(ua)) return true;
-            }
-            if (('ontouchstart' in window) && (Number(navigator?.maxTouchPoints) || 0) > 1) return true;
-        } catch (e) {}
-        return false;
+        return isMobileBrowserViewport();
     }
 
     function hasDeviceNotificationBridge() {
@@ -4748,18 +4761,7 @@
     }
 
     function shouldUseOfficialMobileNotificationBackend() {
-        // 🔧 修复：只检查真正的移动端设备
-        // 桌面端虽然有 sendNotification，但应该使用实时提醒而不是预约机制
-        const backend = getRuntimeBackendType();
-        // 桌面端返回 false，移动端返回 true
-        if (backend === 'desktop' || backend === 'pc') return false;
-        
-        return !!state.isMobileDevice
-            || backend === 'android'
-            || backend === 'harmony'
-            || backend === 'ios'
-            || isLikelyMobileRuntime()
-            || hasDeviceNotificationBridge();
+        return hasOfficialMobileRuntimeSignal() && hasDeviceNotificationBridge();
     }
 
     function shouldPreferDeviceNotificationBackend() {
@@ -9476,7 +9478,19 @@
         const calendarId0 = String(init.calendarId || '').trim() || pickDefaultCalendarId(settings);
         const calDef0 = calDefs.find((d) => d.id === calendarId0) || calDefs[0] || { id: 'default', name: '时间轴', color: 'var(--tm-primary-color)' };
         const color0 = String(init.color || '').trim() || String(calDef0.color || 'var(--tm-primary-color)');
+        const colorInputValue0 = normalizeColorInputHex(color0, calDef0.color || '#7FA2DA');
         const calendarOptions = calDefs.map((d) => `<option value="${esc(d.id)}" ${d.id === calendarId0 ? 'selected' : ''}>${esc(d.name)}</option>`).join('');
+        const colorPresetButtonsHtml = SCHEDULE_EDITOR_MORANDI_PRESET_COLORS.map((color) => `
+            <button
+                class="tm-calendar-edit-color-chip${color === colorInputValue0 ? ' is-active' : ''}"
+                type="button"
+                data-tm-cal-color-preset="${esc(color)}"
+                title="莫兰迪预设 ${esc(color)}"
+                aria-label="选择预设颜色 ${esc(color)}"
+                style="--tm-cal-color-swatch:${esc(color)};"
+                ${taskDateEditor ? 'disabled' : ''}>
+            </button>
+        `).join('');
         const deviceSummary0 = taskDateEditor
             ? '此事件来自任务日期，仅支持同步修改任务的开始日期和完成日期'
             : (isEdit ? getScheduleCurrentDeviceNotificationSummary(init) : '保存后会自动同步当前设备预约');
@@ -9514,8 +9528,12 @@
                 </div>
                 <div class="tm-calendar-edit-row"${taskDateEditor ? ' style="opacity:.55;"' : ''}>
                     <div class="tm-calendar-edit-label">颜色</div>
-                    <input class="tm-calendar-edit-input" style="width:120px;flex:none;padding:0;height:30px" type="color" value="${esc(color0)}" data-tm-cal-field="color" ${taskDateEditor ? 'disabled' : ''}>
-                    <div style="flex:1;"></div>
+                    <div class="tm-calendar-edit-color-wrap">
+                        <input class="tm-calendar-edit-input tm-calendar-edit-color-input" type="color" value="${esc(colorInputValue0)}" data-tm-cal-field="color" aria-label="当前颜色" ${taskDateEditor ? 'disabled' : ''}>
+                        <div class="tm-calendar-edit-color-presets" data-tm-cal-color-presets aria-label="莫兰迪预设颜色">
+                            ${colorPresetButtonsHtml}
+                        </div>
+                    </div>
                 </div>
                 <div class="tm-calendar-edit-row"${taskDateEditor ? ' style="opacity:.55;"' : ''}>
                     <div class="tm-calendar-edit-label">提醒</div>
@@ -9610,8 +9628,40 @@
             const defs = getCalendarDefs(getSettings());
             const def = defs.find((d) => String(d?.id || '').trim() === calendarId);
             const nextColor = String(def?.color || 'var(--tm-primary-color)').trim() || 'var(--tm-primary-color)';
-            colorEl.value = nextColor;
+            colorEl.value = normalizeColorInputHex(nextColor, colorEl.value || colorInputValue0);
+            syncColorPresetState();
         };
+        const colorEl = modal.querySelector('[data-tm-cal-field="color"]');
+        const colorPresetEls = Array.from(modal.querySelectorAll('[data-tm-cal-color-preset]'));
+        const syncColorPresetState = () => {
+            if (!(colorEl instanceof HTMLInputElement)) return;
+            const activeColor = normalizeColorInputHex(colorEl.value, colorInputValue0);
+            colorPresetEls.forEach((button) => {
+                if (!(button instanceof HTMLButtonElement)) return;
+                const presetColor = normalizeColorInputHex(button.getAttribute('data-tm-cal-color-preset'), '');
+                const active = !!presetColor && presetColor === activeColor;
+                button.classList.toggle('is-active', active);
+                button.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+        };
+        if (colorEl instanceof HTMLInputElement) {
+            colorEl.addEventListener('input', () => {
+                syncColorPresetState();
+            }, { signal: abort.signal });
+            colorEl.addEventListener('change', () => {
+                syncColorPresetState();
+            }, { signal: abort.signal });
+        }
+        colorPresetEls.forEach((button) => {
+            if (!(button instanceof HTMLButtonElement)) return;
+            button.addEventListener('click', () => {
+                if (!(colorEl instanceof HTMLInputElement) || colorEl.disabled) return;
+                const presetColor = normalizeColorInputHex(button.getAttribute('data-tm-cal-color-preset'), colorEl.value || colorInputValue0);
+                colorEl.value = presetColor;
+                syncColorPresetState();
+            }, { signal: abort.signal });
+        });
+        syncColorPresetState();
         const syncMonthlyModeSummary = () => {
             const monthlyModeEl = modal.querySelector('[data-tm-cal-field="repeatMonthlyMode"]');
             const summaryEl = modal.querySelector('[data-tm-cal-field="repeatMonthlySummary"]');

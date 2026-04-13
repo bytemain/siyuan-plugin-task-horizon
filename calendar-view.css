@@ -3574,6 +3574,74 @@
     border-radius: 6px;
 }
 
+.tm-calendar-edit-color-wrap {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tm-calendar-edit-color-input {
+    width: 88px;
+    height: 32px;
+    flex: 0 0 auto;
+    padding: 3px;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.tm-calendar-edit-color-input::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.tm-calendar-edit-color-input::-webkit-color-swatch {
+    border: none;
+    border-radius: 7px;
+}
+
+.tm-calendar-edit-color-input::-moz-color-swatch {
+    border: none;
+    border-radius: 7px;
+}
+
+.tm-calendar-edit-color-presets {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tm-calendar-edit-color-chip {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--tm-border-color) 72%, transparent);
+    border-radius: 999px;
+    background: var(--tm-cal-color-swatch);
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, rgba(255, 255, 255, 0.26) 45%, transparent);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.tm-calendar-edit-color-chip:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.tm-calendar-edit-color-chip.is-active {
+    border-color: var(--tm-primary-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--tm-primary-color) 18%, transparent);
+}
+
+.tm-calendar-edit-color-chip:disabled,
+.tm-calendar-edit-color-input:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
 .tm-calendar-edit-actions {
     display: flex;
     gap: 8px;

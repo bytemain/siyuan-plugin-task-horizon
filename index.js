@@ -73,50 +73,36 @@ const getSiyuanRuntimeBackend = () => {
 };
 
 const hasOfficialMobileRuntimeSignal = () => {
-    let explicitIsMobile = null;
+    const backend = getSiyuanRuntimeBackend();
+    if (!MOBILE_RUNTIME_CONTAINERS.has(backend)) return false;
     try {
-        if (window?.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
+        if (backend === "android") return !!globalThis?.JSAndroid;
     } catch (e) {}
     try {
-        if (globalThis?.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!globalThis.siyuan.config.isMobile;
-    } catch (e) {}
-    if (explicitIsMobile === true) return true;
-    try {
-        if (window?.siyuan?.mobile && typeof window.siyuan.mobile === "object") return true;
+        if (backend === "harmony") return !!globalThis?.JSHarmony;
     } catch (e) {}
     try {
-        if (globalThis?.siyuan?.mobile && typeof globalThis.siyuan.mobile === "object") return true;
-    } catch (e) {}
-    try {
-        if (globalThis?.JSAndroid || globalThis?.JSHarmony) return true;
+        if (backend === "ios") return !!globalThis?.webkit?.messageHandlers;
     } catch (e) {}
     return false;
 };
 
-const isRuntimeMobileClient = (pluginInstance = null) => {
-    let explicitIsMobile = null;
+const isMobileBrowserViewport = () => {
     try {
-        if (globalThis?.siyuan?.config?.isMobile !== undefined) {
-            explicitIsMobile = !!globalThis.siyuan.config.isMobile;
-        }
+        const ua = String(navigator?.userAgent || "");
+        if (/Android|iPhone|iPad|iPod|HarmonyOS|Mobile/i.test(ua)) return true;
     } catch (e) {}
     try {
-        if (window?.siyuan?.config?.isMobile !== undefined) {
-            explicitIsMobile = !!window.siyuan.config.isMobile;
-        }
+        const maxTouchPoints = Number(navigator?.maxTouchPoints) || 0;
+        const width = Number(window?.innerWidth) || 0;
+        if (maxTouchPoints > 0 && width > 0 && width <= 768) return true;
     } catch (e) {}
-    try {
-        if (pluginInstance && pluginInstance.isMobile !== undefined) {
-            explicitIsMobile = !!pluginInstance.isMobile;
-        }
-    } catch (e) {}
-    if (explicitIsMobile === true) return true;
-    const backend = getSiyuanRuntimeBackend();
-    if (MOBILE_RUNTIME_CONTAINERS.has(backend)) return true;
-    if (hasOfficialMobileRuntimeSignal()) return true;
-    const ua = navigator.userAgent || "";
-    if (/Android|iPhone|iPad|iPod|HarmonyOS|Mobile/i.test(ua)) return true;
     return false;
+};
+
+const isRuntimeMobileClient = () => {
+    if (hasOfficialMobileRuntimeSignal()) return true;
+    return isMobileBrowserViewport();
 };
 
 const findDockTabPath = (node, type, path = []) => {

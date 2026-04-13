@@ -544,27 +544,45 @@
         return (now - ts) < 240;
     }
 
-    function isMobileDevice() {
-        let explicitIsMobile = null;
-        try {
-            if (window.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
-        } catch (e) {}
-        try {
-            if (globalThis.__taskHorizonPluginIsMobile !== undefined) explicitIsMobile = !!globalThis.__taskHorizonPluginIsMobile;
-        } catch (e) {}
-        if (explicitIsMobile === true) return true;
-        try {
-            if (window.siyuan?.mobile && typeof window.siyuan.mobile === 'object') return true;
-        } catch (e) {}
+    function getSiyuanRuntimeBackend() {
         try {
             const container = String(window?.siyuan?.config?.system?.container || globalThis?.siyuan?.config?.system?.container || '').trim().toLowerCase();
-            if (container === 'android' || container === 'ios' || container === 'harmony') return true;
+            if (container) return container;
+        } catch (e) {}
+        return '';
+    }
+
+    function hasOfficialMobileRuntimeSignal() {
+        const backend = getSiyuanRuntimeBackend();
+        if (backend !== 'android' && backend !== 'ios' && backend !== 'harmony') return false;
+        try {
+            if (backend === 'android') return !!globalThis?.JSAndroid;
         } catch (e) {}
         try {
-            if (globalThis?.JSAndroid || globalThis?.JSHarmony) return true;
+            if (backend === 'harmony') return !!globalThis?.JSHarmony;
         } catch (e) {}
-        const ua = navigator.userAgent || '';
-        return /Mobile|Android|iPhone|iPad|iPod|HarmonyOS/i.test(ua) || (window.innerWidth || 0) <= 768;
+        try {
+            if (backend === 'ios') return !!globalThis?.webkit?.messageHandlers;
+        } catch (e) {}
+        return false;
+    }
+
+    function isMobileBrowserViewport() {
+        try {
+            const ua = String(navigator?.userAgent || '');
+            if (/Mobile|Android|iPhone|iPad|iPod|HarmonyOS/i.test(ua)) return true;
+        } catch (e) {}
+        try {
+            const maxTouchPoints = Number(navigator?.maxTouchPoints) || 0;
+            const width = Number(window?.innerWidth) || 0;
+            if (maxTouchPoints > 0 && width > 0 && width <= 768) return true;
+        } catch (e) {}
+        return false;
+    }
+
+    function isMobileDevice() {
+        if (hasOfficialMobileRuntimeSignal()) return true;
+        return isMobileBrowserViewport();
     }
 
     function isAiFeatureEnabled() {

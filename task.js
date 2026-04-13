@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.1.9
+// @version      2.2.0
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -7444,6 +7444,35 @@
             width: 100%;
         }
 
+        .tm-timeline-split.tm-timeline-split--sidebar-collapsed .tm-timeline-left {
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .tm-timeline-split.tm-timeline-split--sidebar-collapsed .tm-timeline-left-body,
+        .tm-timeline-split.tm-timeline-split--sidebar-collapsed #tmTimelineLeftTable {
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            overflow: hidden;
+        }
+
+        .tm-timeline-split.tm-timeline-split--sidebar-collapsed .tm-timeline-splitter {
+            display: none;
+            width: 0;
+            pointer-events: none;
+        }
+
+        .tm-timeline-split.tm-timeline-split--sidebar-collapsed .tm-timeline-right {
+            flex: 1 1 auto;
+            width: auto;
+            min-width: 0;
+        }
+
         .tm-timeline-left {
             flex: 0 0 auto;
             width: 540px;
@@ -7627,13 +7656,16 @@
 
         .tm-gantt-day {
             height: 28px;
-            line-height: 28px;
             font-size: 12px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             box-sizing: border-box;
             border-right: 1px solid var(--tm-border-color);
             color: color-mix(in srgb, var(--tm-text-color) 76%, var(--tm-secondary-text));
             opacity: 0.92;
+            line-height: 1;
+            padding-bottom: 5px;
         }
 
         .tm-gantt-day--weekend {
@@ -7676,6 +7708,7 @@
             overflow-y: auto;
             overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
+            --tm-mobile-timeline-group-shift: 0px;
         }
 
         .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-split {
@@ -7691,6 +7724,7 @@
             max-width: none !important;
             flex: 0 0 auto;
             align-self: flex-start;
+            z-index: auto;
         }
 
         .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-left-body {
@@ -7710,10 +7744,28 @@
             width: max-content;
             min-width: max-content;
             align-self: flex-start;
+            z-index: auto;
         }
 
         .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-right-header {
-            overflow: visible;
+            position: sticky;
+            top: 0;
+            z-index: 12;
+            overflow: hidden;
+            background: var(--tm-table-header-bg);
+            isolation: isolate;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-right-header::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 2px;
+            background: var(--tm-table-header-bg);
+            pointer-events: none;
+            z-index: 2;
         }
 
         .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-right-body {
@@ -7721,9 +7773,30 @@
             flex: 0 0 auto;
         }
 
+        .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-timeline-left-body thead th {
+            top: 0;
+            z-index: 13;
+        }
+
         .tm-modal.tm-modal--mobile .tm-body.tm-body--timeline .tm-group-row .tm-group-sticky {
-            position: static;
+            position: relative;
             left: auto;
+            z-index: 5;
+            max-width: calc(100vw - 12px);
+            padding: 0 8px 0 0;
+            background: transparent;
+            box-shadow: none;
+            transform: translateX(var(--tm-mobile-timeline-group-shift, 0px));
+            will-change: transform;
+        }
+
+        .tm-modal.tm-modal--mobile.tm-modal--timeline-touch-lock .tm-body.tm-body--timeline,
+        .tm-modal.tm-modal--mobile.tm-modal--timeline-touch-lock .tm-body.tm-body--timeline .tm-timeline-left-body,
+        .tm-modal.tm-modal--mobile.tm-modal--timeline-touch-lock .tm-body.tm-body--timeline .tm-timeline-right-body,
+        .tm-modal.tm-modal--mobile.tm-modal--timeline-touch-lock .tm-body.tm-body--timeline .tm-timeline-right-header {
+            overscroll-behavior: none !important;
+            touch-action: none !important;
+            -ms-touch-action: none !important;
         }
 
         .tm-timeline-toolbar-btn .tm-lucide-emoji,
@@ -7904,6 +7977,36 @@
 
         .tm-gantt-row--group {
             background: var(--tm-header-bg);
+        }
+
+        .tm-gantt-group-chip {
+            display: none;
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            z-index: 5;
+            transform: translate(var(--tm-gantt-group-chip-offset, 0px), -50%);
+            align-items: center;
+            gap: 6px;
+            max-width: min(420px, calc(100% - 16px));
+            height: auto;
+            min-height: 0;
+            padding: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+            line-height: 1.2;
+        }
+
+        .tm-timeline-split.tm-timeline-split--sidebar-collapsed .tm-gantt-group-chip {
+            display: inline-flex;
+        }
+
+        .tm-gantt-group-chip .tm-group-label {
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .tm-gantt-today {
@@ -8242,6 +8345,8 @@
             opacity: 0;
             transition: opacity 0.16s ease;
             pointer-events: auto;
+            touch-action: none;
+            -ms-touch-action: none;
         }
 
         .tm-gantt-bar-handle--start {
@@ -8277,19 +8382,35 @@
 
         .tm-modal.tm-modal--mobile .tm-gantt-bar-handle {
             width: 24px;
+            top: -3px;
+            height: calc(100% + 6px);
             opacity: 0;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-gantt-row.tm-gantt-row--selected .tm-gantt-bar-handle,
+        .tm-modal.tm-modal--mobile .tm-gantt-row.tm-gantt-row--dot-open .tm-gantt-bar-handle,
+        .tm-modal.tm-modal--mobile .tm-gantt-bar.tm-gantt-bar--dragging .tm-gantt-bar-handle {
+            opacity: 1;
         }
 
         .tm-modal.tm-modal--mobile .tm-gantt-bar-handle::before {
             content: '';
             position: absolute;
             top: 50%;
-            left: 50%;
             width: 4px;
             height: calc(100% - 8px);
             border-radius: 999px;
-            background: rgba(17, 24, 39, 0.22);
+            background: rgba(17, 24, 39, 0.92);
             transform: translate(-50%, -50%);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.38);
+        }
+
+        .tm-modal.tm-modal--mobile .tm-gantt-bar-handle--start::before {
+            left: 6px;
+        }
+
+        .tm-modal.tm-modal--mobile .tm-gantt-bar-handle--end::before {
+            left: 18px;
         }
 
         .tm-modal.tm-modal--mobile .tm-gantt-row.tm-gantt-row--selected .tm-gantt-bar__menu-btn,
@@ -11018,6 +11139,7 @@
             startDate: 90,
             // 时间轴模式左侧宽度
             timelineLeftWidth: 540,
+            timelineSidebarCollapsed: false,
             // 时间轴模式任务内容列宽度（不影响表格视图）
             timelineContentWidth: 360,
             timelineForceSortByCompletionNearToday: false,
@@ -11427,6 +11549,7 @@
                                 if (typeof cloudData.excludeCompletedTasks === 'boolean') this.data.excludeCompletedTasks = cloudData.excludeCompletedTasks;
                                 if (typeof cloudData.startDate === 'number') this.data.startDate = cloudData.startDate;
                                 if (typeof cloudData.timelineLeftWidth === 'number') this.data.timelineLeftWidth = cloudData.timelineLeftWidth;
+                                if (typeof cloudData.timelineSidebarCollapsed === 'boolean') this.data.timelineSidebarCollapsed = cloudData.timelineSidebarCollapsed;
                                 if (typeof cloudData.timelineContentWidth === 'number') this.data.timelineContentWidth = cloudData.timelineContentWidth;
                                 if (typeof cloudData.timelineForceSortByCompletionNearToday === 'boolean') this.data.timelineForceSortByCompletionNearToday = cloudData.timelineForceSortByCompletionNearToday;
                                 if (typeof cloudData.groupSortByBestSubtaskTimeInTimeQuadrant === 'boolean') this.data.groupSortByBestSubtaskTimeInTimeQuadrant = cloudData.groupSortByBestSubtaskTimeInTimeQuadrant;
@@ -11718,6 +11841,7 @@
             this.data.excludeCompletedTasks = Storage.get('tm_exclude_completed_tasks', this.data.excludeCompletedTasks);
             this.data.startDate = Storage.get('tm_start_date', this.data.startDate);
             this.data.timelineLeftWidth = Storage.get('tm_timeline_left_width', this.data.timelineLeftWidth);
+            this.data.timelineSidebarCollapsed = !!Storage.get('tm_timeline_sidebar_collapsed', this.data.timelineSidebarCollapsed);
             this.data.timelineContentWidth = Storage.get('tm_timeline_content_width', this.data.timelineContentWidth);
             this.data.timelineForceSortByCompletionNearToday = Storage.get('tm_timeline_force_sort_completion_near_today', this.data.timelineForceSortByCompletionNearToday);
             this.data.groupSortByBestSubtaskTimeInTimeQuadrant = Storage.get('tm_group_sort_best_subtask_time_time_quadrant', this.data.groupSortByBestSubtaskTimeInTimeQuadrant);
@@ -11837,6 +11961,7 @@
                 // 因为用户可能选择了"不分组"或其他分组模式
             }
             this.data.docDisplayNameMode = __tmNormalizeDocDisplayNameMode(this.data.docDisplayNameMode);
+            this.data.timelineSidebarCollapsed = !!this.data.timelineSidebarCollapsed;
             this.normalizeColumns();
         },
 
@@ -12029,6 +12154,7 @@
             Storage.set('tm_exclude_completed_tasks', !!this.data.excludeCompletedTasks);
             Storage.set('tm_start_date', Number(this.data.startDate) || 90);
             Storage.set('tm_timeline_left_width', this.data.timelineLeftWidth);
+            Storage.set('tm_timeline_sidebar_collapsed', !!this.data.timelineSidebarCollapsed);
             Storage.set('tm_timeline_content_width', this.data.timelineContentWidth);
             Storage.set('tm_timeline_force_sort_completion_near_today', !!this.data.timelineForceSortByCompletionNearToday);
             Storage.set('tm_group_sort_best_subtask_time_time_quadrant', !!this.data.groupSortByBestSubtaskTimeInTimeQuadrant);
@@ -23481,6 +23607,7 @@ async function __tmRefreshAfterWake(reason) {
                     bar.style.transform = 'translateY(-50%)';
                 }
             }
+            try { state.__tmTimelineRenderDeps?.(); } catch (e) {}
         };
         try {
             requestAnimationFrame(() => {
@@ -23896,6 +24023,19 @@ async function __tmRefreshAfterWake(reason) {
         return Number.isFinite(scrollWidth) && scrollWidth > 0 ? scrollWidth : 0;
     }
 
+    function __tmSyncTimelineMobileGroupStickyOffset(modalEl) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        const scrollHost = __tmGetTimelineGlobalScrollHost(modal);
+        if (!(scrollHost instanceof HTMLElement)) return false;
+        const offset = Math.max(0, Number(scrollHost.scrollLeft) || 0);
+        try {
+            scrollHost.style.setProperty('--tm-mobile-timeline-group-shift', `${offset}px`);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
+
     function __tmBindTimelineLeftCollapseInteractions(leftBodyEl) {
         const leftBody = leftBodyEl instanceof HTMLElement ? leftBodyEl : null;
         if (!leftBody) return;
@@ -24150,10 +24290,10 @@ async function __tmRefreshAfterWake(reason) {
             } catch (e) {}
         }
 
-        const syncRowHeights = () => {
-            if (Date.now() - (Number(state.__tmFlipTs) || 0) < 320) return;
-            const leftRowsNow = leftBody.querySelectorAll('tbody tr');
-            const rightRowsNow = ganttBody.querySelectorAll('.tm-gantt-row,.tm-gantt-row--group');
+                const syncRowHeights = () => {
+                    if (Date.now() - (Number(state.__tmFlipTs) || 0) < 320) return;
+                    const leftRowsNow = leftBody.querySelectorAll('tbody tr');
+                    const rightRowsNow = ganttBody.querySelectorAll('.tm-gantt-row,.tm-gantt-row--group');
             const n = Math.min(leftRowsNow.length, rightRowsNow.length);
             if (n <= 0) return;
             for (let i = 0; i < n; i++) {
@@ -33992,6 +34132,8 @@ async function __tmRefreshAfterWake(reason) {
             const leftWidth = (Number.isFinite(leftWidth0) && leftWidth0 > 0)
                 ? Math.max(360, Math.min(900, Math.round(leftWidth0)))
                 : Math.max(360, Math.min(900, computedAuto));
+            const sidebarCollapsed = !!SettingsStore.data.timelineSidebarCollapsed;
+            const splitClass = sidebarCollapsed ? ' tm-timeline-split--sidebar-collapsed' : '';
             const isDark = __tmIsDarkMode();
             const progressBarColor = isDark
                 ? __tmNormalizeHexColor(SettingsStore.data.progressBarColorDark, '#81c784')
@@ -34207,7 +34349,7 @@ async function __tmRefreshAfterWake(reason) {
 
             return `
                 <div class="tm-body tm-body--timeline${bodyAnimClass}">
-                    <div class="tm-timeline-split">
+                    <div class="tm-timeline-split${splitClass}">
                         <div class="tm-timeline-left" style="width:${leftWidth}px">
                             <div class="tm-timeline-left-body" id="tmTimelineLeftBody">
                                 <table class="tm-table tm-timeline-table-left" id="tmTimelineLeftTable" style="width:${leftTableWidth}px;min-width:${leftTableWidth}px;max-width:${leftTableWidth}px;">
@@ -36308,6 +36450,10 @@ async function __tmRefreshAfterWake(reason) {
         const showMobileLandscapeTimelineTopbar = !!(isMobile && isLandscape && state.viewMode === 'timeline');
         const showDesktopNarrowTimelineTopbar = !!(!isMobile && isDesktopNarrow && state.viewMode === 'timeline');
         const topbarAddBtnHtml = `<button class="tm-btn tm-btn-info tm-topbar-add-btn bc-btn bc-btn--sm" onclick="tmAdd()" aria-label="新建任务" data-tm-floating-tooltip-label="新建任务" data-tm-tooltip-side="bottom" data-tm-tooltip-align="center" style="padding: 0; width: 30px; height: 30px; min-width: 30px; min-height: 30px; display: inline-flex; align-items: center; justify-content: center;">${__tmRenderLucideIcon('plus')}</button>`;
+        const timelineSidebarToggleLabel = SettingsStore.data.timelineSidebarCollapsed ? '展开时间轴侧栏' : '隐藏时间轴侧栏';
+        const timelineSidebarToggleButtonHtml = state.viewMode === 'timeline'
+            ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmTimelineToggleSidebar(event)" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs(timelineSidebarToggleLabel, { side: 'bottom' })}>${__tmRenderLucideIcon('panel-left')}</button>`
+            : '';
         const __tmRenderTimelineToolbarButtons = ({ buttonClass = '', buttonStyle = '', interactionAttrs = '', clickPrefix = '' } = {}) => {
             const buttonClassName = ['tm-btn', 'tm-btn-info', 'tm-timeline-toolbar-btn', 'bc-btn', 'bc-btn--sm', String(buttonClass || '').trim()].filter(Boolean).join(' ');
             const styleAttr = buttonStyle ? ` style="${__tmEscAttr(buttonStyle)}"` : '';
@@ -36405,6 +36551,7 @@ async function __tmRefreshAfterWake(reason) {
                                 className: 'tm-topbar-doc-quick-select',
                                 tooltip: '切换文档分组'
                             }) : ''}
+                            ${isMobile && state.viewMode === 'timeline' ? timelineSidebarToggleButtonHtml : ''}
                             ${isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCalendarToggleSidebar()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('日历侧边栏', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>` : ''}
                             ${showDesktopNarrowTimelineTopbar ? timelineInlineToolbarButtonsHtml : ''}
                         </div>
@@ -36438,6 +36585,7 @@ async function __tmRefreshAfterWake(reason) {
                                 <button class="tm-btn tm-btn-info tm-compact-topbar-action tm-compact-topbar-action--settings bc-btn bc-btn--sm" onclick="showSettings()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('设置', { side: 'bottom' })}>${__tmRenderLucideIcon('settings')}</button>
                             </div>
                             ` : ''}
+                            ${!isMobile && state.viewMode === 'timeline' ? timelineSidebarToggleButtonHtml : ''}
                             ${!isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info tm-calendar-sidebar-toggle-compact bc-btn bc-btn--sm" onclick="tmCalendarToggleSidebar()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('日历侧边栏', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>` : ''}
 
                         <!-- 移动端菜单按钮 -->
@@ -36472,6 +36620,7 @@ async function __tmRefreshAfterWake(reason) {
                         ${state.viewMode === 'timeline' ? `
                             ${timelineCompactToolbarButtonsHtml}
                         ` : ''}
+                        ${!isMobile && state.viewMode === 'timeline' ? timelineSidebarToggleButtonHtml : ''}
                         ${!isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCalendarToggleSidebar()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('日历侧边栏', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>` : ''}
                         ${!showMobileBottomViewBar ? `
                         <div class="tm-view-segmented bc-tabs-list" role="tablist" aria-label="视图">
@@ -37527,6 +37676,7 @@ async function __tmRefreshAfterWake(reason) {
                         timelineScrollHost.scrollTop = desiredTop;
                         timelineScrollHost.scrollLeft = desiredLeft;
                     } catch (e) {}
+                    try { __tmSyncTimelineMobileGroupStickyOffset(state.modal); } catch (e) {}
                 } else {
                     if (leftBody) leftBody.scrollTop = desiredTop;
                     if (ganttBody) {
@@ -37597,6 +37747,7 @@ async function __tmRefreshAfterWake(reason) {
                         const inner = ganttHeader?.querySelector?.('.tm-gantt-header-inner');
                         if (inner) inner.style.transform = '';
                     } catch (e) {}
+                    try { __tmSyncTimelineMobileGroupStickyOffset(state.modal); } catch (e) {}
                 } else {
                     syncHeaderX();
                 }
@@ -37625,6 +37776,7 @@ async function __tmRefreshAfterWake(reason) {
                             timelineScrollHost.scrollTop = desiredTop;
                             timelineScrollHost.scrollLeft = desiredLeft;
                         } catch (e) {}
+                        try { __tmSyncTimelineMobileGroupStickyOffset(state.modal); } catch (e) {}
                     } else {
                         try { if (leftBody) leftBody.scrollTop = desiredTop; } catch (e) {}
                         try { if (ganttBody) ganttBody.scrollTop = desiredTop; } catch (e) {}
@@ -37669,6 +37821,7 @@ async function __tmRefreshAfterWake(reason) {
                             bar.style.transform = 'translateY(-50%)';
                         }
                     }
+                    try { state.__tmTimelineRenderDeps?.(); } catch (e) {}
                 };
                 try {
                     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -37699,6 +37852,11 @@ async function __tmRefreshAfterWake(reason) {
                         tmToggleGroupCollapse(key, ev);
                     };
                     if (useGlobalScroll) {
+                        const syncMobileGroupX = () => {
+                            try { __tmSyncTimelineMobileGroupStickyOffset(state.modal); } catch (e) {}
+                        };
+                        try { syncMobileGroupX(); } catch (e) {}
+                        try { timelineScrollHost?.addEventListener('scroll', syncMobileGroupX, { passive: true }); } catch (e) {}
                         ganttBody.addEventListener('click', onGroupClick, true);
                     } else {
                     const onGanttWheel = (ev) => {
@@ -41745,6 +41903,14 @@ async function __tmRefreshAfterWake(reason) {
             } catch (e) {}
         }
         if (!layout || !btn) render();
+        try { await SettingsStore.save(); } catch (e) {}
+    };
+
+    window.tmTimelineToggleSidebar = async function(ev) {
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        const next = !SettingsStore.data.timelineSidebarCollapsed;
+        SettingsStore.data.timelineSidebarCollapsed = next;
+        render();
         try { await SettingsStore.save(); } catch (e) {}
     };
 
@@ -47319,6 +47485,13 @@ async function __tmRefreshAfterWake(reason) {
                 if (typeof ev.preventDefault === 'function') ev.preventDefault();
             }
         } catch (e) {}
+
+        const isTimelineDateField = field === 'startDate' || field === 'completionTime' || field === 'customTime';
+        const isMobileTimelineCell = __tmIsMobileDevice()
+            && state.viewMode === 'timeline'
+            && td instanceof Element
+            && !!td.closest('.tm-body.tm-body--timeline');
+        if (isMobileTimelineCell && isTimelineDateField) return;
 
         if (!td) return;
         const existingInput = td.querySelector?.('input,select');
@@ -68586,6 +68759,45 @@ async function __tmRefreshAfterWake(reason) {
                     return false;
                 }
             })();
+            const mobileTimelineModalEl = (() => {
+                try {
+                    const modal = bodyEl?.closest?.('.tm-modal');
+                    return modal instanceof HTMLElement ? modal : null;
+                } catch (e) {
+                    return null;
+                }
+            })();
+            let mobileTimelineTouchLockRelease = null;
+            let groupChipScrollCleanup = null;
+            const setMobileTimelineTouchLock = (enabled) => {
+                if (!isMobileTimelineGlobal) return;
+                if (!enabled) {
+                    if (typeof mobileTimelineTouchLockRelease === 'function') {
+                        try { mobileTimelineTouchLockRelease(); } catch (e) {}
+                    }
+                    mobileTimelineTouchLockRelease = null;
+                    return;
+                }
+                if (typeof mobileTimelineTouchLockRelease === 'function') return;
+                const modal = mobileTimelineModalEl;
+                if (!(modal instanceof HTMLElement)) return;
+                const touchOpts = { capture: true, passive: false };
+                const pointerOpts = { capture: true, passive: false };
+                const preventMoveDefault = (ev) => {
+                    try {
+                        if (!modal.classList.contains('tm-modal--timeline-touch-lock')) return;
+                    } catch (e) {}
+                    try { ev.preventDefault(); } catch (e) {}
+                };
+                try { modal.classList.add('tm-modal--timeline-touch-lock'); } catch (e) {}
+                try { window.addEventListener('touchmove', preventMoveDefault, touchOpts); } catch (e) {}
+                try { window.addEventListener('pointermove', preventMoveDefault, pointerOpts); } catch (e) {}
+                mobileTimelineTouchLockRelease = () => {
+                    try { window.removeEventListener('touchmove', preventMoveDefault, touchOpts); } catch (e) {}
+                    try { window.removeEventListener('pointermove', preventMoveDefault, pointerOpts); } catch (e) {}
+                    try { modal.classList.remove('tm-modal--timeline-touch-lock'); } catch (e) {}
+                };
+            };
     
             try { cleanupMap.get(bodyEl)?.(); } catch (e) {}
     
@@ -68606,6 +68818,7 @@ async function __tmRefreshAfterWake(reason) {
             const endTs = range.endTs;
             const dayCount = clamp(Math.round((endTs - startTs) / DAY_MS) + 1, 1, 366);
             const totalWidth = dayCount * dayWidth;
+            const showCollapsedGroupLabels = !!SettingsStore.data.timelineSidebarCollapsed;
             const timelineMultiSelectedSet = new Set(
                 (Array.isArray(state.timelineMultiSelectedTaskIds) ? state.timelineMultiSelectedTaskIds : [])
                     .map((x) => String(x || '').trim())
@@ -68691,6 +68904,33 @@ async function __tmRefreshAfterWake(reason) {
                 }
                 return '';
             };
+            const buildGanttGroupChipHtml = (groupRow, labelColor) => {
+                if (!showCollapsedGroupLabels || !groupRow) return '';
+                const isCollapsed = !!groupRow?.collapsed;
+                const toggle = `<span class="tm-group-toggle${isCollapsed ? ' tm-group-toggle--collapsed' : ''}" style="margin-right:0;display:inline-flex;align-items:center;justify-content:center;width:16px;min-width:16px;">${__tmRenderToggleIcon(16, isCollapsed ? 0 : 90, 'tm-group-toggle-icon')}</span>`;
+                const countHtml = `<span class="tm-badge tm-badge--count">${Number(groupRow?.count) || 0}</span>`;
+                const durationSum = String(groupRow?.durationSum || '').trim();
+                const durationHtml = durationSum ? `<span class="tm-badge tm-badge--duration"><span class="tm-badge__icon">${__tmRenderBadgeIcon('chart-column')}</span>${esc(durationSum)}</span>` : '';
+                if (groupRow.kind === 'pinned') {
+                    return `<span class="tm-gantt-group-chip">${toggle}<span class="tm-checklist-group-pin-icon">${__tmRenderBadgeIcon('pin', 14)}</span><span class="tm-group-label" style="color:var(--tm-warning-color);">${esc(groupRow?.label || '')}</span>${countHtml}</span>`;
+                }
+                if (groupRow.kind === 'doc') {
+                    return `<span class="tm-gantt-group-chip">${toggle}<span class="tm-group-label" style="color:${labelColor};">${__tmRenderDocGroupLabel(groupRow.docId || groupRow.id, groupRow.label || '')}</span>${countHtml}</span>`;
+                }
+                if (groupRow.kind === 'task') {
+                    return `<span class="tm-gantt-group-chip">${toggle}<span class="tm-group-label" style="color:${labelColor};">${__tmRenderIconLabel('puzzle', groupRow.label || '')}</span>${countHtml}</span>`;
+                }
+                if (groupRow.kind === 'time') {
+                    return `<span class="tm-gantt-group-chip">${toggle}<span class="tm-group-label" style="color:${labelColor};">${esc(groupRow.label || '')}</span>${countHtml}${durationHtml}</span>`;
+                }
+                if (groupRow.kind === 'h2') {
+                    return `<span class="tm-gantt-group-chip">${toggle}<span class="tm-group-label" style="color:${labelColor};">${__tmRenderIconLabel('puzzle', groupRow.label || '')}</span>${countHtml}</span>`;
+                }
+                if (groupRow.kind === 'quadrant') {
+                    return `<span class="tm-gantt-group-chip">${toggle}<span class="tm-group-label" style="color:${labelColor};">${esc(groupRow.label || '')}</span>${countHtml}${durationHtml}</span>`;
+                }
+                return `<span class="tm-gantt-group-chip">${toggle}<span class="tm-group-label">${esc(groupRow?.label || '')}</span>${countHtml}</span>`;
+            };
             for (const r of rowModel) {
                 if (r?.type === 'group') {
                     let labelColor = '';
@@ -68710,7 +68950,7 @@ async function __tmRefreshAfterWake(reason) {
                     } else {
                         currentGroupBg = enableGroupBg ? (__tmGroupBgFromLabelColor(labelColor, isDark) || '') : '';
                     }
-                    rowsHtml.push(`<div class="tm-gantt-row tm-gantt-row--group" data-group-key="${String(r?.key || '')}" style="width:${totalWidth}px;cursor:pointer"></div>`);
+                    rowsHtml.push(`<div class="tm-gantt-row tm-gantt-row--group" data-group-key="${String(r?.key || '')}" style="width:${totalWidth}px;cursor:pointer">${buildGanttGroupChipHtml(r, labelColor)}</div>`);
                     continue;
                 }
                 if (r?.type !== 'task') continue;
@@ -68780,6 +69020,40 @@ async function __tmRefreshAfterWake(reason) {
                     ${rowsHtml.join('')}
                 </div>
             `;
+
+            const syncGroupChipOffset = () => {
+                let offset = 0;
+                if (isMobileTimelineGlobal) {
+                    const scrollHost = mobileTimelineModalEl?.querySelector?.('.tm-body.tm-body--timeline');
+                    offset = Number(scrollHost?.scrollLeft) || 0;
+                } else {
+                    offset = Number(bodyEl.scrollLeft) || 0;
+                }
+                try { bodyEl.style.setProperty('--tm-gantt-group-chip-offset', `${Math.max(0, offset)}px`); } catch (e) {}
+            };
+            try { syncGroupChipOffset(); } catch (e) {}
+            try {
+                if (isMobileTimelineGlobal) {
+                    const scrollHost = mobileTimelineModalEl?.querySelector?.('.tm-body.tm-body--timeline');
+                    if (scrollHost instanceof HTMLElement) {
+                        const onGroupChipScroll = () => { try { syncGroupChipOffset(); } catch (e2) {} };
+                        scrollHost.addEventListener('scroll', onGroupChipScroll, { passive: true });
+                        groupChipScrollCleanup = () => {
+                            try { scrollHost.removeEventListener('scroll', onGroupChipScroll, { passive: true }); } catch (e2) {
+                                try { scrollHost.removeEventListener('scroll', onGroupChipScroll); } catch (e3) {}
+                            }
+                        };
+                    }
+                } else {
+                    const onGroupChipScroll = () => { try { syncGroupChipOffset(); } catch (e2) {} };
+                    bodyEl.addEventListener('scroll', onGroupChipScroll, { passive: true });
+                    groupChipScrollCleanup = () => {
+                        try { bodyEl.removeEventListener('scroll', onGroupChipScroll, { passive: true }); } catch (e2) {
+                            try { bodyEl.removeEventListener('scroll', onGroupChipScroll); } catch (e3) {}
+                        }
+                    };
+                }
+            } catch (e) {}
 
             const renderDependencies = () => {
                 const inner = bodyEl.querySelector('.tm-gantt-body-inner');
@@ -69222,6 +69496,7 @@ async function __tmRefreshAfterWake(reason) {
                 const onWinPointerMove = (ev) => {
                     if (!dragging) return;
                     if (raf) return;
+                    try { ev.preventDefault(); } catch (e) {}
                     raf = requestAnimationFrame(() => {
                         raf = 0;
                         onMove(ev);
@@ -69233,6 +69508,7 @@ async function __tmRefreshAfterWake(reason) {
                     if (!dragging) return;
                     dragging = false;
                     setTimelineDraggingX(false);
+                    setMobileTimelineTouchLock(false);
                     setBarDragState(barEl, false);
                     clearBarDateHint();
                     groupItems.forEach((it) => setBarDragState(it.barEl, false));
@@ -69273,6 +69549,7 @@ async function __tmRefreshAfterWake(reason) {
                 window.addEventListener('pointercancel', onUp, true);
                 window.addEventListener('blur', onUp, true);
                 setTimelineDraggingX(true);
+                setMobileTimelineTouchLock(true);
                 setBarDragState(barEl, true);
                 groupItems.forEach((it) => setBarDragState(it.barEl, true, 'move'));
 
@@ -69315,6 +69592,7 @@ async function __tmRefreshAfterWake(reason) {
                         try { window.removeEventListener('blur', onWinUp, true); } catch (e2) {}
                     }
                     setTimelineDraggingX(false);
+                    setMobileTimelineTouchLock(false);
                     try { bodyEl.style.cursor = ''; } catch (e2) {}
                 };
     
@@ -69327,6 +69605,7 @@ async function __tmRefreshAfterWake(reason) {
                         if (Math.abs(dx) <= Math.abs(dy)) return;
                         active = true;
                         setTimelineDraggingX(true);
+                        setMobileTimelineTouchLock(true);
                         try { bodyEl.setPointerCapture?.(e.pointerId); } catch (e2) {}
                         try { bodyEl.style.cursor = 'grabbing'; } catch (e2) {}
                     }
@@ -69508,6 +69787,8 @@ async function __tmRefreshAfterWake(reason) {
                 try { bodyEl.removeEventListener('dblclick', onDblClick); } catch (e) {}
                 try { bodyEl.removeEventListener('contextmenu', onContextMenu); } catch (e) {}
                 try { bodyEl.removeEventListener('click', onClick); } catch (e) {}
+                try { groupChipScrollCleanup?.(); } catch (e) {}
+                try { setMobileTimelineTouchLock(false); } catch (e) {}
                 if (state.__tmTimelineRenderDeps === renderDependencies) state.__tmTimelineRenderDeps = null;
             });
         }
