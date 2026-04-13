@@ -9526,7 +9526,7 @@
                     <div class="tm-calendar-edit-label">${endLabel}</div>
                     <input class="tm-calendar-edit-input" type="${endInputType}" value="${esc(endInputValue)}" data-tm-cal-field="end">
                 </div>
-                <div class="tm-calendar-edit-row"${taskDateEditor ? ' style="opacity:.55;"' : ''}>
+                <div class="tm-calendar-edit-row tm-calendar-edit-row--color"${taskDateEditor ? ' style="opacity:.55;"' : ''}>
                     <div class="tm-calendar-edit-label">颜色</div>
                     <div class="tm-calendar-edit-color-wrap">
                         <input class="tm-calendar-edit-input tm-calendar-edit-color-input" type="color" value="${esc(colorInputValue0)}" data-tm-cal-field="color" aria-label="当前颜色" ${taskDateEditor ? 'disabled' : ''}>

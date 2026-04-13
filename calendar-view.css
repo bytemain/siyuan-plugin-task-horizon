@@ -3535,6 +3535,10 @@
     border-radius: 10px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
     padding: 14px;
+    max-height: min(88vh, 720px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
 }
 
 .tm-calendar-edit-title {
@@ -3647,6 +3651,92 @@
     gap: 8px;
     align-items: center;
     margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+    .tm-calendar-edit-modal {
+        align-items: flex-end;
+        padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+        box-sizing: border-box;
+    }
+
+    .tm-calendar-edit-box {
+        width: 100%;
+        max-height: calc(100vh - max(24px, env(safe-area-inset-top, 0px)) - max(24px, env(safe-area-inset-bottom, 0px)));
+        border-radius: 16px;
+        padding: 16px 14px calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .tm-calendar-edit-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .tm-calendar-edit-label {
+        width: auto;
+    }
+
+    .tm-calendar-edit-value {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+    }
+
+    .tm-calendar-edit-input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .tm-calendar-edit-color-wrap {
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+
+    .tm-calendar-edit-color-input {
+        width: 48px;
+        min-width: 48px;
+        height: 28px;
+        border-radius: 999px;
+    }
+
+    .tm-calendar-edit-color-presets {
+        width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 6px;
+    }
+
+    .tm-calendar-edit-color-chip {
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        flex: 0 0 20px;
+    }
+
+    .tm-calendar-edit-row--color {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .tm-calendar-edit-row--color .tm-calendar-edit-label {
+        width: 52px;
+        flex: 0 0 52px;
+    }
+
+    .tm-calendar-edit-row--color .tm-calendar-edit-color-wrap {
+        min-width: 0;
+    }
+
+    .tm-calendar-edit-actions {
+        flex-wrap: wrap;
+    }
 }
 
 .tm-calendar-settings {
