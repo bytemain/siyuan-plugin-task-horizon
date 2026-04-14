@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.2.0
+// @version      2.2.1
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -64,6 +64,9 @@
             --tm-card-bg: #ffffff;
             --tm-font-size: 14px;
             --tm-header-height: 44px;
+            --tm-timeline-month-row-height: 18px;
+            --tm-timeline-day-row-height: 26px;
+            --tm-timeline-header-height: calc(var(--tm-timeline-month-row-height) + var(--tm-timeline-day-row-height));
             --tm-table-header-height: 36px;
             --tm-row-height-scale: 1.25;
             --tm-row-height-offset: 12px;
@@ -3224,6 +3227,7 @@
             flex-direction: column;
             box-sizing: border-box;
             padding-bottom: var(--tm-view-bottom-inset, 0px);
+            overflow-anchor: none;
         }
 
         .tm-body.tm-body--kanban {
@@ -6502,6 +6506,10 @@
             transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
         }
 
+        .tm-checklist-pane:not(.tm-checklist-pane--compact) .tm-checklist-item {
+            padding-left: 20px;
+        }
+
         @supports (content-visibility: auto) {
             .tm-checklist-item {
                 content-visibility: auto;
@@ -7549,6 +7557,7 @@
             overflow: auto;
             position: relative;
             z-index: 6;
+            overflow-anchor: none;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
@@ -7561,8 +7570,8 @@
         .tm-timeline-right {
             flex: 1 1 auto;
             min-width: 0;
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-rows: var(--tm-timeline-header-height) minmax(0, 1fr);
             min-height: 0;
             position: relative;
             z-index: 1;
@@ -7572,8 +7581,17 @@
             flex: 0 0 auto;
             overflow: hidden;
             background: var(--tm-table-header-bg);
-            height: var(--tm-header-height);
+            height: var(--tm-timeline-header-height);
+            min-height: var(--tm-timeline-header-height);
+            max-height: var(--tm-timeline-header-height);
             box-shadow: inset 0 -1px 0 var(--tm-border-color);
+        }
+
+        .tm-timeline-right-header > #tmGanttHeader {
+            height: 100%;
+            min-height: 100%;
+            max-height: 100%;
+            overflow: hidden;
         }
 
         .tm-timeline-right-body {
@@ -7582,6 +7600,8 @@
             overflow: auto;
             position: relative;
             background: var(--tm-bg-color);
+            scrollbar-gutter: stable;
+            overflow-anchor: none;
         }
 
         .tm-timeline-table-left {
@@ -7595,9 +7615,9 @@
         }
 
         .tm-body--timeline .tm-timeline-table-left thead th {
-            height: var(--tm-header-height);
+            height: var(--tm-timeline-header-height);
             padding: 0 4px 0 9px;
-            line-height: var(--tm-header-height);
+            line-height: var(--tm-timeline-header-height);
             vertical-align: middle;
         }
 
@@ -7667,6 +7687,10 @@
             display: flex;
             flex-direction: column;
             user-select: none;
+            height: var(--tm-timeline-header-height);
+            min-height: var(--tm-timeline-header-height);
+            max-height: var(--tm-timeline-header-height);
+            overflow: hidden;
         }
 
         .tm-gantt-month-row,
@@ -7676,8 +7700,8 @@
         }
 
         .tm-gantt-month {
-            height: 24px;
-            line-height: 24px;
+            height: var(--tm-timeline-month-row-height);
+            line-height: var(--tm-timeline-month-row-height);
             font-size: 12px;
             font-weight: 600;
             padding-left: 10px;
@@ -7688,7 +7712,7 @@
         }
 
         .tm-gantt-day {
-            height: 28px;
+            height: var(--tm-timeline-day-row-height);
             font-size: 12px;
             display: flex;
             align-items: center;
@@ -7916,6 +7940,7 @@
             inset: 0;
             z-index: 3;
             pointer-events: none;
+            overflow: visible;
         }
 
         .tm-gantt-dep-wrap {
@@ -7937,6 +7962,14 @@
 
         .tm-gantt-dep.tm-gantt-dep--manual {
             stroke: var(--tm-primary-color);
+            pointer-events: stroke;
+            cursor: pointer;
+        }
+
+        .tm-gantt-dep-hit {
+            fill: none;
+            stroke: transparent;
+            stroke-width: 12;
             pointer-events: stroke;
             cursor: pointer;
         }
@@ -7987,10 +8020,13 @@
         .tm-gantt-row {
             position: relative;
             height: var(--tm-row-height);
+            min-height: var(--tm-row-height);
+            max-height: var(--tm-row-height);
             box-sizing: border-box;
             border-bottom: none;
             box-shadow: none;
             overflow: visible;
+            contain: style;
         }
 
         .tm-gantt-row.tm-gantt-row--multi-selected {
@@ -8054,8 +8090,8 @@
 
         .tm-gantt-bar {
             position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
+            top: calc((var(--tm-row-height) - var(--tm-gantt-card-height)) / 2);
+            transform: none;
             height: var(--tm-gantt-card-height);
             min-width: 22px;
             background: transparent;
@@ -8164,6 +8200,11 @@
             pointer-events: none;
         }
 
+        .tm-gantt-bar--milestone .tm-gantt-bar__surface {
+            justify-content: center;
+            padding: 0;
+        }
+
         .tm-gantt-bar__lead {
             display: inline-flex;
             align-items: center;
@@ -8173,6 +8214,31 @@
             color: color-mix(in srgb, var(--tm-gantt-bar-fill) 74%, var(--tm-text-color) 26%);
             line-height: 0;
             flex: 0 0 auto;
+        }
+
+        .tm-gantt-bar__lead--milestone {
+            color: color-mix(in srgb, var(--tm-danger-color) 84%, var(--tm-text-color) 16%);
+        }
+
+        .tm-gantt-bar__label-layer--milestone {
+            left: calc(100% + 10px);
+            width: max-content;
+            min-width: 0;
+            max-width: min(320px, calc(100vw - 120px));
+            padding: 0;
+        }
+
+        .tm-gantt-bar__label-layer--milestone .tm-gantt-bar__title {
+            flex: 0 1 auto;
+            min-width: max-content;
+            max-width: min(220px, calc(100vw - 180px));
+        }
+
+        .tm-gantt-bar:hover .tm-gantt-bar__label-layer--milestone,
+        .tm-gantt-row.tm-gantt-row--selected .tm-gantt-bar__label-layer--milestone,
+        .tm-gantt-row.tm-gantt-row--dot-open .tm-gantt-bar__label-layer--milestone {
+            -webkit-mask-image: none;
+            mask-image: none;
         }
 
         .tm-gantt-bar__lead .tm-lucide-emoji svg,
@@ -8329,11 +8395,20 @@
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
             pointer-events: none;
             opacity: 0;
-            transform: translate(10px, -50%);
+            left: 0;
         }
 
-        .tm-gantt-bar--hint-start .tm-gantt-bar__date-hint {
+        .tm-gantt-bar__date-hint[hidden] {
+            display: none !important;
+        }
+
+        .tm-gantt-bar__date-hint--start {
             transform: translate(calc(-100% - 10px), -50%);
+        }
+
+        .tm-gantt-bar__date-hint--end {
+            left: 100%;
+            transform: translate(10px, -50%);
         }
 
         .tm-gantt-bar.tm-gantt-bar--dragging .tm-gantt-bar__drag-label,
@@ -8382,6 +8457,21 @@
             -ms-touch-action: none;
         }
 
+        .tm-gantt-bar-handle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: calc(100% - 8px);
+            border-radius: 999px;
+            background: rgba(17, 24, 39, 0.92);
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.38);
+            opacity: 0;
+            transition: opacity 0.16s ease;
+        }
+
         .tm-gantt-bar-handle--start {
             left: -6px;
         }
@@ -8401,16 +8491,7 @@
         .tm-gantt-row.tm-gantt-row--selected .tm-gantt-bar-handle::before,
         .tm-gantt-row.tm-gantt-row--dot-open .tm-gantt-bar-handle::before,
         .tm-gantt-bar.tm-gantt-bar--dragging .tm-gantt-bar-handle::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 4px;
-            height: calc(100% - 8px);
-            border-radius: 999px;
-            background: rgba(17, 24, 39, 0.92);
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.38);
+            opacity: 1;
         }
 
         .tm-modal.tm-modal--mobile .tm-gantt-bar-handle {
@@ -8427,15 +8508,8 @@
         }
 
         .tm-modal.tm-modal--mobile .tm-gantt-bar-handle::before {
-            content: '';
-            position: absolute;
-            top: 50%;
             width: 4px;
             height: calc(100% - 8px);
-            border-radius: 999px;
-            background: rgba(17, 24, 39, 0.92);
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 0 1px rgba(255,255,255,0.38);
         }
 
         .tm-modal.tm-modal--mobile .tm-gantt-bar-handle--start::before {
@@ -11008,6 +11082,7 @@
     // 设置存储（使用云端同步存储，支持跨设备同步）
     const SettingsStore = {
         data: {
+            settingsUpdatedAt: 0,
             selectedDocIds: [],
             queryLimit: 500,
             recursiveDocLimit: 2000,
@@ -11116,8 +11191,10 @@
             calendarSidebarCollapseTasks: false,
             calendarShowTomatoMaster: true,
             calendarShowTaskDates: true,
+            calendarHideScheduledTaskDatesInAllDay: false,
             calendarShowOtherBlockCheckbox: true,
             calendarTaskDateColorMode: 'group',
+            calendarScheduleFollowDocColor: false,
             calendar3DayTodayPosition: 1,
             calendarNewScheduleMaxDurationMin: 60,
             calendarHourSlotHeightMode: 'normal',
@@ -11178,6 +11255,7 @@
             timelineSidebarCollapsed: false,
             // 时间轴模式任务内容列宽度（不影响表格视图）
             timelineContentWidth: 360,
+            timelineCardFields: ['title', 'status'],
             timelineForceSortByCompletionNearToday: false,
             groupSortByBestSubtaskTimeInTimeQuadrant: false,
             // 白板视图
@@ -11395,6 +11473,19 @@
                         try {
                             const cloudData = JSON.parse(text);
                             if (cloudData && typeof cloudData === 'object' && Object.keys(cloudData).length > 0) {
+                                const localSettingsUpdatedAt = Number(this.data.settingsUpdatedAt) || 0;
+                                const cloudSettingsUpdatedAt = Number(cloudData.settingsUpdatedAt) || 0;
+                                if (localSettingsUpdatedAt > 0 && cloudSettingsUpdatedAt < localSettingsUpdatedAt) {
+                                    const migratedLegacyTopbarDefaults = this.migrateLegacyTopbarDefaults();
+                                    this.normalizeColumns();
+                                    this.syncToLocal();
+                                    this.loaded = true;
+                                    if (migratedLegacyTopbarDefaults) {
+                                        try { await this.save(); } catch (e) {}
+                                    }
+                                    return;
+                                }
+                                if (cloudSettingsUpdatedAt > 0) this.data.settingsUpdatedAt = cloudSettingsUpdatedAt;
                                 // 应用云端数据
                                 if (Array.isArray(cloudData.selectedDocIds)) this.data.selectedDocIds = cloudData.selectedDocIds;
                                 if (typeof cloudData.queryLimit === 'number') this.data.queryLimit = cloudData.queryLimit;
@@ -11497,8 +11588,10 @@
                                 if (typeof cloudData.calendarSidebarCollapseTomato === 'boolean') this.data.calendarSidebarCollapseTomato = cloudData.calendarSidebarCollapseTomato;
                                 if (typeof cloudData.calendarSidebarCollapseTasks === 'boolean') this.data.calendarSidebarCollapseTasks = cloudData.calendarSidebarCollapseTasks;
                                 if (typeof cloudData.calendarShowTaskDates === 'boolean') this.data.calendarShowTaskDates = cloudData.calendarShowTaskDates;
+                                if (typeof cloudData.calendarHideScheduledTaskDatesInAllDay === 'boolean') this.data.calendarHideScheduledTaskDatesInAllDay = cloudData.calendarHideScheduledTaskDatesInAllDay;
                                 if (typeof cloudData.calendarShowOtherBlockCheckbox === 'boolean') this.data.calendarShowOtherBlockCheckbox = cloudData.calendarShowOtherBlockCheckbox;
                                 if (typeof cloudData.calendarTaskDateColorMode === 'string') this.data.calendarTaskDateColorMode = cloudData.calendarTaskDateColorMode;
+                                if (typeof cloudData.calendarScheduleFollowDocColor === 'boolean') this.data.calendarScheduleFollowDocColor = cloudData.calendarScheduleFollowDocColor;
                                 if (typeof cloudData.calendar3DayTodayPosition === 'number') this.data.calendar3DayTodayPosition = cloudData.calendar3DayTodayPosition;
                                 if (typeof cloudData.calendarNewScheduleMaxDurationMin === 'number') this.data.calendarNewScheduleMaxDurationMin = cloudData.calendarNewScheduleMaxDurationMin;
                                 if (typeof cloudData.calendarHourSlotHeightMode === 'string') this.data.calendarHourSlotHeightMode = cloudData.calendarHourSlotHeightMode;
@@ -11590,6 +11683,7 @@
                                 if (typeof cloudData.timelineLeftWidth === 'number') this.data.timelineLeftWidth = cloudData.timelineLeftWidth;
                                 if (typeof cloudData.timelineSidebarCollapsed === 'boolean') this.data.timelineSidebarCollapsed = cloudData.timelineSidebarCollapsed;
                                 if (typeof cloudData.timelineContentWidth === 'number') this.data.timelineContentWidth = cloudData.timelineContentWidth;
+                                if (Array.isArray(cloudData.timelineCardFields)) this.data.timelineCardFields = __tmNormalizeTimelineCardFields(cloudData.timelineCardFields);
                                 if (typeof cloudData.timelineForceSortByCompletionNearToday === 'boolean') this.data.timelineForceSortByCompletionNearToday = cloudData.timelineForceSortByCompletionNearToday;
                                 if (typeof cloudData.groupSortByBestSubtaskTimeInTimeQuadrant === 'boolean') this.data.groupSortByBestSubtaskTimeInTimeQuadrant = cloudData.groupSortByBestSubtaskTimeInTimeQuadrant;
                                 if (typeof cloudData.collapseAllIncludesGroups === 'boolean') this.data.collapseAllIncludesGroups = cloudData.collapseAllIncludesGroups;
@@ -11701,6 +11795,7 @@
 
         // 从本地缓存加载
         loadFromLocal() {
+            this.data.settingsUpdatedAt = Number(Storage.get('tm_settings_updated_at', this.data.settingsUpdatedAt)) || 0;
             this.data.selectedDocIds = Storage.get('tm_selected_doc_ids', []) || [];
             this.data.queryLimit = Storage.get('tm_query_limit', 500);
             this.data.recursiveDocLimit = Storage.get('tm_recursive_doc_limit', this.data.recursiveDocLimit);
@@ -11827,8 +11922,10 @@
             this.data.calendarShowStopwatch = Storage.get('tm_calendar_show_stopwatch', this.data.calendarShowStopwatch);
             this.data.calendarShowIdle = Storage.get('tm_calendar_show_idle', this.data.calendarShowIdle);
             this.data.calendarShowTaskDates = Storage.get('tm_calendar_show_task_dates', this.data.calendarShowTaskDates);
+            this.data.calendarHideScheduledTaskDatesInAllDay = !!Storage.get('tm_calendar_hide_scheduled_task_dates_in_all_day', this.data.calendarHideScheduledTaskDatesInAllDay);
             this.data.calendarShowOtherBlockCheckbox = Storage.get('tm_calendar_show_other_block_checkbox', this.data.calendarShowOtherBlockCheckbox);
             this.data.calendarTaskDateColorMode = Storage.get('tm_calendar_task_date_color_mode', this.data.calendarTaskDateColorMode);
+            this.data.calendarScheduleFollowDocColor = !!Storage.get('tm_calendar_schedule_follow_doc_color', this.data.calendarScheduleFollowDocColor);
             this.data.calendar3DayTodayPosition = Number(Storage.get('tm_calendar_3day_today_position', this.data.calendar3DayTodayPosition));
             this.data.calendarNewScheduleMaxDurationMin = Number(Storage.get('tm_calendar_new_schedule_max_duration_min', this.data.calendarNewScheduleMaxDurationMin));
             this.data.calendarHourSlotHeightMode = Storage.get('tm_calendar_hour_slot_height_mode', this.data.calendarHourSlotHeightMode);
@@ -11885,6 +11982,7 @@
             this.data.timelineLeftWidth = Storage.get('tm_timeline_left_width', this.data.timelineLeftWidth);
             this.data.timelineSidebarCollapsed = !!Storage.get('tm_timeline_sidebar_collapsed', this.data.timelineSidebarCollapsed);
             this.data.timelineContentWidth = Storage.get('tm_timeline_content_width', this.data.timelineContentWidth);
+            this.data.timelineCardFields = __tmNormalizeTimelineCardFields(Storage.get('tm_timeline_card_fields', this.data.timelineCardFields));
             this.data.timelineForceSortByCompletionNearToday = Storage.get('tm_timeline_force_sort_completion_near_today', this.data.timelineForceSortByCompletionNearToday);
             this.data.groupSortByBestSubtaskTimeInTimeQuadrant = Storage.get('tm_group_sort_best_subtask_time_time_quadrant', this.data.groupSortByBestSubtaskTimeInTimeQuadrant);
             this.data.whiteboardLinks = Storage.get('tm_whiteboard_links', this.data.whiteboardLinks) || [];
@@ -12007,11 +12105,13 @@
             }
             this.data.docDisplayNameMode = __tmNormalizeDocDisplayNameMode(this.data.docDisplayNameMode);
             this.data.timelineSidebarCollapsed = !!this.data.timelineSidebarCollapsed;
+            this.data.timelineCardFields = __tmNormalizeTimelineCardFields(this.data.timelineCardFields);
             this.normalizeColumns();
         },
 
         // 同步到本地缓存
         syncToLocal() {
+            Storage.set('tm_settings_updated_at', Number(this.data.settingsUpdatedAt) || 0);
             Storage.set('tm_selected_doc_ids', this.data.selectedDocIds);
             Storage.set('tm_query_limit', this.data.queryLimit);
             Storage.set('tm_recursive_doc_limit', this.data.recursiveDocLimit);
@@ -12145,8 +12245,10 @@
             Storage.set('tm_calendar_show_stopwatch', !!this.data.calendarShowStopwatch);
             Storage.set('tm_calendar_show_idle', !!this.data.calendarShowIdle);
             Storage.set('tm_calendar_show_task_dates', !!this.data.calendarShowTaskDates);
+            Storage.set('tm_calendar_hide_scheduled_task_dates_in_all_day', !!this.data.calendarHideScheduledTaskDatesInAllDay);
             Storage.set('tm_calendar_show_other_block_checkbox', !!this.data.calendarShowOtherBlockCheckbox);
             Storage.set('tm_calendar_task_date_color_mode', String(this.data.calendarTaskDateColorMode || 'group').trim() || 'group');
+            Storage.set('tm_calendar_schedule_follow_doc_color', !!this.data.calendarScheduleFollowDocColor);
             Storage.set('tm_calendar_3day_today_position', Number(this.data.calendar3DayTodayPosition) || 1);
             Storage.set('tm_calendar_new_schedule_max_duration_min', Number(this.data.calendarNewScheduleMaxDurationMin) || 60);
             Storage.set('tm_calendar_hour_slot_height_mode', String(this.data.calendarHourSlotHeightMode || 'normal').trim() || 'normal');
@@ -12207,6 +12309,8 @@
             Storage.set('tm_timeline_left_width', this.data.timelineLeftWidth);
             Storage.set('tm_timeline_sidebar_collapsed', !!this.data.timelineSidebarCollapsed);
             Storage.set('tm_timeline_content_width', this.data.timelineContentWidth);
+            this.data.timelineCardFields = __tmNormalizeTimelineCardFields(this.data.timelineCardFields);
+            Storage.set('tm_timeline_card_fields', this.data.timelineCardFields);
             Storage.set('tm_timeline_force_sort_completion_near_today', !!this.data.timelineForceSortByCompletionNearToday);
             Storage.set('tm_group_sort_best_subtask_time_time_quadrant', !!this.data.groupSortByBestSubtaskTimeInTimeQuadrant);
             Storage.set('tm_whiteboard_links', this.data.whiteboardLinks || []);
@@ -12463,6 +12567,7 @@
             this.saving = true;
             this.saveDirty = false;
             try {
+                this.data.settingsUpdatedAt = Date.now();
                 // 本地缓存延后到 flush，避免每次 save() 都全量写 localStorage
                 this.syncToLocal();
                 const payload = this.buildCloudPayload();
@@ -14490,16 +14595,7 @@
         const docIds = __tmExtractDocIdsFromTx(payload);
         const blockIds = __tmExtractBlockIdsFromTx(payload);
         if ((!docIds || docIds.size === 0) && (!blockIds || blockIds.size === 0)) return;
-        if (docIds && docIds.size > 0) {
-            docIds.forEach((id) => {
-                if (__tmIsLikelyBlockId(id)) __tmTxTaskRefreshDocIds.add(id);
-            });
-        }
-        if (blockIds && blockIds.size > 0) {
-            blockIds.forEach((id) => {
-                if (__tmIsLikelyBlockId(id)) __tmTxTaskRefreshBlockIds.add(id);
-            });
-        }
+        __tmMarkExternalTaskTxDirty();
         try {
             if (__tmTxTaskRefreshTimer) clearTimeout(__tmTxTaskRefreshTimer);
         } catch (e) {}
@@ -14525,76 +14621,21 @@
         const pendingBlockIds = Array.from(__tmTxTaskRefreshBlockIds);
         __tmTxTaskRefreshDocIds.clear();
         __tmTxTaskRefreshBlockIds.clear();
-
-        if (pendingDocIds.length === 0 && pendingBlockIds.length === 0) return;
-
-        const loadedDocIds = new Set((Array.isArray(state.__tmLoadedDocIdsForTasks) ? state.__tmLoadedDocIdsForTasks : [])
-            .map((id) => String(id || '').trim())
-            .filter((id) => __tmIsLikelyBlockId(id)));
-        if (loadedDocIds.size === 0) return;
-
-        if (state.isRefreshing) {
-            pendingDocIds.forEach((id) => {
-                if (__tmIsLikelyBlockId(id)) __tmTxTaskRefreshDocIds.add(id);
-            });
-            pendingBlockIds.forEach((id) => {
-                if (__tmIsLikelyBlockId(id)) __tmTxTaskRefreshBlockIds.add(id);
-            });
-            try {
-                if (__tmTxTaskRefreshTimer) clearTimeout(__tmTxTaskRefreshTimer);
-            } catch (e) {}
-            __tmTxTaskRefreshTimer = setTimeout(() => {
-                __tmTxTaskRefreshTimer = null;
-                __tmFlushTaskIncrementalRefreshFromTx().catch(() => {});
-            }, 320);
-            return;
-        }
+        if (!state.externalTaskTxDirty && pendingDocIds.length === 0 && pendingBlockIds.length === 0) return;
 
         __tmTxTaskRefreshInFlight = true;
         try {
-            await __tmFlushSqlTransactionsSafe('ws-main-incremental-refresh');
-            const injectedTasksByDoc = await __tmBuildInjectedTasksByDocFromBlockIds(pendingBlockIds);
-            const docIdSet = new Set();
-            pendingDocIds.forEach((id) => {
-                if (loadedDocIds.has(id)) docIdSet.add(id);
-            });
-            const resolvedDocIds = await __tmResolveDocIdsFromBlockIds(pendingBlockIds);
-            resolvedDocIds.forEach((id) => {
-                if (loadedDocIds.has(id)) docIdSet.add(id);
-            });
-            injectedTasksByDoc.forEach((_, docId) => {
-                if (loadedDocIds.has(docId)) docIdSet.add(docId);
-            });
-            const docIds = Array.from(docIdSet);
-            if (docIds.length === 0) return;
-
-            docIds.forEach((docId) => {
-                try { __tmInvalidateTasksQueryCacheByDocId(docId); } catch (e) {}
-            });
-
-            for (const docId of docIds) {
-                try {
-                    await reloadDocTasksProtected(docId, null, null, injectedTasksByDoc.get(docId) || null);
-                } catch (e) {}
-            }
-
-            try { applyFilters(); } catch (e) {}
-            try {
-                if (__tmIsPluginVisibleNow()) {
-                    __tmRefreshMainViewInPlace({ withFilters: false });
-                }
-            } catch (e) {}
-            try { await MetaStore.saveNow(); } catch (e) {}
+            await __tmRunAutoRefreshIfNeeded('ws-main');
         } finally {
             __tmTxTaskRefreshInFlight = false;
-            if (__tmTxTaskRefreshDocIds.size > 0 || __tmTxTaskRefreshBlockIds.size > 0) {
+            if (state.externalTaskTxDirty) {
                 try {
                     if (__tmTxTaskRefreshTimer) clearTimeout(__tmTxTaskRefreshTimer);
                 } catch (e) {}
                 __tmTxTaskRefreshTimer = setTimeout(() => {
                     __tmTxTaskRefreshTimer = null;
                     __tmFlushTaskIncrementalRefreshFromTx().catch(() => {});
-                }, 180);
+                }, 400);
             }
         }
     }
@@ -14620,18 +14661,30 @@
         };
         try { window.addEventListener('tm:sql-cache-invalidate', __tmSqlCacheInvalidationHandler); } catch (e) {}
         try {
-            const eb = window.siyuan?.eventBus;
-            if (eb && typeof eb.on === 'function') {
-                __tmSqlCacheEventBusHandler = (msg) => {
-                    try { __tmApplyTxAttrUpdatesInState(msg); } catch (e) {}
-                    const docIds = __tmExtractDocIdsFromTx(msg);
-                    if (docIds && docIds.size > 0) docIds.forEach((d) => __tmInvalidateTasksQueryCacheByDocId(d));
-                    else __tmInvalidateAllSqlCaches();
-                    __tmScheduleTaskIncrementalRefreshFromTx(msg);
-                    __tmScheduleCalendarRefetchFromTx();
-                };
-                eb.on('ws-main', __tmSqlCacheEventBusHandler);
-            }
+            const seen = new Set();
+            const buses = [
+                { label: 'plugin', eb: globalThis.__taskHorizonPluginInstance?.eventBus },
+                { label: 'window', eb: window.siyuan?.eventBus },
+            ];
+            __tmSqlCacheEventBusHandler = (msg) => {
+                const cmd = String(msg?.detail?.cmd || msg?.cmd || '').trim().toLowerCase();
+                if (cmd && cmd !== 'transactions' && cmd !== 'savedoc') return;
+                __tmMarkExternalTaskTxDirty();
+                try { __tmApplyTxAttrUpdatesInState(msg); } catch (e) {}
+                const docIds = __tmExtractDocIdsFromTx(msg);
+                if (docIds && docIds.size > 0) docIds.forEach((d) => __tmInvalidateTasksQueryCacheByDocId(d));
+                else __tmInvalidateAllSqlCaches();
+                __tmScheduleTaskIncrementalRefreshFromTx(msg);
+                __tmScheduleCalendarRefetchFromTx();
+            };
+            buses.forEach(({ label, eb }) => {
+                if (!eb || typeof eb.on !== 'function') return;
+                if (seen.has(eb)) return;
+                seen.add(eb);
+                try {
+                    eb.on('ws-main', __tmSqlCacheEventBusHandler);
+                } catch (e) {}
+            });
         } catch (e) {}
     }
 
@@ -16634,6 +16687,7 @@
         topbarManagerIconLongPressStartY: 0,
         topbarManagerIconTrigger: null,
         topbarManagerIconSuppressClickUntil: 0,
+        topbarManagerIconIgnoreContextMenuUntil: 0,
         docTabsScrollLeft: 0,
         settingsSubtabsScrollLeft: 0,
         settingsSectionJump: null,
@@ -16677,6 +16731,9 @@
         quickbarModifiedTaskIds: new Set(),
         // 悬浮条最后更新时间（用于判断是否需要刷新）
         lastQuickbarUpdateTime: 0,
+        // 外部事务更新的脏标记（文档页编辑/新建任务后用于切回页签静默刷新）
+        externalTaskTxDirty: false,
+        lastExternalTaskTxTime: 0,
         // 刚插入但 SQL 索引可能尚未返回的任务，短暂保活避免刷新后闪现消失
         pendingInsertedTasks: {},
         semanticDateAutoApplying: false,
@@ -20205,14 +20262,8 @@ async function __tmRefreshAfterWake(reason) {
                     return;
                 }
                 
-                const hasQuickbarModifications = __tmHasQuickbarModificationsSync();
-                
-                // 只有当有悬浮条修改时才刷新，否则保持现状
-                if (hasQuickbarModifications) {
-                    __tmClearQuickbarModifications();
-                    // 等待数据库同步（思源笔记的 setBlockAttrs 可能有时延）
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                    await __tmSilentRefreshAfterQuickbarUpdate();
+                if (__tmHasAutoRefreshPendingSync()) {
+                    await __tmRunAutoRefreshIfNeeded('visibilitychange');
                 } else if (state.modal && document.body.contains(state.modal)) {
                     try { __tmScheduleReminderTaskNameMarksRefresh(state.modal, true); } catch (e) {}
                 }
@@ -20220,11 +20271,8 @@ async function __tmRefreshAfterWake(reason) {
 		};
 		__tmFocusHandler = async () => {
 			try {
-                const hasQuickbarModifications = __tmHasQuickbarModificationsSync();
-                if (__tmWasPluginVisibleBeforeHide && hasQuickbarModifications) {
-                    __tmClearQuickbarModifications();
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                    await __tmSilentRefreshAfterQuickbarUpdate();
+                if (__tmWasPluginVisibleBeforeHide && __tmHasAutoRefreshPendingSync()) {
+                    await __tmRunAutoRefreshIfNeeded('focus');
                 } else if (state.modal && document.body.contains(state.modal)) {
                     try { __tmScheduleReminderTaskNameMarksRefresh(state.modal, true); } catch (e) {}
                 }
@@ -20240,6 +20288,10 @@ async function __tmRefreshAfterWake(reason) {
     let __tmTabEnterAutoRefreshLastTs = 0;
     let __tmTabEnterAutoRefreshTimer = null;
     let __tmTabEnterAutoRefreshTryCount = 0;
+    let __tmTabHeaderAutoRefreshHandler = null;
+    let __tmTabActivationObserver = null;
+    let __tmTabActivationObserverTimer = 0;
+    let __tmTaskHorizonTabWasActive = false;
 
     function __tmHasQuickbarModificationsSync() {
         let has = false;
@@ -20265,6 +20317,52 @@ async function __tmRefreshAfterWake(reason) {
     function __tmClearQuickbarModifications() {
         try { state.quickbarModifiedTaskIds && state.quickbarModifiedTaskIds.clear(); } catch (e) {}
         try { localStorage.removeItem('__tmQuickbarModifiedTasks'); } catch (ex) {}
+    }
+
+    function __tmHasExternalTaskTxDirtySync() {
+        return state.externalTaskTxDirty === true;
+    }
+
+    function __tmClearExternalTaskTxDirty() {
+        state.externalTaskTxDirty = false;
+        state.lastExternalTaskTxTime = 0;
+    }
+
+    function __tmMarkExternalTaskTxDirty() {
+        state.externalTaskTxDirty = true;
+        state.lastExternalTaskTxTime = Date.now();
+    }
+
+    function __tmHasAutoRefreshPendingSync() {
+        return __tmHasQuickbarModificationsSync() || __tmHasExternalTaskTxDirtySync();
+    }
+
+    async function __tmRunAutoRefreshIfNeeded(source, options = {}) {
+        const force = options?.force === true;
+        if (!__tmIsPluginVisibleNow()) return false;
+        if (!force && !__tmHasAutoRefreshPendingSync()) return false;
+        const now = Date.now();
+        if (__tmTabEnterAutoRefreshInFlight) return false;
+        if (now - (Number(__tmTabEnterAutoRefreshLastTs) || 0) < 1200) return false;
+        const hadQuickbarDirty = __tmHasQuickbarModificationsSync();
+        const hadExternalDirty = __tmHasExternalTaskTxDirtySync();
+        __tmTabEnterAutoRefreshLastTs = now;
+        __tmTabEnterAutoRefreshInFlight = true;
+        try {
+            await new Promise((resolve) => setTimeout(resolve, hadQuickbarDirty ? 200 : 80));
+            const ok = await __tmRefreshCore({
+                silent: true,
+                reason: `auto:${String(source || 'unknown').trim() || 'unknown'}`,
+                preserveUi: true,
+            });
+            if (ok) {
+                if (hadQuickbarDirty) __tmClearQuickbarModifications();
+                if (hadExternalDirty) __tmClearExternalTaskTxDirty();
+            }
+            return ok;
+        } finally {
+            __tmTabEnterAutoRefreshInFlight = false;
+        }
     }
 
     async function __tmSilentRefreshAfterQuickbarUpdate() {
@@ -20338,20 +20436,7 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     async function __tmMaybeAutoRefreshOnEnter(source) {
-        try {
-            if (!__tmIsPluginVisibleNow()) return;
-            if (!__tmHasQuickbarModificationsSync()) return;
-            const now = Date.now();
-            if (__tmTabEnterAutoRefreshInFlight) return;
-            if (now - (Number(__tmTabEnterAutoRefreshLastTs) || 0) < 800) return;
-            __tmTabEnterAutoRefreshLastTs = now;
-            __tmTabEnterAutoRefreshInFlight = true;
-            __tmClearQuickbarModifications();
-            await new Promise(resolve => setTimeout(resolve, 200));
-            await __tmSilentRefreshAfterQuickbarUpdate();
-        } catch (e) {} finally {
-            __tmTabEnterAutoRefreshInFlight = false;
-        }
+        await __tmRunAutoRefreshIfNeeded(source, { force: true });
     }
 
     function __tmScheduleMaybeAutoRefreshOnEnter(source) {
@@ -20361,13 +20446,12 @@ async function __tmRefreshAfterWake(reason) {
             __tmTabEnterAutoRefreshTimer = null;
             __tmTabEnterAutoRefreshTryCount += 1;
             try {
-                if (!__tmHasQuickbarModificationsSync()) return;
                 if (__tmIsPluginVisibleNow()) {
                     await __tmMaybeAutoRefreshOnEnter(source);
                     return;
                 }
             } catch (e) {}
-            if (__tmTabEnterAutoRefreshTryCount < 16 && __tmHasQuickbarModificationsSync()) {
+            if (__tmTabEnterAutoRefreshTryCount < 16) {
                 __tmTabEnterAutoRefreshTimer = setTimeout(tick, 120);
             }
         };
@@ -20392,6 +20476,43 @@ async function __tmRefreshAfterWake(reason) {
                 };
                 wrapped.__tmTaskHorizonWrapped = true;
                 try { centerLayout.switchTab = wrapped; } catch (e) {}
+            }
+        } catch (e) {}
+        try {
+            if (!__tmTabHeaderAutoRefreshHandler) {
+                __tmTabHeaderAutoRefreshHandler = (event) => {
+                    try {
+                        const target = event?.target instanceof Element ? event.target : null;
+                        const header = target?.closest?.('.layout-tab-bar__item');
+                        if (!header || !__tmIsTaskHorizonTabHeaderEl(header)) return;
+                        __tmScheduleMaybeAutoRefreshOnEnter('tabHeaderClick');
+                    } catch (e) {}
+                };
+                document.addEventListener('click', __tmTabHeaderAutoRefreshHandler, true);
+            }
+        } catch (e) {}
+        try {
+            if (!__tmTabActivationObserver) {
+                __tmTaskHorizonTabWasActive = __tmIsTaskHorizonTabActiveNow();
+                __tmTabActivationObserver = new MutationObserver(() => {
+                    try {
+                        if (__tmTabActivationObserverTimer) return;
+                    } catch (e) {}
+                    __tmTabActivationObserverTimer = setTimeout(() => {
+                        __tmTabActivationObserverTimer = 0;
+                        const active = __tmIsTaskHorizonTabActiveNow();
+                        const prev = __tmTaskHorizonTabWasActive === true;
+                        __tmTaskHorizonTabWasActive = active;
+                        if (!active || prev) return;
+                        __tmRunAutoRefreshIfNeeded('tabActivatedObserver', { force: true }).catch(() => {});
+                    }, 60);
+                });
+                __tmTabActivationObserver.observe(document.body, {
+                    subtree: true,
+                    attributes: true,
+                    childList: true,
+                    attributeFilter: ['class', 'aria-selected'],
+                });
             }
         } catch (e) {}
     }
@@ -21284,46 +21405,363 @@ async function __tmRefreshAfterWake(reason) {
     };
 
     const __tmHasOfficialMobileRuntimeSignal = () => {
-        let explicitIsMobile = null;
         try {
-            if (window.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
-        } catch (e) {}
-        if (explicitIsMobile === true) return true;
-        try {
-            if (window.siyuan?.mobile && typeof window.siyuan.mobile === 'object') return true;
+            if (globalThis.__taskHorizonPluginIsNativeMobile !== undefined) return !!globalThis.__taskHorizonPluginIsNativeMobile;
         } catch (e) {}
         try {
-            if (globalThis?.siyuan?.mobile && typeof globalThis.siyuan.mobile === 'object') return true;
+            if (globalThis?.JSAndroid) return true;
         } catch (e) {}
         try {
-            if (globalThis?.JSAndroid || globalThis?.JSHarmony) return true;
+            if (globalThis?.JSHarmony) return true;
+        } catch (e) {}
+        try {
+            const hasIosBridge = !!globalThis?.webkit?.messageHandlers;
+            if (!hasIosBridge) return false;
+            const ua = String(navigator?.userAgent || '');
+            const maxTouchPoints = Number(navigator?.maxTouchPoints) || 0;
+            if (/iPhone|iPad|iPod/i.test(ua)) return true;
+            if (maxTouchPoints > 0) return true;
+            return true;
         } catch (e) {}
         return false;
+    };
+
+    const __tmIsMobileBrowserViewport = () => {
+        try {
+            if (navigator?.userAgentData?.mobile === true) return true;
+        } catch (e) {}
+        try {
+            const ua = String(navigator?.userAgent || '');
+            if (/Android|iPhone|iPad|iPod|HarmonyOS|Mobile/i.test(ua)) return true;
+        } catch (e) {}
+        try {
+            const maxTouchPoints = Number(navigator?.maxTouchPoints) || 0;
+            const width = Number(window?.innerWidth) || 0;
+            const coarse = !!window?.matchMedia?.('(pointer: coarse)')?.matches;
+            if ((coarse || maxTouchPoints > 0) && width > 0 && width <= 900) return true;
+        } catch (e) {}
+        return false;
+    };
+
+    const __tmGetRuntimeClientKind = () => {
+        try {
+            if (globalThis.__taskHorizonRuntimeClientKind) return String(globalThis.__taskHorizonRuntimeClientKind || '').trim() || 'desktop-browser';
+        } catch (e) {}
+        if (__tmHasOfficialMobileRuntimeSignal()) {
+            try {
+                if (globalThis?.JSAndroid) return 'android-app';
+            } catch (e) {}
+            try {
+                if (globalThis?.JSHarmony) return 'harmony-app';
+            } catch (e) {}
+            return 'ios-app';
+        }
+        return __tmIsMobileBrowserViewport() ? 'mobile-browser' : 'desktop-browser';
     };
 
     const __tmIsRuntimeMobileClient = () => {
-        let explicitIsMobile = null;
-        try {
-            if (window.siyuan?.config?.isMobile !== undefined) explicitIsMobile = !!window.siyuan.config.isMobile;
-        } catch (e) {}
         try {
             if (globalThis.__taskHorizonPluginIsMobile !== undefined) return !!globalThis.__taskHorizonPluginIsMobile;
         } catch (e) {}
-        if (explicitIsMobile === true) return true;
-        const backend = __tmGetRuntimeBackendType();
-        if (backend === 'android' || backend === 'ios' || backend === 'harmony') return true;
-        if (__tmHasOfficialMobileRuntimeSignal()) return true;
-        const ua = navigator.userAgent || '';
-        if (/Android|iPhone|iPad|iPod|HarmonyOS|Mobile/i.test(ua)) return true;
-        return false;
+        return __tmGetRuntimeClientKind() !== 'desktop-browser';
     };
+
+    const __tmIsNativeMobileRuntimeClient = () => __tmHasOfficialMobileRuntimeSignal();
 
     const __tmIsMobileDevice = () => {
         if (__tmHostUsesMobileUI()) return true;
-        if (__tmIsRuntimeMobileClient()) return true;
-        const ua = navigator.userAgent || '';
-        return /Mobile|Android|iPhone|iPad|iPod/i.test(ua) || (window.innerWidth || 0) <= 768;
+        return __tmIsRuntimeMobileClient();
     };
+
+    const __tmShouldUseMobileTaskDragLogic = () => (
+        __tmHostUsesMobileUI() || __tmIsRuntimeMobileClient()
+    );
+
+    const __tmShouldUseDesktopTaskDragLogic = () => !__tmShouldUseMobileTaskDragLogic();
+
+    const __tmGetFloatingMiniDragMode = () => (__tmShouldUseMobileTaskDragLogic() ? 'mobile' : 'desktop');
+
+    const __tmShouldUseBrowserTouchTaskDrag = () => __tmGetRuntimeClientKind() === 'mobile-browser';
+
+    const __TM_MOBILE_RUNTIME_CONTAINERS = new Set(['android', 'ios', 'harmony']);
+
+    const __tmGetUserAgentDataMobile = () => {
+        try {
+            const mobile = navigator?.userAgentData?.mobile;
+            return typeof mobile === 'boolean' ? mobile : null;
+        } catch (e) {}
+        return null;
+    };
+
+    const __tmHasAndroidNativeBridge = () => {
+        try { return !!globalThis?.JSAndroid; } catch (e) {}
+        return false;
+    };
+
+    const __tmHasHarmonyNativeBridge = () => {
+        try { return !!globalThis?.JSHarmony; } catch (e) {}
+        return false;
+    };
+
+    const __tmHasIOSNativeBridge = () => {
+        try { return !!globalThis?.webkit?.messageHandlers; } catch (e) {}
+        return false;
+    };
+
+    const __tmIsReferenceMobileBrowserClient = () => {
+        const uaDataMobile = __tmGetUserAgentDataMobile();
+        if (uaDataMobile === true) return true;
+        try {
+            const ua = String(navigator?.userAgent || '');
+            if (/Android|iPhone|iPad|iPod|HarmonyOS|Mobile/i.test(ua)) return true;
+        } catch (e) {}
+        try {
+            const width = Number(window?.innerWidth) || 0;
+            const maxTouchPoints = Number(navigator?.maxTouchPoints) || 0;
+            const coarse = !!window.matchMedia?.('(pointer: coarse)')?.matches;
+            if ((coarse || maxTouchPoints > 0) && width > 0 && width <= 900) return true;
+        } catch (e) {}
+        return false;
+    };
+
+    const __tmInferReferenceClientKind = () => {
+        if (__tmHasAndroidNativeBridge()) return 'android-app';
+        if (__tmHasHarmonyNativeBridge()) return 'harmony-app';
+        if (__tmHasIOSNativeBridge()) return 'ios-app';
+        if (__tmIsReferenceMobileBrowserClient()) return 'mobile-browser';
+        return 'desktop-browser';
+    };
+
+    const __tmInferReferenceUiMode = () => (__tmInferReferenceClientKind() === 'desktop-browser' ? 'desktop' : 'mobile');
+
+    const __tmDescribeReferenceScenario = (backend, clientKind) => {
+        const kernelIsMobile = __TM_MOBILE_RUNTIME_CONTAINERS.has(String(backend || '').trim().toLowerCase());
+        const client = String(clientKind || '').trim();
+        if (kernelIsMobile) {
+            if (client === 'desktop-browser') return '移动端本体 -> 桌面浏览器伺服访问';
+            if (client === 'mobile-browser') return '移动端本体 -> 手机浏览器伺服访问';
+            return '移动端本体 -> 原生移动客户端';
+        }
+        if (client === 'desktop-browser') return '桌面端本体 -> 桌面访问';
+        if (client === 'mobile-browser') return '桌面端本体 -> 手机浏览器访问';
+        return '桌面端本体 -> 原生移动客户端访问';
+    };
+
+    const __tmFormatDiagnosticValue = (value) => {
+        if (value == null) return '—';
+        if (typeof value === 'boolean') return value ? 'true' : 'false';
+        if (Array.isArray(value)) return value.length ? value.join(', ') : '[]';
+        if (typeof value === 'object') {
+            try { return JSON.stringify(value); } catch (e) {}
+        }
+        const text = String(value).trim();
+        return text || '—';
+    };
+
+    const __tmGetPluginManifestCompatInfo = () => {
+        try {
+            const manifest = globalThis.__taskHorizonPluginInstance?.manifest;
+            if (manifest && typeof manifest === 'object') {
+                return {
+                    version: String(manifest.version || '').trim() || '2.2.0',
+                    frontends: Array.isArray(manifest.frontends) ? manifest.frontends : ['all'],
+                    backends: Array.isArray(manifest.backends) ? manifest.backends : ['all'],
+                };
+            }
+        } catch (e) {}
+        return {
+            version: '2.2.0',
+            frontends: ['all'],
+            backends: ['all'],
+        };
+    };
+
+    const __tmBuildDeviceRecognitionSnapshot = () => {
+        const backend = __tmGetRuntimeBackendType();
+        const config = window?.siyuan?.config || {};
+        const system = config?.system || {};
+        const referenceClientKind = __tmInferReferenceClientKind();
+        const referenceUiMode = __tmInferReferenceUiMode();
+        const manifestCompat = __tmGetPluginManifestCompatInfo();
+        const currentUiMode = __tmIsMobileDevice() ? 'mobile' : 'desktop';
+        return {
+            now: new Date().toISOString(),
+            plugin: {
+                name: 'Task Horizon',
+                version: manifestCompat.version,
+                frontends: manifestCompat.frontends,
+                backends: manifestCompat.backends,
+            },
+            current: {
+                hostMode: __tmGetMountHostMode() || '',
+                hostUsesMobileUI: __tmHostUsesMobileUI(),
+                runtimeMobileClient: __tmIsRuntimeMobileClient(),
+                nativeMobileClient: __tmIsNativeMobileRuntimeClient(),
+                mobileDevice: __tmIsMobileDevice(),
+                pluginIsMobileFlag: globalThis.__taskHorizonPluginIsMobile,
+                pluginIsNativeMobileFlag: globalThis.__taskHorizonPluginIsNativeMobile,
+                uiMode: currentUiMode,
+            },
+            reference: {
+                clientKind: referenceClientKind,
+                uiMode: referenceUiMode,
+                scenario: __tmDescribeReferenceScenario(backend, referenceClientKind),
+                differsFromCurrent: currentUiMode !== referenceUiMode,
+            },
+            runtime: {
+                container: String(system?.container || '').trim(),
+                os: String(system?.os || '').trim(),
+                osPlatform: String(system?.osPlatform || '').trim(),
+                networkServe: !!system?.networkServe,
+                configIsMobile: typeof config?.isMobile === 'boolean' ? config.isMobile : null,
+                siyuanMobileObject: !!window?.siyuan?.mobile,
+            },
+            bridges: {
+                JSAndroid: __tmHasAndroidNativeBridge(),
+                JSHarmony: __tmHasHarmonyNativeBridge(),
+                webkitMessageHandlers: __tmHasIOSNativeBridge(),
+                platformUtils: !!globalThis.__taskHorizonPlatformUtils,
+            },
+            browser: {
+                ua: String(navigator?.userAgent || ''),
+                uaDataMobile: __tmGetUserAgentDataMobile(),
+                language: String(navigator?.language || ''),
+                maxTouchPoints: Number(navigator?.maxTouchPoints) || 0,
+                coarsePointer: !!window.matchMedia?.('(pointer: coarse)')?.matches,
+                width: Number(window?.innerWidth) || 0,
+                height: Number(window?.innerHeight) || 0,
+                devicePixelRatio: Number(window?.devicePixelRatio) || 0,
+            },
+            relatedPlugins: {
+                tomatoPluginIsMobile: globalThis.__tomatoPluginIsMobile,
+                tomatoPlatformUtils: !!globalThis.__tomatoPlatformUtils,
+            },
+        };
+    };
+
+    const __tmBuildDeviceRecognitionReportText = () => {
+        const snapshot = __tmBuildDeviceRecognitionSnapshot();
+        return JSON.stringify(snapshot, null, 2);
+    };
+
+    function __tmRenderDiagnosticRows(rows) {
+        return rows.map(([label, value]) => `
+            <div style="padding:8px 10px;border-bottom:1px solid var(--tm-border-color);font-size:12px;color:var(--tm-secondary-text);">${esc(String(label || ''))}</div>
+            <div style="padding:8px 10px;border-bottom:1px solid var(--tm-border-color);font-size:12px;color:var(--tm-text-color);word-break:break-all;">${esc(__tmFormatDiagnosticValue(value))}</div>
+        `).join('');
+    }
+
+    function __tmRenderAboutSettingsPanel() {
+        const snapshot = __tmBuildDeviceRecognitionSnapshot();
+        const summaryCards = [
+            ['当前插件 UI 判定', snapshot.current.uiMode === 'mobile' ? '移动端' : '桌面端'],
+            ['参考 UI 判定', snapshot.reference.uiMode === 'mobile' ? '移动端' : '桌面端'],
+            ['参考客户端类型', snapshot.reference.clientKind],
+            ['访问场景推断', snapshot.reference.scenario],
+        ];
+        const runtimeRows = [
+            ['kernel container', snapshot.runtime.container],
+            ['system.os', snapshot.runtime.os],
+            ['system.osPlatform', snapshot.runtime.osPlatform],
+            ['networkServe', snapshot.runtime.networkServe],
+            ['config.isMobile', snapshot.runtime.configIsMobile],
+            ['window.siyuan.mobile', snapshot.runtime.siyuanMobileObject],
+            ['挂载宿主模式', snapshot.current.hostMode || '—'],
+            ['挂载宿主移动 UI', snapshot.current.hostUsesMobileUI],
+            ['当前 runtimeMobileClient()', snapshot.current.runtimeMobileClient],
+            ['当前 nativeMobileClient()', snapshot.current.nativeMobileClient],
+            ['当前 isMobileDevice()', snapshot.current.mobileDevice],
+            ['入口层 __taskHorizonPluginIsMobile', snapshot.current.pluginIsMobileFlag],
+            ['入口层 __taskHorizonPluginIsNativeMobile', snapshot.current.pluginIsNativeMobileFlag],
+        ];
+        const browserRows = [
+            ['userAgentData.mobile', snapshot.browser.uaDataMobile],
+            ['navigator.maxTouchPoints', snapshot.browser.maxTouchPoints],
+            ['pointer: coarse', snapshot.browser.coarsePointer],
+            ['innerWidth', snapshot.browser.width],
+            ['innerHeight', snapshot.browser.height],
+            ['devicePixelRatio', snapshot.browser.devicePixelRatio],
+            ['language', snapshot.browser.language],
+        ];
+        const bridgeRows = [
+            ['JSAndroid', snapshot.bridges.JSAndroid],
+            ['JSHarmony', snapshot.bridges.JSHarmony],
+            ['webkit.messageHandlers', snapshot.bridges.webkitMessageHandlers],
+            ['__taskHorizonPlatformUtils', snapshot.bridges.platformUtils],
+            ['__tomatoPlatformUtils', snapshot.relatedPlugins.tomatoPlatformUtils],
+            ['__tomatoPluginIsMobile', snapshot.relatedPlugins.tomatoPluginIsMobile],
+        ];
+        const pluginRows = [
+            ['插件名称', snapshot.plugin.name],
+            ['插件版本', snapshot.plugin.version],
+            ['plugin.json frontends', snapshot.plugin.frontends],
+            ['plugin.json backends', snapshot.plugin.backends],
+        ];
+        return `
+            <div class="tm-settings-panel">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+                    <div>
+                        <div style="font-weight:700;font-size:15px;">ℹ️ 关于与设备识别</div>
+                        <div style="font-size:12px;color:var(--tm-secondary-text);margin-top:6px;line-height:1.7;">这里会展示当前页面的设备识别结果、原生桥信号、浏览器信号和插件兼容声明，方便排查桌面/移动端误判。</div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="tm-btn tm-btn-secondary" onclick="tmRefreshDeviceRecognitionStatus()">刷新检测</button>
+                        <button class="tm-btn tm-btn-primary" onclick="tmCopyDeviceRecognitionReport()">复制诊断</button>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px;">
+                    ${summaryCards.map(([label, value]) => `
+                        <div style="padding:12px;border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-card-bg);">
+                            <div style="font-size:12px;color:var(--tm-secondary-text);margin-bottom:6px;">${esc(String(label || ''))}</div>
+                            <div style="font-size:14px;font-weight:700;color:var(--tm-text-color);word-break:break-word;">${esc(__tmFormatDiagnosticValue(value))}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                ${snapshot.reference.differsFromCurrent ? `
+                    <div style="padding:10px 12px;border:1px solid rgba(249,171,0,0.35);background:rgba(249,171,0,0.12);border-radius:10px;color:var(--tm-text-color);font-size:12px;line-height:1.7;margin-bottom:14px;">
+                        当前插件判定与“参考判定”不一致。这通常意味着宿主内核、原生桥和当前浏览器信号之间存在冲突，建议复制下方诊断信息用于定位。
+                    </div>
+                ` : ''}
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;">
+                    <div style="border:1px solid var(--tm-border-color);border-radius:10px;overflow:hidden;background:var(--tm-card-bg);">
+                        <div style="padding:10px 12px;font-weight:600;background:var(--tm-sidebar-bg);">当前判定链路</div>
+                        <div style="display:grid;grid-template-columns:132px minmax(0,1fr);">${__tmRenderDiagnosticRows(runtimeRows)}</div>
+                    </div>
+                    <div style="border:1px solid var(--tm-border-color);border-radius:10px;overflow:hidden;background:var(--tm-card-bg);">
+                        <div style="padding:10px 12px;font-weight:600;background:var(--tm-sidebar-bg);">浏览器与视口信号</div>
+                        <div style="display:grid;grid-template-columns:132px minmax(0,1fr);">${__tmRenderDiagnosticRows(browserRows)}</div>
+                    </div>
+                    <div style="border:1px solid var(--tm-border-color);border-radius:10px;overflow:hidden;background:var(--tm-card-bg);">
+                        <div style="padding:10px 12px;font-weight:600;background:var(--tm-sidebar-bg);">原生桥与联动插件</div>
+                        <div style="display:grid;grid-template-columns:132px minmax(0,1fr);">${__tmRenderDiagnosticRows(bridgeRows)}</div>
+                    </div>
+                    <div style="border:1px solid var(--tm-border-color);border-radius:10px;overflow:hidden;background:var(--tm-card-bg);">
+                        <div style="padding:10px 12px;font-weight:600;background:var(--tm-sidebar-bg);">插件兼容声明</div>
+                        <div style="display:grid;grid-template-columns:132px minmax(0,1fr);">${__tmRenderDiagnosticRows(pluginRows)}</div>
+                    </div>
+                </div>
+
+                <div style="margin-top:14px;padding:12px;border:1px solid var(--tm-border-color);border-radius:10px;background:var(--tm-card-bg);">
+                    <div style="font-weight:600;margin-bottom:8px;">官方/SDK 参考</div>
+                    <div style="font-size:12px;color:var(--tm-secondary-text);line-height:1.8;">
+                        <div><code>system.container</code> 更接近“本体内核运行环境”，不等于“当前访问页面客户端”。</div>
+                        <div>SDK <code>platformUtils</code> 来自兼容层，可用于原生能力调用；而当前页面是不是移动端，还需要结合原生桥与浏览器信号判断。</div>
+                        <div><code>window.siyuan.mobile</code> 更偏向页面层的移动 UI/状态对象，不应单独当成原生移动桥信号。</div>
+                        <div>插件清单支持 <code>frontends</code> / <code>backends</code> 兼容声明，常见前端包括 <code>browser-desktop</code>、<code>browser-mobile</code>、<code>desktop-window</code>。</div>
+                    </div>
+                </div>
+
+                <details style="margin-top:14px;">
+                    <summary style="cursor:pointer;color:var(--tm-primary-color);font-size:12px;">展开原始诊断 JSON</summary>
+                    <pre style="margin-top:10px;padding:12px;border-radius:10px;background:var(--tm-sidebar-bg);border:1px solid var(--tm-border-color);font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;">${esc(__tmBuildDeviceRecognitionReportText())}</pre>
+                </details>
+                <div style="margin-top:10px;font-size:12px;color:var(--tm-secondary-text);line-height:1.7;">浏览器 UA：${esc(snapshot.browser.ua)}</div>
+            </div>
+        `;
+    }
 
     const __tmShouldShowDocTopbarButton = () => (__tmIsMobileDevice()
         ? (SettingsStore.data.docTopbarButtonMobile !== false)
@@ -21419,13 +21857,33 @@ async function __tmRefreshAfterWake(reason) {
         return result;
     };
 
+    const __TM_TIMELINE_CARD_FIELD_OPTIONS = Object.freeze([
+        { key: 'title', label: '任务名称' },
+        { key: 'status', label: '状态标签' },
+    ]);
+
+    const __TM_TIMELINE_CARD_FIELD_DEFAULTS = Object.freeze(['title', 'status']);
+
+    const __tmNormalizeTimelineCardFields = (fields, defaults = __TM_TIMELINE_CARD_FIELD_DEFAULTS) => {
+        const allow = new Set(__TM_TIMELINE_CARD_FIELD_OPTIONS.map((item) => item.key));
+        const source = Array.isArray(fields) ? fields : defaults;
+        const result = [];
+        source.forEach((value) => {
+            const key = String(value || '').trim();
+            if (!allow.has(key) || result.includes(key)) return;
+            result.push(key);
+        });
+        return result;
+    };
+
     const __tmGetCompactChecklistMetaFieldsForCurrentHost = () => {
         const isDockHost = __tmIsDockHost() && !__tmIsRuntimeMobileClient();
         const isMobileHost = __tmIsMobileDevice() && !isDockHost;
+        const isCalendarSidebarChecklist = state.__tmCalendarSidebarChecklistRender === true || __tmHasCalendarSidebarChecklist(state.modal);
         if (isDockHost) {
             return __tmNormalizeCompactChecklistMetaFields(SettingsStore?.data?.dockChecklistCompactMetaFields);
         }
-        if (isMobileHost) {
+        if (isMobileHost || isCalendarSidebarChecklist) {
             return __tmNormalizeCompactChecklistMetaFields(SettingsStore?.data?.dockChecklistCompactMetaFields);
         }
         return __tmNormalizeCompactChecklistMetaFields(SettingsStore?.data?.desktopChecklistCompactMetaFields);
@@ -21874,11 +22332,71 @@ async function __tmRefreshAfterWake(reason) {
         const isRuntimeMobile = __tmIsRuntimeMobileClient();
         const isDockHost = __tmIsDockHost();
         const hostUsesMobileUI = __tmHostUsesMobileUI();
+        const browserBottomGap = __tmComputeMobileBrowserViewportBottomInsetPx();
         const isLandscape = !!(isMobile && (() => { try { return !!window.matchMedia?.('(orientation: landscape)')?.matches; } catch (e) { return false; } })());
         const showMobileBottomViewBar = isDockHost
             ? (!isRuntimeMobile || !isLandscape)
             : !!(isMobile && !isLandscape);
-        return `${isMobile ? 1 : 0}|${isRuntimeMobile ? 1 : 0}|${isDockHost ? 1 : 0}|${hostUsesMobileUI ? 1 : 0}|${isLandscape ? 1 : 0}|${showMobileBottomViewBar ? 1 : 0}`;
+        return `${isMobile ? 1 : 0}|${isRuntimeMobile ? 1 : 0}|${isDockHost ? 1 : 0}|${hostUsesMobileUI ? 1 : 0}|${isLandscape ? 1 : 0}|${showMobileBottomViewBar ? 1 : 0}|${browserBottomGap}`;
+    }
+
+    function __tmComputeMobileBrowserViewportBottomInsetPx() {
+        if (!__tmShouldUseBrowserTouchTaskDrag()) return 0;
+        try {
+            const vv = window.visualViewport;
+            if (!vv) return 12;
+            const clientHeight = Number(document.documentElement?.clientHeight || 0);
+            const innerHeight = Number(window.innerHeight || 0);
+            const layoutHeight = Math.max(clientHeight, innerHeight, Math.round(Number(vv.height || 0) + Number(vv.offsetTop || 0)));
+            const vvBottom = Number(vv.height || 0) + Number(vv.offsetTop || 0);
+            const hiddenBottom = Math.max(0, Math.round(layoutHeight - vvBottom));
+            return Math.max(12, hiddenBottom);
+        } catch (e) {
+            return 12;
+        }
+    }
+
+    function __tmComputeMobileBottomViewbarOffsetCss() {
+        const browserBottomGap = __tmComputeMobileBrowserViewportBottomInsetPx();
+        return `calc(env(safe-area-inset-bottom, 0px) + ${10 + browserBottomGap}px)`;
+    }
+
+    function __tmApplyMobileBrowserViewportMetrics(modalEl) {
+        const modal = modalEl instanceof HTMLElement ? modalEl : state.modal;
+        if (!(modal instanceof HTMLElement)) return false;
+        if (__tmGetRuntimeClientKind() !== 'mobile-browser' || !modal.classList.contains('tm-modal--mobile')) {
+            try { modal.style.removeProperty('left'); } catch (e) {}
+            try { modal.style.removeProperty('top'); } catch (e) {}
+            try { modal.style.removeProperty('width'); } catch (e) {}
+            try { modal.style.removeProperty('height'); } catch (e) {}
+            try { modal.style.removeProperty('--tm-mobile-browser-visible-height'); } catch (e) {}
+            try { modal.style.removeProperty('--tm-mobile-browser-visible-width'); } catch (e) {}
+            try { modal.style.removeProperty('--tm-mobile-bottom-browser-gap'); } catch (e) {}
+            try { modal.style.removeProperty('--tm-mobile-bottom-viewbar-offset'); } catch (e) {}
+            return false;
+        }
+        try {
+            const vv = window.visualViewport;
+            const width = Math.max(0, Math.round(Number(vv?.width || window.innerWidth || document.documentElement?.clientWidth || 0)));
+            const height = Math.max(0, Math.round(Number(vv?.height || window.innerHeight || document.documentElement?.clientHeight || 0)));
+            const offsetLeft = Math.max(0, Math.round(Number(vv?.offsetLeft || 0)));
+            const offsetTop = Math.max(0, Math.round(Number(vv?.offsetTop || 0)));
+            if (width > 0) {
+                modal.style.left = `${offsetLeft}px`;
+                modal.style.width = `${width}px`;
+                modal.style.setProperty('--tm-mobile-browser-visible-width', `${width}px`);
+            }
+            if (height > 0) {
+                modal.style.top = `${offsetTop}px`;
+                modal.style.height = `${height}px`;
+                modal.style.setProperty('--tm-mobile-browser-visible-height', `${height}px`);
+            }
+            modal.style.setProperty('--tm-mobile-bottom-browser-gap', `${__tmComputeMobileBrowserViewportBottomInsetPx()}px`);
+            modal.style.setProperty('--tm-mobile-bottom-viewbar-offset', __tmComputeMobileBottomViewbarOffsetCss());
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 
     function __tmUnbindMobileViewportAutoRefresh() {
@@ -21893,6 +22411,7 @@ async function __tmRefreshAfterWake(reason) {
                 window.removeEventListener('resize', state.mobileViewportRefreshHandler);
                 window.removeEventListener('orientationchange', state.mobileViewportRefreshHandler);
                 state.mobileViewportRefreshVisualViewport?.removeEventListener?.('resize', state.mobileViewportRefreshHandler);
+                state.mobileViewportRefreshVisualViewport?.removeEventListener?.('scroll', state.mobileViewportRefreshHandler);
             }
         } catch (e) {}
         state.mobileViewportRefreshHandler = null;
@@ -21912,6 +22431,7 @@ async function __tmRefreshAfterWake(reason) {
             state.mobileViewportRefreshTimer = setTimeout(() => {
                 state.mobileViewportRefreshTimer = 0;
                 if (!state.modal || !document.body.contains(state.modal)) return;
+                try { __tmApplyMobileBrowserViewportMetrics(state.modal); } catch (e) {}
                 const nextSig = __tmComputeMobileBottomViewbarLayoutSig();
                 if (nextSig === state.mobileViewportRefreshSig) return;
                 state.mobileViewportRefreshSig = nextSig;
@@ -21928,6 +22448,7 @@ async function __tmRefreshAfterWake(reason) {
         try {
             if (window.visualViewport?.addEventListener) {
                 window.visualViewport.addEventListener('resize', onViewportChange, { passive: true });
+                window.visualViewport.addEventListener('scroll', onViewportChange, { passive: true });
                 state.mobileViewportRefreshVisualViewport = window.visualViewport;
             }
         } catch (e) {}
@@ -22768,6 +23289,14 @@ async function __tmRefreshAfterWake(reason) {
         const resolved = raw ? __tmThemeAdjustHex(raw, isDark) : __tmBuildAutoDocColorFromScheme(id, isDark, effective);
         return __tmRememberSmallCache(__tmDocColorHexCache, cacheKey, resolved, 1000);
     }
+
+    window.tmGetDocColorHex = function(docId, options = {}) {
+        const id = String(docId || '').trim();
+        if (!id) return '';
+        const opts = (options && typeof options === 'object') ? options : {};
+        const isDark = (typeof opts.isDark === 'boolean') ? opts.isDark : __tmIsDarkMode();
+        return __tmGetDocColorHex(id, isDark) || '';
+    };
 
     function __tmDarkenHex(hex, amount) {
         const rgb = __tmHexToRgb(hex);
@@ -23679,8 +24208,8 @@ async function __tmRefreshAfterWake(reason) {
             rr.style.display = disp;
         }
 
-        const syncRowHeightsOnce = () => {
-            if (Date.now() - (Number(state.__tmFlipTs) || 0) < 240) return;
+        const syncRowHeightsOnce = (force = false) => {
+            if (!force && Date.now() - (Number(state.__tmFlipTs) || 0) < 240) return;
             const n2 = Math.min(leftRows.length, rightRows.length);
             for (let i = 0; i < n2; i++) {
                 const lr = leftRows[i];
@@ -23694,13 +24223,14 @@ async function __tmRefreshAfterWake(reason) {
                 rr.style.maxHeight = `${h}px`;
                 const bar = rr.querySelector?.('.tm-gantt-bar');
                 if (bar) {
-                    bar.style.top = '50%';
-                    bar.style.transform = 'translateY(-50%)';
+                    bar.style.top = 'calc((var(--tm-row-height) - var(--tm-gantt-card-height)) / 2)';
+                    bar.style.transform = 'none';
                 }
             }
             try { state.__tmTimelineRenderDeps?.(); } catch (e) {}
         };
         try {
+            syncRowHeightsOnce(true);
             requestAnimationFrame(() => {
                 syncRowHeightsOnce();
                 if (leftRows.length <= 400) {
@@ -24338,7 +24868,10 @@ async function __tmRefreshAfterWake(reason) {
                         } catch (e) {
                             hint(`❌ 更新失败: ${e.message}`, 'error');
                         }
-                        __tmScheduleRender({ withFilters: true });
+                        if (__tmCanUpdateTimelineDatesInPlace(task) && __tmUpdateTimelineTaskInDOM(id)) {
+                            return;
+                        }
+                        __tmRefreshMainViewInPlace({ withFilters: true });
                     },
                     onUpdateTaskMeta: async (taskId, patch) => {
                         const id = String(taskId || '').trim();
@@ -24354,7 +24887,7 @@ async function __tmRefreshAfterWake(reason) {
                         } catch (e) {
                             hint(`❌ 更新失败: ${e.message}`, 'error');
                         }
-                        __tmScheduleRender({ withFilters: true });
+                        __tmRefreshMainViewInPlace({ withFilters: true });
                     },
                 });
             } catch (e) {}
@@ -24381,8 +24914,8 @@ async function __tmRefreshAfterWake(reason) {
             } catch (e) {}
         }
 
-                const syncRowHeights = () => {
-                    if (Date.now() - (Number(state.__tmFlipTs) || 0) < 320) return;
+                const syncRowHeights = (force = false) => {
+                    if (!force && Date.now() - (Number(state.__tmFlipTs) || 0) < 320) return;
                     const leftRowsNow = leftBody.querySelectorAll('tbody tr');
                     const rightRowsNow = ganttBody.querySelectorAll('.tm-gantt-row,.tm-gantt-row--group');
             const n = Math.min(leftRowsNow.length, rightRowsNow.length);
@@ -24403,12 +24936,13 @@ async function __tmRefreshAfterWake(reason) {
                 }
                 const bar = rr.querySelector?.('.tm-gantt-bar');
                 if (bar) {
-                    bar.style.top = '50%';
-                    bar.style.transform = 'translateY(-50%)';
+                    bar.style.top = 'calc((var(--tm-row-height) - var(--tm-gantt-card-height)) / 2)';
+                    bar.style.transform = 'none';
                 }
-            }
-        };
+                    }
+                };
         try {
+            syncRowHeights(true);
             requestAnimationFrame(() => requestAnimationFrame(() => {
                 syncRowHeights();
                 setTimeout(syncRowHeights, 60);
@@ -31030,10 +31564,7 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     const __tmShouldUseCompactTopbarBrand = () => {
-        if (__tmIsDockHost()) return true;
-        if (__tmHostUsesMobileUI()) return true;
-        if (__tmIsRuntimeMobileClient()) return true;
-        return false;
+        return true;
     };
 
     function __tmClearTopbarManagerIconLongPressTimer() {
@@ -32404,7 +32935,13 @@ async function __tmRefreshAfterWake(reason) {
             }));
             ev.dataTransfer.setData('text/plain', id);
         } catch (e) {}
-        try { __tmCalendarFloatingDragStart(id, meta, ev); } catch (e) {}
+        try {
+            const sourceEl = ev?.currentTarget instanceof Element ? ev.currentTarget : (ev?.target instanceof Element ? ev.target : null);
+            const shouldSuppressFloatingMini = !!sourceEl?.closest?.('.tm-calendar-sidebar, [data-tm-cal-role="task-page-list"], [data-tm-cal-role="task-list"], .tm-cal-task[data-task-id]');
+            if (!shouldSuppressFloatingMini) {
+                __tmCalendarFloatingDragStart(id, meta, ev);
+            }
+        } catch (e) {}
     };
 
     window.tmDragTaskEnd = function() {
@@ -32603,6 +33140,7 @@ async function __tmRefreshAfterWake(reason) {
             const syntheticTransfer = __tmBuildDockPointerTaskSyntheticTransfer(payload);
             const threshold = sourceType === 'kanban' ? 6 : 4;
             const suppressClickMs = 260;
+            const floatingMiniMode = __tmGetFloatingMiniDragMode();
             const pointerId = Number.isFinite(Number(ev?.pointerId)) ? Number(ev.pointerId) : NaN;
             const startX = Number(ev?.clientX) || 0;
             const startY = Number(ev?.clientY) || 0;
@@ -32649,7 +33187,7 @@ async function __tmRefreshAfterWake(reason) {
                     clientX: lastX,
                     clientY: lastY,
                     target: pointTarget || sourceEl,
-                }, { mode: 'desktop' });
+                }, { mode: floatingMiniMode });
                 if (floatingInfo?.overFloatingMini) {
                     clearDocHover();
                     clearKanbanHover();
@@ -32712,7 +33250,7 @@ async function __tmRefreshAfterWake(reason) {
                         clientX: lastX,
                         clientY: lastY,
                         target: pointTarget,
-                        mode: 'desktop',
+                        mode: floatingMiniMode,
                     });
                     if (handled) return true;
                 } catch (e) {}
@@ -32773,7 +33311,7 @@ async function __tmRefreshAfterWake(reason) {
                         clientY: lastY,
                         target: sourceEl,
                     }, {
-                        mode: __tmIsDockHost() ? 'mobile' : 'desktop',
+                        mode: floatingMiniMode,
                         html5: false,
                         containerRect: dockModalRect,
                     });
@@ -32882,37 +33420,41 @@ async function __tmRefreshAfterWake(reason) {
 
     function __tmIsTouchLikeChecklistPointer(ev) {
         const pType = String(ev?.pointerType || '').trim().toLowerCase();
+        if (__tmShouldUseBrowserTouchTaskDrag()) return true;
         return pType === 'touch' || pType === 'pen' || (!pType && __tmIsRuntimeMobileClient());
     }
 
-    function __tmResolveChecklistTouchDragSource(ev, taskId) {
+    function __tmResolveTouchTaskDragSource(ev, taskId) {
         const id = String(taskId || '').trim();
         if (!id) return null;
-        const itemEl = ev?.currentTarget instanceof HTMLElement
-            ? ev.currentTarget.closest('.tm-checklist-item[data-id]')
-            : (ev?.target instanceof Element ? ev.target.closest('.tm-checklist-item[data-id]') : null);
-        if (!(itemEl instanceof HTMLElement)) return null;
-        return { taskId: id, itemEl };
+        const sourceEl = ev?.currentTarget instanceof HTMLElement
+            ? ev.currentTarget.closest('.tm-checklist-item[data-id], #tmTaskTable tbody tr[data-id]')
+            : (ev?.target instanceof Element ? ev.target.closest('.tm-checklist-item[data-id], #tmTaskTable tbody tr[data-id]') : null);
+        if (!(sourceEl instanceof HTMLElement)) return null;
+        const sourceType = String(sourceEl.tagName || '').toUpperCase() === 'TR' ? 'table' : 'checklist';
+        return { taskId: id, sourceEl, sourceType };
     }
 
-    function __tmStartChecklistTouchDrag(ev, taskId) {
-        if (state.viewMode !== 'checklist') return false;
-        if (__tmIsMultiSelectActive('checklist')) return false;
+    function __tmStartTouchTaskDrag(ev, taskId) {
+        if (!__tmShouldUseBrowserTouchTaskDrag()) return false;
+        if (__tmIsMultiSelectActive()) return false;
         if (!__tmIsTouchLikeChecklistPointer(ev)) return false;
         if (ev && typeof ev.button === 'number' && ev.button !== 0) return false;
-        try {
-            const draggableAttr = String(ev?.currentTarget?.getAttribute?.('draggable') || '').trim().toLowerCase();
-            if (draggableAttr === 'true') return false;
-        } catch (e) {}
-        const source = __tmResolveChecklistTouchDragSource(ev, taskId);
+        try { ev?.preventDefault?.(); } catch (e) {}
+        const source = __tmResolveTouchTaskDragSource(ev, taskId);
         if (!source) return false;
         const target = ev?.target;
-        if (target?.closest?.('input,button,select,textarea,a,.tm-tree-toggle,.tm-checklist-mobile-toggle,.tm-task-checkbox,.tm-task-checkbox-wrap,.tm-status-tag')) {
+        const sourceType = String(source.sourceType || 'checklist').trim() || 'checklist';
+        const blockedSelector = sourceType === 'table'
+            ? 'input,button,select,textarea,a,.tm-tree-toggle,.tm-col-resize,.tm-task-checkbox,.tm-task-checkbox-wrap,.tm-status-tag'
+            : 'input,button,select,textarea,a,.tm-tree-toggle,.tm-checklist-mobile-toggle,.tm-task-checkbox,.tm-task-checkbox-wrap,.tm-status-tag';
+        if (target?.closest?.(blockedSelector)) {
             return false;
         }
 
         const id = source.taskId;
-        const itemEl = source.itemEl;
+        const sourceEl = source.sourceEl;
+        const activeEl = ev?.currentTarget instanceof HTMLElement ? ev.currentTarget : null;
         let dragMeta = null;
         try {
             if (typeof window.tmCalendarGetTaskDragMeta === 'function') {
@@ -32927,6 +33469,7 @@ async function __tmRefreshAfterWake(reason) {
         const longPressMoveTolerance = 14;
         const floatingMiniRevealDistance = 18;
         const floatingMiniRevealDelayMs = 120;
+        const shouldRevealFloatingMiniImmediately = true;
         let lastX = startX;
         let lastY = startY;
         let ended = false;
@@ -32939,6 +33482,61 @@ async function __tmRefreshAfterWake(reason) {
         let dragStartedAt = 0;
         let dragStartX = NaN;
         let dragStartY = NaN;
+        const restoreStyleTargets = [];
+        const restoreDraggableTargets = [];
+        const rememberDraggableState = (el) => {
+            if (!(el instanceof HTMLElement)) return;
+            if (restoreDraggableTargets.some((entry) => entry?.el === el)) return;
+            restoreDraggableTargets.push({
+                el,
+                value: el.getAttribute('draggable'),
+            });
+            try { el.setAttribute('draggable', 'false'); } catch (e) {}
+        };
+        const rememberTouchDragStyle = (el) => {
+            if (!(el instanceof HTMLElement)) return;
+            if (restoreStyleTargets.some((entry) => entry?.el === el)) return;
+            restoreStyleTargets.push({
+                el,
+                touchAction: el.style.touchAction,
+                webkitUserDrag: el.style.webkitUserDrag,
+                webkitTouchCallout: el.style.webkitTouchCallout,
+            });
+            try { el.style.touchAction = 'none'; } catch (e) {}
+            try { el.style.webkitUserDrag = 'none'; } catch (e) {}
+            try { el.style.webkitTouchCallout = 'none'; } catch (e) {}
+        };
+        const restoreDraggableState = () => {
+            restoreDraggableTargets.forEach((entry) => {
+                const el = entry?.el;
+                if (!(el instanceof HTMLElement)) return;
+                try {
+                    if (entry.value == null) el.removeAttribute('draggable');
+                    else el.setAttribute('draggable', String(entry.value));
+                } catch (e) {}
+            });
+            restoreDraggableTargets.length = 0;
+        };
+        const restoreTouchDragStyle = () => {
+            restoreStyleTargets.forEach((entry) => {
+                const el = entry?.el;
+                if (!(el instanceof HTMLElement)) return;
+                try { el.style.touchAction = entry.touchAction || ''; } catch (e) {}
+                try { el.style.webkitUserDrag = entry.webkitUserDrag || ''; } catch (e) {}
+                try { el.style.webkitTouchCallout = entry.webkitTouchCallout || ''; } catch (e) {}
+            });
+            restoreStyleTargets.length = 0;
+        };
+        const onContextMenu = (e2) => {
+            try { e2?.preventDefault?.(); } catch (e) {}
+            try { e2?.stopPropagation?.(); } catch (e) {}
+            return false;
+        };
+        const onNativeDragStart = (e2) => {
+            try { e2?.preventDefault?.(); } catch (e) {}
+            try { e2?.stopPropagation?.(); } catch (e) {}
+            return false;
+        };
         const resolvePointTarget = (x, y) => {
             if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
             try {
@@ -32954,10 +33552,18 @@ async function __tmRefreshAfterWake(reason) {
             if (!Number.isFinite(cur)) return true;
             return cur === pointerId;
         };
+        const getTouchPoint = (e2) => {
+            const touch = e2?.touches?.[0] || e2?.changedTouches?.[0] || null;
+            if (!touch) return null;
+            const x = Number(touch?.clientX);
+            const y = Number(touch?.clientY);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+            return { x, y };
+        };
         const capturePointer = () => {
-            if (captured || !Number.isFinite(pointerId) || typeof itemEl.setPointerCapture !== 'function') return;
+            if (captured || !Number.isFinite(pointerId) || typeof sourceEl.setPointerCapture !== 'function') return;
             try {
-                itemEl.setPointerCapture(pointerId);
+                sourceEl.setPointerCapture(pointerId);
                 captured = true;
             } catch (e) {}
         };
@@ -32978,7 +33584,7 @@ async function __tmRefreshAfterWake(reason) {
                 floatingMiniVisible = !!__tmCalendarFloatingDragStart(id, dragMeta, {
                     clientX: lastX,
                     clientY: lastY,
-                    target: resolvePointTarget(lastX, lastY) || itemEl,
+                    target: resolvePointTarget(lastX, lastY) || sourceEl,
                 }, { mode: 'mobile', html5: false });
             } catch (e) {
                 floatingMiniVisible = false;
@@ -32992,10 +33598,18 @@ async function __tmRefreshAfterWake(reason) {
             cancelFloatingMiniStart();
             try { document.removeEventListener('pointermove', onMove, true); } catch (e) {}
             try { document.removeEventListener('pointerup', onUp, true); } catch (e) {}
-            try { document.removeEventListener('pointercancel', onUp, true); } catch (e) {}
+            try { document.removeEventListener('pointercancel', onPointerCancel, true); } catch (e) {}
+            try { document.removeEventListener('touchmove', onTouchMove, true); } catch (e) {}
+            try { document.removeEventListener('touchend', onTouchEnd, true); } catch (e) {}
+            try { document.removeEventListener('touchcancel', onTouchEnd, true); } catch (e) {}
+            try { document.removeEventListener('contextmenu', onContextMenu, true); } catch (e) {}
+            try { sourceEl.removeEventListener('dragstart', onNativeDragStart, true); } catch (e) {}
+            try { activeEl?.removeEventListener?.('dragstart', onNativeDragStart, true); } catch (e) {}
+            restoreDraggableState();
+            restoreTouchDragStyle();
             try { window.removeEventListener('blur', onBlur, true); } catch (e) {}
-            if (captured && Number.isFinite(pointerId) && typeof itemEl.releasePointerCapture === 'function') {
-                try { itemEl.releasePointerCapture(pointerId); } catch (e) {}
+            if (captured && Number.isFinite(pointerId) && typeof sourceEl.releasePointerCapture === 'function') {
+                try { sourceEl.releasePointerCapture(pointerId); } catch (e) {}
             }
             if (ghostMeta?.ghost instanceof HTMLElement) {
                 try { ghostMeta.ghost.remove(); } catch (e) {}
@@ -33022,12 +33636,17 @@ async function __tmRefreshAfterWake(reason) {
                 document.body.style.userSelect = 'none';
                 document.body.style.cursor = 'grabbing';
             } catch (e) {}
-            ghostMeta = __tmBuildDockPointerTaskGhost(id, itemEl, payload, lastX, lastY);
+            ghostMeta = __tmBuildDockPointerTaskGhost(id, sourceEl, payload, lastX, lastY);
+            if (shouldRevealFloatingMiniImmediately) {
+                try { startFloatingMini(); } catch (e) {}
+            }
         };
         const updateDrag = (x, y) => {
             if (!dragging) return;
             __tmPlaceDockPointerTaskGhost(ghostMeta, x, y);
-            if (!floatingMiniVisible) {
+            if (!floatingMiniVisible && shouldRevealFloatingMiniImmediately) {
+                try { startFloatingMini(); } catch (e) {}
+            } else if (!floatingMiniVisible) {
                 const dx0 = Number.isFinite(dragStartX) ? (x - dragStartX) : 0;
                 const dy0 = Number.isFinite(dragStartY) ? (y - dragStartY) : 0;
                 const movedEnough = (dx0 * dx0 + dy0 * dy0) >= (floatingMiniRevealDistance * floatingMiniRevealDistance);
@@ -33049,9 +33668,26 @@ async function __tmRefreshAfterWake(reason) {
                 __tmCalendarFloatingDragMove({
                     clientX: x,
                     clientY: y,
-                    target: resolvePointTarget(x, y) || itemEl,
+                    target: resolvePointTarget(x, y) || sourceEl,
                 }, { mode: 'mobile' });
             } catch (e) {}
+        };
+        const finalizeDrag = async () => {
+            cancelLongPress();
+            cancelFloatingMiniStart();
+            try {
+                if (dragging) {
+                    await globalThis.__tmCalendar?.finalizeFloatingMiniCalendarTouchDrop?.({
+                        taskId: id,
+                        clientX: lastX,
+                        clientY: lastY,
+                        target: resolvePointTarget(lastX, lastY) || sourceEl,
+                        mode: 'mobile',
+                    });
+                }
+            } finally {
+                cleanup(dragging);
+            }
         };
         const onMove = (e2) => {
             if (ended || !samePointer(e2)) return;
@@ -33070,23 +33706,41 @@ async function __tmRefreshAfterWake(reason) {
         };
         const onUp = async (e2) => {
             if (ended || !samePointer(e2)) return;
-            cancelLongPress();
-            cancelFloatingMiniStart();
             lastX = Number(e2?.clientX) || lastX;
             lastY = Number(e2?.clientY) || lastY;
-            try {
-                if (dragging) {
-                    try { e2.preventDefault(); } catch (e) {}
-                    await globalThis.__tmCalendar?.finalizeFloatingMiniCalendarTouchDrop?.({
-                        taskId: id,
-                        clientX: lastX,
-                        clientY: lastY,
-                        target: resolvePointTarget(lastX, lastY) || itemEl,
-                        mode: 'mobile',
-                    });
+            try { e2.preventDefault(); } catch (e) {}
+            await finalizeDrag();
+        };
+        const onTouchMove = (e2) => {
+            if (ended) return;
+            const point = getTouchPoint(e2);
+            if (!point) return;
+            lastX = point.x;
+            lastY = point.y;
+            if (!dragging) {
+                const dx = lastX - startX;
+                const dy = lastY - startY;
+                if ((dx * dx + dy * dy) >= (longPressMoveTolerance * longPressMoveTolerance)) {
+                    cleanup(false);
                 }
-            } finally {
-                cleanup(dragging);
+                return;
+            }
+            updateDrag(lastX, lastY);
+            try { e2.preventDefault(); } catch (e) {}
+        };
+        const onTouchEnd = async (e2) => {
+            if (ended) return;
+            const point = getTouchPoint(e2);
+            if (point) {
+                lastX = point.x;
+                lastY = point.y;
+            }
+            try { e2.preventDefault(); } catch (e) {}
+            await finalizeDrag();
+        };
+        const onPointerCancel = (e2) => {
+            if (!__tmShouldUseBrowserTouchTaskDrag()) {
+                onUp(e2);
             }
         };
         const onBlur = () => {
@@ -33100,14 +33754,24 @@ async function __tmRefreshAfterWake(reason) {
 
         document.addEventListener('pointermove', onMove, true);
         document.addEventListener('pointerup', onUp, true);
-        document.addEventListener('pointercancel', onUp, true);
+        document.addEventListener('pointercancel', onPointerCancel, true);
+        document.addEventListener('touchmove', onTouchMove, { capture: true, passive: false });
+        document.addEventListener('touchend', onTouchEnd, { capture: true, passive: false });
+        document.addEventListener('touchcancel', onTouchEnd, { capture: true, passive: false });
+        document.addEventListener('contextmenu', onContextMenu, true);
+        rememberDraggableState(sourceEl);
+        rememberDraggableState(activeEl);
+        rememberTouchDragStyle(sourceEl);
+        rememberTouchDragStyle(activeEl);
+        sourceEl.addEventListener('dragstart', onNativeDragStart, true);
+        try { activeEl?.addEventListener?.('dragstart', onNativeDragStart, true); } catch (e) {}
         window.addEventListener('blur', onBlur, true);
         return true;
     }
 
-    window.tmChecklistTitlePointerDown = function(ev, taskId) {
+    window.tmTaskTouchDragStart = function(ev, taskId) {
         try { ev?.stopPropagation?.(); } catch (e) {}
-        try { __tmStartChecklistTouchDrag(ev, taskId); } catch (e) {}
+        try { __tmStartTouchTaskDrag(ev, taskId); } catch (e) {}
     };
 
     window.tmChecklistTitleClick = function(taskId, ev) {
@@ -33544,14 +34208,28 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
     };
 
+    window.tmHandleManagerIconContextMenu = function(ev) {
+        if (Number(state.topbarManagerIconIgnoreContextMenuUntil || 0) > Date.now()) {
+            try { ev?.preventDefault?.(); } catch (e) {}
+            try { ev?.stopPropagation?.(); } catch (e) {}
+            return false;
+        }
+        try { ev?.preventDefault?.(); } catch (e) {}
+        try { ev?.stopPropagation?.(); } catch (e) {}
+        try {
+            window.tmToggleDocTabs?.(ev);
+        } catch (e) {}
+        return false;
+    };
+
     window.tmTopbarManagerIconPressStart = function(event) {
-        if (!__tmShouldUseCompactTopbarBrand()) return;
         const type = String(event?.type || '').trim();
         if (type.startsWith('mouse') && Number(event?.button) !== 0) return;
         __tmClearTopbarManagerIconLongPressTimer();
         state.topbarManagerIconLongPressFired = false;
         state.topbarManagerIconLongPressMoved = false;
         state.topbarManagerIconSuppressClickUntil = 0;
+        state.topbarManagerIconIgnoreContextMenuUntil = 0;
         state.topbarManagerIconTrigger = event?.currentTarget instanceof HTMLElement
             ? event.currentTarget
             : (event?.target instanceof HTMLElement ? event.target.closest('[data-tm-all-doc-menu-trigger="1"]') : null);
@@ -33563,6 +34241,7 @@ async function __tmRefreshAfterWake(reason) {
             if (state.topbarManagerIconLongPressMoved) return;
             state.topbarManagerIconLongPressFired = true;
             state.topbarManagerIconSuppressClickUntil = Date.now() + 700;
+            state.topbarManagerIconIgnoreContextMenuUntil = Date.now() + 1200;
             const trigger = state.topbarManagerIconTrigger;
             window.tmToggleDocTabs?.({
                 currentTarget: trigger,
@@ -33798,7 +34477,7 @@ async function __tmRefreshAfterWake(reason) {
         const isDockHost = __tmIsDockHost();
         const hostUsesMobileUI = __tmHostUsesMobileUI();
         const useCompactTopbarBrand = __tmShouldUseCompactTopbarBrand();
-        const managerIconTooltip = useCompactTopbarBrand ? '全部页签，长按隐藏/展开页签栏' : '全部页签';
+        const managerIconTooltip = '全部页签，右击或长按隐藏/展开页签栏';
         const isAnimatedDockHost = !!(isDockHost && !isRuntimeMobile);
         const isSplitPane = false; // 使用CSS容器查询处理分屏模式
         const isLandscape = !!(isMobile && (() => { try { return !!window.matchMedia?.('(orientation: landscape)')?.matches; } catch (e) { return false; } })());
@@ -33844,6 +34523,7 @@ async function __tmRefreshAfterWake(reason) {
             state.modal.classList.toggle('tm-modal--task-wrap', !!wrapCfg.enabled);
             state.modal.style.setProperty('--tm-task-content-wrap-lines', String(wrapCfg.contentLines));
             state.modal.style.setProperty('--tm-task-remark-wrap-lines', String(wrapCfg.remarkLines));
+            __tmApplyMobileBrowserViewportMetrics(state.modal);
         } catch (e) {}
         if (useSoftSwap && prevModalEl) {
             try { state.modal.style.pointerEvents = 'none'; } catch (e) {}
@@ -34249,12 +34929,18 @@ async function __tmRefreshAfterWake(reason) {
                 const itemIndentStyle = checklistCompact
                     ? `--tm-checklist-compact-indent:${indent}px;`
                     : `margin-left:${indent}px;`;
+                const useDesktopTaskDragLogic = __tmShouldUseDesktopTaskDragLogic();
                 const itemDragAttrs = `draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)"`;
-                const titleDragAttrs = `draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)"`;
-                const itemContextMenuAttr = `oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')"`; 
+                const titleDragAttrs = '';
+                const itemContextMenuAttr = useDesktopTaskDragLogic
+                    ? `oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')"`
+                    : 'oncontextmenu="event.preventDefault();event.stopPropagation();return false;"';
+                const touchDragAttr = __tmShouldUseBrowserTouchTaskDrag()
+                    ? `onpointerdown="tmTaskTouchDragStart(event, '${escSq(String(task.id || ''))}')"`
+                    : '';
                 renderedChecklistTaskCount += 1;
                 return `
-                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}${multiSelectCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}" ${itemDragAttrs} style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" ${itemContextMenuAttr}>
+                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}${multiSelectCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}" ${itemDragAttrs} ${touchDragAttr} style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)" ${itemContextMenuAttr}>
                         <div class="tm-checklist-leading${hasChildren ? ' tm-checklist-leading--branch' : ''}${hasChildren && collapsed ? ' tm-checklist-leading--collapsed' : ''}">
                             ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);">${__tmRenderToggleIcon(16, collapsed ? 0 : 90, 'tm-tree-toggle-icon')}</span>` : '<span class="tm-tree-toggle tm-tree-toggle--placeholder" aria-hidden="true"></span>'}
                             ${hasChildren && collapsed ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>' : ''}
@@ -34262,7 +34948,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main">
                             <div class="${titleRowClass}">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span ${titleDragAttrs} onpointerdown="tmChecklistTitlePointerDown(event, '${escSq(String(task.id || ''))}')" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span ${titleDragAttrs} onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
                                 ${compactMeta}
                                 ${showCompactStatusTag ? `<span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>` : ''}
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}
@@ -36685,9 +37371,12 @@ async function __tmRefreshAfterWake(reason) {
         const showWhiteboardMobileLayoutModeToggle = state.viewMode === 'whiteboard';
         const whiteboardMobileMenuLayoutMode = showWhiteboardAllTabsModeToggle ? whiteboardAllTabsLayoutMode : 'board';
         const showInlineDocGroupQuickSelect = isMobile || isDockHost;
-        const showMobileTimelineFloatingToolbar = !!(isMobile && !isLandscape && state.viewMode === 'timeline');
-        const showMobileLandscapeTimelineTopbar = !!(isMobile && isLandscape && state.viewMode === 'timeline');
-        const showDesktopNarrowTimelineTopbar = !!(!isMobile && isDesktopNarrow && state.viewMode === 'timeline');
+        const showMobileTimelineFloatingToolbar = !!(isMobile && !isDockHost && !isLandscape && state.viewMode === 'timeline');
+        const showDockTimelineFloatingToolbar = !!(isDockHost && state.viewMode === 'timeline');
+        const showTimelineFloatingToolbar = !!(showMobileTimelineFloatingToolbar || showDockTimelineFloatingToolbar);
+        const showMobileLandscapeTimelineTopbar = !!(isMobile && !isDockHost && isLandscape && state.viewMode === 'timeline');
+        const showDesktopNarrowTimelineTopbar = !!(!isMobile && !isDockHost && isDesktopNarrow && state.viewMode === 'timeline');
+        const showTopbarTimelineToolbar = !!(state.viewMode === 'timeline' && !showTimelineFloatingToolbar);
         const topbarAddBtnHtml = `<button class="tm-btn tm-btn-info tm-topbar-add-btn bc-btn bc-btn--sm" onclick="tmAdd()" aria-label="新建任务" data-tm-floating-tooltip-label="新建任务" data-tm-tooltip-side="bottom" data-tm-tooltip-align="center" style="padding: 0; width: 30px; height: 30px; min-width: 30px; min-height: 30px; display: inline-flex; align-items: center; justify-content: center;">${__tmRenderLucideIcon('plus')}</button>`;
         const timelineSidebarToggleLabel = SettingsStore.data.timelineSidebarCollapsed ? '展开时间轴侧栏' : '隐藏时间轴侧栏';
         const timelineSidebarToggleButtonHtml = state.viewMode === 'timeline'
@@ -36711,10 +37400,14 @@ async function __tmRefreshAfterWake(reason) {
         const timelineCompactToolbarButtonsHtml = __tmRenderTimelineToolbarButtons({
             buttonStyle: 'padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;'
         });
-        const timelineMobileFloatingToolbarHtml = showMobileTimelineFloatingToolbar
-            ? `<div class="tm-timeline-mobile-toolbar"><div class="tm-timeline-mobile-toolbar__inner">${__tmRenderTimelineToolbarButtons({ buttonClass: 'tm-timeline-mobile-toolbar__btn', interactionAttrs: ' onpointerdown=\"tmTouchTimelineMobileToolbarButton(event)\" ontouchstart=\"tmTouchTimelineMobileToolbarButton(event)\"', clickPrefix: 'tmTouchTimelineMobileToolbarButton(event);' })}</div></div>`
+        const timelineFloatingToolbarHtml = showTimelineFloatingToolbar
+            ? `<div class="tm-timeline-mobile-toolbar"><div class="tm-timeline-mobile-toolbar__inner">${__tmRenderTimelineToolbarButtons({
+                buttonClass: 'tm-timeline-mobile-toolbar__btn',
+                interactionAttrs: showMobileTimelineFloatingToolbar ? ' onpointerdown=\"tmTouchTimelineMobileToolbarButton(event)\" ontouchstart=\"tmTouchTimelineMobileToolbarButton(event)\"' : '',
+                clickPrefix: showMobileTimelineFloatingToolbar ? 'tmTouchTimelineMobileToolbarButton(event);' : ''
+            })}</div></div>`
             : '';
-        const mainStageBottomInset = showMobileTimelineFloatingToolbar
+        const mainStageBottomInset = showTimelineFloatingToolbar
             ? 'calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 112px)'
             : (showMobileBottomViewBar
                 ? 'calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 52px)'
@@ -36740,7 +37433,7 @@ async function __tmRefreshAfterWake(reason) {
             : mainBodyHtml;
         const multiSelectCount = __tmGetMultiSelectedTaskIds().length;
         const showMultiSelectBar = __tmIsMultiSelectActive() && __tmIsMultiSelectSupportedView();
-        const multiSelectBarBottom = showMobileTimelineFloatingToolbar
+        const multiSelectBarBottom = showTimelineFloatingToolbar
             ? 'calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 108px)'
             : (showMobileBottomViewBar
                 ? 'calc(var(--tm-mobile-bottom-viewbar-offset, env(safe-area-inset-bottom, 0px)) + 52px)'
@@ -36785,6 +37478,7 @@ async function __tmRefreshAfterWake(reason) {
                                     class="tm-manager-brand-icon"
                                     data-tm-all-doc-menu-trigger="1"
                                     onclick="tmHandleManagerIconClick(event)"
+                                    oncontextmenu="return tmHandleManagerIconContextMenu(event)"
                                     ontouchstart="tmTopbarManagerIconPressStart(event)"
                                     ontouchmove="tmTopbarManagerIconPressMove(event)"
                                     ontouchend="tmTopbarManagerIconPressEnd(event)"
@@ -36870,10 +37564,9 @@ async function __tmRefreshAfterWake(reason) {
                                 <button class="tm-view-seg-item bc-tabs-trigger ${whiteboardAllTabsLayoutMode === 'stream' ? 'tm-view-seg-item--active' : ''}" data-state="${whiteboardAllTabsLayoutMode === 'stream' ? 'active' : 'inactive'}" onclick="tmSetWhiteboardAllTabsLayoutMode('stream', event)" role="tab" aria-selected="${whiteboardAllTabsLayoutMode === 'stream' ? 'true' : 'false'}"${__tmBuildTooltipAttrs('卡片流', { side: 'bottom', ariaLabel: false })}>卡片流</button>
                             </div>
                         ` : ''}
-                        ${state.viewMode === 'timeline' ? `
+                        ${showTopbarTimelineToolbar ? `
                             ${timelineCompactToolbarButtonsHtml}
                         ` : ''}
-                        ${!isMobile && state.viewMode === 'timeline' ? timelineSidebarToggleButtonHtml : ''}
                         ${!isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCalendarToggleSidebar()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('日历侧边栏', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>` : ''}
                         ${!showMobileBottomViewBar ? `
                         <div class="tm-view-segmented bc-tabs-list" role="tablist" aria-label="视图">
@@ -37805,8 +38498,8 @@ async function __tmRefreshAfterWake(reason) {
                     }
                 </style>
                 
-                <div class="tm-main-stage${stageAnimClass}${showMobileBottomViewBar ? ' tm-main-stage--with-bottom-viewbar' : ''}${showMobileTimelineFloatingToolbar ? ' tm-main-stage--timeline-mobile-toolbar' : ''}" style="--tm-view-bottom-inset:${mainStageBottomInset};">
-                    ${timelineMobileFloatingToolbarHtml}
+                <div class="tm-main-stage${stageAnimClass}${showMobileBottomViewBar ? ' tm-main-stage--with-bottom-viewbar' : ''}${showTimelineFloatingToolbar ? ' tm-main-stage--timeline-mobile-toolbar' : ''}" style="--tm-view-bottom-inset:${mainStageBottomInset};">
+                    ${timelineFloatingToolbarHtml}
                     ${bodyWithSideDockHtml}
                     ${multiSelectBarHtml}
                 </div>
@@ -37965,7 +38658,7 @@ async function __tmRefreshAfterWake(reason) {
                             } catch (e) {
                                 hint(`❌ 更新失败: ${e.message}`, 'error');
                             }
-                            __tmScheduleRender({ withFilters: true });
+                            __tmRefreshMainViewInPlace({ withFilters: true });
                         },
                         onUpdateTaskMeta: async (taskId, patch) => {
                             const id = String(taskId || '').trim();
@@ -37981,7 +38674,7 @@ async function __tmRefreshAfterWake(reason) {
                             } catch (e) {
                                 hint(`❌ 更新失败: ${e.message}`, 'error');
                             }
-                            __tmScheduleRender({ withFilters: true });
+                            __tmRefreshMainViewInPlace({ withFilters: true });
                         },
                     });
                     if (!useGlobalScroll) {
@@ -38048,9 +38741,9 @@ async function __tmRefreshAfterWake(reason) {
                     }
                 }));
 
-                const syncRowHeights = () => {
+                const syncRowHeights = (force = false) => {
                     if (!leftBody || !ganttBody) return;
-                    if (Date.now() - (Number(state.__tmFlipTs) || 0) < 320) return;
+                    if (!force && Date.now() - (Number(state.__tmFlipTs) || 0) < 320) return;
                     const leftRows = leftBody.querySelectorAll('tbody tr');
                     const rightRows = ganttBody.querySelectorAll('.tm-gantt-row,.tm-gantt-row--group');
                     const n = Math.min(leftRows.length, rightRows.length);
@@ -38071,13 +38764,14 @@ async function __tmRefreshAfterWake(reason) {
                         }
                         const bar = rr.querySelector?.('.tm-gantt-bar');
                         if (bar) {
-                            bar.style.top = '50%';
-                            bar.style.transform = 'translateY(-50%)';
+                            bar.style.top = 'calc((var(--tm-row-height) - var(--tm-gantt-card-height)) / 2)';
+                            bar.style.transform = 'none';
                         }
                     }
                     try { state.__tmTimelineRenderDeps?.(); } catch (e) {}
                 };
                 try {
+                    syncRowHeights(true);
                     requestAnimationFrame(() => requestAnimationFrame(() => {
                         syncRowHeights();
                         setTimeout(syncRowHeights, 60);
@@ -38437,6 +39131,86 @@ async function __tmRefreshAfterWake(reason) {
         try { SettingsStore.syncToLocal(); } catch (e) {}
     }
 
+    function __tmCaptureRefreshUiState() {
+        return {
+            session: __tmCaptureManualRefreshSessionState(),
+            viewMode: String(state.viewMode || 'list').trim() || 'list',
+            viewModeInitialized: state.viewModeInitialized === true,
+            activeDocId: String(state.activeDocId || 'all').trim() || 'all',
+            detailTaskId: String(state.detailTaskId || '').trim(),
+            checklistDetailSheetOpen: !!state.checklistDetailSheetOpen,
+            checklistDetailDismissed: !!state.checklistDetailDismissed,
+            kanbanDetailTaskId: String(state.kanbanDetailTaskId || '').trim(),
+            kanbanDetailAnchorTaskId: String(state.kanbanDetailAnchorTaskId || '').trim(),
+            multiSelectModeEnabled: !!state.multiSelectModeEnabled,
+            multiSelectedTaskIds: Array.isArray(state.multiSelectedTaskIds) ? state.multiSelectedTaskIds.slice() : [],
+            multiBulkEditFieldKey: String(state.multiBulkEditFieldKey || '').trim(),
+            docTabsHidden: !!state.docTabsHidden,
+            aiSidebarOpen: !!state.aiSidebarOpen,
+            aiMobilePanelOpen: !!state.aiMobilePanelOpen,
+            calendarDockDate: String(state.calendarDockDate || '').trim(),
+            listRenderLimit: Number(state.listRenderLimit) || 100,
+            listRenderStep: Number(state.listRenderStep) || 100,
+            viewScroll: __tmCloneHostSessionValue(state.viewScroll || {}),
+        };
+    }
+
+    function __tmRestoreRefreshUiState(snapshot) {
+        const saved = (snapshot && typeof snapshot === 'object') ? snapshot : null;
+        if (!saved) return;
+        try { __tmRestoreManualRefreshSessionState(saved.session); } catch (e) {}
+        try { state.collapsedTaskIds = new Set(saved?.session?.collapsedTaskIds || []); } catch (e) {}
+        try { state.collapsedGroups = new Set(saved?.session?.collapsedGroups || []); } catch (e) {}
+        try {
+            const ids = Array.isArray(saved?.session?.kanbanCollapsedTaskIds) ? saved.session.kanbanCollapsedTaskIds : [];
+            state.__tmKanbanCollapsedIds = new Set(ids.map((id) => String(id || '').trim()).filter(Boolean));
+        } catch (e) {}
+        state.viewMode = String(saved.viewMode || state.viewMode || 'list').trim() || 'list';
+        state.viewModeInitialized = saved.viewModeInitialized === true;
+        state.activeDocId = String(saved.activeDocId || 'all').trim() || 'all';
+        state.detailTaskId = String(saved.detailTaskId || '').trim();
+        state.checklistDetailSheetOpen = !!saved.checklistDetailSheetOpen;
+        state.checklistDetailDismissed = !!saved.checklistDetailDismissed;
+        state.kanbanDetailTaskId = String(saved.kanbanDetailTaskId || '').trim();
+        state.kanbanDetailAnchorTaskId = String(saved.kanbanDetailAnchorTaskId || '').trim();
+        state.multiSelectModeEnabled = !!saved.multiSelectModeEnabled;
+        state.multiSelectedTaskIds = Array.isArray(saved.multiSelectedTaskIds)
+            ? saved.multiSelectedTaskIds.map((id) => String(id || '').trim()).filter(Boolean)
+            : [];
+        state.multiBulkEditFieldKey = String(saved.multiBulkEditFieldKey || '').trim();
+        state.docTabsHidden = !!saved.docTabsHidden;
+        state.aiSidebarOpen = !!saved.aiSidebarOpen;
+        state.aiMobilePanelOpen = !!saved.aiMobilePanelOpen;
+        state.calendarDockDate = String(saved.calendarDockDate || '').trim();
+        state.listRenderLimit = Number(saved.listRenderLimit) || 100;
+        state.listRenderStep = Number(saved.listRenderStep) || 100;
+        state.viewScroll = __tmCloneHostSessionValue(saved.viewScroll || {});
+    }
+
+    function __tmClearAutoRefreshDirtyFlags() {
+        try { state.quickbarModifiedTaskIds?.clear?.(); } catch (e) {}
+        try { localStorage.removeItem('__tmQuickbarModifiedTasks'); } catch (e) {}
+        state.externalTaskTxDirty = false;
+        state.lastExternalTaskTxTime = 0;
+    }
+
+    function __tmIsTaskHorizonTabActiveNow() {
+        try {
+            const header = __tmFindExistingTaskManagerTab?.();
+            if (!(header instanceof HTMLElement)) return false;
+            if (!__tmIsTaskHorizonTabHeaderEl(header)) return false;
+            const cls = String(header.className || '');
+            const ariaSelected = String(header.getAttribute?.('aria-selected') || '').trim();
+            return header.classList?.contains?.('item--focus')
+                || /\bitem--focus\b/.test(cls)
+                || /\bis-active\b/.test(cls)
+                || /\bactive\b/.test(cls)
+                || ariaSelected === 'true';
+        } catch (e) {
+            return false;
+        }
+    }
+
     async function __tmMaybeSyncServerSharedStateOnManualRefresh() {
         if (SettingsStore?.data?.serverSyncOnManualRefresh !== true) return false;
         const keepSessionState = SettingsStore?.data?.serverSyncSessionStateOnManualRefresh !== true;
@@ -38469,106 +39243,103 @@ async function __tmRefreshAfterWake(reason) {
         return true;
     }
 
-    window.tmRefreshCalendarInPlace = async function(options = {}) {
+    async function __tmRefreshCore(options = {}) {
         const opt = (options && typeof options === 'object') ? options : {};
         const silent = opt.silent === true;
-        if (state.isRefreshing) return;
-        state.isRefreshing = true;
+        const reason = String(opt.reason || 'manual').trim() || 'manual';
+        const preserveUi = opt.preserveUi !== false;
+        if (state.isRefreshing) return false;
+
+        const snapshot = preserveUi ? __tmCaptureRefreshUiState() : null;
+        const mode = String(state.viewMode || '').trim();
         let _refreshHint = null;
         if (!silent) _refreshHint = hint('🔄 正在刷新...', 'info');
-        try {
-            try { __tmInvalidateAllSqlCaches(); } catch (e) {}
-            try { window.__tmCalendarAllTasksCache = null; } catch (e) {}
-            const syncedServerState = await __tmMaybeSyncServerSharedStateOnManualRefresh();
-            await loadSelectedDocuments({ skipRender: true });
-            let removedCount = 0;
-            try {
-                removedCount = Number(__tmSyncWhiteboardFrozenTasksWithLiveTasks()) || 0;
-            } catch (e) {}
-            if (String(state.viewMode || '').trim() === 'calendar' && globalThis.__tmCalendar && typeof globalThis.__tmCalendar.refreshInPlace === 'function') {
-                try { globalThis.__tmCalendar.refreshInPlace({ hard: true }); } catch (e) {}
-            } else {
-                try { render(); } catch (e) {}
-            }
-            if (!silent) {
-                __tmRemoveHint(_refreshHint);
-                const syncedLabel = syncedServerState ? '，已同步伺服共享配置' : '';
-                hint(removedCount > 0 ? `✅ 刷新完成${syncedLabel}，已清理冻结任务 ${removedCount} 项` : `✅ 刷新完成${syncedLabel}`, 'success');
-            }
-        } catch (e) {
-            if (!silent) { __tmRemoveHint(_refreshHint); hint(`❌ 刷新失败: ${e.message}`, 'error'); }
-        } finally {
-            state.isRefreshing = false;
-        }
-    };
 
-    window.tmRefresh = async function() {
-        if (state.isRefreshing) return;
-        if (String(state.viewMode || '').trim() === 'calendar') {
-            return window.tmRefreshCalendarInPlace({ silent: false });
-        }
         state.isRefreshing = true;
-        const _refreshHint = hint('🔄 正在刷新...', 'info');
         try {
             try { __tmInvalidateAllSqlCaches(); } catch (e) {}
-            // 清除日历缓存，确保获取最新数据
             try { window.__tmCalendarAllTasksCache = null; } catch (e) {}
             const syncedServerState = await __tmMaybeSyncServerSharedStateOnManualRefresh();
-            await __tmFlushSqlTransactionsSafe('manual-refresh');
-            await loadSelectedDocuments();
+            await __tmFlushSqlTransactionsSafe(`refresh-core:${reason}`);
+            await loadSelectedDocuments({
+                skipRender: true,
+                showInlineLoading: false,
+                source: `refresh-core:${reason}`,
+            });
+
+            if (preserveUi && snapshot) {
+                try { __tmRestoreRefreshUiState(snapshot); } catch (e) {}
+                try { applyFilters(); } catch (e) {}
+            }
+
             let removedCount = 0;
             try {
                 removedCount = Number(__tmSyncWhiteboardFrozenTasksWithLiveTasks()) || 0;
             } catch (e) {}
             if (removedCount > 0) {
                 try { applyFilters(); } catch (e) {}
-                try { if (state.modal) render(); } catch (e) {}
             }
-            __tmRemoveHint(_refreshHint);
-            const syncedLabel = syncedServerState ? '，已同步伺服共享配置' : '';
-            hint(removedCount > 0 ? `✅ 刷新完成${syncedLabel}，已清理冻结任务 ${removedCount} 项` : `✅ 刷新完成${syncedLabel}`, 'success');
+
+            if (mode === 'calendar' && globalThis.__tmCalendar && typeof globalThis.__tmCalendar.refreshInPlace === 'function') {
+                try { globalThis.__tmCalendar.refreshInPlace({ hard: true }); } catch (e) { try { render(); } catch (e2) {} }
+            } else {
+                try { render(); } catch (e) {}
+            }
+
+            try { __tmClearAutoRefreshDirtyFlags(); } catch (e) {}
+
+            if (!silent) {
+                __tmRemoveHint(_refreshHint);
+                const syncedLabel = syncedServerState ? '，已同步伺服共享配置' : '';
+                hint(removedCount > 0 ? `✅ 刷新完成${syncedLabel}，已清理冻结任务 ${removedCount} 项` : `✅ 刷新完成${syncedLabel}`, 'success');
+            }
+            return true;
         } catch (e) {
-            __tmRemoveHint(_refreshHint);
-            hint(`❌ 刷新失败: ${e.message}`, 'error');
+            if (!silent) {
+                __tmRemoveHint(_refreshHint);
+                hint(`❌ 刷新失败: ${e.message}`, 'error');
+            }
+            return false;
         } finally {
             state.isRefreshing = false;
         }
+    }
+
+    window.tmRefreshCalendarInPlace = async function(options = {}) {
+        const opt = (options && typeof options === 'object') ? options : {};
+        return await __tmRefreshCore({
+            silent: opt.silent === true,
+            reason: 'manual-calendar',
+            preserveUi: true,
+        });
+    };
+
+    window.tmRefresh = async function() {
+        return await __tmRefreshCore({
+            silent: false,
+            reason: 'manual',
+            preserveUi: true,
+        });
     };
 
     window.tmToggleTimelineMode = function() {
         const next = state.viewMode === 'timeline' ? 'list' : 'timeline';
-        state.viewMode = next;
-        state.uiAnimKind = '';
-        state.uiAnimTs = 0;
-        __tmScheduleRender({ withFilters: true });
+        return window.tmSwitchViewMode(next);
     };
 
     window.tmToggleKanbanMode = function() {
         const next = state.viewMode === 'kanban' ? 'list' : 'kanban';
-        state.viewMode = next;
-        state.uiAnimKind = '';
-        state.uiAnimTs = 0;
-        try { __tmHideMobileMenu(); } catch (e) {}
-        __tmScheduleRender({ withFilters: true });
+        return window.tmSwitchViewMode(next);
     };
 
     window.tmToggleCalendarMode = function() {
         const next = state.viewMode === 'calendar' ? 'list' : 'calendar';
-        state.viewMode = next;
-        state.uiAnimKind = '';
-        state.uiAnimTs = 0;
-        try { __tmHideMobileMenu(); } catch (e) {}
-        __tmScheduleRender({ withFilters: true });
+        return window.tmSwitchViewMode(next);
     };
 
     window.tmToggleWhiteboardMode = function() {
         const next = state.viewMode === 'whiteboard' ? 'list' : 'whiteboard';
-        state.viewMode = next;
-        state.uiAnimKind = '';
-        state.uiAnimTs = 0;
-        try { __tmHideMobileMenu(); } catch (e) {}
-        try { applyFilters(); } catch (e) {}
-        render();
+        return window.tmSwitchViewMode(next);
     };
 
     window.tmCalendarToggleSidebar = function() {
@@ -42847,6 +43618,7 @@ async function __tmRefreshAfterWake(reason) {
                 start,
                 endExclusive: endExKey || nextDay(start),
                 calendarId,
+                docId,
                 sourceStart: s0 || '',
                 sourceCompletion: e0 || '',
                 milestone: isMilestone,
@@ -43688,6 +44460,7 @@ async function __tmRefreshAfterWake(reason) {
 
     function __tmIsKanbanTouchPointer(ev) {
         const pType = String(ev?.pointerType || '').trim().toLowerCase();
+        if (__tmShouldUseBrowserTouchTaskDrag()) return true;
         return pType === 'touch' || pType === 'pen' || (!pType && __tmIsRuntimeMobileClient());
     }
 
@@ -44591,7 +45364,9 @@ async function __tmRefreshAfterWake(reason) {
             const view = globalThis.__TaskHorizonGanttView;
             const parse = view?.parseDateOnlyToTs;
             const startOfDayTs = view?.startOfDayTs;
+            const extendTimelineEndTs = view?.extendTimelineEndTs;
             const DAY_MS = Number(view?.DAY_MS) || 86400000;
+            const maxDayCount = Math.max(1, Number(view?.TIMELINE_MAX_DAY_COUNT) || 397);
             if (typeof parse !== 'function' || typeof startOfDayTs !== 'function') {
                 state.ganttView.__forceScrollLeft = 0;
                 render();
@@ -44616,8 +45391,11 @@ async function __tmRefreshAfterWake(reason) {
             const paddingDays = Math.max(0, Number(state.ganttView?.paddingDays) || 0);
             const pad = paddingDays * DAY_MS;
             const startTs = startOfDayTs((minTs || now) - pad);
-            const endTs = startOfDayTs((maxTs || now) + pad);
-            const dayCount = Math.max(1, Math.min(366, Math.round((endTs - startTs) / DAY_MS) + 1));
+            const endBaseTs = startOfDayTs((maxTs || now) + pad);
+            const endTs = typeof extendTimelineEndTs === 'function'
+                ? extendTimelineEndTs(endBaseTs)
+                : endBaseTs;
+            const dayCount = Math.max(1, Math.min(maxDayCount, Math.round((endTs - startTs) / DAY_MS) + 1));
             const usableW = Math.max(120, w - 24);
             const next = Math.max(10, Math.min(60, Math.floor(usableW / dayCount)));
             state.ganttView.dayWidth = next;
@@ -45601,13 +46379,37 @@ async function __tmRefreshAfterWake(reason) {
         document.body.style.userSelect = 'none';
     };
 
+    function __tmCanUpdateTimelineDatesInPlace(task) {
+        if (String(state.viewMode || '').trim() !== 'timeline') return false;
+        if (!(state.modal instanceof Element) || !document.body.contains(state.modal)) return false;
+        if (state.currentRule) return false;
+        if (state.groupByTime || state.quadrantEnabled) return false;
+        if (SettingsStore.data.timelineForceSortByCompletionNearToday) return false;
+        const ganttBody = state.modal.querySelector('#tmGanttBody');
+        const view = globalThis.__TaskHorizonGanttView;
+        if (!(ganttBody instanceof HTMLElement) || !view) return false;
+        const startTs0 = Number(ganttBody.dataset?.tmGanttStartTs);
+        const dayCount0 = Number(ganttBody.dataset?.tmGanttDayCount);
+        if (!Number.isFinite(startTs0) || !Number.isFinite(dayCount0) || dayCount0 <= 0) return false;
+        const rangeStart = view.startOfDayTs(startTs0);
+        const rangeEnd = rangeStart + ((dayCount0 - 1) * view.DAY_MS);
+        const sTs0 = view.parseDateOnlyToTs(task?.startDate);
+        const eTs0 = view.parseDateOnlyToTs(task?.completionTime);
+        const targets = [sTs0, eTs0].filter((ts) => Number.isFinite(ts));
+        if (!targets.length) return true;
+        return targets.every((ts) => {
+            const dayTs = view.startOfDayTs(ts);
+            return dayTs >= rangeStart && dayTs <= rangeEnd;
+        });
+    }
+
     function __tmUpdateTimelineTaskInDOM(taskId) {
         const id = String(taskId || '').trim();
-        if (!id) return;
+        if (!id) return false;
         const task = state.flatTasks?.[id];
-        if (!task) return;
+        if (!task) return false;
         const modal = state.modal;
-        if (!modal) return;
+        if (!modal) return false;
 
         try {
             const row = modal.querySelector(`#tmTimelineLeftTable tbody tr[data-id="${id}"]`);
@@ -45622,16 +46424,16 @@ async function __tmRefreshAfterWake(reason) {
 
         try {
             const ganttBody = modal.querySelector('#tmGanttBody');
-            if (!ganttBody) return;
+            if (!ganttBody) return false;
             const rowEl = ganttBody.querySelector(`.tm-gantt-row[data-id="${id}"]`);
-            if (!rowEl) return;
+            if (!rowEl) return false;
 
             const view = globalThis.__TaskHorizonGanttView;
-            if (!view) return;
+            if (!view) return false;
             const startTs0 = Number(ganttBody.dataset?.tmGanttStartTs);
             const dayWidth0 = Number(ganttBody.dataset?.tmGanttDayWidth);
             const dayCount0 = Number(ganttBody.dataset?.tmGanttDayCount);
-            if (!Number.isFinite(startTs0) || !Number.isFinite(dayWidth0) || !Number.isFinite(dayCount0) || dayWidth0 <= 0) return;
+            if (!Number.isFinite(startTs0) || !Number.isFinite(dayWidth0) || !Number.isFinite(dayCount0) || dayWidth0 <= 0) return false;
 
             const sTs0 = view.parseDateOnlyToTs(task?.startDate);
             const eTs0 = view.parseDateOnlyToTs(task?.completionTime);
@@ -45647,55 +46449,65 @@ async function __tmRefreshAfterWake(reason) {
             if (!aTs && !bTs) {
                 if (bar) bar.remove();
                 if (marker) marker.remove();
-                return;
+                try { state.__tmTimelineRenderDeps?.(); } catch (e) {}
+                return true;
             }
 
+            const displayStartTs = (isMilestone && bTs) ? bTs : aTs;
+            const displayEndTs = bTs;
             const dayIdxOf = (ts) => Math.round((view.startOfDayTs(ts) - view.startOfDayTs(startTs0)) / view.DAY_MS);
-            const startIdx = __tmClamp(dayIdxOf(aTs), 0, dayCount0 - 1);
-            const endIdx = __tmClamp(dayIdxOf(bTs), 0, dayCount0 - 1);
+            const startIdx = __tmClamp(dayIdxOf(displayStartTs), 0, dayCount0 - 1);
+            const endIdx = __tmClamp(dayIdxOf(displayEndTs), 0, dayCount0 - 1);
             const left = Math.min(startIdx, endIdx) * dayWidth0;
             const width = (Math.abs(endIdx - startIdx) + 1) * dayWidth0;
             const milestoneLeft = endIdx * dayWidth0 + (dayWidth0 * 0.5);
-
-            const docId = String(task?.docId || task?.root_id || '').trim();
             const isDark = __tmIsDarkMode();
             const barLayout = {
                 left,
                 width,
                 dayWidth: dayWidth0,
-                startTs: aTs,
-                endTs: bTs,
+                startTs: displayStartTs,
+                endTs: displayEndTs,
                 isDark,
             };
 
             if (isMilestone && bTs) {
-                if (bar) bar.remove();
-                if (marker) {
-                    marker.style.left = `${milestoneLeft}px`;
-                    marker.innerHTML = `${__tmRenderLucideIcon('flag', '', { size: 12 })}<span class="tm-gantt-milestone__label">里程碑</span>`;
-                    marker.title = `${String(task?.content || '').trim() || '(无内容)'}\n里程碑：${view.formatDateOnlyFromTs(bTs)}`;
-                    return;
+                if (marker) marker.remove();
+                const milestoneBarLayout = {
+                    ...barLayout,
+                    left: milestoneLeft - (dayWidth0 * 0.5),
+                    width: dayWidth0,
+                    dayWidth: dayWidth0,
+                    startTs: bTs,
+                    endTs: bTs,
+                };
+                if (bar) {
+                    view.applyTimelineTaskBarElement?.(bar, task, milestoneBarLayout);
+                    try { state.__tmTimelineRenderDeps?.(); } catch (e) {}
+                    return true;
                 }
-                const markerEl = document.createElement('div');
-                markerEl.className = 'tm-gantt-milestone';
-                markerEl.style.left = `${milestoneLeft}px`;
-                markerEl.title = `${String(task?.content || '').trim() || '(无内容)'}\n里程碑：${view.formatDateOnlyFromTs(bTs)}`;
-                markerEl.innerHTML = `${__tmRenderLucideIcon('flag', '', { size: 12 })}<span class="tm-gantt-milestone__label">里程碑</span>`;
-                rowEl.appendChild(markerEl);
-                return;
+                const barEl = document.createElement('div');
+                view.applyTimelineTaskBarElement?.(barEl, task, milestoneBarLayout);
+                rowEl.appendChild(barEl);
+                try { state.__tmTimelineRenderDeps?.(); } catch (e) {}
+                return true;
             }
 
             if (marker) marker.remove();
 
             if (bar) {
                 view.applyTimelineTaskBarElement?.(bar, task, barLayout);
-                return;
+                try { state.__tmTimelineRenderDeps?.(); } catch (e) {}
+                return true;
             }
 
             const barEl = document.createElement('div');
             view.applyTimelineTaskBarElement?.(barEl, task, barLayout);
             rowEl.appendChild(barEl);
+            try { state.__tmTimelineRenderDeps?.(); } catch (e) {}
+            return true;
         } catch (e) {}
+        return false;
     }
 
     function normalizeTaskFields(task, docNameFallback) {
@@ -48804,16 +49616,17 @@ async function __tmRefreshAfterWake(reason) {
         if (!id || id === 'all') return false;
         const app = __getPluginApp();
         const isDock = __tmIsDockHost();
-        const isRealMobile = __tmIsRuntimeMobileClient();
+        const isMobileUi = __tmIsRuntimeMobileClient();
+        const isNativeMobile = __tmIsNativeMobileRuntimeClient();
         const topWin = isDock ? (window.parent || window.top || window) : window;
         const closeAfterOpen = () => {
-            if (!isRealMobile) return;
+            if (!isMobileUi) return;
             setTimeout(() => {
                 try { window.tmClose?.(); } catch (e) {}
             }, 120);
         };
 
-        if (isRealMobile) {
+        if (isNativeMobile) {
             const openMobile = getOpenMobileFn();
             if (typeof openMobile === 'function') {
                 try {
@@ -48867,18 +49680,19 @@ async function __tmRefreshAfterWake(reason) {
         }
         const app = __getPluginApp();
         const isDock = __tmIsDockHost();
-        const isRealMobile = __tmIsRuntimeMobileClient();
+        const isMobileUi = __tmIsRuntimeMobileClient();
+        const isNativeMobile = __tmIsNativeMobileRuntimeClient();
         const topWin = isDock ? (window.parent || window.top || window) : window;
         const topDoc = topWin.document || document;
         const closeAfterJump = () => {
-            if (!isRealMobile) return;
+            if (!isMobileUi) return;
             setTimeout(() => {
                 try { window.tmClose?.(); } catch (e) {}
             }, 120);
         };
 
         const openMobile = getOpenMobileFn();
-        if (isRealMobile && typeof openMobile === 'function') {
+        if (isNativeMobile && typeof openMobile === 'function') {
             try {
                 let docId = taskId;
                 try {
@@ -50092,6 +50906,16 @@ async function __tmRefreshAfterWake(reason) {
                 lastSerialized = JSON.stringify([s.nextContent, s.nextStatus, s.nextPriority, s.nextPinned, s.nextStart, s.nextEnd, s.nextDuration, s.nextRemark, s.nextCustomFieldTextValues]);
             } catch (e) {}
         };
+        const shouldDeferAutoSaveWhileFocused = () => {
+            try {
+                if (!__tmIsMobileDevice()) return false;
+                const active = document.activeElement;
+                if (!(active instanceof Element) || !root.contains(active)) return false;
+                return !!active.closest?.('[data-tm-detail="remark"]');
+            } catch (e) {
+                return false;
+            }
+        };
         const isDetailEditorFocused = () => {
             try {
                 const active = document.activeElement;
@@ -50168,17 +50992,23 @@ async function __tmRefreshAfterWake(reason) {
                     nextTask = __tmCacheTaskInState(nextTask, {
                         docNameFallback: nextTask.doc_name || nextTask.docName || '未命名文档'
                     }) || nextTask;
+                    const normalizedRemarkValue = __tmNormalizeRemarkMarkdown(nextTask.remark || '');
                     {
                         const textarea = root.querySelector('textarea[data-tm-detail="remark"]');
                         if (textarea instanceof HTMLTextAreaElement) {
-                            textarea.value = __tmNormalizeRemarkMarkdown(nextTask.remark || '');
-                            syncAutoHeight(textarea, 34);
+                            const isActiveRemarkEditor = document.activeElement === textarea || textarea.matches(':focus');
+                            if (!isActiveRemarkEditor) {
+                                textarea.value = normalizedRemarkValue;
+                                syncAutoHeight(textarea, 34);
+                            }
                         }
                     }
                     {
                         const preview = root.querySelector('[data-tm-detail-remark-preview]');
-                        if (preview instanceof HTMLElement) {
-                            preview.innerHTML = __tmRenderRemarkMarkdown(nextTask.remark || '');
+                        const remarkShell = root.querySelector('[data-tm-detail-remark-shell]');
+                        const isEditingRemark = remarkShell instanceof HTMLElement && remarkShell.classList.contains('is-editing');
+                        if (preview instanceof HTMLElement && !isEditingRemark) {
+                            preview.innerHTML = __tmRenderRemarkMarkdown(normalizedRemarkValue);
                         }
                     }
                     break;
@@ -50324,21 +51154,6 @@ async function __tmRefreshAfterWake(reason) {
                 }
             })();
 
-            const rerenderCurrentViewDeferred = () => {
-                const run = () => {
-                    try {
-                        if (state.modal && document.body.contains(state.modal)) {
-                            if (!__tmRerenderCurrentViewInPlace(state.modal)) render();
-                        } else {
-                            render();
-                        }
-                    } catch (e) {
-                        try { render(); } catch (e2) {}
-                    }
-                };
-                try { setTimeout(run, 0); } catch (e) { run(); }
-            };
-
             try {
                 if (!__tmIsCollectedOtherBlockTask(task) && nextContent !== String(task.content || '')) {
                     await __tmUpdateTaskContentBlock(task, nextContent, { background: true });
@@ -50390,9 +51205,7 @@ async function __tmRefreshAfterWake(reason) {
                 }
                 try { applyFilters(); } catch (e) {}
                 try { root.__tmTaskDetailCloseInlinePopover?.(); } catch (e) {}
-                if (skipRerender) {
-                    rerenderCurrentViewDeferred();
-                } else if (showHint || closeAfterSave || !preserveFocus || !isDetailEditorFocused()) {
+                if (!skipRerender && (showHint || closeAfterSave || !preserveFocus || !isDetailEditorFocused())) {
                     if (String(state.viewMode || '').trim() === 'checklist' && embedded) {
                         rerenderChecklistPreserveScroll();
                     } else if (state.modal && document.body.contains(state.modal)) {
@@ -50428,8 +51241,12 @@ async function __tmRefreshAfterWake(reason) {
                 try { clearTimeout(autoSaveTimer); } catch (e) {}
             }
             autoSaveTimer = setTimeout(() => {
+                if (shouldDeferAutoSaveWhileFocused()) {
+                    scheduleAutoSave();
+                    return;
+                }
                 autoSaveTimer = null;
-                doSave({ showHint: false, closeAfterSave: false, preserveFocus: true }).catch(() => null);
+                doSave({ showHint: false, closeAfterSave: false, preserveFocus: true, skipRerender: true }).catch(() => null);
             }, 1600);
         };
         const flushAutoSaveNow = async (saveOptions = {}) => {
@@ -51155,12 +51972,35 @@ async function __tmRefreshAfterWake(reason) {
         const remarkToolbar = root.querySelector('[data-tm-detail-remark-toolbar]');
         const remarkToolbarToggle = root.querySelector('[data-tm-detail-remark-toolbar-toggle]');
         if (remarkShell instanceof HTMLElement && remarkPreview instanceof HTMLElement && remarkTextarea instanceof HTMLTextAreaElement) {
+            const remarkFocusScope = remarkShell.closest('.tm-task-detail-section') || remarkShell.parentElement || remarkShell;
             const resolveRemarkTargetElement = (target) => {
                 if (target instanceof Element) return target;
                 if (target && typeof target === 'object' && target.parentElement instanceof Element) return target.parentElement;
                 return null;
             };
             let remarkEnterGuardUntil = 0;
+            const armRemarkInteractionGuard = (duration = null) => {
+                const fallback = __tmIsMobileDevice() ? 900 : 360;
+                const ttl = Math.max(0, Number(duration) || fallback);
+                remarkEnterGuardUntil = Date.now() + ttl;
+            };
+            const isRemarkEditorScopedTarget = (target) => {
+                if (!(target instanceof Element)) return false;
+                if (remarkShell.contains(target)) return true;
+                if (remarkToolbar instanceof HTMLElement && remarkToolbar.contains(target)) return true;
+                if (remarkToolbarToggle instanceof HTMLElement && remarkToolbarToggle.contains(target)) return true;
+                if (remarkActivator instanceof HTMLElement && remarkActivator.contains(target)) return true;
+                return false;
+            };
+            const bindRemarkInteractionGuard = (target) => {
+                if (!target?.addEventListener) return;
+                on(target, 'pointerdown', () => {
+                    armRemarkInteractionGuard();
+                });
+                on(target, 'touchstart', () => {
+                    armRemarkInteractionGuard();
+                }, { passive: true });
+            };
             const captureDetailScrollSnapshot = () => {
                 try {
                     const checklistSnapshot = __tmCaptureChecklistDetailScrollSnapshot(state.modal);
@@ -51240,6 +52080,7 @@ async function __tmRefreshAfterWake(reason) {
                 try { remarkShell.dataset.toolbarOpen = open ? 'true' : 'false'; } catch (e) {}
             };
             const focusRemarkTextarea = (selectAll = false) => {
+                armRemarkInteractionGuard(260);
                 try { syncRemarkHeight(); } catch (e) {}
                 preserveDetailScroll(() => {
                     try { remarkTextarea.focus({ preventScroll: true }); } catch (e) { try { remarkTextarea.focus(); } catch (e2) {} }
@@ -51254,7 +52095,7 @@ async function __tmRefreshAfterWake(reason) {
             const enterRemarkEditMode = (options = {}) => {
                 remarkShell.classList.add('is-editing');
                 try { remarkShell.dataset.mode = 'edit'; } catch (e) {}
-                remarkEnterGuardUntil = Date.now() + 320;
+                armRemarkInteractionGuard(320);
                 syncRemarkHeight();
                 if (options.openToolbar) setRemarkToolbarOpen(true);
                 focusRemarkTextarea(!!options.selectAll);
@@ -51290,6 +52131,10 @@ async function __tmRefreshAfterWake(reason) {
             syncRemarkHeight();
             setRemarkToolbarOpen(false);
             try { remarkShell.dataset.mode = 'preview'; } catch (e) {}
+            bindRemarkInteractionGuard(remarkShell);
+            bindRemarkInteractionGuard(remarkToolbar);
+            bindRemarkInteractionGuard(remarkToolbarToggle);
+            bindRemarkInteractionGuard(remarkActivator);
 
             if (remarkActivator instanceof HTMLButtonElement) {
                 on(remarkActivator, 'mousedown', (ev) => {
@@ -51370,6 +52215,7 @@ async function __tmRefreshAfterWake(reason) {
                     try { ev.preventDefault(); } catch (e) {}
                 });
                 on(remarkToolbarToggle, 'click', (ev) => {
+                    armRemarkInteractionGuard();
                     try { ev.preventDefault(); } catch (e) {}
                     try { ev.stopPropagation(); } catch (e) {}
                     if (!remarkShell.classList.contains('is-editing')) {
@@ -51377,9 +52223,7 @@ async function __tmRefreshAfterWake(reason) {
                         return;
                     }
                     setRemarkToolbarOpen(!(remarkToolbar instanceof HTMLElement && remarkToolbar.classList.contains('is-open')));
-                    preserveDetailScroll(() => {
-                        try { remarkTextarea.focus({ preventScroll: true }); } catch (e) { try { remarkTextarea.focus(); } catch (e2) {} }
-                    });
+                    focusRemarkTextarea(false);
                 });
             }
             if (remarkToolbar instanceof HTMLElement) {
@@ -51395,6 +52239,7 @@ async function __tmRefreshAfterWake(reason) {
                         try { ev.preventDefault(); } catch (e) {}
                     });
                     on(button, 'click', (ev) => {
+                        armRemarkInteractionGuard();
                         try { ev.preventDefault(); } catch (e) {}
                         try { ev.stopPropagation(); } catch (e) {}
                         const action = String(button.getAttribute('data-tm-detail-remark-tool') || '').trim();
@@ -51413,15 +52258,22 @@ async function __tmRefreshAfterWake(reason) {
                         syncRemarkHeight();
                         syncRemarkPreview(false);
                         scheduleAutoSave();
+                        focusRemarkTextarea(false);
                     });
                 });
             }
-            on(remarkShell, 'focusout', () => {
+            on(remarkFocusScope, 'focusout', () => {
                 try {
                     requestAnimationFrame(() => {
-                        if (Date.now() < remarkEnterGuardUntil) return;
-                        if (remarkShell.contains(document.activeElement)) return;
                         if (!remarkShell.classList.contains('is-editing')) return;
+                        const active = document.activeElement;
+                        if (Date.now() < remarkEnterGuardUntil) {
+                            if (__tmIsMobileDevice() && isRemarkEditorScopedTarget(active) && active !== remarkTextarea) {
+                                focusRemarkTextarea(false);
+                            }
+                            return;
+                        }
+                        if (isRemarkEditorScopedTarget(active)) return;
                         exitRemarkEditMode(true);
                     });
                 } catch (e) {}
@@ -52076,7 +52928,10 @@ async function __tmRefreshAfterWake(reason) {
                     : (tomatoFocusModeEnabled ? 'tm-timer-dim' : ''))
                 : '';
             const finalRowClass = [rowClass, isMultiSelected ? 'tm-task-row--multi-selected' : ''].filter(Boolean).join(' ');
-            let rowHtml = `<tr data-id="${task.id}" data-depth="${depth}" class="${finalRowClass}" ${groupBg ? `style="background-color:${groupBg};"` : ''} draggable="true" ondragstart="tmDragTaskStart(event, '${task.id}')" ondragend="tmDragTaskEnd(event)" onclick="tmRowClick(event, '${task.id}')" oncontextmenu="tmShowTaskContextMenu(event, '${task.id}')">`;
+            const touchDragAttr = __tmShouldUseBrowserTouchTaskDrag()
+                ? ` onpointerdown="tmTaskTouchDragStart(event, '${task.id}')"`
+                : '';
+            let rowHtml = `<tr data-id="${task.id}" data-depth="${depth}" class="${finalRowClass}" ${groupBg ? `style="background-color:${groupBg};"` : ''} draggable="true" ondragstart="tmDragTaskStart(event, '${task.id}')" ondragend="tmDragTaskEnd(event)"${touchDragAttr} onclick="tmRowClick(event, '${task.id}')" oncontextmenu="tmShowTaskContextMenu(event, '${task.id}')">`;
             colOrder.forEach(col => {
                 if (cells[col]) rowHtml += cells[col]();
             });
@@ -54781,6 +55636,11 @@ async function __tmRefreshAfterWake(reason) {
 
     // 任务右键菜单
     window.tmShowTaskContextMenu = function(event, taskId, extra) {
+        if (__tmHasCalendarSidebarChecklist(state.modal) && __tmIsRuntimeMobileClient()) {
+            try { event.preventDefault(); } catch (e) {}
+            try { event.stopPropagation(); } catch (e) {}
+            return;
+        }
         event.preventDefault();
         event.stopPropagation();
 
@@ -58244,16 +59104,20 @@ async function __tmRefreshAfterWake(reason) {
                     : `margin-left:${indent}px;`;
                 const calendarSidebarChecklist = state.__tmCalendarSidebarChecklistRender === true;
                 const disableDesktopDragAndMenu = calendarSidebarChecklist;
-                const dragAttrs = disableDesktopDragAndMenu
-                    ? ' draggable="false"'
-                    : ` draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)"`;
-                const titleDragAttrs = disableDesktopDragAndMenu
-                    ? ''
-                    : ` draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)"`;
-                const contextMenuAttr = ` oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')"`
-                ;
+                const useDesktopTaskDragLogic = !disableDesktopDragAndMenu && __tmShouldUseDesktopTaskDragLogic();
+                const useNativeTaskDrag = !disableDesktopDragAndMenu;
+                const dragAttrs = useNativeTaskDrag
+                    ? ` draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(String(task.id || ''))}')" ondragend="tmDragTaskEnd(event)"`
+                    : ' draggable="false"';
+                const titleDragAttrs = '';
+                const contextMenuAttr = useDesktopTaskDragLogic
+                    ? ` oncontextmenu="tmShowTaskContextMenu(event, '${escSq(String(task.id || ''))}')"`
+                    : ' oncontextmenu="event.preventDefault();event.stopPropagation();return false;"';
+                const touchDragAttr = __tmShouldUseBrowserTouchTaskDrag()
+                    ? ` onpointerdown="tmTaskTouchDragStart(event, '${escSq(String(task.id || ''))}')"`
+                    : '';
                 return `
-                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}"${dragAttrs} style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)"${contextMenuAttr}>
+                    <div class="tm-checklist-item${activeCls}${doneCls}${timerCls}" data-id="${esc(String(task.id || ''))}" data-depth="${depth}"${dragAttrs}${touchDragAttr} style="${itemIndentStyle}${accentStyle}${baseBg}${progressBg}" onclick="tmChecklistSelectTask('${escSq(String(task.id || ''))}', event)"${contextMenuAttr}>
                         <div class="tm-checklist-leading${hasChildren ? ' tm-checklist-leading--branch' : ''}${hasChildren && collapsed ? ' tm-checklist-leading--collapsed' : ''}">
                             ${hasChildren ? `<span class="tm-tree-toggle" onclick="tmToggleCollapse('${escSq(String(task.id || ''))}', event)" style="opacity:1;pointer-events:auto;color:var(--tm-text-color);">${__tmRenderToggleIcon(16, collapsed ? 0 : 90, 'tm-tree-toggle-icon')}</span>` : '<span class="tm-tree-toggle tm-tree-toggle--placeholder" aria-hidden="true"></span>'}
                             ${hasChildren && collapsed ? '<span class="tm-task-leading-ring" aria-hidden="true"></span>' : ''}
@@ -58261,7 +59125,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main" ondblclick="tmChecklistItemDblClick('${escSq(String(task.id || ''))}', event)">
                             <div class="${titleRowClass}">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span${titleDragAttrs} onpointerdown="tmChecklistTitlePointerDown(event, '${escSq(String(task.id || ''))}')" onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span${titleDragAttrs} onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
                                 ${compactMeta}
                                 ${showCompactStatusTag ? `<span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>` : ''}
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}
@@ -58451,6 +59315,7 @@ async function __tmRefreshAfterWake(reason) {
         if (state.settingsActiveTab === 'rules') activeTab = 'rules';
         if (state.settingsActiveTab === 'quadrant') activeTab = 'quadrant';
         if (state.settingsActiveTab === 'priority') activeTab = 'priority';
+        if (state.settingsActiveTab === 'about') activeTab = 'about';
         if (activeTab === 'main' || activeTab === 'docs') {
             try { __tmEnsureAllDocumentsLoaded(false); } catch (e) {}
         }
@@ -58624,6 +59489,7 @@ async function __tmRefreshAfterWake(reason) {
                             <button class="tm-settings-nav-btn ${activeTab === 'rules' ? 'is-active' : ''}" data-tm-action="tmSwitchSettingsTab" data-tab="rules">📋 规则管理</button>
                             <button class="tm-settings-nav-btn ${activeTab === 'quadrant' ? 'is-active' : ''}" data-tm-action="tmSwitchSettingsTab" data-tab="quadrant">📊 四象限</button>
                             <button class="tm-settings-nav-btn ${activeTab === 'priority' ? 'is-active' : ''}" data-tm-action="tmSwitchSettingsTab" data-tab="priority">⚙️ 优先级算法</button>
+                            <button class="tm-settings-nav-btn ${activeTab === 'about' ? 'is-active' : ''}" data-tm-action="tmSwitchSettingsTab" data-tab="about">ℹ️ 关于</button>
                             ` : `
                             <button class="tm-settings-nav-btn is-active">${state.editingRule ? '✏️ 编辑规则' : '🆕 新建规则'}</button>
                             `}
@@ -58679,6 +59545,10 @@ async function __tmRefreshAfterWake(reason) {
                                 ${__tmRenderPriorityScoreSettings(true)}
                             </div>
                         </div>
+                    ` : ''}
+
+                    ${activeTab === 'about' ? `
+                        ${__tmRenderAboutSettingsPanel()}
                     ` : ''}
                     
                     ${activeTab === 'quadrant' ? `
@@ -58935,7 +59805,7 @@ async function __tmRefreshAfterWake(reason) {
                         <div style="margin-bottom:10px;opacity:${SettingsStore.data.dockSidebarEnabled !== false ? 1 : 0.6};">
                             ${renderSingleFieldSetting(
                                 'Dock 及移动端紧凑右侧字段',
-                                '控制 Dock 侧边栏和移动端清单紧凑视图里任务右侧显示哪些信息。默认显示完成时间和状态标签。',
+                                '控制 Dock 侧边栏、移动端清单紧凑视图，以及日历视图侧边栏任务清单里任务右侧显示哪些信息。默认显示完成时间和状态标签。',
                                 (() => {
                                     const selected = new Set(__tmNormalizeCompactChecklistMetaFields(SettingsStore.data.dockChecklistCompactMetaFields));
                                     return `<div style="display:flex;gap:8px;flex-wrap:wrap;">${__TM_CHECKLIST_COMPACT_META_FIELD_OPTIONS.map((item) => `
@@ -58956,6 +59826,20 @@ async function __tmRefreshAfterWake(reason) {
                                 return `<div style="display:flex;gap:8px;flex-wrap:wrap;">${__TM_CHECKLIST_COMPACT_META_FIELD_OPTIONS.map((item) => `
                                     <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--tm-border-color);border-radius:999px;background:var(--tm-card-bg);cursor:pointer;">
                                         <input class="b3-switch fn__flex-center" type="checkbox" ${selected.has(item.key) ? 'checked' : ''} onchange="updateChecklistCompactMetaFieldVisibility('desktop', '${item.key}', this.checked)">
+                                        <span>${item.label}</span>
+                                    </label>
+                                `).join('')}</div>`;
+                            })(),
+                            { style: 'margin-bottom:10px;' }
+                        )}
+                        ${renderSingleFieldSetting(
+                            '时间轴卡片字段',
+                            '控制时间轴卡片显示任务名称和状态标签。两个都关闭时，前导图标会自动隐藏。',
+                            (() => {
+                                const selected = new Set(__tmNormalizeTimelineCardFields(SettingsStore.data.timelineCardFields));
+                                return `<div style="display:flex;gap:8px;flex-wrap:wrap;">${__TM_TIMELINE_CARD_FIELD_OPTIONS.map((item) => `
+                                    <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--tm-border-color);border-radius:999px;background:var(--tm-card-bg);cursor:pointer;">
+                                        <input class="b3-switch fn__flex-center" type="checkbox" ${selected.has(item.key) ? 'checked' : ''} onchange="updateTimelineCardFieldVisibility('${item.key}', this.checked)">
                                         <span>${item.label}</span>
                                     </label>
                                 `).join('')}</div>`;
@@ -59431,6 +60315,11 @@ async function __tmRefreshAfterWake(reason) {
                     <button class="tm-btn tm-btn-secondary" data-tm-action="closePriorityScoreSettings">取消</button>
                     <button class="tm-btn tm-btn-success" data-tm-action="savePriorityScoreSettings">保存算法</button>
                 </div>
+                ` : activeTab === 'about' ? `
+                <div class="tm-settings-footer">
+                    <button class="tm-btn tm-btn-secondary" data-tm-action="closeSettings">关闭</button>
+                    <button class="tm-btn tm-btn-success" onclick="tmCopyDeviceRecognitionReport()">复制诊断</button>
+                </div>
                 ` : activeTab !== 'rule_editor' ? `
                 <div class="tm-settings-footer">
                     <button class="tm-btn tm-btn-secondary" data-tm-action="closeSettings">取消</button>
@@ -59504,6 +60393,40 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
     }
     window.showSettings = showSettings;
+    window.tmRefreshDeviceRecognitionStatus = function() {
+        state.settingsActiveTab = 'about';
+        showSettings();
+    };
+    window.tmCopyDeviceRecognitionReport = async function() {
+        const text = __tmBuildDeviceRecognitionReportText();
+        if (!String(text || '').trim()) {
+            hint('⚠️ 没有可复制的诊断内容', 'warning');
+            return false;
+        }
+        let ok = false;
+        try {
+            if (navigator?.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+                ok = true;
+            }
+        } catch (e) {}
+        if (!ok) {
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.setAttribute('readonly', 'readonly');
+                textarea.style.position = 'fixed';
+                textarea.style.left = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                ok = document.execCommand('copy');
+                textarea.remove();
+            } catch (e) {}
+        }
+        hint(ok ? '✅ 诊断信息已复制' : '❌ 复制失败，请手动展开 JSON 复制', ok ? 'success' : 'error');
+        return ok;
+    };
     window.tmSwitchSettingsTab = function(tab) {
         const prev = state.settingsActiveTab || 'docs';
         if (tab === 'main') {
@@ -59523,6 +60446,8 @@ async function __tmRefreshAfterWake(reason) {
         } else if (tab === 'priority') {
             state.priorityScoreDraft = state.priorityScoreDraft || __tmEnsurePriorityDraft();
             state.settingsActiveTab = 'priority';
+        } else if (tab === 'about') {
+            state.settingsActiveTab = 'about';
         } else {
             state.settingsActiveTab = 'docs';
         }
@@ -64712,6 +65637,20 @@ async function __tmRefreshAfterWake(reason) {
         }
     };
 
+    window.updateTimelineCardFieldVisibility = async function(fieldKey, enabled) {
+        const normalizedField = String(fieldKey || '').trim();
+        if (!__TM_TIMELINE_CARD_FIELD_OPTIONS.some((item) => item.key === normalizedField)) return;
+        const current = new Set(__tmNormalizeTimelineCardFields(SettingsStore.data.timelineCardFields));
+        if (enabled) current.add(normalizedField);
+        else current.delete(normalizedField);
+        SettingsStore.data.timelineCardFields = __tmNormalizeTimelineCardFields(Array.from(current), []);
+        await SettingsStore.save();
+        showSettings();
+        if (state.modal && document.body.contains(state.modal)) {
+            try { render(); } catch (e) {}
+        }
+    };
+
     window.updateChecklistCompactTitleOpenDetailPage = async function(enabled) {
         SettingsStore.data.checklistCompactTitleOpenDetailPage = !!enabled;
         await SettingsStore.save();
@@ -67748,6 +68687,19 @@ async function __tmRefreshAfterWake(reason) {
                 __tmTabEnterAutoRefreshTimer = null;
             }
             __tmTabEnterAutoRefreshTryCount = 0;
+            if (__tmTabHeaderAutoRefreshHandler) {
+                document.removeEventListener('click', __tmTabHeaderAutoRefreshHandler, true);
+                __tmTabHeaderAutoRefreshHandler = null;
+            }
+            if (__tmTabActivationObserver) {
+                __tmTabActivationObserver.disconnect();
+                __tmTabActivationObserver = null;
+            }
+            if (__tmTabActivationObserverTimer) {
+                clearTimeout(__tmTabActivationObserverTimer);
+                __tmTabActivationObserverTimer = 0;
+            }
+            __tmTaskHorizonTabWasActive = false;
         } catch (e) {}
         try {
             if (__tmTopBarClickCaptureHandler) {
@@ -67802,6 +68754,7 @@ async function __tmRefreshAfterWake(reason) {
             __tmTxTaskRefreshDocIds.clear();
             __tmTxTaskRefreshBlockIds.clear();
             __tmRecentVisibleDateFallbackTasks.clear();
+            __tmClearExternalTaskTxDirty();
         } catch (e) {}
         try { __tmClearTimelineTodayIndicatorTimer(); } catch (e) {}
         try { __tmSetInlineLoading(false); } catch (e) {}
@@ -68097,6 +69050,7 @@ async function __tmRefreshAfterWake(reason) {
             state.topbarManagerIconLongPressStartX = 0;
             state.topbarManagerIconLongPressStartY = 0;
             state.topbarManagerIconSuppressClickUntil = 0;
+            state.topbarManagerIconIgnoreContextMenuUntil = 0;
             state.__tmPluginIconLongPressing = false;
         } catch (e) {}
 
@@ -68902,6 +69856,7 @@ async function __tmRefreshAfterWake(reason) {
                 'tm_tomato_spent_attr_mode',
                 'tm_tomato_spent_attr_key_minutes',
                 'tm_tomato_spent_attr_key_hours',
+                'tm_timeline_card_fields',
                 'tm_doc_topbar_button_swap_press_actions',
                 'tm_default_doc_id',
                 'tm_default_doc_id_by_group',
@@ -69006,6 +69961,24 @@ async function __tmRefreshAfterWake(reason) {
             if (Number.isNaN(d.getTime())) return 0;
             return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).getTime();
         }
+
+        const TIMELINE_EXTRA_FUTURE_MONTHS = 1;
+        const TIMELINE_MAX_DAY_COUNT = 397;
+
+        function extendTimelineEndTs(baseTs, extraMonths = TIMELINE_EXTRA_FUTURE_MONTHS) {
+            const months = Math.max(0, Math.round(Number(extraMonths) || 0));
+            const baseDayTs = startOfDayTs(baseTs);
+            if (!baseDayTs || months <= 0) return baseDayTs;
+            const baseDate = new Date(baseDayTs);
+            const y = baseDate.getFullYear();
+            const m = baseDate.getMonth();
+            const d = baseDate.getDate();
+            const targetMonthDate = new Date(y, m + months, 1, 0, 0, 0, 0);
+            const targetY = targetMonthDate.getFullYear();
+            const targetM = targetMonthDate.getMonth();
+            const lastDay = new Date(targetY, targetM + 1, 0, 0, 0, 0, 0).getDate();
+            return new Date(targetY, targetM, Math.min(d, lastDay), 0, 0, 0, 0).getTime();
+        }
     
         function computeAutoRangeTs(taskItems, paddingDays) {
             let minTs = 0;
@@ -69023,12 +69996,12 @@ async function __tmRefreshAfterWake(reason) {
             if (!minTs || !maxTs) {
                 const today = startOfDayTs(now);
                 const start = today - 7 * DAY_MS;
-                const end = today + 21 * DAY_MS;
+                const end = extendTimelineEndTs(today + 21 * DAY_MS);
                 return { startTs: start, endTs: end };
             }
             const pad = Math.max(0, Number(paddingDays) || 0) * DAY_MS;
             const startTs = startOfDayTs(minTs - pad);
-            const endTs = startOfDayTs(maxTs + pad);
+            const endTs = extendTimelineEndTs(maxTs + pad);
             return { startTs, endTs };
         }
     
@@ -69101,6 +70074,11 @@ async function __tmRefreshAfterWake(reason) {
             const docId = String(task?.docId || task?.root_id || '').trim();
             const baseColor = __tmGetDocColorHex(docId, isDark);
             const done = !!task?.done;
+            const milestoneRaw = task?.milestone;
+            const isMilestone = typeof milestoneRaw === 'boolean'
+                ? milestoneRaw
+                : ['1', 'true'].includes(String(milestoneRaw || '').trim().toLowerCase());
+            const timelineCardFieldSet = new Set(__tmNormalizeTimelineCardFields(SettingsStore?.data?.timelineCardFields));
             const barColor = done
                 ? __tmDesaturateHex(__tmDarkenHex(baseColor, isDark ? 0.48 : 0.36), isDark ? 0.36 : 0.26)
                 : baseColor;
@@ -69113,7 +70091,10 @@ async function __tmRefreshAfterWake(reason) {
             const statusOption = statusId
                 ? (statusOptions.find((item) => String(item?.id || '').trim() === statusId) || null)
                 : null;
-            const statusLabel = String(statusOption?.name || '').trim();
+            const rawStatusLabel = String(statusOption?.name || '').trim();
+            const showTitle = timelineCardFieldSet.has('title');
+            const showStatus = timelineCardFieldSet.has('status');
+            const statusLabel = showStatus ? rawStatusLabel : '';
             const statusChipStyle = statusLabel ? __tmBuildStatusChipStyle(statusOption?.color || '#9ca3af') : '';
             const taskTitle = String(task?.content || '').trim() || '(无内容)';
             return {
@@ -69123,6 +70104,10 @@ async function __tmRefreshAfterWake(reason) {
                 taskTitle,
                 docId,
                 done,
+                isMilestone,
+                iconName: isMilestone ? 'flag' : (done ? 'circle-check-big' : 'blocks'),
+                showTitle,
+                showLead: showTitle || !!statusLabel,
             };
         }
 
@@ -69150,23 +70135,49 @@ async function __tmRefreshAfterWake(reason) {
 
         function buildTimelineTaskBarInnerHtml(task, layout, visualMeta = null) {
             const visual = visualMeta || getTimelineTaskVisualMeta(task, !!layout?.isDark);
-            const iconName = visual.done ? 'circle-check-big' : 'blocks';
-            const leadHtml = `<span class="tm-gantt-bar__lead">${__tmRenderLucideIcon(iconName, '', { size: 14 })}</span>`;
-            const titleHtml = `<span class="tm-gantt-bar__title">${esc(visual.taskTitle)}</span>`;
+            const leadClassName = `tm-gantt-bar__lead${visual.isMilestone ? ' tm-gantt-bar__lead--milestone' : ''}`;
+            const leadHtml = visual.showLead
+                ? `<span class="${leadClassName}">${__tmRenderLucideIcon(visual.iconName, '', { size: 14 })}</span>`
+                : '';
+            const titleHtml = visual.showTitle
+                ? `<span class="tm-gantt-bar__title">${esc(visual.taskTitle)}</span>`
+                : '';
             const statusHtml = visual.statusLabel
                 ? `<span class="tm-gantt-bar__status"><span class="tm-status-tag" style="${visual.statusChipStyle}">${esc(visual.statusLabel)}</span></span>`
                 : '';
             const menuBtnHtml = `<button class="tm-gantt-bar__menu-btn" type="button" aria-label="时间轴菜单" title="时间轴菜单"><span class="tm-gantt-bar__menu-btn-text">···</span></button>`;
+            if (visual.isMilestone) {
+                return `
+                    <div class="tm-gantt-bar__surface">
+                        ${leadHtml}
+                        <div class="tm-gantt-bar__drag-label" hidden></div>
+                    </div>
+                    <span class="tm-gantt-bar__label-layer tm-gantt-bar__label-layer--milestone">${titleHtml}${statusHtml}${menuBtnHtml}</span>
+                    <div class="tm-gantt-bar__date-hint tm-gantt-bar__date-hint--start" data-role="start-date-hint" hidden></div>
+                    <div class="tm-gantt-bar__date-hint tm-gantt-bar__date-hint--end" data-role="end-date-hint" hidden></div>
+                    <div class="tm-gantt-bar-handle tm-gantt-bar-handle--start" data-handle="start"></div>
+                    <div class="tm-gantt-bar-handle tm-gantt-bar-handle--end" data-handle="end"></div>
+                `;
+            }
             return `
                 <div class="tm-gantt-bar__surface">
                     <span class="tm-gantt-bar__edge tm-gantt-bar__edge--end"></span>
                     <div class="tm-gantt-bar__drag-label" hidden></div>
-                    <div class="tm-gantt-bar__date-hint" hidden></div>
                 </div>
                 <span class="tm-gantt-bar__label-layer">${leadHtml}${titleHtml}${statusHtml}${menuBtnHtml}</span>
+                <div class="tm-gantt-bar__date-hint tm-gantt-bar__date-hint--start" data-role="start-date-hint" hidden></div>
+                <div class="tm-gantt-bar__date-hint tm-gantt-bar__date-hint--end" data-role="end-date-hint" hidden></div>
                 <div class="tm-gantt-bar-handle tm-gantt-bar-handle--start" data-handle="start"></div>
                 <div class="tm-gantt-bar-handle tm-gantt-bar-handle--end" data-handle="end"></div>
             `;
+        }
+
+        function buildTimelineTaskBarTitle(layout, visualMeta = null) {
+            const visual = visualMeta || getTimelineTaskVisualMeta(null, !!layout?.isDark);
+            if (visual.isMilestone) {
+                return `${visual.taskTitle}\n里程碑：${formatDateOnlyFromTs(layout?.endTs || layout?.startTs)}`;
+            }
+            return `${visual.taskTitle}\n${formatDateOnlyFromTs(layout?.startTs)} ~ ${formatDateOnlyFromTs(layout?.endTs)}`;
         }
 
         function buildTimelineTaskBarHtml(task, layout) {
@@ -69176,13 +70187,23 @@ async function __tmRefreshAfterWake(reason) {
             const isOverflow = typeof layout?.overflow === 'boolean' ? layout.overflow : !!resolved.overflow;
             const barWidth = Math.max(1, Number(layout?.width) || 0);
             const fadeStart = barWidth;
-            const title = `${visual.taskTitle}\n${formatDateOnlyFromTs(layout?.startTs)} ~ ${formatDateOnlyFromTs(layout?.endTs)}`;
-            return `<div class="tm-gantt-bar tm-gantt-bar--${mode}${isOverflow ? ' tm-gantt-bar--overflowing' : ''}" style="left:${Number(layout?.left) || 0}px;width:${barWidth}px;--tm-gantt-bar-fill:${visual.barColor};--tm-gantt-fade-start:${fadeStart}px;" title="${esc(title)}">${buildTimelineTaskBarInnerHtml(task, { ...layout, mode, overflow: isOverflow }, visual)}</div>`;
+            const title = buildTimelineTaskBarTitle(layout, visual);
+            const milestoneClass = visual.isMilestone ? ' tm-gantt-bar--milestone' : '';
+            return `<div class="tm-gantt-bar tm-gantt-bar--${mode}${isOverflow ? ' tm-gantt-bar--overflowing' : ''}${milestoneClass}" style="left:${Number(layout?.left) || 0}px;width:${barWidth}px;--tm-gantt-bar-fill:${visual.barColor};--tm-gantt-fade-start:${fadeStart}px;" title="${esc(title)}">${buildTimelineTaskBarInnerHtml(task, { ...layout, mode, overflow: isOverflow }, visual)}</div>`;
         }
 
         function buildTimelineMilestoneHtml(task, layout) {
-            const title = `${String(task?.content || '').trim() || '(无内容)'}\n里程碑：${formatDateOnlyFromTs(layout?.endTs)}`;
-            return `<div class="tm-gantt-milestone" style="left:${Number(layout?.left) || 0}px;" title="${esc(title)}"><span class="tm-gantt-milestone__icon">${__tmRenderLucideIcon('flag', '', { size: 12 })}</span><span class="tm-gantt-milestone__label">里程碑</span></div>`;
+            const width = Math.max(1, Number(layout?.width) || Number(layout?.dayWidth) || 1);
+            const pointTs = layout?.endTs || layout?.startTs;
+            const centerLeft = Number(layout?.left) || 0;
+            return buildTimelineTaskBarHtml(task, {
+                ...layout,
+                left: centerLeft - (width * 0.5),
+                width,
+                dayWidth: Number(layout?.dayWidth) || width,
+                startTs: pointTs,
+                endTs: pointTs,
+            });
         }
 
         function applyTimelineTaskBarElement(barEl, task, layout) {
@@ -69194,12 +70215,20 @@ async function __tmRefreshAfterWake(reason) {
             const left = Number(layout?.left) || 0;
             const width = Math.max(1, Number(layout?.width) || 0);
             const fadeStart = width;
-            const title = `${visual.taskTitle}\n${formatDateOnlyFromTs(layout?.startTs)} ~ ${formatDateOnlyFromTs(layout?.endTs)}`;
-            barEl.className = `tm-gantt-bar tm-gantt-bar--${mode}${isOverflow ? ' tm-gantt-bar--overflowing' : ''}`;
+            const title = buildTimelineTaskBarTitle(layout, visual);
+            const keepDragging = barEl.classList.contains('tm-gantt-bar--dragging');
+            const keepResizeStart = barEl.classList.contains('tm-gantt-bar--resizing-start');
+            const keepResizeEnd = barEl.classList.contains('tm-gantt-bar--resizing-end');
+            const keepHintStart = barEl.classList.contains('tm-gantt-bar--hint-start');
+            barEl.className = `tm-gantt-bar tm-gantt-bar--${mode}${isOverflow ? ' tm-gantt-bar--overflowing' : ''}${visual.isMilestone ? ' tm-gantt-bar--milestone' : ''}`;
+            if (keepDragging) barEl.classList.add('tm-gantt-bar--dragging');
+            if (keepResizeStart) barEl.classList.add('tm-gantt-bar--resizing-start');
+            if (keepResizeEnd) barEl.classList.add('tm-gantt-bar--resizing-end');
+            if (keepHintStart) barEl.classList.add('tm-gantt-bar--hint-start');
             barEl.style.left = `${left}px`;
             barEl.style.width = `${width}px`;
-            barEl.style.top = '50%';
-            barEl.style.transform = 'translateY(-50%)';
+            barEl.style.top = 'calc((var(--tm-row-height) - var(--tm-gantt-card-height)) / 2)';
+            barEl.style.transform = 'none';
             try { barEl.style.removeProperty('background'); } catch (e) {}
             barEl.style.setProperty('--tm-gantt-bar-fill', visual.barColor);
             barEl.style.setProperty('--tm-gantt-fade-start', `${fadeStart}px`);
@@ -69282,7 +70311,7 @@ async function __tmRefreshAfterWake(reason) {
             const range = computeAutoRangeTs(tasks, paddingDays);
             const startTs = range.startTs;
             const endTs = range.endTs;
-            const dayCount = clamp(Math.round((endTs - startTs) / DAY_MS) + 1, 1, 366);
+            const dayCount = clamp(Math.round((endTs - startTs) / DAY_MS) + 1, 1, TIMELINE_MAX_DAY_COUNT);
             const totalWidth = dayCount * dayWidth;
             const showCollapsedGroupLabels = !!SettingsStore.data.timelineSidebarCollapsed;
             const timelineMultiSelectedSet = new Set(
@@ -69416,7 +70445,7 @@ async function __tmRefreshAfterWake(reason) {
                     } else {
                         currentGroupBg = enableGroupBg ? (__tmGroupBgFromLabelColor(labelColor, isDark) || '') : '';
                     }
-                    rowsHtml.push(`<div class="tm-gantt-row tm-gantt-row--group" data-group-key="${String(r?.key || '')}" style="width:${totalWidth}px;cursor:pointer">${buildGanttGroupChipHtml(r, labelColor)}</div>`);
+                    rowsHtml.push(`<div class="tm-gantt-row tm-gantt-row--group" data-group-key="${String(r?.key || '')}" style="width:${totalWidth}px;height:var(--tm-row-height);min-height:var(--tm-row-height);max-height:var(--tm-row-height);cursor:pointer">${buildGanttGroupChipHtml(r, labelColor)}</div>`);
                     continue;
                 }
                 if (r?.type !== 'task') continue;
@@ -69443,7 +70472,7 @@ async function __tmRefreshAfterWake(reason) {
                 const selectedCls = isPinnedSelected ? ' tm-gantt-row--selected tm-gantt-row--dot-open' : '';
                 const dotHoverCls = String(state.timelineLinkHoverTaskId || '').trim() === String(r.id) ? ' tm-gantt-row--link-hover' : '';
                 const multiSelCls = timelineMultiSelectedSet.has(String(r.id)) ? ' tm-gantt-row--multi-selected' : '';
-                const rowAttrs = `data-id="${String(r.id)}" data-doc-id="${docId}" style="width:${totalWidth}px;${rowBgStyle}" ondragenter="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragover="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragleave="tmTimelineLinkRowDragLeave(event, '${escSq(String(r.id))}')"`;
+                const rowAttrs = `data-id="${String(r.id)}" data-doc-id="${docId}" style="width:${totalWidth}px;height:var(--tm-row-height);min-height:var(--tm-row-height);max-height:var(--tm-row-height);${rowBgStyle}" ondragenter="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragover="tmTimelineLinkRowDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragleave="tmTimelineLinkRowDragLeave(event, '${escSq(String(r.id))}')"`;
                 const buildDotHtml = (kind, leftPx) => `<span class="tm-task-link-dot tm-task-link-dot--timeline tm-task-link-dot--${kind}${state.whiteboardLinkFromTaskId === String(r.id) ? ' tm-task-link-dot--active' : ''}" style="left:${leftPx}px;" draggable="true" onmousedown="tmTaskLinkDotPressStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragstart="tmTaskLinkDotDragStart(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondragend="tmTaskLinkDotDragEnd(event)" ondragover="tmTaskLinkDotDragOver(event, '${escSq(String(r.id))}', '${escSq(docId)}')" ondrop="tmTaskLinkDotDrop(event, '${escSq(String(r.id))}', '${escSq(docId)}')" title="连接${kind === 'in' ? '输入' : '输出'}点"></span>`;
                 if (!aTs && !bTs) {
                     rowsHtml.push(`<div class="tm-gantt-row${selectedCls}${dotHoverCls}${multiSelCls}" ${rowAttrs}></div>`);
@@ -69452,11 +70481,13 @@ async function __tmRefreshAfterWake(reason) {
                 if (isMilestone && eTs0) {
                     const endIdx0 = clamp(getDayIndexByTs(startTs, eTs0), 0, dayCount - 1);
                     const markerLeft = endIdx0 * dayWidth + (dayWidth * 0.5);
-                    const inLeft = Math.max(6, markerLeft - 16);
-                    const outLeft = Math.min(totalWidth - 6, markerLeft + 16);
+                    const left = markerLeft - (dayWidth * 0.5);
+                    const width = dayWidth;
+                    const inLeft = left;
+                    const outLeft = left + width;
                     rowsHtml.push(`
                         <div class="tm-gantt-row${selectedCls}${dotHoverCls}${multiSelCls}" ${rowAttrs}>
-                            ${buildTimelineMilestoneHtml(task, { left: markerLeft, endTs: eTs0 })}
+                            ${buildTimelineMilestoneHtml(task, { left: markerLeft, width, dayWidth, startTs: eTs0, endTs: eTs0, isDark })}
                             ${buildDotHtml('in', inLeft)}
                             ${buildDotHtml('out', outLeft)}
                         </div>
@@ -69526,8 +70557,17 @@ async function __tmRefreshAfterWake(reason) {
                 if (!(inner instanceof Element)) return;
                 const svg = inner.querySelector('.tm-gantt-deps');
                 if (!(svg instanceof SVGElement)) return;
-                const width = Math.max(Math.ceil(inner.scrollWidth), Math.ceil(inner.clientWidth), 1);
-                const height = Math.max(Math.ceil(inner.scrollHeight), Math.ceil(inner.clientHeight), 1);
+                const width = Math.max(
+                    Math.ceil(Number(bodyEl.dataset?.tmGanttTotalWidth) || 0),
+                    Math.ceil(inner.getBoundingClientRect?.().width || 0),
+                    Math.ceil(inner.clientWidth || 0),
+                    1
+                );
+                const height = Math.max(
+                    Math.ceil(inner.getBoundingClientRect?.().height || 0),
+                    Math.ceil(inner.clientHeight || 0),
+                    1
+                );
                 try { svg.setAttribute('width', String(width)); } catch (e) {}
                 try { svg.setAttribute('height', String(height)); } catch (e) {}
                 try { svg.setAttribute('viewBox', `0 0 ${width} ${height}`); } catch (e) {}
@@ -69581,6 +70621,61 @@ async function __tmRefreshAfterWake(reason) {
                     parts.push(`L ${last.x.toFixed(2)} ${last.y.toFixed(2)}`);
                     return parts.join(' ');
                 };
+                const getPathTailButtonPos = (pts, bounds) => {
+                    const list = Array.isArray(pts) ? pts.filter((p) => Number.isFinite(p?.x) && Number.isFinite(p?.y)) : [];
+                    const btnSize = 20;
+                    const maxX = Math.max(0, (Number(bounds?.width) || 0) - btnSize);
+                    const maxY = Math.max(0, (Number(bounds?.height) || 0) - btnSize);
+                    if (list.length < 2) {
+                        const fallbackX = Number(bounds?.fallbackX) || 0;
+                        const fallbackY = Number(bounds?.fallbackY) || 0;
+                        return {
+                            x: Math.min(Math.max(fallbackX - (btnSize / 2), 0), maxX),
+                            y: Math.min(Math.max(fallbackY - (btnSize / 2), 0), maxY),
+                        };
+                    }
+                    const segLens = [];
+                    let total = 0;
+                    for (let i = 1; i < list.length; i += 1) {
+                        const dx = Number(list[i].x) - Number(list[i - 1].x);
+                        const dy = Number(list[i].y) - Number(list[i - 1].y);
+                        const len = Math.hypot(dx, dy);
+                        segLens.push(len);
+                        total += len;
+                    }
+                    if (!(total > 0)) {
+                        return {
+                            x: Math.min(Math.max(Number(list[0]?.x || 0) - (btnSize / 2), 0), maxX),
+                            y: Math.min(Math.max(Number(list[0]?.y || 0) - (btnSize / 2), 0), maxY),
+                        };
+                    }
+                    let acc = 0;
+                    const tailDistance = 30;
+                    const target = total <= (tailDistance + 6)
+                        ? (total * 0.72)
+                        : Math.max(0, total - tailDistance);
+                    for (let i = 1; i < list.length; i += 1) {
+                        const prev = list[i - 1];
+                        const next = list[i];
+                        const seg = segLens[i - 1];
+                        if (acc + seg < target) {
+                            acc += seg;
+                            continue;
+                        }
+                        const t = seg <= 0 ? 0 : ((target - acc) / seg);
+                        const px = prev.x + ((next.x - prev.x) * t);
+                        const py = prev.y + ((next.y - prev.y) * t);
+                        return {
+                            x: Math.min(Math.max(px - (btnSize / 2), 0), maxX),
+                            y: Math.min(Math.max(py - (btnSize / 2), 0), maxY),
+                        };
+                    }
+                    const last = list[list.length - 1];
+                    return {
+                        x: Math.min(Math.max(Number(last?.x || 0) - (btnSize / 2), 0), maxX),
+                        y: Math.min(Math.max(Number(last?.y || 0) - (btnSize / 2), 0), maxY),
+                    };
+                };
                 const buildTimelineDep = (from, to) => {
                     const gap = Math.max(14, Math.min(28, Math.abs(to.x - from.x) * 0.35));
                     const x1 = from.x + gap;
@@ -69612,13 +70707,17 @@ async function __tmRefreshAfterWake(reason) {
                         : 'tm-gantt-dep tm-gantt-dep--auto';
                     if (!link.manual) return `<path class="${cls}" d="${d}" marker-end="url(#${markerIdOut})"></path>`;
                     const idEsc = String(link.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-                    const dir = (to.x - from.x) >= 0 ? 1 : -1;
-                    const btnX = to.x - (dir * 12) - 10;
-                    const btnY = to.y - 10;
+                    const btnPos = getPathTailButtonPos(routed.pts, {
+                        width,
+                        height,
+                        fallbackX: (from.x + to.x) * 0.5,
+                        fallbackY: (from.y + to.y) * 0.5,
+                    });
                     return `
                         <g class="tm-gantt-dep-wrap${isSelected ? ' tm-gantt-dep-wrap--selected' : ''}">
+                            <path class="tm-gantt-dep-hit" d="${d}" onclick="tmTimelineSelectLink('${idEsc}', event)"></path>
                             <path class="${cls}" d="${d}" marker-end="url(#${markerIdOut})" onclick="tmTimelineSelectLink('${idEsc}', event)"></path>
-                            <foreignObject class="tm-gantt-dep-remove" x="${btnX.toFixed(2)}" y="${btnY.toFixed(2)}" width="20" height="20">
+                            <foreignObject class="tm-gantt-dep-remove" x="${btnPos.x.toFixed(2)}" y="${btnPos.y.toFixed(2)}" width="20" height="20">
                                 <button xmlns="http://www.w3.org/1999/xhtml" class="tm-gantt-dep-remove-btn" type="button" title="删除连线" onclick="tmTimelineRemoveLink('${idEsc}', event)">×</button>
                             </foreignObject>
                         </g>
@@ -69830,9 +70929,7 @@ async function __tmRefreshAfterWake(reason) {
                 }
 
                 const activeTask = getTaskById(taskId);
-                const rect = bodyEl.getBoundingClientRect();
                 const startX = e.clientX;
-                const baseScrollLeft = bodyEl.scrollLeft;
                 const initialLeftPx = Number.parseFloat(String(barEl.style.left || '').replace('px', '')) || 0;
                 const initialWidthPx = Number.parseFloat(String(barEl.style.width || '').replace('px', '')) || dayWidth0;
                 const initialStartIdx = clamp(Math.round(initialLeftPx / dayWidth0), 0, dayCount0 - 1);
@@ -69843,6 +70940,8 @@ async function __tmRefreshAfterWake(reason) {
                 let lastEndIdx = initialEndIdx;
                 let raf = 0;
                 let dragging = true;
+                let dragActive = false;
+                const dragThreshold = action === 'move' ? 6 : 3;
                 const setBarDragState = (targetBar, enabled, dragAction = action) => {
                     if (!(targetBar instanceof HTMLElement)) return;
                     try {
@@ -69866,36 +70965,45 @@ async function __tmRefreshAfterWake(reason) {
                     });
                 };
                 const updateBarDateHint = () => {
-                    const hintEl = barEl.querySelector('.tm-gantt-bar__date-hint');
+                    const startHintEl = barEl.querySelector('.tm-gantt-bar__date-hint--start');
+                    const endHintEl = barEl.querySelector('.tm-gantt-bar__date-hint--end');
                     const lineEl = barEl.querySelector('.tm-gantt-bar__drag-label');
-                    if (!(hintEl instanceof HTMLElement) || !(lineEl instanceof HTMLElement)) return;
-                    let text = '';
+                    if (!(startHintEl instanceof HTMLElement) || !(endHintEl instanceof HTMLElement) || !(lineEl instanceof HTMLElement)) return;
+                    const startLabel = formatTimelineHintDate(startTs0 + lastStartIdx * DAY_MS);
+                    const endLabel = formatTimelineHintDate(startTs0 + lastEndIdx * DAY_MS);
+                    let startText = '';
+                    let endText = '';
                     if (groupMove && groupItems.length > 1) {
                         const first = groupItems[0];
                         const delta = first.lastStartIdx - first.initialStartIdx;
-                        text = `整体偏移 ${delta >= 0 ? '+' : ''}${delta} 天`;
+                        endText = `整体偏移 ${delta >= 0 ? '+' : ''}${delta} 天`;
                     } else if (action === 'start') {
-                        text = formatTimelineHintDate(startTs0 + lastStartIdx * DAY_MS);
+                        startText = startLabel;
                     } else if (action === 'end') {
-                        text = formatTimelineHintDate(startTs0 + lastEndIdx * DAY_MS);
+                        endText = endLabel;
                     } else {
-                        const startLabel = formatTimelineHintDate(startTs0 + lastStartIdx * DAY_MS);
-                        const endLabel = formatTimelineHintDate(startTs0 + lastEndIdx * DAY_MS);
-                        text = `${startLabel} - ${endLabel}`;
+                        endText = `${startLabel} - ${endLabel}`;
                     }
                     const widthPx = Number.parseFloat(String(barEl.style.width || '').replace('px', '')) || initialWidthPx;
                     const lineLeft = action === 'start' ? 0 : widthPx;
                     lineEl.hidden = false;
                     lineEl.style.left = `${lineLeft}px`;
-                    hintEl.hidden = false;
-                    hintEl.textContent = text;
+                    startHintEl.hidden = !startText;
+                    startHintEl.textContent = startText;
+                    endHintEl.hidden = !endText;
+                    endHintEl.textContent = endText;
                 };
                 const clearBarDateHint = () => {
-                    const hintEl = barEl.querySelector('.tm-gantt-bar__date-hint');
+                    const startHintEl = barEl.querySelector('.tm-gantt-bar__date-hint--start');
+                    const endHintEl = barEl.querySelector('.tm-gantt-bar__date-hint--end');
                     const lineEl = barEl.querySelector('.tm-gantt-bar__drag-label');
-                    if (hintEl instanceof HTMLElement) {
-                        hintEl.hidden = true;
-                        hintEl.textContent = '';
+                    if (startHintEl instanceof HTMLElement) {
+                        startHintEl.hidden = true;
+                        startHintEl.textContent = '';
+                    }
+                    if (endHintEl instanceof HTMLElement) {
+                        endHintEl.hidden = true;
+                        endHintEl.textContent = '';
                     }
                     if (lineEl instanceof HTMLElement) {
                         lineEl.hidden = true;
@@ -69918,6 +71026,15 @@ async function __tmRefreshAfterWake(reason) {
                         groupItems.push({ taskId: sid, barEl: bar, initialStartIdx: sIdx, initialEndIdx: eIdx, lastStartIdx: sIdx, lastEndIdx: eIdx });
                     });
                 }
+
+                const activateDrag = () => {
+                    if (dragActive) return;
+                    dragActive = true;
+                    setTimelineDraggingX(true);
+                    setMobileTimelineTouchLock(true);
+                    setBarDragState(barEl, true);
+                    groupItems.forEach((it) => setBarDragState(it.barEl, true, 'move'));
+                };
 
                 const applyBar = (sIdx, eIdx) => {
                     const s = clamp(Math.min(sIdx, eIdx), 0, dayCount0 - 1);
@@ -69965,6 +71082,9 @@ async function __tmRefreshAfterWake(reason) {
                     try { ev.preventDefault(); } catch (e) {}
                     raf = requestAnimationFrame(() => {
                         raf = 0;
+                        const dx = ev.clientX - startX;
+                        if (!dragActive && Math.abs(dx) < dragThreshold) return;
+                        activateDrag();
                         onMove(ev);
                         updateBarDateHint();
                     });
@@ -69973,19 +71093,22 @@ async function __tmRefreshAfterWake(reason) {
                 const onUp = async () => {
                     if (!dragging) return;
                     dragging = false;
-                    setTimelineDraggingX(false);
-                    setMobileTimelineTouchLock(false);
-                    setBarDragState(barEl, false);
-                    clearBarDateHint();
-                    groupItems.forEach((it) => setBarDragState(it.barEl, false));
                     try { window.removeEventListener('pointermove', onWinPointerMove, true); } catch (e) {}
                     try { window.removeEventListener('pointerup', onUp, true); } catch (e) {}
                     try { window.removeEventListener('pointercancel', onUp, true); } catch (e) {}
                     try { window.removeEventListener('blur', onUp, true); } catch (e) {}
                     if (raf) cancelAnimationFrame(raf);
+                    if (!dragActive) return;
+                    setTimelineDraggingX(false);
+                    setMobileTimelineTouchLock(false);
+                    setBarDragState(barEl, false);
+                    clearBarDateHint();
+                    groupItems.forEach((it) => setBarDragState(it.barEl, false));
 
                     if (groupMove && groupItems.length > 1) {
-                        for (const it of groupItems) {
+                        const changedItems = groupItems.filter((it) => it.lastStartIdx !== it.initialStartIdx || it.lastEndIdx !== it.initialEndIdx);
+                        if (!changedItems.length) return;
+                        for (const it of changedItems) {
                             const t = getTaskById(it.taskId);
                             const rawStart = String(t?.startDate || '').trim();
                             const rawEnd = String(t?.completionTime || '').trim();
@@ -69998,6 +71121,8 @@ async function __tmRefreshAfterWake(reason) {
                         }
                         return;
                     }
+
+                    if (lastStartIdx === initialStartIdx && lastEndIdx === initialEndIdx) return;
 
                     const startDate = formatDateOnlyFromTs(startTs0 + lastStartIdx * DAY_MS);
                     const completionTime = formatDateOnlyFromTs(startTs0 + lastEndIdx * DAY_MS);
@@ -70014,22 +71139,9 @@ async function __tmRefreshAfterWake(reason) {
                 window.addEventListener('pointerup', onUp, true);
                 window.addEventListener('pointercancel', onUp, true);
                 window.addEventListener('blur', onUp, true);
-                setTimelineDraggingX(true);
-                setMobileTimelineTouchLock(true);
-                setBarDragState(barEl, true);
-                groupItems.forEach((it) => setBarDragState(it.barEl, true, 'move'));
 
                 try { e.preventDefault(); } catch (e3) {}
                 try { e.stopPropagation(); } catch (e3) {}
-
-                if (action === 'move') {
-                    const relX = e.clientX - rect.left + baseScrollLeft;
-                    const anchor = clamp(relX, 0, totalWidth);
-                    const newScroll = clamp(anchor - bodyEl.clientWidth * 0.5, 0, Math.max(0, totalWidth - bodyEl.clientWidth));
-                    bodyEl.scrollLeft = newScroll;
-                }
-
-                updateBarDateHint();
             };
     
             const onPanPointerDown = (e) => {
@@ -70235,7 +71347,7 @@ async function __tmRefreshAfterWake(reason) {
                     try { rowEl.classList.add('tm-gantt-row--dot-open', 'tm-gantt-row--selected'); } catch (e2) {}
                 }
             };
-    
+
             bodyEl.addEventListener('pointerdown', onPointerDown, { passive: false });
             if (!isMobileTimelineGlobal) {
                 bodyEl.addEventListener('pointerdown', onPanPointerDown, { passive: false });
@@ -70265,7 +71377,9 @@ async function __tmRefreshAfterWake(reason) {
             formatDateOnlyFromTs,
             formatTimelineHintDate,
             startOfDayTs,
+            extendTimelineEndTs,
             DAY_MS,
+            TIMELINE_MAX_DAY_COUNT,
             resolveTimelineBarLayout,
             buildTimelineTaskBarHtml,
             buildTimelineMilestoneHtml,

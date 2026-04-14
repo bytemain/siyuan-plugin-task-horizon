@@ -553,21 +553,28 @@
     }
 
     function hasOfficialMobileRuntimeSignal() {
-        const backend = getSiyuanRuntimeBackend();
-        if (backend !== 'android' && backend !== 'ios' && backend !== 'harmony') return false;
         try {
-            if (backend === 'android') return !!globalThis?.JSAndroid;
+            if (globalThis?.JSAndroid) return true;
         } catch (e) {}
         try {
-            if (backend === 'harmony') return !!globalThis?.JSHarmony;
+            if (globalThis?.JSHarmony) return true;
         } catch (e) {}
         try {
-            if (backend === 'ios') return !!globalThis?.webkit?.messageHandlers;
+            const hasIosBridge = !!globalThis?.webkit?.messageHandlers;
+            if (!hasIosBridge) return false;
+            const ua = String(navigator?.userAgent || '');
+            const maxTouchPoints = Number(navigator?.maxTouchPoints) || 0;
+            if (/iPhone|iPad|iPod/i.test(ua)) return true;
+            if (maxTouchPoints > 0) return true;
+            return true;
         } catch (e) {}
         return false;
     }
 
     function isMobileBrowserViewport() {
+        try {
+            if (navigator?.userAgentData?.mobile === true) return true;
+        } catch (e) {}
         try {
             const ua = String(navigator?.userAgent || '');
             if (/Mobile|Android|iPhone|iPad|iPod|HarmonyOS/i.test(ua)) return true;
@@ -575,7 +582,8 @@
         try {
             const maxTouchPoints = Number(navigator?.maxTouchPoints) || 0;
             const width = Number(window?.innerWidth) || 0;
-            if (maxTouchPoints > 0 && width > 0 && width <= 768) return true;
+            const coarse = !!window?.matchMedia?.('(pointer: coarse)')?.matches;
+            if ((coarse || maxTouchPoints > 0) && width > 0 && width <= 900) return true;
         } catch (e) {}
         return false;
     }
@@ -3085,7 +3093,6 @@
         function layoutInlineMetaHost(blockEl, host, taskId, textAnchor, html, forceRefresh = false, visibilityBuffer = 0) {
             if (!blockEl || !host || !taskId || !textAnchor) return false;
             if (inlineMetaIsComposing && isInlineMetaEditingBlock(blockEl)) {
-                console.log('[comp] COMPOSING_HIDE taskId=' + taskId);
                 host.classList.remove('is-ready');
                 return false;
             }

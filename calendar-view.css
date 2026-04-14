@@ -67,6 +67,7 @@
     .tm-calendar-wrap--mobile.tm-calendar-wrap--sidebar-open .tm-calendar-mobile-backdrop {
         display: block;
     }
+
 }
 
 .tm-calendar-sidebar {
@@ -783,7 +784,8 @@
 }
 
 .tm-floating-mini-cal--mobile .tm-floating-mini-cal__panel {
-    pointer-events: none;
+    pointer-events: auto;
+    touch-action: none;
 }
 
 .tm-floating-mini-cal--mobile .tm-floating-mini-cal__panel {
@@ -1381,6 +1383,7 @@
 .tm-calendar-host {
     flex: 1;
     min-height: 0;
+    position: relative;
 }
 
 .tm-calendar-wrap .fc .fc-header-toolbar {
@@ -2693,6 +2696,12 @@
     padding: 1px 4px 1px 0 !important;
 }
 
+/* NOTE:
+   全天区/“更多”弹层的字号不要在 calendar-view.css 里调。
+   这个文件会被 calendar-view.js 里的运行时样式和事件渲染时的行内样式覆盖。
+   真正生效的字号入口见:
+   1. ensureFcCompactAllDayStyle() 的运行时 fallback
+   2. applyTaskEventTitleClamp() 的 inline font-size（最终优先级最高） */
 .tm-calendar-host .fc .fc-timegrid-all-day .fc-daygrid-event,
 #tmCalendarSideDockTimeline .fc .fc-timegrid-all-day .fc-daygrid-event,
 .tm-calendar-host .fc .fc-popover .fc-daygrid-event,
@@ -3553,6 +3562,10 @@
     margin-bottom: 10px;
 }
 
+.tm-calendar-edit-row[hidden] {
+    display: none !important;
+}
+
 .tm-calendar-edit-label {
     width: 52px;
     font-size: 12px;
@@ -3576,6 +3589,16 @@
     background: var(--tm-input-bg);
     color: var(--tm-text-color);
     border-radius: 6px;
+}
+
+.tm-calendar-edit-input--repeat-every {
+    width: 96px;
+    flex: 0 0 auto;
+}
+
+.tm-calendar-edit-input--repeat-monthly {
+    width: 140px;
+    flex: 0 0 auto;
 }
 
 .tm-calendar-edit-color-wrap {
@@ -3653,6 +3676,10 @@
     margin-top: 8px;
 }
 
+.tm-calendar-edit-inline-action {
+    margin-left: 8px;
+}
+
 @media (max-width: 768px) {
     .tm-calendar-edit-modal {
         align-items: flex-end;
@@ -3686,6 +3713,12 @@
     .tm-calendar-edit-input {
         width: 100%;
         box-sizing: border-box;
+    }
+
+    .tm-calendar-edit-input--repeat-every,
+    .tm-calendar-edit-input--repeat-monthly {
+        width: 100%;
+        flex: 1 1 auto;
     }
 
     .tm-calendar-edit-color-wrap {
@@ -3736,6 +3769,11 @@
 
     .tm-calendar-edit-actions {
         flex-wrap: wrap;
+    }
+
+    .tm-calendar-edit-inline-action {
+        margin-left: 0;
+        align-self: flex-start;
     }
 }
 

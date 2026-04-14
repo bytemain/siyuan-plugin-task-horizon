@@ -73,21 +73,28 @@ const getSiyuanRuntimeBackend = () => {
 };
 
 const hasOfficialMobileRuntimeSignal = () => {
-    const backend = getSiyuanRuntimeBackend();
-    if (!MOBILE_RUNTIME_CONTAINERS.has(backend)) return false;
     try {
-        if (backend === "android") return !!globalThis?.JSAndroid;
+        if (globalThis?.JSAndroid) return true;
     } catch (e) {}
     try {
-        if (backend === "harmony") return !!globalThis?.JSHarmony;
+        if (globalThis?.JSHarmony) return true;
     } catch (e) {}
     try {
-        if (backend === "ios") return !!globalThis?.webkit?.messageHandlers;
+        const hasIosBridge = !!globalThis?.webkit?.messageHandlers;
+        if (!hasIosBridge) return false;
+        const ua = String(navigator?.userAgent || "");
+        const maxTouchPoints = Number(navigator?.maxTouchPoints) || 0;
+        if (/iPhone|iPad|iPod/i.test(ua)) return true;
+        if (maxTouchPoints > 0) return true;
+        return true;
     } catch (e) {}
     return false;
 };
 
 const isMobileBrowserViewport = () => {
+    try {
+        if (navigator?.userAgentData?.mobile === true) return true;
+    } catch (e) {}
     try {
         const ua = String(navigator?.userAgent || "");
         if (/Android|iPhone|iPad|iPod|HarmonyOS|Mobile/i.test(ua)) return true;
@@ -95,9 +102,25 @@ const isMobileBrowserViewport = () => {
     try {
         const maxTouchPoints = Number(navigator?.maxTouchPoints) || 0;
         const width = Number(window?.innerWidth) || 0;
-        if (maxTouchPoints > 0 && width > 0 && width <= 768) return true;
+        const coarse = !!window?.matchMedia?.("(pointer: coarse)")?.matches;
+        if ((coarse || maxTouchPoints > 0) && width > 0 && width <= 900) return true;
     } catch (e) {}
     return false;
+};
+
+const isNativeMobileRuntimeClient = () => hasOfficialMobileRuntimeSignal();
+
+const getRuntimeClientKind = () => {
+    try {
+        if (globalThis?.JSAndroid) return "android-app";
+    } catch (e) {}
+    try {
+        if (globalThis?.JSHarmony) return "harmony-app";
+    } catch (e) {}
+    try {
+        if (globalThis?.webkit?.messageHandlers) return "ios-app";
+    } catch (e) {}
+    return isMobileBrowserViewport() ? "mobile-browser" : "desktop-browser";
 };
 
 const isRuntimeMobileClient = () => {
@@ -324,12 +347,15 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         clearPluginResourceTextCache();
         const mountToken = String(Date.now());
         const runtimeMobile = this.isRuntimeMobileClient();
+        const runtimeNativeMobile = isNativeMobileRuntimeClient();
         this._mountToken = mountToken;
         this._mountExistingTabsStopped = false;
         this._mountExistingTabsTimer = null;
         globalThis.__taskHorizonPluginApp = this.app;
         globalThis.__taskHorizonPluginInstance = this;
         globalThis.__taskHorizonPluginIsMobile = runtimeMobile;
+        globalThis.__taskHorizonPluginIsNativeMobile = runtimeNativeMobile;
+        globalThis.__taskHorizonRuntimeClientKind = getRuntimeClientKind();
         globalThis.__taskHorizonOpenTab = typeof openTab === "function" ? openTab : null;
         globalThis.__taskHorizonOpenMobileFileById = typeof openMobileFileById === "function" ? openMobileFileById : null;
         globalThis.__taskHorizonPlatformUtils = platformUtils || null;
@@ -954,6 +980,8 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         try { delete globalThis.__taskHorizonPluginApp; } catch (e) {}
         try { delete globalThis.__taskHorizonPluginInstance; } catch (e) {}
         try { delete globalThis.__taskHorizonPluginIsMobile; } catch (e) {}
+        try { delete globalThis.__taskHorizonPluginIsNativeMobile; } catch (e) {}
+        try { delete globalThis.__taskHorizonRuntimeClientKind; } catch (e) {}
         try { delete globalThis.__taskHorizonOpenTab; } catch (e) {}
         try { delete globalThis.__taskHorizonOpenMobileFileById; } catch (e) {}
         try { delete globalThis.__taskHorizonPlatformUtils; } catch (e) {}
