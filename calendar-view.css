@@ -222,6 +222,10 @@
     padding-left: 18px;
 }
 
+.tm-calendar-nav-item--indent2 {
+    padding-left: 36px;
+}
+
 .tm-calendar-nav-item--disabled {
     opacity: 0.55;
 }

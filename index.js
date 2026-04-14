@@ -11,6 +11,7 @@ const BASECOAT_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/src/basecoat/basecoat.j
 const BASECOAT_CSS_PATH = `/data/plugins/${PLUGIN_ID}/src/basecoat/basecoat.css`;
 const CALENDAR_VIEW_SCRIPT_PATH = `/data/plugins/${PLUGIN_ID}/calendar-view.js`;
 const CALENDAR_VIEW_CSS_PATH = `/data/plugins/${PLUGIN_ID}/calendar-view.css`;
+const PLUGIN_MANIFEST_PATH = `/data/plugins/${PLUGIN_ID}/plugin.json`;
 const TAB_TYPE = "task-horizon";
 const TAB_TITLE = "任务管理器";
 const ICON_ID = "iconTaskHorizon";
@@ -249,6 +250,28 @@ const fetchPluginResourceText = async (path) => {
     return await task;
 };
 
+const normalizePluginManifest = (manifest) => {
+    const source = (manifest && typeof manifest === "object") ? manifest : {};
+    return {
+        name: String(source.name || "").trim() || PLUGIN_ID,
+        version: String(source.version || "").trim(),
+        frontends: Array.isArray(source.frontends) && source.frontends.length ? source.frontends.slice() : ["all"],
+        backends: Array.isArray(source.backends) && source.backends.length ? source.backends.slice() : ["all"],
+    };
+};
+
+const loadPluginManifest = async (pluginInstance) => {
+    try {
+        const text = await fetchPluginResourceText(PLUGIN_MANIFEST_PATH);
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed === "object") return normalizePluginManifest(parsed);
+    } catch (e) {}
+    try {
+        return normalizePluginManifest(pluginInstance?.manifest);
+    } catch (e) {}
+    return normalizePluginManifest(null);
+};
+
 const loadScriptText = async (path, sourceName) => {
     try {
         const code = await fetchPluginResourceText(path);
@@ -365,6 +388,7 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         globalThis.__taskHorizonMountToken = mountToken;
         globalThis.__taskHorizonEnsureAiModuleLoaded = () => ensureDeferredScriptText("ai", AI_SCRIPT_PATH, "ai.js", hasAiRuntime);
         globalThis.__taskHorizonEnsureXlsxModuleLoaded = () => ensureDeferredScriptText("xlsx", XLSX_VENDOR_SCRIPT_PATH, "vendor/xlsx.full.min.js", hasXlsxRuntime);
+        globalThis.__taskHorizonPluginManifest = await loadPluginManifest(this);
         try { this.addIcons(ICON_SYMBOL); } catch (e) {}
         this.ensureCustomTab();
         this.initTaskDock();
@@ -979,6 +1003,7 @@ module.exports = class TaskHorizonPlugin extends Plugin {
 
         try { delete globalThis.__taskHorizonPluginApp; } catch (e) {}
         try { delete globalThis.__taskHorizonPluginInstance; } catch (e) {}
+        try { delete globalThis.__taskHorizonPluginManifest; } catch (e) {}
         try { delete globalThis.__taskHorizonPluginIsMobile; } catch (e) {}
         try { delete globalThis.__taskHorizonPluginIsNativeMobile; } catch (e) {}
         try { delete globalThis.__taskHorizonRuntimeClientKind; } catch (e) {}

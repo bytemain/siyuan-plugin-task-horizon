@@ -934,20 +934,23 @@
                 position: absolute;
                 z-index: 3007;
                 display: none;
-                min-width: 160px;
-                max-width: 280px;
+                width: min(280px, calc(100vw - 12px));
+                min-width: min(160px, calc(100vw - 12px));
+                max-width: calc(100vw - 12px);
                 padding: 10px;
                 border-radius: 8px;
                 background: var(--b3-theme-background);
                 border: 1px solid var(--b3-border-color);
                 box-shadow: var(--b3-dialog-shadow);
+                box-sizing: border-box;
             }
             .sy-custom-props-floatbar__input-editor.is-visible {
                 display: block;
             }
             .sy-custom-props-floatbar__input-editor.is-remark {
+                width: min(72vw, 420px);
                 min-width: min(72vw, 240px);
-                max-width: min(72vw, 420px);
+                max-width: calc(100vw - 12px);
             }
             .sy-custom-props-floatbar__remark-toolbar {
                 display: none;
@@ -1036,6 +1039,75 @@
                 justify-content: flex-end;
                 gap: 8px;
                 margin-top: 10px;
+            }
+            .sy-custom-props-floatbar__input-extra {
+                display: none;
+                flex-direction: column;
+                gap: 8px;
+                margin-top: 10px;
+            }
+            .sy-custom-props-floatbar__input-extra.is-visible {
+                display: flex;
+            }
+            .sy-custom-props-floatbar__input-extra-row {
+                width: 100%;
+                min-height: 38px;
+                border: 1px solid var(--b3-border-color);
+                border-radius: 10px;
+                background: var(--b3-theme-surface);
+                color: var(--b3-theme-on-surface);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 8px 10px;
+                box-sizing: border-box;
+                cursor: pointer;
+            }
+            .sy-custom-props-floatbar__input-extra-row:hover {
+                border-color: var(--b3-theme-primary);
+                background: var(--b3-theme-background);
+            }
+            .sy-custom-props-floatbar__input-extra-main {
+                min-width: 0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex: 1 1 auto;
+            }
+            .sy-custom-props-floatbar__input-extra-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 16px;
+                height: 16px;
+                color: var(--b3-theme-primary);
+                flex: 0 0 auto;
+            }
+            .sy-custom-props-floatbar__input-extra-text {
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+            }
+            .sy-custom-props-floatbar__input-extra-title {
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--b3-theme-on-background);
+            }
+            .sy-custom-props-floatbar__input-extra-desc {
+                font-size: 11px;
+                color: var(--b3-theme-on-surface);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .sy-custom-props-floatbar__input-extra-tail {
+                color: var(--b3-theme-on-surface);
+                flex: 0 0 auto;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
             }
             .sy-custom-props-floatbar__btn {
                 height: 26px;
@@ -1252,6 +1324,7 @@
         inputEditor.innerHTML = `
             <input type="text" class="sy-custom-props-floatbar__input" placeholder="输入内容..." />
             <textarea class="sy-custom-props-floatbar__textarea is-hidden" placeholder="输入内容..."></textarea>
+            <div class="sy-custom-props-floatbar__input-extra" data-input-extra></div>
             <div class="sy-custom-props-floatbar__remark-toolbar" data-remark-toolbar hidden>
                 <button class="sy-custom-props-floatbar__btn sy-custom-props-floatbar__remark-tool" data-remark-tool="bullet"${buildTooltipAttrs('无序列表')}>•</button>
                 <button class="sy-custom-props-floatbar__btn sy-custom-props-floatbar__remark-tool" data-remark-tool="ordered"${buildTooltipAttrs('有序列表')}>1.</button>
@@ -1293,10 +1366,53 @@
             textarea.style.height = `${nextHeight}px`;
         }
 
+        function positionPopupNearAnchor(popupEl, anchorEl, options = {}) {
+            if (!(popupEl instanceof HTMLElement) || !(anchorEl instanceof HTMLElement)) return;
+            const gap = Math.max(0, Number(options.gap) || 4);
+            const viewportMargin = Math.max(4, Number(options.viewportMargin) || 6);
+            const viewportW = document.documentElement?.clientWidth || window.innerWidth || 0;
+            const viewportH = document.documentElement?.clientHeight || window.innerHeight || 0;
+            if (!viewportW || !viewportH) return;
+
+            const anchorRect = anchorEl.getBoundingClientRect();
+            const popupRect = popupEl.getBoundingClientRect();
+            const popupWidth = Math.min(
+                Math.max(0, popupRect.width || popupEl.offsetWidth || 0),
+                Math.max(0, viewportW - viewportMargin * 2)
+            );
+            const popupHeight = Math.min(
+                Math.max(0, popupRect.height || popupEl.offsetHeight || 0),
+                Math.max(0, viewportH - viewportMargin * 2)
+            );
+            const viewportLeft = window.scrollX;
+            const viewportTop = window.scrollY;
+            const minLeft = viewportLeft + viewportMargin;
+            const maxLeft = viewportLeft + Math.max(viewportMargin, viewportW - popupWidth - viewportMargin);
+            let left = viewportLeft + anchorRect.left;
+            if (left + popupWidth > viewportLeft + viewportW - viewportMargin) {
+                left = viewportLeft + anchorRect.right - popupWidth;
+            }
+            left = Math.max(minLeft, Math.min(left, maxLeft));
+
+            const minTop = viewportTop + viewportMargin;
+            const maxTop = viewportTop + Math.max(viewportMargin, viewportH - popupHeight - viewportMargin);
+            const belowTop = viewportTop + anchorRect.bottom + gap;
+            const aboveTop = viewportTop + anchorRect.top - popupHeight - gap;
+            let top = belowTop;
+            if (belowTop + popupHeight > viewportTop + viewportH - viewportMargin && aboveTop >= minTop) {
+                top = aboveTop;
+            }
+            top = Math.max(minTop, Math.min(top, maxTop));
+
+            popupEl.style.left = `${Math.round(left)}px`;
+            popupEl.style.top = `${Math.round(top)}px`;
+        }
+
         function setInputEditorMode(mode = 'input') {
             const { input, textarea } = getInputEditorControls();
             const useTextarea = mode === 'textarea';
             const remarkToolbar = inputEditor.querySelector('[data-remark-toolbar]');
+            const extraPanel = inputEditor.querySelector('[data-input-extra]');
             if (input instanceof HTMLInputElement) {
                 input.classList.toggle('is-hidden', useTextarea);
                 input.disabled = useTextarea;
@@ -1315,6 +1431,10 @@
             if (remarkToolbar instanceof HTMLElement) {
                 remarkToolbar.classList.remove('is-open');
                 remarkToolbar.hidden = true;
+            }
+            if (extraPanel instanceof HTMLElement) {
+                extraPanel.classList.remove('is-visible');
+                extraPanel.innerHTML = '';
             }
             return useTextarea ? textarea : input;
         }
@@ -1462,6 +1582,43 @@
             showMessage('未能打开提醒设置，请确认任务块与番茄钟插件状态', true, 2400);
         }
 
+        async function openRepeatDialogForCurrentTask() {
+            const openRepeat = globalThis.tmEditTaskRepeatRule;
+            if (typeof openRepeat !== 'function') {
+                showMessage('未检测到任务循环功能，请确认任务管理器已启用', true, 2000);
+                return null;
+            }
+            const candidateIds = [
+                resolveCurrentTaskId(),
+                currentTaskId,
+                currentBlockId,
+                resolveTaskNodeIdForDetail(currentBlockEl),
+                resolveTaskAttrNodeIdForDetail(currentBlockEl),
+                currentBlockEl?.dataset?.nodeId,
+            ].map((id) => String(id || '').trim()).filter(Boolean);
+            const uniqIds = Array.from(new Set(candidateIds));
+            if (!uniqIds.length) {
+                showMessage('未找到任务', true, 1800);
+                return null;
+            }
+            for (const candidateId of uniqIds) {
+                try {
+                    const result = await openRepeat(candidateId);
+                    if (result !== null) return { candidateId, result };
+                } catch (e) {}
+            }
+            showMessage('未能打开循环设置，请确认任务块状态', true, 2200);
+            return null;
+        }
+
+        async function getRepeatRuleForTask(taskId) {
+            const getter = globalThis.tmGetTaskRepeatRule;
+            if (typeof getter !== 'function') return null;
+            const id = String(taskId || '').trim();
+            if (!id) return null;
+            try { return await getter(id); } catch (e) { return null; }
+        }
+
         async function resolveCurrentTaskIdForAi() {
             const rawId = String(resolveCurrentTaskId() || '').trim();
             if (!rawId) return '';
@@ -1559,6 +1716,22 @@
             const id = String(blockId || '').trim();
             const key = String(attrKey || '').trim();
             if (!id || !key) return { success: false, viaSharedApi: false };
+            if (key === 'custom-start-date' || key === 'custom-completion-time') {
+                const updater = globalThis.tmUpdateTaskDates;
+                if (typeof updater === 'function') {
+                    try {
+                        await updater(id, key === 'custom-start-date'
+                            ? { startDate: value == null ? '' : String(value) }
+                            : { completionTime: value == null ? '' : String(value) }, { refresh: false });
+                        return {
+                            success: true,
+                            changed: true,
+                            viaSharedApi: true,
+                            value: value == null ? '' : String(value),
+                        };
+                    } catch (e) {}
+                }
+            }
             const success = await setBlockCustomAttrs(id, { [key]: value });
             return {
                 success,
@@ -1602,6 +1775,7 @@
             const name = String(iconName || '').trim().toLowerCase();
             const official = {
                 sparkle: 'M199,125.31l-49.88-18.39L130.69,57a19.92,19.92,0,0,0-37.38,0L74.92,106.92,25,125.31a19.92,19.92,0,0,0,0,37.38l49.88,18.39L93.31,231a19.92,19.92,0,0,0,37.38,0l18.39-49.88L199,162.69a19.92,19.92,0,0,0,0-37.38Zm-63.38,35.16a12,12,0,0,0-7.11,7.11L112,212.28l-16.47-44.7a12,12,0,0,0-7.11-7.11L43.72,144l44.7-16.47a12,12,0,0,0,7.11-7.11L112,75.72l16.47,44.7a12,12,0,0,0,7.11,7.11L180.28,144ZM140,40a12,12,0,0,1,12-12h12V16a12,12,0,0,1,24,0V28h12a12,12,0,0,1,0,24H188V64a12,12,0,0,1-24,0V52H152A12,12,0,0,1,140,40ZM252,88a12,12,0,0,1-12,12h-4v4a12,12,0,0,1-24,0v-4h-4a12,12,0,0,1,0-24h4V72a12,12,0,0,1,24,0v4h4A12,12,0,0,1,252,88Z',
+                repeat: 'M20,128A76.08,76.08,0,0,1,96,52h99l-3.52-3.51a12,12,0,1,1,17-17l24,24a12,12,0,0,1,0,17l-24,24a12,12,0,0,1-17-17L195,76H96a52.06,52.06,0,0,0-52,52,12,12,0,0,1-24,0Zm204-12a12,12,0,0,0-12,12,52.06,52.06,0,0,1-52,52H61l3.52-3.51a12,12,0,1,0-17-17l-24,24a12,12,0,0,0,0,17l24,24a12,12,0,1,0,17-17L61,204h99a76.08,76.08,0,0,0,76-76A12,12,0,0,0,224,116Z',
                 'alarm-clock': 'M128,36A100,100,0,1,0,228,136,100.11,100.11,0,0,0,128,36Zm0,176a76,76,0,1,1,76-76A76.08,76.08,0,0,1,128,212ZM32.49,72.49a12,12,0,1,1-17-17l32-32a12,12,0,1,1,17,17Zm208,0a12,12,0,0,1-17,0l-32-32a12,12,0,1,1,17-17l32,32A12,12,0,0,1,240.49,72.49ZM176,124a12,12,0,0,1,0,24H128a12,12,0,0,1-12-12V88a12,12,0,0,1,24,0v36Z',
                 'calendar-check': 'M208,28H188V20a12,12,0,0,0-24,0v8H92V20a12,12,0,0,0-24,0v8H48A20.02229,20.02229,0,0,0,28,48V208a20.02229,20.02229,0,0,0,20,20H208a20.02229,20.02229,0,0,0,20-20V48A20.02229,20.02229,0,0,0,208,28Zm-4,24V76H52V52ZM52,204V100H204V204Zm120.72559-84.2373a12.00022,12.00022,0,0,1-.499,16.96386l-46.6665,44a11.99953,11.99953,0,0,1-16.48486-.02051l-25.3335-24a11.99964,11.99964,0,1,1,16.50586-17.42187l17.1001,16.19922,38.415-36.21973A11.99993,11.99993,0,0,1,172.72559,119.7627Z',
                 'calendar-plus-2': 'M208,28H188V24a12,12,0,0,0-24,0v4H92V24a12,12,0,0,0-24,0v4H48A20,20,0,0,0,28,48V208a20,20,0,0,0,20,20H208a20,20,0,0,0,20-20V48A20,20,0,0,0,208,28ZM68,52a12,12,0,0,0,24,0h72a12,12,0,0,0,24,0h16V76H52V52ZM52,204V100H204V204Zm112-52a12,12,0,0,1-12,12H140v12a12,12,0,0,1-24,0V164H104a12,12,0,0,1,0-24h12V128a12,12,0,0,1,24,0v12h12A12,12,0,0,1,164,152Z',
@@ -2213,6 +2387,8 @@
                 showMessage('无法获取任务ID', true, 1800);
                 return;
             }
+            const isCompletionDate = String(config?.attrKey || '').trim() === 'custom-completion-time';
+            const extraPanel = inputEditor.querySelector('[data-input-extra]');
             const saveDateValue = async (rawDateValue) => {
                 const newValue = rawDateValue ? parseDate(rawDateValue) : '';
                 const result = await saveTaskAttrWithUndo(blockIdAtOpen, config.attrKey, newValue, {
@@ -2232,6 +2408,59 @@
                 } else {
                     showMessage('更新失败', true, 2000);
                 }
+            };
+            const renderRepeatExtras = async () => {
+                if (!isCompletionDate || !(extraPanel instanceof HTMLElement)) return;
+                const repeatRule = await getRepeatRuleForTask(blockIdAtOpen);
+                const repeatSummary = String(repeatRule?.summary || '').trim() || '不重复';
+                const untilSummary = (repeatRule && repeatRule.enabled)
+                    ? (String(repeatRule.until || '').trim() ? `结束于 ${String(repeatRule.until || '').trim()}` : '永不结束')
+                    : '未设置';
+                extraPanel.innerHTML = `
+                    <button type="button" class="sy-custom-props-floatbar__input-extra-row" data-repeat-row="rule">
+                        <span class="sy-custom-props-floatbar__input-extra-main">
+                            <span class="sy-custom-props-floatbar__input-extra-icon">${renderPhosphorBoldIcon('repeat', 14)}</span>
+                            <span class="sy-custom-props-floatbar__input-extra-text">
+                                <span class="sy-custom-props-floatbar__input-extra-title">循环</span>
+                                <span class="sy-custom-props-floatbar__input-extra-desc">${esc(repeatSummary)}</span>
+                            </span>
+                        </span>
+                        <span class="sy-custom-props-floatbar__input-extra-tail">${renderPhosphorBoldIcon('caret-right', 12)}</span>
+                    </button>
+                    <button type="button" class="sy-custom-props-floatbar__input-extra-row" data-repeat-row="until">
+                        <span class="sy-custom-props-floatbar__input-extra-main">
+                            <span class="sy-custom-props-floatbar__input-extra-icon">${renderPhosphorBoldIcon('calendar-check', 14)}</span>
+                            <span class="sy-custom-props-floatbar__input-extra-text">
+                                <span class="sy-custom-props-floatbar__input-extra-title">结束方式</span>
+                                <span class="sy-custom-props-floatbar__input-extra-desc">${esc(untilSummary)}</span>
+                            </span>
+                        </span>
+                        <span class="sy-custom-props-floatbar__input-extra-tail">${renderPhosphorBoldIcon('caret-right', 12)}</span>
+                    </button>
+                `.trim();
+                extraPanel.classList.add('is-visible');
+                const handleOpenRepeat = async () => {
+                    const opened = await openRepeatDialogForCurrentTask();
+                    if (!opened) return;
+                    try {
+                        const props = await getTaskCustomProps(blockIdAtOpen, true);
+                        if (String(currentBlockId || '').trim() === blockIdAtOpen) {
+                            currentProps = props;
+                            renderFloatBar();
+                        }
+                        patchInlineMetaCache(blockIdAtOpen, props);
+                        refreshInlineMetaByTaskId(blockIdAtOpen, true);
+                    } catch (e) {}
+                    await renderRepeatExtras();
+                    positionPopupNearAnchor(inputEditor, anchorEl, { gap: 4, viewportMargin: 6 });
+                };
+                extraPanel.querySelectorAll('[data-repeat-row]').forEach((btn) => {
+                    btn.onclick = async (ev) => {
+                        try { ev.preventDefault(); } catch (e) {}
+                        try { ev.stopPropagation(); } catch (e) {}
+                        await handleOpenRepeat();
+                    };
+                });
             };
             const isTouchLike = isMobileDevice();
             if (isTouchLike) {
@@ -2289,10 +2518,9 @@
             input.value = oldValue;
             input.placeholder = '';
 
-            const anchorRect = anchorEl.getBoundingClientRect();
-            inputEditor.style.left = `${window.scrollX + anchorRect.left}px`;
-            inputEditor.style.top = `${window.scrollY + anchorRect.bottom + 4}px`;
             inputEditor.classList.add('is-visible');
+            positionPopupNearAnchor(inputEditor, anchorEl, { gap: 4, viewportMargin: 6 });
+            Promise.resolve(renderRepeatExtras()).catch(() => null);
 
             input.focus();
             try { input.showPicker?.(); } catch (e) {}
@@ -2345,14 +2573,16 @@
             }
 
             // 计算位置
-            const anchorRect = anchorEl.getBoundingClientRect();
-            inputEditor.style.left = `${window.scrollX + anchorRect.left}px`;
-            inputEditor.style.top = `${window.scrollY + anchorRect.bottom + 4}px`;
             inputEditor.classList.add('is-visible');
+            const repositionEditor = () => positionPopupNearAnchor(inputEditor, anchorEl, { gap: 4, viewportMargin: 6 });
+            repositionEditor();
             if (textarea instanceof HTMLTextAreaElement) {
                 syncInputEditorTextareaHeight(textarea, 76);
                 try {
-                    requestAnimationFrame(() => syncInputEditorTextareaHeight(textarea, 76));
+                    requestAnimationFrame(() => {
+                        syncInputEditorTextareaHeight(textarea, 76);
+                        repositionEditor();
+                    });
                 } catch (e) {}
             }
 
@@ -2394,12 +2624,16 @@
             };
 
             if (textarea instanceof HTMLTextAreaElement) {
-                textarea.oninput = () => syncInputEditorTextareaHeight(textarea, 76);
+                textarea.oninput = () => {
+                    syncInputEditorTextareaHeight(textarea, 76);
+                    repositionEditor();
+                };
                 textarea.onkeydown = (e) => {
                     if (isRemark && remarkTools && typeof remarkTools.handleTextareaKeydown === 'function') {
                         const handled = remarkTools.handleTextareaKeydown(textarea, e);
                         if (handled) {
                             syncInputEditorTextareaHeight(textarea, 76);
+                            repositionEditor();
                             return;
                         }
                     }
@@ -2447,6 +2681,7 @@
                         else if (action === 'bullet' && typeof remarkTools.toggleLinePrefix === 'function') remarkTools.toggleLinePrefix(textarea, '- ');
                         else if (action === 'ordered' && typeof remarkTools.toggleOrderedList === 'function') remarkTools.toggleOrderedList(textarea);
                         syncInputEditorTextareaHeight(textarea, 76);
+                        repositionEditor();
                     };
                 });
                 if (remarkToolsBtn instanceof HTMLButtonElement) {
@@ -2460,9 +2695,13 @@
                         remarkToolbar.hidden = !nextOpen;
                         syncInputEditorTextareaHeight(textarea, 76);
                         try {
-                            requestAnimationFrame(() => syncInputEditorTextareaHeight(textarea, 76));
+                            requestAnimationFrame(() => {
+                                syncInputEditorTextareaHeight(textarea, 76);
+                                repositionEditor();
+                            });
                         } catch (e2) {}
                         try { textarea.focus({ preventScroll: true }); } catch (e2) { try { textarea.focus(); } catch (e3) {} }
+                        repositionEditor();
                     };
                 }
             } else if (remarkToolsBtn instanceof HTMLButtonElement) {

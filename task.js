@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.2.1
+// @version      2.2.2
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -2897,6 +2897,11 @@
             max-width: min(42vw, 180px);
         }
 
+        .tm-modal.tm-modal--tab:not(.tm-modal--mobile):not(.tm-modal--dock) .tm-filter-rule-bar .tm-topbar-doc-quick-select--tab-adaptive {
+            display: none;
+            max-width: min(40vw, 220px);
+        }
+
         .tm-filter-rule-bar .tm-topbar-doc-quick-select .bc-select-trigger {
             width: auto;
             max-width: 100%;
@@ -3032,6 +3037,11 @@
                 gap: 6px !important;
             }
 
+            .tm-modal.tm-modal--tab:not(.tm-modal--dock):not(.tm-modal--mobile) .tm-filter-rule-bar .tm-topbar-doc-quick-select--tab-adaptive {
+                display: inline-flex;
+                max-width: min(40vw, 220px);
+            }
+
             .tm-modal:not(.tm-modal--dock) .tm-calendar-sidebar-toggle-compact {
                 display: inline-flex !important;
             }
@@ -3039,6 +3049,15 @@
 
         .tm-filter-rule-bar #tmMobileMenu {
             color: var(--tm-text-color);
+        }
+
+        /* 桌面端窄宽度同样会复用 #tmMobileMenu，顶栏层级要高于表格 sticky 表头 */
+        .tm-modal:not(.tm-modal--mobile) .tm-filter-rule-bar {
+            z-index: 32;
+        }
+
+        .tm-modal:not(.tm-modal--mobile) .tm-filter-rule-bar #tmMobileMenu {
+            z-index: 33 !important;
         }
 
         .tm-modal.tm-modal--mobile .tm-header,
@@ -6273,6 +6292,187 @@
             gap: 8px;
         }
 
+        .tm-task-detail-inline-popover--date-sheet {
+            width: min(340px, calc(100vw - 20px));
+            gap: 12px;
+        }
+
+        .tm-task-detail-inline-popover__section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tm-task-detail-inline-popover__row-btn {
+            width: 100%;
+            min-height: 42px;
+            border: 1px solid var(--tm-border-color);
+            border-radius: 12px;
+            background: var(--tm-card-bg);
+            color: var(--tm-text-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            box-sizing: border-box;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .tm-task-detail-inline-popover__row-btn:hover,
+        .tm-task-detail-inline-popover__row-btn:focus-visible {
+            border-color: color-mix(in srgb, var(--primary) 42%, var(--border) 58%);
+            outline: none;
+        }
+
+        .tm-task-detail-inline-popover__row-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .tm-task-detail-inline-popover__row-icon {
+            width: 16px;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            flex: 0 0 auto;
+        }
+
+        .tm-task-detail-inline-popover__row-icon .tm-lucide-emoji__svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .tm-task-detail-inline-popover__row-text {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tm-task-detail-inline-popover__row-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--tm-text-color);
+        }
+
+        .tm-task-detail-inline-popover__row-desc {
+            font-size: 12px;
+            color: var(--tm-secondary-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tm-task-detail-inline-popover__row-trailing {
+            flex: 0 0 auto;
+            color: var(--tm-secondary-text);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tm-task-detail-inline-popover__preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tm-task-detail-inline-popover__preview-chip {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: var(--tm-card-bg);
+            border: 1px solid var(--tm-border-color);
+            color: var(--tm-secondary-text);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tm-task-detail-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tm-task-detail-history-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: var(--tm-card-bg);
+            border: 1px solid var(--tm-border-color);
+        }
+
+        .tm-task-detail-history-main {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--tm-text-color);
+        }
+
+        .tm-task-detail-history-sub {
+            font-size: 12px;
+            color: var(--tm-secondary-text);
+            line-height: 1.5;
+        }
+
+        .tm-task-detail-history-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .tm-task-detail-history-delete {
+            min-height: 24px;
+            padding: 0 8px;
+            border-radius: 8px;
+            border: 1px solid color-mix(in srgb, var(--destructive) 24%, var(--tm-border-color) 76%);
+            background: transparent;
+            color: var(--destructive);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .tm-task-detail-history-delete:hover,
+        .tm-task-detail-history-delete:focus-visible {
+            background: color-mix(in srgb, var(--destructive) 10%, transparent 90%);
+            outline: none;
+        }
+
+        .tm-recurring-instance-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 20px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--tm-primary-color) 12%, var(--tm-card-bg) 88%);
+            border: 1px solid color-mix(in srgb, var(--tm-primary-color) 22%, var(--tm-border-color) 78%);
+            color: var(--tm-primary-color);
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+            flex: 0 0 auto;
+        }
+
+        .tm-recurring-instance-badge--inline {
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
         .tm-task-detail-header .bc-btn,
         .tm-task-detail-header .bc-select-trigger,
         .tm-task-detail-core .bc-btn,
@@ -7870,6 +8070,12 @@
             display: block;
         }
 
+        .tm-timeline-toolbar-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .tm-timeline-mobile-toolbar {
             position: absolute;
             left: 0;
@@ -8870,6 +9076,28 @@
             display: block;
         }
 
+        .tm-recurring-task-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 4px;
+            line-height: 0;
+            white-space: nowrap;
+            vertical-align: baseline;
+            color: color-mix(in srgb, var(--tm-primary-color) 82%, var(--tm-text-color) 18%);
+        }
+        .tm-recurring-task-icon .tm-lucide-emoji {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
+        }
+        .tm-recurring-task-icon .tm-lucide-emoji__svg {
+            width: 13px;
+            height: 13px;
+            display: block;
+        }
+
         .tm-task-remark-emoji {
             display: inline-flex;
             align-items: center;
@@ -9758,6 +9986,175 @@
         .tm-prompt-btn-secondary {
             background: #757575;
             color: white;
+        }
+
+        .tm-repeat-modal {
+            position: fixed;
+            inset: 0;
+            background: var(--tm-modal-overlay);
+            z-index: 200070;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            box-sizing: border-box;
+        }
+
+        .tm-repeat-card {
+            width: min(92vw, 520px);
+            max-height: min(88vh, 760px);
+            overflow: auto;
+            background: var(--tm-bg-color);
+            color: var(--tm-text-color);
+            border-radius: 26px;
+            padding: 22px;
+            box-shadow: var(--tm-shadow);
+            box-sizing: border-box;
+        }
+
+        .tm-repeat-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .tm-repeat-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .tm-repeat-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tm-repeat-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--tm-secondary-text);
+        }
+
+        .tm-repeat-select,
+        .tm-repeat-input {
+            width: 100%;
+            min-height: 46px;
+            padding: 10px 14px;
+            border: 1px solid var(--tm-input-border);
+            border-radius: 16px;
+            background: var(--tm-input-bg);
+            color: var(--tm-text-color);
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .tm-repeat-select:focus,
+        .tm-repeat-input:focus {
+            outline: none;
+            border-color: var(--tm-primary-color);
+        }
+
+        .tm-repeat-inline {
+            display: grid;
+            grid-template-columns: 1fr 120px 140px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .tm-repeat-inline-prefix {
+            min-height: 46px;
+            border-radius: 16px;
+            background: var(--tm-card-bg);
+            border: 1px solid var(--tm-border-color);
+            display: inline-flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .tm-repeat-segments {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            border-radius: 18px;
+            background: var(--tm-card-bg);
+            border: 1px solid var(--tm-border-color);
+        }
+
+        .tm-repeat-segment {
+            flex: 1 1 0;
+            min-height: 42px;
+            border: none;
+            border-radius: 14px;
+            background: transparent;
+            color: var(--tm-secondary-text);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .tm-repeat-segment.is-active {
+            background: color-mix(in srgb, var(--tm-primary-color) 14%, var(--tm-bg-color) 86%);
+            color: var(--tm-primary-color);
+            box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tm-primary-color) 45%, transparent 55%);
+        }
+
+        .tm-repeat-summary {
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: var(--tm-card-bg);
+            border: 1px solid var(--tm-border-color);
+            font-size: 14px;
+            line-height: 1.55;
+            color: var(--tm-secondary-text);
+        }
+
+        .tm-repeat-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 6px;
+        }
+
+        .tm-repeat-action {
+            min-height: 48px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .tm-repeat-action--primary {
+            border: none;
+            background: var(--tm-primary-color);
+            color: #fff;
+        }
+
+        .tm-repeat-action--ghost {
+            border: 1px solid var(--tm-border-color);
+            background: transparent;
+            color: var(--tm-text-color);
+        }
+
+        .tm-repeat-muted {
+            font-size: 12px;
+            color: var(--tm-secondary-text);
+            line-height: 1.5;
+        }
+
+        @media (max-width: 640px) {
+            .tm-repeat-card {
+                width: min(96vw, 520px);
+                border-radius: 22px;
+                padding: 18px;
+            }
+
+            .tm-repeat-inline {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* 设置弹窗样式 */
@@ -10983,6 +11380,12 @@
             if (!dbHasCompletionTime && allowVisibleDateFallback && 'completionTime' in v && isValidValue(v.completionTime)) task.completionTime = v.completionTime;
             if (!dbHasCustomTime && allowVisibleDateFallback && 'customTime' in v && isValidValue(v.customTime)) task.customTime = v.customTime;
             if (!dbHasCustomStatus && 'customStatus' in v && isValidValue(v.customStatus)) task.customStatus = v.customStatus;
+            if (Object.prototype.hasOwnProperty.call(v, 'repeatRule')) task.repeatRule = __tmNormalizeTaskRepeatRule(v.repeatRule, {
+                startDate: task?.startDate,
+                completionTime: task?.completionTime,
+            });
+            if (Object.prototype.hasOwnProperty.call(v, 'repeatState')) task.repeatState = __tmNormalizeTaskRepeatState(v.repeatState);
+            if (Object.prototype.hasOwnProperty.call(v, 'repeatHistory')) task.repeatHistory = __tmNormalizeTaskRepeatHistory(v.repeatHistory);
             if (v.customFieldValues && typeof v.customFieldValues === 'object' && !Array.isArray(v.customFieldValues)) {
                 const current = (task.customFieldValues && typeof task.customFieldValues === 'object' && !Array.isArray(task.customFieldValues))
                     ? task.customFieldValues
@@ -11004,6 +11407,12 @@
             if (task.completionTime) candidate.completionTime = task.completionTime;
             if (task.customTime) candidate.customTime = task.customTime;
             if (task.customStatus) candidate.customStatus = task.customStatus;
+            if (task.repeatRule && typeof task.repeatRule === 'object') candidate.repeatRule = __tmNormalizeTaskRepeatRule(task.repeatRule, {
+                startDate: task?.startDate,
+                completionTime: task?.completionTime,
+            });
+            if (task.repeatState && typeof task.repeatState === 'object') candidate.repeatState = __tmNormalizeTaskRepeatState(task.repeatState);
+            if (Array.isArray(task.repeatHistory) && task.repeatHistory.length) candidate.repeatHistory = __tmNormalizeTaskRepeatHistory(task.repeatHistory);
             if (task.customFieldValues && typeof task.customFieldValues === 'object' && Object.keys(task.customFieldValues).length > 0) {
                 candidate.customFieldValues = { ...task.customFieldValues };
             }
@@ -11216,6 +11625,7 @@
             semanticDateAutoPromptEnabled: true,
             defaultDocId: '',
             defaultDocIdByGroup: {},
+            allDocsExcludedDocIds: [],
             // 默认状态选项
             customStatusOptions: [
                 { id: 'todo', name: '待办', color: '#757575' },
@@ -11613,6 +12023,7 @@
                                 if (typeof cloudData.checklistDetailWidth === 'number') this.data.checklistDetailWidth = cloudData.checklistDetailWidth;
                                 if (typeof cloudData.defaultDocId === 'string') this.data.defaultDocId = cloudData.defaultDocId;
                                 if (cloudData.defaultDocIdByGroup && typeof cloudData.defaultDocIdByGroup === 'object') this.data.defaultDocIdByGroup = cloudData.defaultDocIdByGroup;
+                                if (Array.isArray(cloudData.allDocsExcludedDocIds)) this.data.allDocsExcludedDocIds = cloudData.allDocsExcludedDocIds;
                                 if (cloudData.priorityScoreConfig && typeof cloudData.priorityScoreConfig === 'object') this.data.priorityScoreConfig = cloudData.priorityScoreConfig;
                                 if (cloudData.quadrantConfig && typeof cloudData.quadrantConfig === 'object') this.data.quadrantConfig = cloudData.quadrantConfig;
                                 if (Array.isArray(cloudData.docGroups)) this.data.docGroups = cloudData.docGroups;
@@ -11963,6 +12374,7 @@
             this.data.calendarSidebarCollapseTasks = Storage.get('tm_calendar_sidebar_collapse_tasks', this.data.calendarSidebarCollapseTasks);
             this.data.defaultDocId = Storage.get('tm_default_doc_id', '');
             this.data.defaultDocIdByGroup = Storage.get('tm_default_doc_id_by_group', {}) || {};
+            this.data.allDocsExcludedDocIds = Storage.get('tm_all_docs_excluded_doc_ids', this.data.allDocsExcludedDocIds) || [];
             this.data.priorityScoreConfig = Storage.get('tm_priority_score_config', this.data.priorityScoreConfig) || this.data.priorityScoreConfig;
             this.data.quadrantConfig = Storage.get('tm_quadrant_config', this.data.quadrantConfig);
             this.data.docGroups = Storage.get('tm_doc_groups', []);
@@ -12286,6 +12698,7 @@
             Storage.set('tm_calendar_sidebar_collapse_tasks', !!this.data.calendarSidebarCollapseTasks);
             Storage.set('tm_default_doc_id', this.data.defaultDocId);
             Storage.set('tm_default_doc_id_by_group', this.data.defaultDocIdByGroup || {});
+            Storage.set('tm_all_docs_excluded_doc_ids', __tmNormalizeDocGroupExcludedDocIds(this.data.allDocsExcludedDocIds));
             Storage.set('tm_priority_score_config', this.data.priorityScoreConfig || {});
             Storage.set('tm_quadrant_config', this.data.quadrantConfig);
             Storage.set('tm_doc_groups', this.data.docGroups);
@@ -12419,6 +12832,7 @@
                 seedFallback: this.data.docColorSeed
             });
             this.data.docColorSeed = Number(this.data.docDefaultColorScheme.seed) || 1;
+            this.data.allDocsExcludedDocIds = __tmNormalizeDocGroupExcludedDocIds(this.data.allDocsExcludedDocIds);
             const rawDocGroups = Array.isArray(this.data.docGroups) ? this.data.docGroups : [];
             this.data.docGroups = rawDocGroups.map((group) => __tmNormalizeDocGroupConfig(group, this.data.docDefaultColorScheme)).filter(Boolean);
             const pinMap0 = this.data.docPinnedByGroup;
@@ -16386,6 +16800,10 @@
         }
     };
 
+    const __TM_TASK_REPEAT_RULE_ATTR = 'custom-task-repeat-rule';
+    const __TM_TASK_REPEAT_STATE_ATTR = 'custom-task-repeat-state';
+    const __TM_TASK_REPEAT_HISTORY_ATTR = 'custom-task-repeat-history';
+
     const __tmMetaAttrMap = {
         priority: 'custom-priority',
         duration: 'custom-duration',
@@ -16395,7 +16813,10 @@
         milestone: 'custom-milestone-event',
         customTime: 'custom-time',
         customStatus: 'custom-status',
-        pinned: 'custom-pinned'
+        pinned: 'custom-pinned',
+        repeatRule: __TM_TASK_REPEAT_RULE_ATTR,
+        repeatState: __TM_TASK_REPEAT_STATE_ATTR,
+        repeatHistory: __TM_TASK_REPEAT_HISTORY_ATTR,
     };
 
     function __tmNormalizeCheckboxStatusBindingValue(value) {
@@ -16553,6 +16974,19 @@
         Object.entries(patch || {}).forEach(([key, val]) => {
             const attrKey = __tmMetaAttrMap[key];
             if (attrKey) {
+                if (key === 'repeatRule') {
+                    const normalized = __tmNormalizeTaskRepeatRule(val);
+                    attrs[attrKey] = normalized.enabled ? JSON.stringify(normalized) : '';
+                    return;
+                }
+                if (key === 'repeatState') {
+                    attrs[attrKey] = JSON.stringify(__tmNormalizeTaskRepeatState(val));
+                    return;
+                }
+                if (key === 'repeatHistory') {
+                    attrs[attrKey] = JSON.stringify(__tmNormalizeTaskRepeatHistory(val));
+                    return;
+                }
                 attrs[attrKey] = String(val ?? '');
                 return;
             }
@@ -16837,6 +17271,9 @@
         if (key === 'pinned') return !!(value === true || value === '1' || value === 1);
         if (key === 'milestone') return (value === true || value === '1' || value === 1) ? '1' : '';
         if (key === 'remark') return __tmNormalizeRemarkMarkdown(value);
+        if (key === 'repeatRule') return __tmNormalizeTaskRepeatRule(value);
+        if (key === 'repeatState') return __tmNormalizeTaskRepeatState(value);
+        if (key === 'repeatHistory') return __tmNormalizeTaskRepeatHistory(value);
         if (key === 'customFieldValues') {
             const input = (value && typeof value === 'object' && !Array.isArray(value)) ? value : {};
             const out = {};
@@ -17037,6 +17474,21 @@
                         target.customTime = String(value ?? '').trim();
                         target.custom_time = target.customTime;
                         break;
+                    case 'repeatRule':
+                        target.repeatRule = __tmNormalizeTaskRepeatRule(value, {
+                            startDate: target?.startDate,
+                            completionTime: target?.completionTime,
+                        });
+                        target.repeat_rule = target.repeatRule;
+                        break;
+                    case 'repeatState':
+                        target.repeatState = __tmNormalizeTaskRepeatState(value);
+                        target.repeat_state = target.repeatState;
+                        break;
+                    case 'repeatHistory':
+                        target.repeatHistory = __tmNormalizeTaskRepeatHistory(value);
+                        target.repeat_history = target.repeatHistory;
+                        break;
                     case 'duration':
                         target.duration = String(value ?? '').trim();
                         target.custom_duration = target.duration;
@@ -17136,6 +17588,21 @@
                         target.customTime = String(value ?? '').trim();
                         target.custom_time = target.customTime;
                         break;
+                    case 'repeatRule':
+                        target.repeatRule = __tmNormalizeTaskRepeatRule(value, {
+                            startDate: target?.startDate,
+                            completionTime: target?.completionTime,
+                        });
+                        target.repeat_rule = target.repeatRule;
+                        break;
+                    case 'repeatState':
+                        target.repeatState = __tmNormalizeTaskRepeatState(value);
+                        target.repeat_state = target.repeatState;
+                        break;
+                    case 'repeatHistory':
+                        target.repeatHistory = __tmNormalizeTaskRepeatHistory(value);
+                        target.repeat_history = target.repeatHistory;
+                        break;
                     case 'duration':
                         target.duration = String(value ?? '').trim();
                         target.custom_duration = target.duration;
@@ -17209,6 +17676,7 @@
                 statusPatch: op?.data?.statusPatch,
                 suppressHint: op?.data?.suppressHint === true,
                 source: op?.data?.source,
+                scheduleId: op?.data?.scheduleId,
             });
         }
         if (type === 'moveTask') {
@@ -19333,6 +19801,8 @@
         if (key === 'custom-completion-time') return '完成时间';
         if (key === 'custom-duration') return '时长';
         if (key === 'custom-remark') return '备注';
+        if (key === __TM_TASK_REPEAT_RULE_ATTR) return '循环规则';
+        if (key === __TM_TASK_REPEAT_STATE_ATTR) return '循环状态';
         const field = __tmGetCustomFieldDefByAttrStorageKey(key);
         const fieldName = String(field?.name || '').trim();
         return fieldName || '任务字段';
@@ -19341,7 +19811,7 @@
     function __tmExtractUndoEligibleMetaPatch(patch) {
         const input = (patch && typeof patch === 'object') ? patch : {};
         const out = {};
-        ['customStatus', 'startDate', 'completionTime', 'duration', 'remark'].forEach((key) => {
+        ['customStatus', 'startDate', 'completionTime', 'duration', 'remark', 'repeatRule', 'repeatState'].forEach((key) => {
             if (Object.prototype.hasOwnProperty.call(input, key)) out[key] = input[key];
         });
         return out;
@@ -19357,6 +19827,8 @@
             if (key === 'completionTime') return '完成时间';
             if (key === 'duration') return '时长';
             if (key === 'remark') return '备注';
+            if (key === 'repeatRule') return '循环规则';
+            if (key === 'repeatState') return '循环状态';
         }
         if (keys.length === 2 && keys.includes('startDate') && keys.includes('completionTime')) return '日期';
         return String(fallback || '任务字段').trim() || '任务字段';
@@ -19373,6 +19845,8 @@
         if (key === 'custom-completion-time') return { patch: { completionTime: trimmedValue }, attrValue: trimmedValue };
         if (key === 'custom-duration') return { patch: { duration: trimmedValue }, attrValue: trimmedValue };
         if (key === 'custom-remark') return { patch: { remark: rawValue }, attrValue: rawValue };
+        if (key === __TM_TASK_REPEAT_RULE_ATTR) return { patch: { repeatRule: __tmNormalizeTaskRepeatRule(rawValue) }, attrValue: rawValue };
+        if (key === __TM_TASK_REPEAT_STATE_ATTR) return { patch: { repeatState: __tmNormalizeTaskRepeatState(rawValue) }, attrValue: rawValue };
         if (key === 'custom-pinned') {
             const pin = trimmedValue === '1' || trimmedValue.toLowerCase() === 'true';
             return { patch: { pinned: pin ? '1' : '' }, attrValue: pin ? '1' : '' };
@@ -19464,6 +19938,7 @@
     function __tmRefreshViewsAfterTaskMutation(options = {}) {
         const opts = (options && typeof options === 'object') ? options : {};
         if (opts.refresh === false) return;
+        const calendarOnly = opts.calendarOnly === true;
         let refreshed = false;
         if (opts.refreshCalendar !== false) {
             try {
@@ -19473,13 +19948,15 @@
                 }
             } catch (e) {}
         }
-        try {
-            __tmRefreshMainViewInPlace({ withFilters: opts.withFilters !== false });
-            refreshed = true;
-        } catch (e) {}
-        if (!refreshed) {
-            try { __tmScheduleRender({ withFilters: opts.withFilters !== false }); } catch (e) {
-                try { render(); } catch (e2) {}
+        if (!calendarOnly) {
+            try {
+                __tmRefreshMainViewInPlace({ withFilters: opts.withFilters !== false });
+                refreshed = true;
+            } catch (e) {}
+            if (!refreshed) {
+                try { __tmScheduleRender({ withFilters: opts.withFilters !== false }); } catch (e) {
+                    try { render(); } catch (e2) {}
+                }
             }
         }
     }
@@ -21560,17 +22037,17 @@ async function __tmRefreshAfterWake(reason) {
 
     const __tmGetPluginManifestCompatInfo = () => {
         try {
-            const manifest = globalThis.__taskHorizonPluginInstance?.manifest;
+            const manifest = globalThis.__taskHorizonPluginManifest || globalThis.__taskHorizonPluginInstance?.manifest;
             if (manifest && typeof manifest === 'object') {
                 return {
-                    version: String(manifest.version || '').trim() || '2.2.0',
+                    version: String(manifest.version || '').trim() || '—',
                     frontends: Array.isArray(manifest.frontends) ? manifest.frontends : ['all'],
                     backends: Array.isArray(manifest.backends) ? manifest.backends : ['all'],
                 };
             }
         } catch (e) {}
         return {
-            version: '2.2.0',
+            version: '—',
             frontends: ['all'],
             backends: ['all'],
         };
@@ -24786,10 +25263,10 @@ async function __tmRefreshAfterWake(reason) {
                                 <span class="${leadingClass}">
                                     ${leadingRing}
                                 ${__tmRenderTaskCheckbox(task.id, task, { checked: task.done, extraClass: isGloballyLocked ? 'tm-operating' : '' })}
-                                    ${toggle}
+                            ${toggle}
                                 </span>
                             <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}">
-                                <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, task.content || '')}</span>
+                                <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, task.content || '')}${__tmRenderRecurringTaskInlineIcon(task)}${__tmRenderRecurringInstanceBadge(task, { className: 'tm-recurring-instance-badge--inline' })}</span>
                             </span>
                         </div>
                     </td>
@@ -25016,8 +25493,9 @@ async function __tmRefreshAfterWake(reason) {
         const body = modal.querySelector('.tm-body.tm-body--checklist');
         const pane = modal.querySelector('.tm-checklist-scroll');
         if (!(body instanceof HTMLElement) || !(pane instanceof HTMLElement)) return false;
-        const sheetMode = __tmChecklistUseSheetMode(modal);
-        const detailPanel = modal.querySelector(sheetMode ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+        const panelState = __tmResolveChecklistDetailPanel(modal, { preferSheetMode: __tmChecklistUseSheetMode(modal) });
+        const sheetMode = !!panelState.sheetMode;
+        const detailPanel = panelState.panel;
         const paneTop = Number(pane.scrollTop || 0);
         const paneLeft = Number(pane.scrollLeft || 0);
         const detailTop = Number(detailPanel?.scrollTop || 0);
@@ -25042,7 +25520,7 @@ async function __tmRefreshAfterWake(reason) {
                 }
             } catch (e) {}
             try {
-                const nextPanel = modal.querySelector(sheetMode ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+                const nextPanel = __tmResolveChecklistDetailPanel(modal, { preferSheetMode: sheetMode }).panel;
                 if (nextPanel instanceof HTMLElement) {
                     nextPanel.scrollTop = detailTop;
                     nextPanel.scrollLeft = detailLeft;
@@ -26263,6 +26741,16 @@ async function __tmRefreshAfterWake(reason) {
         return __tmNormalizeDocGroupExcludedDocIds(group?.excludedDocIds);
     }
 
+    function __tmGetAllDocsExcludedDocIds() {
+        return __tmNormalizeDocGroupExcludedDocIds(SettingsStore?.data?.allDocsExcludedDocIds);
+    }
+
+    function __tmGetExcludedDocIdsForGroup(groupId) {
+        const gid = String(groupId || 'all').trim() || 'all';
+        if (gid === 'all') return __tmGetAllDocsExcludedDocIds();
+        return __tmGetGroupExcludedDocIds(__tmGetDocGroupById(gid));
+    }
+
     function __tmExtractCalendarDateFromText(text, options = {}) {
         const source = String(text || '').trim();
         if (!source) return null;
@@ -27277,6 +27765,160 @@ async function __tmRefreshAfterWake(reason) {
             modal.onclick = (e) => {
                 if (e.target === modal) cancelBtn.click();
             };
+        });
+    }
+
+    function showTaskRepeatRuleDialog(taskLike, options = {}) {
+        return new Promise((resolve) => {
+            document.querySelector('.tm-repeat-modal')?.remove?.();
+            const opts = (options && typeof options === 'object') ? options : {};
+            const task = (taskLike && typeof taskLike === 'object') ? taskLike : {};
+            const currentRule = __tmNormalizeTaskRepeatRule(task?.repeatRule || task?.repeat_rule || '', {
+                startDate: task?.startDate,
+                completionTime: task?.completionTime,
+            });
+            const anchorDate = __tmNormalizeDateOnly(task?.completionTime || task?.startDate || currentRule.anchorDate || new Date());
+            const modal = document.createElement('div');
+            modal.className = 'tm-repeat-modal';
+            modal.innerHTML = `
+                <div class="tm-repeat-card">
+                    <div class="tm-repeat-title">${esc(String(opts.title || '循环设置').trim() || '循环设置')}</div>
+                    <div class="tm-repeat-stack">
+                        <div class="tm-repeat-field">
+                            <div class="tm-repeat-label">触发方式</div>
+                            <select class="tm-repeat-select" data-tm-repeat-field="triggerType">
+                                <option value="none"${(!currentRule.enabled || currentRule.type === 'none') ? ' selected' : ''}>不循环</option>
+                                <option value="due"${(currentRule.enabled && currentRule.trigger === 'due') ? ' selected' : ''}>到期重复</option>
+                                <option value="complete"${(currentRule.enabled && currentRule.trigger === 'complete') ? ' selected' : ''}>完成重复</option>
+                            </select>
+                        </div>
+                        <div class="tm-repeat-field">
+                            <div class="tm-repeat-label">循环频率</div>
+                            <div class="tm-repeat-inline">
+                                <div class="tm-repeat-inline-prefix">每</div>
+                                <input class="tm-repeat-input" data-tm-repeat-field="every" type="number" min="1" max="3650" step="1" value="${esc(String(currentRule.every || 1))}">
+                                <select class="tm-repeat-select" data-tm-repeat-field="type">
+                                    <option value="daily"${currentRule.type === 'daily' ? ' selected' : ''}>天</option>
+                                    <option value="workday"${currentRule.type === 'workday' ? ' selected' : ''}>工作日</option>
+                                    <option value="weekly"${currentRule.type === 'weekly' ? ' selected' : ''}>周</option>
+                                    <option value="monthly"${currentRule.type === 'monthly' ? ' selected' : ''}>月</option>
+                                    <option value="yearly"${currentRule.type === 'yearly' ? ' selected' : ''}>年</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="tm-repeat-field" data-tm-repeat-monthly-wrap style="display:${currentRule.type === 'monthly' ? 'flex' : 'none'};flex-direction:column;gap:8px;">
+                            <div class="tm-repeat-label">每月规则</div>
+                            <div class="tm-repeat-segments">
+                                <button type="button" class="tm-repeat-segment ${currentRule.monthlyMode !== 'weekday' ? 'is-active' : ''}" data-tm-repeat-monthly="date">${esc(__tmGetTaskRepeatMonthlyModeCaption('date', anchorDate))}</button>
+                                <button type="button" class="tm-repeat-segment ${currentRule.monthlyMode === 'weekday' ? 'is-active' : ''}" data-tm-repeat-monthly="weekday">${esc(__tmGetTaskRepeatMonthlyModeCaption('weekday', anchorDate))}</button>
+                            </div>
+                        </div>
+                        <div class="tm-repeat-field">
+                            <div class="tm-repeat-label">循环截止</div>
+                            <input class="tm-repeat-input" data-tm-repeat-field="until" type="date" value="${esc(String(currentRule.until || '').trim())}">
+                            <div class="tm-repeat-muted">基准日期：${esc(anchorDate || '未设置')}</div>
+                        </div>
+                        <div class="tm-repeat-summary" data-tm-repeat-summary></div>
+                        <div class="tm-repeat-actions">
+                            <button type="button" class="tm-repeat-action tm-repeat-action--primary" data-tm-repeat-action="confirm">确定</button>
+                            <button type="button" class="tm-repeat-action tm-repeat-action--ghost" data-tm-repeat-action="cancel">取消</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            const card = modal.querySelector('.tm-repeat-card');
+            __tmApplyPopupOpenAnimation(modal, card);
+            const triggerTypeEl = modal.querySelector('[data-tm-repeat-field="triggerType"]');
+            const everyEl = modal.querySelector('[data-tm-repeat-field="every"]');
+            const typeEl = modal.querySelector('[data-tm-repeat-field="type"]');
+            const untilEl = modal.querySelector('[data-tm-repeat-field="until"]');
+            const monthlyWrap = modal.querySelector('[data-tm-repeat-monthly-wrap]');
+            const summaryEl = modal.querySelector('[data-tm-repeat-summary]');
+            const confirmBtn = modal.querySelector('[data-tm-repeat-action="confirm"]');
+            const cancelBtn = modal.querySelector('[data-tm-repeat-action="cancel"]');
+            const monthlyButtons = Array.from(modal.querySelectorAll('[data-tm-repeat-monthly]')).filter((el) => el instanceof HTMLButtonElement);
+            let monthlyMode = currentRule.monthlyMode || 'date';
+            let settled = false;
+
+            const removeFromStack = __tmModalStackBind(() => cancelBtn?.click?.());
+            const finish = (value) => {
+                if (settled) return;
+                settled = true;
+                removeFromStack();
+                try { modal.remove(); } catch (e) {}
+                resolve(value);
+            };
+            const readDraft = () => {
+                const triggerType = String(triggerTypeEl?.value || 'none').trim();
+                const type = __tmNormalizeTaskRepeatType(typeEl?.value || currentRule.type || 'daily');
+                const every = __tmNormalizeTaskRepeatEvery(everyEl?.value || currentRule.every || 1, type);
+                const until = __tmNormalizeTaskRepeatUntil(untilEl?.value || '');
+                if (triggerType === 'none') {
+                    return __tmNormalizeTaskRepeatRule({ enabled: false, type: 'none' }, {
+                        anchorDate,
+                        startDate: task?.startDate,
+                        completionTime: task?.completionTime,
+                    });
+                }
+                return __tmNormalizeTaskRepeatRule({
+                    enabled: true,
+                    trigger: triggerType,
+                    type,
+                    every,
+                    monthlyMode,
+                    until,
+                    anchorDate,
+                }, {
+                    anchorDate,
+                    startDate: task?.startDate,
+                    completionTime: task?.completionTime,
+                });
+            };
+            const syncMonthlyButtons = () => {
+                monthlyButtons.forEach((btn) => {
+                    const value = String(btn.getAttribute('data-tm-repeat-monthly') || '').trim();
+                    btn.classList.toggle('is-active', value === monthlyMode);
+                });
+            };
+            const syncUi = () => {
+                const triggerType = String(triggerTypeEl?.value || 'none').trim();
+                const type = __tmNormalizeTaskRepeatType(typeEl?.value || currentRule.type || 'daily');
+                const disabled = triggerType === 'none';
+                if (everyEl instanceof HTMLInputElement) everyEl.disabled = disabled;
+                if (typeEl instanceof HTMLSelectElement) typeEl.disabled = disabled;
+                if (untilEl instanceof HTMLInputElement) untilEl.disabled = disabled;
+                if (monthlyWrap instanceof HTMLElement) monthlyWrap.style.display = (!disabled && type === 'monthly') ? 'flex' : 'none';
+                syncMonthlyButtons();
+                const draft = readDraft();
+                if (summaryEl instanceof HTMLElement) {
+                    summaryEl.textContent = draft.enabled
+                        ? `${__tmGetTaskRepeatSummary(draft, { startDate: task?.startDate, completionTime: task?.completionTime })}。`
+                        : '当前任务不会自动循环。';
+                }
+            };
+
+            monthlyButtons.forEach((btn) => {
+                btn.onclick = () => {
+                    monthlyMode = String(btn.getAttribute('data-tm-repeat-monthly') || '').trim() === 'weekday' ? 'weekday' : 'date';
+                    syncUi();
+                };
+            });
+            triggerTypeEl?.addEventListener('change', syncUi);
+            typeEl?.addEventListener('change', syncUi);
+            everyEl?.addEventListener('input', syncUi);
+            untilEl?.addEventListener('change', syncUi);
+            confirmBtn?.addEventListener('click', () => finish(readDraft()));
+            cancelBtn?.addEventListener('click', () => finish(null));
+            modal.addEventListener('click', (ev) => {
+                if (ev.target === modal) finish(null);
+            });
+            try {
+                everyEl?.focus?.({ preventScroll: true });
+            } catch (e) {
+                try { everyEl?.focus?.(); } catch (e2) {}
+            }
+            syncUi();
         });
     }
 
@@ -31803,7 +32445,8 @@ async function __tmRefreshAfterWake(reason) {
         const existing = __tmNormalizeHexColor(map[id], '');
         const pinGroupId = String(SettingsStore.data.currentGroupId || 'all').trim() || 'all';
         const pinnedInGroup = __tmIsDocPinnedInGroup(id, pinGroupId);
-        const excludedInGroup = pinGroupId !== 'all' && __tmIsDocExcludedInGroup(id, pinGroupId);
+        const excludedInGroup = __tmIsDocExcludedInGroup(id, pinGroupId);
+        const excludeRestoreTargetLabel = pinGroupId === 'all' ? '全部文档设置' : '文档分组设置';
         const docCustomProfile = __tmGetStoredDocViewProfile(id);
         const groupCustomProfile = __tmGetStoredGroupViewProfile(pinGroupId);
         const defaultProfile = __tmGetViewProfilesStore().global;
@@ -31869,17 +32512,15 @@ async function __tmRefreshAfterWake(reason) {
                 await __tmSetDocPinnedForGroup(id, !pinnedInGroup, pinGroupId);
                 await loadSelectedDocuments();
             }));
-            if (pinGroupId !== 'all') {
-                menu.appendChild(item(__tmRenderContextMenuLabel('eye-off', '排除当前文档'), async () => {
-                    if (excludedInGroup) {
-                        hint('ℹ 当前文档已在排除列表中，恢复显示请到文档分组设置中移出排除列表', 'info');
-                        return;
-                    }
-                    const result = await __tmSetDocExcludedForGroup(id, true, pinGroupId);
-                    if (!result?.changed) return;
-                    hint('✅ 已排除当前文档。恢复显示请到文档分组设置中移出排除列表', 'success');
-                }));
-            }
+            menu.appendChild(item(__tmRenderContextMenuLabel('eye-off', '排除当前文档'), async () => {
+                if (excludedInGroup) {
+                    hint(`ℹ 当前文档已在排除列表中，恢复显示请到${excludeRestoreTargetLabel}中移出排除列表`, 'info');
+                    return;
+                }
+                const result = await __tmSetDocExcludedForGroup(id, true, pinGroupId);
+                if (!result?.changed) return;
+                hint(`✅ 已排除当前文档。恢复显示请到${excludeRestoreTargetLabel}中移出排除列表`, 'success');
+            }));
         }
 
         if (isOtherBlocksTab) {
@@ -33415,7 +34056,8 @@ async function __tmRefreshAfterWake(reason) {
         state.detailTaskId = id;
         state.checklistDetailDismissed = false;
         if (__tmChecklistUseSheetMode(state.modal)) state.checklistDetailSheetOpen = true;
-        if (!__tmRefreshChecklistSelectionInPlace(state.modal)) render();
+        const refreshed = __tmRefreshChecklistSelectionInPlace(state.modal);
+        if (!refreshed) render();
     };
 
     function __tmIsTouchLikeChecklistPointer(ev) {
@@ -33796,8 +34438,10 @@ async function __tmRefreshAfterWake(reason) {
                 window.tmJumpToTask(id, ev);
                 return;
             }
+            window.tmChecklistSelectTask(id, ev);
+            return;
         }
-        window.tmChecklistSelectTask(id, ev);
+        window.tmJumpToTask(id, ev);
     };
 
     window.tmWhiteboardStreamTaskTitleClick = function(taskId, ev) {
@@ -34009,6 +34653,8 @@ async function __tmRefreshAfterWake(reason) {
     const __tmPhosphorBoldPaths = {
         'alarm-clock': 'M128,36A100,100,0,1,0,228,136,100.11,100.11,0,0,0,128,36Zm0,176a76,76,0,1,1,76-76A76.08,76.08,0,0,1,128,212ZM32.49,72.49a12,12,0,1,1-17-17l32-32a12,12,0,1,1,17,17Zm208,0a12,12,0,0,1-17,0l-32-32a12,12,0,1,1,17-17l32,32A12,12,0,0,1,240.49,72.49ZM176,124a12,12,0,0,1,0,24H128a12,12,0,0,1-12-12V88a12,12,0,0,1,24,0v36Z',
         'arrow-clockwise': 'M244,56v48a12,12,0,0,1-12,12H184a12,12,0,1,1,0-24H201.1l-19-17.38c-.13-.12-.26-.24-.38-.37A76,76,0,1,0,127,204h1a75.53,75.53,0,0,0,52.15-20.72,12,12,0,0,1,16.49,17.45A99.45,99.45,0,0,1,128,228h-1.37A100,100,0,1,1,198.51,57.06L220,76.72V56a12,12,0,0,1,24,0Z',
+        repeat: 'M20,128A76.08,76.08,0,0,1,96,52h99l-3.52-3.51a12,12,0,1,1,17-17l24,24a12,12,0,0,1,0,17l-24,24a12,12,0,0,1-17-17L195,76H96a52.06,52.06,0,0,0-52,52,12,12,0,0,1-24,0Zm204-12a12,12,0,0,0-12,12,52.06,52.06,0,0,1-52,52H61l3.52-3.51a12,12,0,1,0-17-17l-24,24a12,12,0,0,0,0,17l24,24a12,12,0,1,0,17-17L61,204h99a76.08,76.08,0,0,0,76-76A12,12,0,0,0,224,116Z',
+        'arrows-clockwise': 'M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h28.69L182.06,73.37a79.56,79.56,0,0,0-56.13-23.43h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27a96,96,0,0,1,135,.79L208,76.69V48a8,8,0,0,1,16,0ZM186.41,183.29a80,80,0,0,1-112.47-.66L59.31,168H88a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8v48a8,8,0,0,0,16,0V179.31l14.63,14.63A95.43,95.43,0,0,0,130,222.06h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z',
         'bot': 'M72,104a16,16,0,1,1,16,16A16,16,0,0,1,72,104Zm96,16a16,16,0,1,0-16-16A16,16,0,0,0,168,120Zm68-40V192a36,36,0,0,1-36,36H56a36,36,0,0,1-36-36V80A36,36,0,0,1,56,44h60V16a12,12,0,0,1,24,0V44h60A36,36,0,0,1,236,80Zm-24,0a12,12,0,0,0-12-12H56A12,12,0,0,0,44,80V192a12,12,0,0,0,12,12H200a12,12,0,0,0,12-12Zm-12,82a30,30,0,0,1-30,30H86a30,30,0,0,1,0-60h84A30,30,0,0,1,200,162Zm-80-6v12h16V156ZM86,168H96V156H86a6,6,0,0,0,0,12Zm90-6a6,6,0,0,0-6-6H160v12h10A6,6,0,0,0,176,162Z',
         'calendar-check': 'M208,28H188V20a12,12,0,0,0-24,0v8H92V20a12,12,0,0,0-24,0v8H48A20.02229,20.02229,0,0,0,28,48V208a20.02229,20.02229,0,0,0,20,20H208a20.02229,20.02229,0,0,0,20-20V48A20.02229,20.02229,0,0,0,208,28Zm-4,24V76H52V52ZM52,204V100H204V204Zm120.72559-84.2373a12.00022,12.00022,0,0,1-.499,16.96386l-46.6665,44a11.99953,11.99953,0,0,1-16.48486-.02051l-25.3335-24a11.99964,11.99964,0,1,1,16.50586-17.42187l17.1001,16.19922,38.415-36.21973A11.99993,11.99993,0,0,1,172.72559,119.7627Z',
         'calendar-clock': 'M208,28H188V24a12,12,0,0,0-24,0v4H92V24a12,12,0,0,0-24,0v4H48A20,20,0,0,0,28,48V208a20,20,0,0,0,20,20H208a20,20,0,0,0,20-20V48A20,20,0,0,0,208,28ZM68,52a12,12,0,0,0,24,0h72a12,12,0,0,0,24,0h16V76H52V52ZM52,204V100H204V204Z',
@@ -34948,7 +35594,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main">
                             <div class="${titleRowClass}">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span ${titleDragAttrs} onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span ${titleDragAttrs} onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, String(task.content || '').trim() || '(无内容)')}${__tmRenderRecurringTaskInlineIcon(task)}${__tmRenderRecurringInstanceBadge(task, { className: 'tm-recurring-instance-badge--inline' })}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
                                 ${compactMeta}
                                 ${showCompactStatusTag ? `<span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>` : ''}
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}
@@ -35219,7 +35865,7 @@ async function __tmRefreshAfterWake(reason) {
                                     ${toggle}
                                 </span>
                                 <span class="tm-task-text ${task.done ? 'tm-task-done' : ''}" data-level="${row.depth}">
-                                    <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, task.content || '')}</span>
+                                    <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, task.content || '')}${__tmRenderRecurringTaskInlineIcon(task)}${__tmRenderRecurringInstanceBadge(task, { className: 'tm-recurring-instance-badge--inline' })}</span>
                                 </span>
                             </div>
                         </td>
@@ -35723,7 +36369,7 @@ async function __tmRefreshAfterWake(reason) {
                             <div class="tm-kanban-card-head">
                                 ${toggleHtml || ''}
                                     ${__tmRenderTaskCheckboxWrap(id, task, { checked: task?.done, extraClass: isGloballyLocked ? 'tm-operating' : '', collapsed: !!(isParent && totalChildren > 0 && __tmKanbanGetCollapsedSet().has(id)) })}
-                                <span class="tm-kanban-card-title-inline tm-task-content-clickable" onclick="tmJumpToTask('${id}', event)"${__tmBuildTooltipAttrs(String(content || '(无内容)').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, content || '(无内容)')}</span>
+                                <span class="tm-kanban-card-title-inline tm-task-content-clickable" onclick="tmJumpToTask('${id}', event)"${__tmBuildTooltipAttrs(String(content || '(无内容)').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, content || '(无内容)')}${__tmRenderRecurringTaskInlineIcon(task)}${__tmRenderRecurringInstanceBadge(task, { className: 'tm-recurring-instance-badge--inline' })}</span>
                             </div>
                             <button class="tm-kanban-more" onclick="tmOpenTaskDetail('${id}', event)" title="任务详情">${__tmRenderLucideIcon('dots-three')}</button>
                         </div>
@@ -36631,7 +37277,7 @@ async function __tmRefreshAfterWake(reason) {
                                 <div class="tm-whiteboard-stream-task">
                                     <div class="tm-whiteboard-stream-task-head${multiSelectCls}" data-task-id="${esc(tid)}" data-id="${esc(tid)}" draggable="true" ondragstart="tmDragTaskStart(event, '${escSq(tid)}')" ondragend="tmDragTaskEnd(event)" oncontextmenu="tmShowTaskContextMenu(event, '${escSq(tid)}')" onclick="tmWhiteboardStreamTaskHeadClick('${escSq(tid)}', event)">
                                         ${__tmRenderTaskCheckboxWrap(tid, task, { checked: task?.done, stopMouseDown: true, stopClick: true, title: '完成状态' })}
-                                        <span class="tm-whiteboard-stream-task-title ${task?.done ? 'tm-task-done' : ''}" onpointerdown="tmWhiteboardStreamTaskTitlePointerDown(event)" onmousedown="tmWhiteboardStreamTaskTitleMouseDown(event)" ontouchstart="tmWhiteboardStreamTaskTitleTouchStart(event)" onclick="tmWhiteboardStreamTaskTitleClick('${escSq(tid)}', event)"${__tmBuildTooltipAttrs(String(content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task?.markdown, content)}</span>
+                                        <span class="tm-whiteboard-stream-task-title ${task?.done ? 'tm-task-done' : ''}" onpointerdown="tmWhiteboardStreamTaskTitlePointerDown(event)" onmousedown="tmWhiteboardStreamTaskTitleMouseDown(event)" ontouchstart="tmWhiteboardStreamTaskTitleTouchStart(event)" onclick="tmWhiteboardStreamTaskTitleClick('${escSq(tid)}', event)"${__tmBuildTooltipAttrs(String(content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task?.markdown, content)}${__tmRenderRecurringTaskInlineIcon(task)}${__tmRenderRecurringInstanceBadge(task, { className: 'tm-recurring-instance-badge--inline' })}</span>
                                         ${toggleHtml}
                                     </div>
                                 </div>
@@ -36954,7 +37600,7 @@ async function __tmRefreshAfterWake(reason) {
                                 ${toggleHtml}
                                 ${__tmRenderTaskCheckboxWrap(tid, task, { checked: task?.done, disabled: isGhost, extraClass: GlobalLock.isLocked() ? 'tm-operating' : '', title: isGhost ? '快照任务，当前不可直接勾选' : '', stopMouseDown: true, stopClick: true, collapsed: !!(collapsed && children.length) })}
                                 <div class="tm-whiteboard-card-title ${task?.done ? 'tm-task-done' : ''}">
-                                    <span class="tm-task-content-clickable" onclick="tmJumpToTask('${escSq(tid)}', event)"${__tmBuildTooltipAttrs(String(task?.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task?.markdown, String(task?.content || '').trim() || '(无内容)')}</span>
+                                    <span class="tm-task-content-clickable" onclick="tmJumpToTask('${escSq(tid)}', event)"${__tmBuildTooltipAttrs(String(task?.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task?.markdown, String(task?.content || '').trim() || '(无内容)')}${__tmRenderRecurringTaskInlineIcon(task)}${__tmRenderRecurringInstanceBadge(task, { className: 'tm-recurring-instance-badge--inline' })}</span>
                                 </div>
                                 ${opBtn}
                             </div>
@@ -37251,7 +37897,7 @@ async function __tmRefreshAfterWake(reason) {
                                             <div class="tm-whiteboard-pool-item${doneCls}${parentCls}${topCls}${lockedCls}${selectedCls}" data-task-id="${esc(tid)}" draggable="${draggableAttr}"${mouseDownAttr}${dragStartAttr}${dragEndAttr} title="${itemTitle}">
                                                 ${toggleHtml}
                                                 ${__tmRenderTaskCheckboxWrap(tid, t, { checked: t?.done, stopMouseDown: true, title: '完成状态', collapsed: !!collapsed })}
-                                                <span class="tm-whiteboard-pool-item-title"><span class="tm-task-content-clickable" onclick="tmJumpToTask('${escSq(tid)}', event)"${__tmBuildTooltipAttrs(String(t?.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(t?.markdown, String(t?.content || '').trim() || '(无内容)')}</span></span>
+                                                <span class="tm-whiteboard-pool-item-title"><span class="tm-task-content-clickable" onclick="tmJumpToTask('${escSq(tid)}', event)"${__tmBuildTooltipAttrs(String(t?.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(t?.markdown, String(t?.content || '').trim() || '(无内容)')}${__tmRenderRecurringTaskInlineIcon(t)}${__tmRenderRecurringInstanceBadge(t, { className: 'tm-recurring-instance-badge--inline' })}</span></span>
                                             </div>
                                             ${kidsHtml}
                                         </div>
@@ -37371,6 +38017,7 @@ async function __tmRefreshAfterWake(reason) {
         const showWhiteboardMobileLayoutModeToggle = state.viewMode === 'whiteboard';
         const whiteboardMobileMenuLayoutMode = showWhiteboardAllTabsModeToggle ? whiteboardAllTabsLayoutMode : 'board';
         const showInlineDocGroupQuickSelect = isMobile || isDockHost;
+        const showAdaptiveTabDocGroupQuickSelect = !!(__tmMountEl && !isMobile && !isDockHost);
         const showMobileTimelineFloatingToolbar = !!(isMobile && !isDockHost && !isLandscape && state.viewMode === 'timeline');
         const showDockTimelineFloatingToolbar = !!(isDockHost && state.viewMode === 'timeline');
         const showTimelineFloatingToolbar = !!(showMobileTimelineFloatingToolbar || showDockTimelineFloatingToolbar);
@@ -37380,7 +38027,7 @@ async function __tmRefreshAfterWake(reason) {
         const topbarAddBtnHtml = `<button class="tm-btn tm-btn-info tm-topbar-add-btn bc-btn bc-btn--sm" onclick="tmAdd()" aria-label="新建任务" data-tm-floating-tooltip-label="新建任务" data-tm-tooltip-side="bottom" data-tm-tooltip-align="center" style="padding: 0; width: 30px; height: 30px; min-width: 30px; min-height: 30px; display: inline-flex; align-items: center; justify-content: center;">${__tmRenderLucideIcon('plus')}</button>`;
         const timelineSidebarToggleLabel = SettingsStore.data.timelineSidebarCollapsed ? '展开时间轴侧栏' : '隐藏时间轴侧栏';
         const timelineSidebarToggleButtonHtml = state.viewMode === 'timeline'
-            ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmTimelineToggleSidebar(event)" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs(timelineSidebarToggleLabel, { side: 'bottom' })}>${__tmRenderLucideIcon('panel-left')}</button>`
+            ? `<button class="tm-btn tm-btn-info tm-timeline-toolbar-btn bc-btn bc-btn--sm" onclick="tmTimelineToggleSidebar(event)" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs(timelineSidebarToggleLabel, { side: 'bottom' })}>${__tmRenderLucideIcon('panel-left')}</button>`
             : '';
         const __tmRenderTimelineToolbarButtons = ({ buttonClass = '', buttonStyle = '', interactionAttrs = '', clickPrefix = '' } = {}) => {
             const buttonClassName = ['tm-btn', 'tm-btn-info', 'tm-timeline-toolbar-btn', 'bc-btn', 'bc-btn--sm', String(buttonClass || '').trim()].filter(Boolean).join(' ');
@@ -37394,10 +38041,22 @@ async function __tmRefreshAfterWake(reason) {
                 <button class="${buttonClassName}" onclick="${clickStart}tmGanttToday()"${styleAttr}${extraAttrs}${__tmBuildTooltipAttrs('定位今天', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>
             `;
         };
+        const __tmRenderTimelineToolbarGroup = ({ includeSidebarToggle = false, buttonClass = '', buttonStyle = '', interactionAttrs = '', clickPrefix = '' } = {}) => {
+            const inner = `${includeSidebarToggle ? timelineSidebarToggleButtonHtml : ''}${__tmRenderTimelineToolbarButtons({ buttonClass, buttonStyle, interactionAttrs, clickPrefix })}`;
+            return inner ? `<div class="tm-timeline-toolbar-group">${inner}</div>` : '';
+        };
         const timelineInlineToolbarButtonsHtml = __tmRenderTimelineToolbarButtons({
             buttonStyle: 'padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;'
         });
         const timelineCompactToolbarButtonsHtml = __tmRenderTimelineToolbarButtons({
+            buttonStyle: 'padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;'
+        });
+        const timelineInlineToolbarGroupHtml = __tmRenderTimelineToolbarGroup({
+            includeSidebarToggle: true,
+            buttonStyle: 'padding: 0 8px; height: 30px; display: inline-flex; align-items: center; justify-content: center;'
+        });
+        const timelineCompactToolbarGroupHtml = __tmRenderTimelineToolbarGroup({
+            includeSidebarToggle: true,
             buttonStyle: 'padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;'
         });
         const timelineFloatingToolbarHtml = showTimelineFloatingToolbar
@@ -37491,16 +38150,16 @@ async function __tmRefreshAfterWake(reason) {
                                 >${__tmRenderTaskHorizonTopbarIcon(16)}</button>
                                 ${useCompactTopbarBrand ? '' : `<span class="tm-manager-title-label" onclick="tmHandleManagerTitleClick(event)">任务管理器</span>`}
                             </div>
-                            ${showInlineDocGroupQuickSelect ? __tmRenderTopbarSelect({
+                            ${showInlineDocGroupQuickSelect || showAdaptiveTabDocGroupQuickSelect ? __tmRenderTopbarSelect({
                                 id: 'tmTopbarDocQuickSelect',
                                 label: '文档',
                                 options: docGroupMenuOptions,
-                                className: 'tm-topbar-doc-quick-select',
+                                className: `tm-topbar-doc-quick-select${showAdaptiveTabDocGroupQuickSelect ? ' tm-topbar-doc-quick-select--tab-adaptive' : ''}`,
                                 tooltip: '切换文档分组'
                             }) : ''}
                             ${isMobile && state.viewMode === 'timeline' ? timelineSidebarToggleButtonHtml : ''}
                             ${isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCalendarToggleSidebar()" style="padding: 0 10px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('日历侧边栏', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>` : ''}
-                            ${showDesktopNarrowTimelineTopbar ? timelineInlineToolbarButtonsHtml : ''}
+                            ${showDesktopNarrowTimelineTopbar ? timelineInlineToolbarGroupHtml : ''}
                         </div>
 
                         <!-- 桌面端工具栏 -->
@@ -37532,7 +38191,7 @@ async function __tmRefreshAfterWake(reason) {
                                 <button class="tm-btn tm-btn-info tm-compact-topbar-action tm-compact-topbar-action--settings bc-btn bc-btn--sm" onclick="showSettings()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('设置', { side: 'bottom' })}>${__tmRenderLucideIcon('settings')}</button>
                             </div>
                             ` : ''}
-                            ${!isMobile && state.viewMode === 'timeline' ? timelineSidebarToggleButtonHtml : ''}
+                            ${!isMobile && state.viewMode === 'timeline' && !showDesktopNarrowTimelineTopbar && !showTopbarTimelineToolbar ? timelineSidebarToggleButtonHtml : ''}
                             ${!isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info tm-calendar-sidebar-toggle-compact bc-btn bc-btn--sm" onclick="tmCalendarToggleSidebar()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('日历侧边栏', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>` : ''}
 
                         <!-- 移动端菜单按钮 -->
@@ -37565,7 +38224,7 @@ async function __tmRefreshAfterWake(reason) {
                             </div>
                         ` : ''}
                         ${showTopbarTimelineToolbar ? `
-                            ${timelineCompactToolbarButtonsHtml}
+                            ${timelineCompactToolbarGroupHtml}
                         ` : ''}
                         ${!isMobile && state.viewMode === 'calendar' ? `<button class="tm-btn tm-btn-info bc-btn bc-btn--sm" onclick="tmCalendarToggleSidebar()" style="padding: 0; width: 30px; min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;"${__tmBuildTooltipAttrs('日历侧边栏', { side: 'bottom' })}>${__tmRenderLucideIcon('calendar-days')}</button>` : ''}
                         ${!showMobileBottomViewBar ? `
@@ -43786,7 +44445,14 @@ async function __tmRefreshAfterWake(reason) {
         state.__tmCalendarFloatingDragCleanup = null;
     }
 
+    function __tmShouldSuppressCalendarFloatingMiniPanel() {
+        const viewMode = String(state.viewMode || '').trim();
+        if (viewMode !== 'calendar') return false;
+        return __tmIsRuntimeMobileClient() || __tmHostUsesMobileUI();
+    }
+
     function __tmCalendarFloatingDragStart(taskId, meta, ev, opts = {}) {
+        if (__tmShouldSuppressCalendarFloatingMiniPanel()) return false;
         const id = String(taskId || '').trim();
         if (!id) return false;
         const calendar = globalThis.__tmCalendar;
@@ -43834,6 +44500,7 @@ async function __tmRefreshAfterWake(reason) {
     }
 
     function __tmCalendarFloatingDragMove(ev, opts = {}) {
+        if (__tmShouldSuppressCalendarFloatingMiniPanel()) return null;
         const calendar = globalThis.__tmCalendar;
         if (!calendar || typeof calendar.updateFloatingMiniCalendarDrag !== 'function') return null;
         const options = (opts && typeof opts === 'object') ? opts : {};
@@ -43921,6 +44588,17 @@ async function __tmRefreshAfterWake(reason) {
         const attrPatch = {};
         if (hasStartDate) attrPatch.startDate = nextStart;
         if (hasCompletionTime) attrPatch.completionTime = nextEnd;
+        const repeatRule = __tmNormalizeTaskRepeatRule(task?.repeatRule || task?.repeat_rule || '', {
+            startDate: nextStart || prevStart,
+            completionTime: nextEnd || prevEnd,
+        });
+        if (repeatRule.enabled) {
+            attrPatch.repeatState = __tmNormalizeTaskRepeatState({
+                ...(task?.repeatState && typeof task.repeatState === 'object' ? task.repeatState : {}),
+                lastInstanceStart: nextStart,
+                lastInstanceDue: nextEnd,
+            });
+        }
 
         await __tmApplyTaskMetaPatchWithUndo(persistId, attrPatch, {
             source: 'calendar-dates',
@@ -43935,6 +44613,387 @@ async function __tmRefreshAfterWake(reason) {
             startDate: nextStart,
             completionTime: nextEnd,
         };
+    };
+
+    function __tmGetTaskRepeatRule(taskLike, options = {}) {
+        const task = (taskLike && typeof taskLike === 'object') ? taskLike : {};
+        return __tmNormalizeTaskRepeatRule(task.repeatRule || task.repeat_rule || '', {
+            startDate: task?.startDate,
+            completionTime: task?.completionTime,
+            ...((options && typeof options === 'object') ? options : {}),
+        });
+    }
+
+    async function __tmResolveTaskForRepeat(taskId) {
+        const requestedId = String(taskId || '').trim();
+        if (!requestedId) return null;
+        let task = state.flatTasks?.[requestedId] || state.pendingInsertedTasks?.[requestedId] || null;
+        if (!task) {
+            try { task = await __tmEnsureTaskInStateById(requestedId); } catch (e) { task = null; }
+        }
+        if (!task) {
+            try { task = await __tmBuildTaskLikeFromBlockId(requestedId); } catch (e) { task = null; }
+        }
+        if (!task) return null;
+        try { MetaStore.applyToTask(task); } catch (e) {}
+        try { normalizeTaskFields(task, String(task.doc_name || task.docName || '').trim()); } catch (e) {}
+        return task;
+    }
+
+    async function __tmApplyTaskRepeatRule(taskId, ruleInput, options = {}) {
+        const task = await __tmResolveTaskForRepeat(taskId);
+        if (!task?.id) throw new Error('未找到任务');
+        const opts = (options && typeof options === 'object') ? options : {};
+        const nextRule = __tmNormalizeTaskRepeatRule(ruleInput, {
+            startDate: task?.startDate,
+            completionTime: task?.completionTime,
+        });
+        const nextState = __tmNormalizeTaskRepeatState({
+            ...(task?.repeatState && typeof task.repeatState === 'object' ? task.repeatState : {}),
+            lastInstanceStart: __tmNormalizeDateOnly(task?.startDate || ''),
+            lastInstanceDue: __tmNormalizeDateOnly(task?.completionTime || ''),
+        });
+        const patch = {
+            repeatRule: nextRule,
+            repeatState: nextState,
+        };
+        const result = await __tmApplyTaskMetaPatchWithUndo(task.id, patch, {
+            source: String(opts.source || 'task-repeat').trim() || 'task-repeat',
+            label: '循环规则',
+            refresh: opts.refresh !== false,
+            refreshCalendar: opts.refreshCalendar !== false,
+            withFilters: opts.withFilters !== false,
+            hard: opts.hard === true,
+            recordUndo: opts.recordUndo !== false,
+        });
+        return {
+            ...result,
+            rule: nextRule,
+            state: nextState,
+            summary: __tmGetTaskRepeatSummary(nextRule, {
+                startDate: task?.startDate,
+                completionTime: task?.completionTime,
+            }),
+        };
+    }
+
+    async function __tmDeleteTaskRepeatHistoryEntry(taskId, completedAt, options = {}) {
+        const task = await __tmResolveTaskForRepeat(taskId);
+        if (!task?.id) throw new Error('未找到任务');
+        const key = String(completedAt || '').trim();
+        const currentHistory = __tmNormalizeTaskRepeatHistory(task?.repeatHistory || task?.repeat_history || '');
+        const nextHistory = currentHistory.filter((item) => String(item?.completedAt || '').trim() !== key);
+        if (nextHistory.length === currentHistory.length) return false;
+        await __tmApplyTaskMetaPatchWithUndo(task.id, {
+            repeatHistory: nextHistory,
+        }, {
+            source: String(options?.source || 'task-repeat-history-delete').trim() || 'task-repeat-history-delete',
+            label: '删除循环记录',
+            refresh: false,
+            refreshCalendar: false,
+            withFilters: true,
+            hard: false,
+            recordUndo: options?.recordUndo !== false,
+        });
+        __tmPurgeRecurringInstanceTasks(task.id, [key]);
+        try {
+            __tmRefreshViewsAfterTaskMutation({
+                refresh: true,
+                refreshCalendar: true,
+                withFilters: true,
+                hard: false,
+            });
+        } catch (e) {}
+        return true;
+    }
+
+    const __tmRecurringAdvanceTimers = new Map();
+
+    function __tmClearRecurringTaskAdvanceTimer(taskId) {
+        const tid = String(taskId || '').trim();
+        if (!tid) return false;
+        const timer = __tmRecurringAdvanceTimers.get(tid);
+        if (!timer) return false;
+        try { clearTimeout(timer); } catch (e) {}
+        __tmRecurringAdvanceTimers.delete(tid);
+        return true;
+    }
+
+    async function __tmAdvanceRecurringTaskAfterCompletion(taskId, options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        if (String(opts.source || '').trim() === 'task-repeat-advance') return false;
+        const waited = await __tmWaitForGlobalUnlock(12000);
+        if (!waited) return false;
+        let task = await __tmResolveTaskForRepeat(taskId);
+        try {
+            const latestTaskId = await __tmResolveTaskIdFromAnyBlockId(String(task?.id || taskId || '').trim());
+            if (latestTaskId && latestTaskId !== String(task?.id || '').trim()) {
+                const latestTask = await __tmResolveTaskForRepeat(latestTaskId);
+                if (latestTask?.id) task = latestTask;
+            }
+        } catch (e) {}
+        if (!task?.id || !task.done) return false;
+        const repeatRule = __tmGetTaskRepeatRule(task);
+        if (!repeatRule.enabled || repeatRule.trigger !== 'complete' || repeatRule.type === 'none') return false;
+        const completedAt = String(opts.completedAt || new Date().toISOString()).trim() || new Date().toISOString();
+        const nextPatch = __tmBuildTaskRepeatAdvancePatch(task, repeatRule, { completedAt });
+        if (!nextPatch) return false;
+        const nextHistory = __tmNormalizeTaskRepeatHistory([
+            {
+                completedAt,
+                sourceStart: __tmNormalizeDateOnly(task?.startDate || ''),
+                sourceDue: __tmNormalizeDateOnly(task?.completionTime || ''),
+                nextStart: __tmNormalizeDateOnly(nextPatch.startDate || ''),
+                nextDue: __tmNormalizeDateOnly(nextPatch.completionTime || ''),
+            },
+            ...__tmNormalizeTaskRepeatHistory(task?.repeatHistory || task?.repeat_history || ''),
+        ]);
+        const historyHead = nextHistory[0] || null;
+        nextPatch.repeatHistory = nextHistory;
+        await __tmApplyTaskMetaPatchWithUndo(task.id, nextPatch, {
+            source: 'task-repeat-advance',
+            label: '循环推进',
+            refresh: false,
+            refreshCalendar: false,
+            withFilters: true,
+            hard: false,
+            recordUndo: false,
+        });
+        try {
+            task.startDate = String(nextPatch.startDate || '').trim();
+            task.start_date = task.startDate;
+            task.completionTime = String(nextPatch.completionTime || '').trim();
+            task.completion_time = task.completionTime;
+            task.repeatState = __tmNormalizeTaskRepeatState(nextPatch.repeatState);
+            task.repeat_state = task.repeatState;
+            task.repeatHistory = __tmNormalizeTaskRepeatHistory(nextPatch.repeatHistory);
+            task.repeat_history = task.repeatHistory;
+            if (state.flatTasks?.[task.id]) state.flatTasks[task.id] = task;
+            if (state.pendingInsertedTasks?.[task.id]) {
+                state.pendingInsertedTasks[task.id].startDate = task.startDate;
+                state.pendingInsertedTasks[task.id].start_date = task.startDate;
+                state.pendingInsertedTasks[task.id].completionTime = task.completionTime;
+                state.pendingInsertedTasks[task.id].completion_time = task.completionTime;
+                state.pendingInsertedTasks[task.id].repeatState = task.repeatState;
+                state.pendingInsertedTasks[task.id].repeat_state = task.repeatState;
+                state.pendingInsertedTasks[task.id].repeatHistory = task.repeatHistory;
+                state.pendingInsertedTasks[task.id].repeat_history = task.repeatHistory;
+            }
+            try {
+                MetaStore.set(task.id, {
+                    startDate: task.startDate,
+                    completionTime: task.completionTime,
+                    repeatState: task.repeatState,
+                    repeatHistory: task.repeatHistory,
+                });
+            } catch (e) {}
+        } catch (e) {}
+        if (historyHead && String(opts?.scheduleId || '').trim()) {
+            try { await __tmReassignCompletedScheduleToRecurringInstance(String(opts.scheduleId || '').trim(), task, historyHead); } catch (e) {}
+        }
+        let resetTaskId = String(task.id || '').trim();
+        try {
+            const resolvedResetTaskId = await __tmResolveTaskIdFromAnyBlockId(resetTaskId);
+            if (resolvedResetTaskId) resetTaskId = String(resolvedResetTaskId || '').trim() || resetTaskId;
+        } catch (e) {}
+        if (!resetTaskId) resetTaskId = String(task.id || '').trim();
+        let resetDoneOk = false;
+        try {
+            await __tmSetDoneKernel(resetTaskId, false, null, {
+                force: true,
+                suppressHint: true,
+                source: 'task-repeat-advance',
+                recordUndo: false,
+            });
+        } catch (e) {}
+        try {
+            const latest = state.flatTasks?.[resetTaskId] || state.flatTasks?.[task.id] || null;
+            resetDoneOk = !!latest && latest.done !== true;
+        } catch (e) {}
+        if (!resetDoneOk) {
+            try {
+                resetDoneOk = await __tmSetDoneByIdStateless(resetTaskId, false);
+            } catch (e) {
+                resetDoneOk = false;
+            }
+            if (resetDoneOk) {
+                try { task.done = false; } catch (e) {}
+                try {
+                    if (state.flatTasks?.[resetTaskId]) state.flatTasks[resetTaskId].done = false;
+                    if (state.flatTasks?.[task.id]) state.flatTasks[task.id].done = false;
+                } catch (e) {}
+                try {
+                    if (!state.doneOverrides || typeof state.doneOverrides !== 'object') state.doneOverrides = {};
+                    state.doneOverrides[String(resetTaskId || '').trim()] = false;
+                    state.doneOverrides[String(task.id || '').trim()] = false;
+                } catch (e) {}
+                try { MetaStore.set(resetTaskId, { done: false }); } catch (e) {}
+                try { MetaStore.set(task.id, { done: false }); } catch (e) {}
+            }
+        }
+        if (!resetDoneOk) {
+            try {
+                hint('⚠ 循环推进后未能自动取消主任务完成，请手动取消勾选', 'warning');
+            } catch (e) {}
+            return false;
+        }
+        try {
+            const calendarOnlyRefresh = String(opts?.source || '').trim() === 'calendar'
+                && String(state.viewMode || '').trim() === 'calendar';
+            __tmRefreshViewsAfterTaskMutation({
+                refresh: true,
+                refreshCalendar: true,
+                withFilters: true,
+                hard: false,
+                calendarOnly: calendarOnlyRefresh,
+            });
+        } catch (e) {}
+        try {
+            const summary = __tmGetTaskRepeatSummary(repeatRule, {
+                startDate: nextPatch.startDate,
+                completionTime: nextPatch.completionTime,
+            });
+            hint(`🔁 已推进到下一次${summary ? `：${summary}` : ''}`, 'success');
+        } catch (e) {}
+        return true;
+    }
+
+    function __tmScheduleRecurringTaskAdvanceAfterCompletion(taskId, options = {}) {
+        const tid = String(taskId || '').trim();
+        if (!tid) return;
+        const opts = (options && typeof options === 'object') ? options : {};
+        __tmClearRecurringTaskAdvanceTimer(tid);
+        try {
+            const timer = setTimeout(() => {
+                __tmRecurringAdvanceTimers.delete(tid);
+                __tmAdvanceRecurringTaskAfterCompletion(tid, opts).catch(() => null);
+            }, Math.max(120, Number(opts.delayMs) || 280));
+            __tmRecurringAdvanceTimers.set(tid, timer);
+        } catch (e) {}
+    }
+
+    function __tmBuildTaskRepeatDueAdvancePatch(taskLike, ruleInput, options = {}) {
+        const task = (taskLike && typeof taskLike === 'object') ? taskLike : {};
+        const rule = __tmNormalizeTaskRepeatRule(ruleInput, {
+            startDate: task?.startDate,
+            completionTime: task?.completionTime,
+        });
+        if (!rule.enabled || rule.trigger !== 'due' || rule.type === 'none') return null;
+        const todayKey = __tmNormalizeDateOnly(options.todayKey || new Date());
+        if (!todayKey) return null;
+        let nextTask = {
+            ...task,
+            startDate: __tmNormalizeDateOnly(task?.startDate || ''),
+            completionTime: __tmNormalizeDateOnly(task?.completionTime || ''),
+            repeatState: __tmNormalizeTaskRepeatState(task?.repeatState),
+        };
+        let compareKey = __tmNormalizeDateOnly(nextTask?.completionTime || nextTask?.startDate || '');
+        if (!compareKey || compareKey >= todayKey) return null;
+        let advancedCount = 0;
+        let guard = 0;
+        while (compareKey && compareKey < todayKey && guard < 400) {
+            const patch = __tmBuildTaskRepeatAdvancePatch(nextTask, rule, {
+                advancedAt: String(options.advancedAt || new Date().toISOString()).trim() || new Date().toISOString(),
+                completedAt: String(nextTask?.repeatState?.lastCompletedAt || '').trim(),
+            });
+            if (!patch) break;
+            nextTask = {
+                ...nextTask,
+                startDate: __tmNormalizeDateOnly(patch.startDate || ''),
+                completionTime: __tmNormalizeDateOnly(patch.completionTime || ''),
+                repeatState: __tmNormalizeTaskRepeatState(patch.repeatState),
+            };
+            compareKey = __tmNormalizeDateOnly(nextTask?.completionTime || nextTask?.startDate || '');
+            advancedCount += 1;
+            guard += 1;
+        }
+        if (!advancedCount) return null;
+        return {
+            startDate: nextTask.startDate,
+            completionTime: nextTask.completionTime,
+            repeatState: nextTask.repeatState,
+            __advancedCount: advancedCount,
+        };
+    }
+
+    let __tmRecurringDueReconcilePromise = null;
+    async function __tmReconcileRecurringTasksOnLoad(taskIdsInput, options = {}) {
+        if (__tmRecurringDueReconcilePromise) return await __tmRecurringDueReconcilePromise;
+        const taskIds = Array.from(new Set((Array.isArray(taskIdsInput) ? taskIdsInput : [])
+            .map((id) => String(id || '').trim())
+            .filter(Boolean)));
+        if (!taskIds.length) return 0;
+        const opts = (options && typeof options === 'object') ? options : {};
+        const job = (async () => {
+            let changed = 0;
+            const todayKey = __tmNormalizeDateOnly(opts.todayKey || new Date());
+            for (const taskId of taskIds) {
+                const task = await __tmResolveTaskForRepeat(taskId);
+                if (!task?.id || task.done) continue;
+                const rule = __tmGetTaskRepeatRule(task);
+                if (!rule.enabled || rule.trigger !== 'due' || rule.type === 'none') continue;
+                const patch = __tmBuildTaskRepeatDueAdvancePatch(task, rule, { todayKey });
+                if (!patch) continue;
+                await __tmApplyTaskMetaPatchWithUndo(task.id, patch, {
+                    source: 'task-repeat-due',
+                    label: '循环推进',
+                    refresh: false,
+                    refreshCalendar: false,
+                    withFilters: true,
+                    hard: false,
+                    recordUndo: false,
+                    broadcast: true,
+                });
+                changed += 1;
+            }
+            return changed;
+        })();
+        __tmRecurringDueReconcilePromise = job;
+        try {
+            return await job;
+        } finally {
+            if (__tmRecurringDueReconcilePromise === job) __tmRecurringDueReconcilePromise = null;
+        }
+    }
+
+    window.tmGetTaskRepeatRule = async function(taskId) {
+        const task = await __tmResolveTaskForRepeat(taskId);
+        if (!task?.id) return null;
+        const rule = __tmGetTaskRepeatRule(task);
+        return {
+            ...rule,
+            summary: __tmGetTaskRepeatSummary(rule, {
+                startDate: task?.startDate,
+                completionTime: task?.completionTime,
+            }),
+        };
+    };
+
+    window.tmSetTaskRepeatRule = async function(taskId, ruleInput = {}, options = {}) {
+        return await __tmApplyTaskRepeatRule(taskId, ruleInput, options);
+    };
+
+    window.tmClearTaskRepeatRule = async function(taskId, options = {}) {
+        return await __tmApplyTaskRepeatRule(taskId, { enabled: false, type: 'none' }, options);
+    };
+
+    window.tmEditTaskRepeatRule = async function(taskId, options = {}) {
+        const task = await __tmResolveTaskForRepeat(taskId);
+        if (!task?.id) {
+            hint('⚠ 未找到任务', 'warning');
+            return null;
+        }
+        const nextRule = await showTaskRepeatRuleDialog(task, {
+            title: String(options?.title || '循环设置').trim() || '循环设置',
+        });
+        if (nextRule === null) return null;
+        if (!nextRule.enabled || nextRule.type === 'none') {
+            return await window.tmClearTaskRepeatRule(task.id, { source: 'task-repeat-dialog' });
+        }
+        return await window.tmSetTaskRepeatRule(task.id, {
+            ...nextRule,
+            anchorDate: task?.completionTime || task?.startDate || __tmNormalizeDateOnly(new Date()),
+        }, { source: 'task-repeat-dialog' });
     };
 
     window.tmCalendarWarmDocsToGroupCache = async function() {
@@ -43969,6 +45028,203 @@ async function __tmRefreshAfterWake(reason) {
         }
         window.__tmCalendarDocsToGroupCache = { key, map };
         return true;
+    };
+
+    let __tmCalendarSidebarDocItemsWarmPromise = null;
+
+    function __tmBuildCalendarSidebarDocItemsCacheKey() {
+        const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
+        const groupParts = [];
+        for (const g of groups) {
+            const gid = String(g?.id || '').trim();
+            if (!gid) continue;
+            const ds = __tmGetGroupSourceEntries(g).map((d) => {
+                const did = String(d?.id || '').trim();
+                if (!did) return '';
+                return did + (d.kind === 'notebook' ? '#nb' : (d.recursive ? '*' : ''));
+            }).filter(Boolean);
+            groupParts.push(`${gid}:${ds.join(',')}`);
+        }
+        const legacyIds = Array.isArray(SettingsStore.data.selectedDocIds) ? SettingsStore.data.selectedDocIds : [];
+        const quickAddDocId = String(SettingsStore.data.newTaskDocId || '').trim();
+        const treeTaskSig = (() => {
+            const parts = [];
+            (Array.isArray(state.taskTree) ? state.taskTree : []).forEach((doc) => {
+                const id = String(doc?.id || '').trim();
+                const taskCount = Array.isArray(doc?.tasks) ? doc.tasks.length : 0;
+                if (!id || taskCount <= 0) return;
+                parts.push(`${id}:${taskCount}`);
+            });
+            return parts.sort().join(',');
+        })();
+        const calendarCacheSig = (() => {
+            const cache = window.__tmCalendarAllTasksCache;
+            const parts = [];
+            if (Array.isArray(cache?.tasks)) {
+                const seen = new Set();
+                cache.tasks.forEach((task) => {
+                    const docId = String(task?.root_id || task?.docId || '').trim();
+                    if (!docId || seen.has(docId)) return;
+                    seen.add(docId);
+                    parts.push(docId);
+                });
+            }
+            return [
+                String(cache?.key || '').trim(),
+                Number(cache?.ts) || 0,
+                parts.sort().join(',')
+            ].join('|');
+        })();
+        return [
+            groupParts.join('|'),
+            `legacy:${legacyIds.map((id) => String(id || '').trim()).filter(Boolean).join(',')}`,
+            `quick:${quickAddDocId}`,
+            `mode:${__tmGetDocDisplayNameMode()}`,
+            `docs:${Number(__tmAllDocumentsFetchedAt) || 0}`,
+            `tree:${treeTaskSig}`,
+            `calendar:${calendarCacheSig}`
+        ].join('||');
+    }
+
+    function __tmBuildCalendarSidebarDocItemsName(docId, docMap) {
+        const did = String(docId || '').trim();
+        if (!did) return '未命名文档';
+        const map = docMap instanceof Map ? docMap : new Map();
+        const meta = map.get(did) || { id: did, name: did };
+        const raw = String(meta?.name || meta?.content || did).trim() || did;
+        try {
+            return __tmGetDocDisplayName(meta, raw) || raw;
+        } catch (e) {}
+        return raw;
+    }
+
+    window.tmCalendarGetSidebarDocItems = function() {
+        const cached = window.__tmCalendarSidebarDocItemsCache;
+        if (!cached || !cached.data || typeof cached.data !== 'object') return null;
+        return cached.data;
+    };
+
+    window.tmCalendarWarmSidebarDocItems = async function(options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const key = __tmBuildCalendarSidebarDocItemsCacheKey();
+        const prev = window.__tmCalendarSidebarDocItemsCache;
+        const cacheMaxAgeMs = 5000;
+        if (!opts.force && prev && prev.key === key && prev.data && typeof prev.data === 'object' && (Date.now() - (Number(prev.ts) || 0) < cacheMaxAgeMs)) {
+            return prev.data;
+        }
+        if (!opts.force && __tmCalendarSidebarDocItemsWarmPromise && __tmCalendarSidebarDocItemsWarmPromise.key === key) {
+            return await __tmCalendarSidebarDocItemsWarmPromise.promise;
+        }
+
+        let tracked = null;
+        const run = Promise.resolve().then(async () => {
+            try { await window.tmCalendarWarmDocsToGroupCache?.(); } catch (e) {}
+            try { await __tmEnsureAllDocumentsLoaded(false); } catch (e) {}
+
+            const docsToGroup = window.__tmCalendarDocsToGroupCache?.map instanceof Map
+                ? new Map(window.__tmCalendarDocsToGroupCache.map)
+                : __tmGetCalendarDocsToGroupMapSync();
+            const docMap = new Map();
+            (Array.isArray(state.allDocuments) ? state.allDocuments : []).forEach((doc) => {
+                const id = String(doc?.id || '').trim();
+                if (!id || docMap.has(id)) return;
+                docMap.set(id, doc);
+            });
+            (Array.isArray(state.taskTree) ? state.taskTree : []).forEach((doc) => {
+                const id = String(doc?.id || '').trim();
+                if (!id || docMap.has(id)) return;
+                docMap.set(id, {
+                    id,
+                    name: String(doc?.name || '').trim() || id,
+                    alias: String(doc?.alias || '').trim(),
+                    icon: doc?.icon,
+                });
+            });
+            const tasksMap = new Map();
+            (Array.isArray(state.taskTree) ? state.taskTree : []).forEach((doc) => {
+                const id = String(doc?.id || '').trim();
+                if (!id || !Array.isArray(doc?.tasks) || doc.tasks.length <= 0) return;
+                tasksMap.set(id, true);
+            });
+            (Array.isArray(window.__tmCalendarAllTasksCache?.tasks) ? window.__tmCalendarAllTasksCache.tasks : []).forEach((task) => {
+                const docId = String(task?.root_id || task?.docId || '').trim();
+                if (!docId) return;
+                tasksMap.set(docId, true);
+            });
+
+            const calendarDocIds = {};
+            const seenByCalendar = new Map();
+            const pushDoc = (calendarId0, docId0) => {
+                const calendarId = String(calendarId0 || '').trim();
+                const docId = String(docId0 || '').trim();
+                if (!calendarId || !docId) return;
+                if (!Array.isArray(calendarDocIds[calendarId])) calendarDocIds[calendarId] = [];
+                if (!seenByCalendar.has(calendarId)) seenByCalendar.set(calendarId, new Set());
+                const seen = seenByCalendar.get(calendarId);
+                if (seen.has(docId)) return;
+                seen.add(docId);
+                calendarDocIds[calendarId].push(docId);
+            };
+
+            docsToGroup.forEach((gid, did) => {
+                const groupId = String(gid || '').trim();
+                const docId = String(did || '').trim();
+                if (!groupId || !docId) return;
+                pushDoc(`group:${groupId}`, docId);
+            });
+
+            let allDocIds = [];
+            try {
+                allDocIds = await resolveDocIdsFromGroups({
+                    groupId: 'all',
+                    includeQuickAddDoc: true,
+                });
+            } catch (e) {
+                allDocIds = [];
+            }
+            const candidateDocIds = new Set();
+            docsToGroup.forEach((gid, did) => {
+                const docId = String(did || '').trim();
+                if (docId) candidateDocIds.add(docId);
+            });
+            (Array.isArray(allDocIds) ? allDocIds : []).forEach((docId0) => {
+                const docId = String(docId0 || '').trim();
+                if (docId) candidateDocIds.add(docId);
+            });
+            try {
+                await __tmFillDocHasTasksMap(Array.from(candidateDocIds), tasksMap);
+            } catch (e) {}
+
+            (Array.isArray(allDocIds) ? allDocIds : []).forEach((docId0) => {
+                const docId = String(docId0 || '').trim();
+                if (!docId || docsToGroup.has(docId) || !tasksMap.has(docId)) return;
+                pushDoc('default', docId);
+            });
+            Object.keys(calendarDocIds).forEach((calendarId) => {
+                const ids = Array.isArray(calendarDocIds[calendarId]) ? calendarDocIds[calendarId] : [];
+                calendarDocIds[calendarId] = ids.filter((docId) => tasksMap.has(String(docId || '').trim()));
+            });
+
+            const calendars = {};
+            Object.keys(calendarDocIds).forEach((calendarId) => {
+                const ids = Array.isArray(calendarDocIds[calendarId]) ? calendarDocIds[calendarId] : [];
+                const docs = ids.map((docId) => ({
+                    id: docId,
+                    name: __tmBuildCalendarSidebarDocItemsName(docId, docMap)
+                }));
+                if (docs.length > 0) calendars[calendarId] = docs;
+            });
+
+            const data = { key, calendars };
+            window.__tmCalendarSidebarDocItemsCache = { key, data, ts: Date.now() };
+            return data;
+        });
+
+        tracked = run.finally(() => {
+            if (__tmCalendarSidebarDocItemsWarmPromise === tracked) __tmCalendarSidebarDocItemsWarmPromise = null;
+        });
+        __tmCalendarSidebarDocItemsWarmPromise = { key, promise: tracked };
+        return await tracked;
     };
 
     function __tmKanbanClearDragOver(modalEl) {
@@ -44063,6 +45319,36 @@ async function __tmRefreshAfterWake(reason) {
             await new Promise(r => setTimeout(r, 32));
         }
         return true;
+    }
+
+    async function __tmReassignCompletedScheduleToRecurringInstance(scheduleId, sourceTask, historyItem) {
+        const sid = String(scheduleId || '').trim();
+        if (!sid) return false;
+        let task = (sourceTask && typeof sourceTask === 'object') ? sourceTask : null;
+        try {
+            const sourceTaskId = String(task?.id || '').trim();
+            const latestTaskId = await __tmResolveTaskIdFromAnyBlockId(sourceTaskId);
+            if (latestTaskId && latestTaskId !== sourceTaskId) {
+                const latestTask = await __tmResolveTaskForRepeat(latestTaskId);
+                if (latestTask?.id) task = latestTask;
+            }
+        } catch (e) {}
+        const history = __tmNormalizeTaskRepeatHistory([historyItem])[0] || null;
+        if (!task?.id || !history) return false;
+        const virtualTask = __tmBuildRecurringInstanceTask(task, history, 0);
+        const nextTaskId = String(virtualTask?.id || '').trim();
+        if (!nextTaskId) return false;
+        const calendarApi = globalThis.__tmCalendar;
+        if (!calendarApi || typeof calendarApi.reassignScheduleLinkedTask !== 'function') return false;
+        try {
+            const result = await calendarApi.reassignScheduleLinkedTask(sid, nextTaskId, {
+                sourceTaskId: String(task.id || '').trim(),
+                completedAt: String(history.completedAt || '').trim(),
+            });
+            return result !== false;
+        } catch (e) {
+            return false;
+        }
     }
 
     async function __tmKanbanWaitForUnlock(timeoutMs = 8000) {
@@ -45352,6 +46638,7 @@ async function __tmRefreshAfterWake(reason) {
             const useGlobalScroll = !!globalScrollHost;
             const body = state.modal?.querySelector?.('#tmGanttBody');
             const leftPaneWidth = useGlobalScroll ? __tmGetTimelineLeftPaneWidth(state.modal) : 0;
+            const currentRangeStartTs = Number(body?.dataset?.tmGanttStartTs);
             const w0 = useGlobalScroll
                 ? Math.max(0, (Number(globalScrollHost?.clientWidth) || 0) - Math.round(leftPaneWidth))
                 : Number(body?.clientWidth || 0);
@@ -45362,44 +46649,44 @@ async function __tmRefreshAfterWake(reason) {
                 return;
             }
             const view = globalThis.__TaskHorizonGanttView;
-            const parse = view?.parseDateOnlyToTs;
             const startOfDayTs = view?.startOfDayTs;
-            const extendTimelineEndTs = view?.extendTimelineEndTs;
+            const computeRangeTs = view?.computeRangeTs;
             const DAY_MS = Number(view?.DAY_MS) || 86400000;
             const maxDayCount = Math.max(1, Number(view?.TIMELINE_MAX_DAY_COUNT) || 397);
-            if (typeof parse !== 'function' || typeof startOfDayTs !== 'function') {
+            if (typeof startOfDayTs !== 'function' || typeof computeRangeTs !== 'function') {
                 state.ganttView.__forceScrollLeft = 0;
                 render();
                 return;
             }
             const rowModel = __tmBuildTaskRowModel();
-            let minTs = 0;
-            let maxTs = 0;
+            const tasks = [];
             for (const r of rowModel) {
                 if (r?.type !== 'task') continue;
                 const t = state.flatTasks[String(r.id)];
                 if (!t) continue;
-                const sTs = parse(t?.startDate);
-                const eTs = parse(t?.completionTime);
-                const a = sTs || eTs;
-                const b = eTs || sTs;
-                if (!a || !b) continue;
-                if (!minTs || a < minTs) minTs = a;
-                if (!maxTs || b > maxTs) maxTs = b;
+                tasks.push(t);
             }
-            const now = Date.now();
             const paddingDays = Math.max(0, Number(state.ganttView?.paddingDays) || 0);
-            const pad = paddingDays * DAY_MS;
-            const startTs = startOfDayTs((minTs || now) - pad);
-            const endBaseTs = startOfDayTs((maxTs || now) + pad);
-            const endTs = typeof extendTimelineEndTs === 'function'
-                ? extendTimelineEndTs(endBaseTs)
-                : endBaseTs;
+            const rangeOptions = { anchorByStartDate: true, extraFutureMonths: 0 };
+            const range = computeRangeTs(tasks, paddingDays, rangeOptions);
+            const startTs = startOfDayTs(range?.startTs);
+            const endTs = startOfDayTs(range?.endTs);
+            if (!Number.isFinite(startTs) || !Number.isFinite(endTs) || endTs < startTs) {
+                state.ganttView.__forceScrollLeft = 0;
+                render();
+                return;
+            }
             const dayCount = Math.max(1, Math.min(maxDayCount, Math.round((endTs - startTs) / DAY_MS) + 1));
             const usableW = Math.max(120, w - 24);
             const next = Math.max(10, Math.min(60, Math.floor(usableW / dayCount)));
+            const scrollOffsetPx = Number.isFinite(currentRangeStartTs)
+                ? Math.max(0, Math.round(((startTs - currentRangeStartTs) / DAY_MS) * next))
+                : 0;
             state.ganttView.dayWidth = next;
-            state.ganttView.__forceScrollLeft = 0;
+            try { delete state.ganttView.__rangeOptions; } catch (e) {}
+            state.ganttView.__forceScrollLeft = useGlobalScroll
+                ? Math.max(0, Math.round(leftPaneWidth + scrollOffsetPx))
+                : scrollOffsetPx;
             render();
         } catch (e) {
             try { state.ganttView.__forceScrollLeft = 0; } catch (e2) {}
@@ -46554,6 +47841,31 @@ async function __tmRefreshAfterWake(reason) {
         task.customTime = isValidValue(task.customTime) ? String(task.customTime) : (isValidValue(task.custom_time) ? String(task.custom_time) : '');
         task.customStatus = isValidValue(task.custom_status) ? String(task.custom_status) : (isValidValue(task.customStatus) ? String(task.customStatus) : '');
         task.bookmark = isValidValue(task.bookmark) ? String(task.bookmark) : '';
+        task.repeatRule = __tmNormalizeTaskRepeatRule(
+            task.repeatRule
+            || task.repeat_rule
+            || task[__TM_TASK_REPEAT_RULE_ATTR]
+            || '',
+            {
+                startDate: task.startDate,
+                completionTime: task.completionTime,
+            }
+        );
+        task.repeat_rule = task.repeatRule;
+        task.repeatState = __tmNormalizeTaskRepeatState(
+            task.repeatState
+            || task.repeat_state
+            || task[__TM_TASK_REPEAT_STATE_ATTR]
+            || ''
+        );
+        task.repeat_state = task.repeatState;
+        task.repeatHistory = __tmNormalizeTaskRepeatHistory(
+            task.repeatHistory
+            || task.repeat_history
+            || task[__TM_TASK_REPEAT_HISTORY_ATTR]
+            || ''
+        );
+        task.repeat_history = task.repeatHistory;
         task.tomatoMinutes = isValidValue(task.tomatoMinutes) ? String(task.tomatoMinutes) : (isValidValue(task.tomato_minutes) ? String(task.tomato_minutes) : '');
         task.tomatoHours = isValidValue(task.tomatoHours) ? String(task.tomatoHours) : (isValidValue(task.tomato_hours) ? String(task.tomato_hours) : '');
         const rawCustomFieldValues = (task.__customFieldRawValues && typeof task.__customFieldRawValues === 'object' && !Array.isArray(task.__customFieldRawValues))
@@ -46594,11 +47906,26 @@ async function __tmRefreshAfterWake(reason) {
             if (!isValidValue(task.startDate) && allowVisibleDateFallback && isValidValue(meta.startDate)) task.startDate = meta.startDate;
             if (!isValidValue(task.customTime) && allowVisibleDateFallback && isValidValue(meta.customTime)) task.customTime = meta.customTime;
             if (!isValidValue(task.customStatus) && isValidValue(meta.customStatus)) task.customStatus = meta.customStatus;
+            if (Object.prototype.hasOwnProperty.call(meta, 'repeatRule')) {
+                task.repeatRule = __tmNormalizeTaskRepeatRule(meta.repeatRule, {
+                    startDate: task.startDate,
+                    completionTime: task.completionTime,
+                });
+            }
+            if (Object.prototype.hasOwnProperty.call(meta, 'repeatState')) {
+                task.repeatState = __tmNormalizeTaskRepeatState(meta.repeatState);
+            }
+            if (Object.prototype.hasOwnProperty.call(meta, 'repeatHistory')) {
+                task.repeatHistory = __tmNormalizeTaskRepeatHistory(meta.repeatHistory);
+            }
             if (task.isOtherBlock === true && Object.prototype.hasOwnProperty.call(meta, 'done')) {
                 const doneRaw = meta.done;
                 task.done = doneRaw === true || doneRaw === 1 || String(doneRaw || '').trim().toLowerCase() === 'true' || String(doneRaw || '').trim() === '1';
             }
         }
+        task.repeat_rule = task.repeatRule;
+        task.repeat_state = task.repeatState;
+        task.repeat_history = task.repeatHistory;
         task.customFieldValues = __tmNormalizeTaskCustomFieldValues(rawCustomFieldValues, meta?.customFieldValues);
         try { __tmMaybeBackfillTaskCustomFieldAttrs(task, meta); } catch (e) {}
 
@@ -46633,32 +47960,44 @@ async function __tmRefreshAfterWake(reason) {
 
     function __tmIsDocExcludedInGroup(docId, groupId) {
         const id = String(docId || '').trim();
-        const group = __tmGetDocGroupById(groupId);
-        if (!id || !group) return false;
-        return __tmGetGroupExcludedDocIds(group).includes(id);
+        if (!id) return false;
+        return __tmGetExcludedDocIdsForGroup(groupId).includes(id);
     }
 
     async function __tmSetDocExcludedForGroup(docId, excluded, groupId) {
         const id = String(docId || '').trim();
-        const gid = String(groupId || '').trim();
-        if (!id || !gid || gid === 'all') return { changed: false, group: null, reason: 'invalid-group' };
+        const gid = String(groupId || 'all').trim() || 'all';
+        if (!id || !gid) return { changed: false, group: null, reason: 'invalid-group' };
 
+        const isAllGroup = gid === 'all';
         const groups = Array.isArray(SettingsStore.data.docGroups) ? SettingsStore.data.docGroups : [];
-        const idx = groups.findIndex((group) => String(group?.id || '').trim() === gid);
-        if (idx < 0) return { changed: false, group: null, reason: 'group-missing' };
+        let group = null;
+        let nextExcluded = null;
 
-        const group = groups[idx];
-        const nextExcluded = new Set(__tmGetGroupExcludedDocIds(group));
+        if (isAllGroup) {
+            nextExcluded = new Set(__tmGetAllDocsExcludedDocIds());
+        } else {
+            const idx = groups.findIndex((item) => String(item?.id || '').trim() === gid);
+            if (idx < 0) return { changed: false, group: null, reason: 'group-missing' };
+            group = groups[idx];
+            nextExcluded = new Set(__tmGetGroupExcludedDocIds(group));
+        }
         const had = nextExcluded.has(id);
         if (excluded) nextExcluded.add(id);
         else nextExcluded.delete(id);
         if (had === !!excluded) return { changed: false, group, reason: had ? 'already-set' : 'already-cleared' };
 
-        groups[idx] = {
-            ...group,
-            excludedDocIds: Array.from(nextExcluded)
-        };
-        SettingsStore.data.docGroups = groups.map((item) => __tmNormalizeDocGroupConfig(item, SettingsStore.data.docDefaultColorScheme)).filter(Boolean);
+        if (isAllGroup) {
+            SettingsStore.data.allDocsExcludedDocIds = __tmNormalizeDocGroupExcludedDocIds(Array.from(nextExcluded));
+        } else {
+            const idx = groups.findIndex((item) => String(item?.id || '').trim() === gid);
+            groups[idx] = {
+                ...group,
+                excludedDocIds: Array.from(nextExcluded)
+            };
+            SettingsStore.data.docGroups = groups.map((item) => __tmNormalizeDocGroupConfig(item, SettingsStore.data.docDefaultColorScheme)).filter(Boolean);
+            group = __tmGetDocGroupById(gid);
+        }
 
         if (excluded) {
             const pinMap0 = (SettingsStore.data.docPinnedByGroup && typeof SettingsStore.data.docPinnedByGroup === 'object')
@@ -46672,12 +48011,18 @@ async function __tmRefreshAfterWake(reason) {
                 SettingsStore.data.docPinnedByGroup = pinMap;
             }
 
-            const defaultDocIdByGroup = (SettingsStore.data.defaultDocIdByGroup && typeof SettingsStore.data.defaultDocIdByGroup === 'object')
-                ? { ...SettingsStore.data.defaultDocIdByGroup }
-                : {};
-            if (String(defaultDocIdByGroup[gid] || '').trim() === id) {
-                delete defaultDocIdByGroup[gid];
-                SettingsStore.data.defaultDocIdByGroup = defaultDocIdByGroup;
+            if (isAllGroup) {
+                if (String(SettingsStore.data.defaultDocId || '').trim() === id) {
+                    SettingsStore.data.defaultDocId = '';
+                }
+            } else {
+                const defaultDocIdByGroup = (SettingsStore.data.defaultDocIdByGroup && typeof SettingsStore.data.defaultDocIdByGroup === 'object')
+                    ? { ...SettingsStore.data.defaultDocIdByGroup }
+                    : {};
+                if (String(defaultDocIdByGroup[gid] || '').trim() === id) {
+                    delete defaultDocIdByGroup[gid];
+                    SettingsStore.data.defaultDocIdByGroup = defaultDocIdByGroup;
+                }
             }
         }
 
@@ -46701,7 +48046,7 @@ async function __tmRefreshAfterWake(reason) {
         }
 
         if (state.settingsModal) showSettings();
-        return { changed: true, group: __tmGetDocGroupById(gid), reason: excluded ? 'excluded' : 'restored' };
+        return { changed: true, group: isAllGroup ? null : group, reason: excluded ? 'excluded' : 'restored' };
     }
 
     function __tmNormalizeOtherBlockRefs(input) {
@@ -47458,6 +48803,461 @@ async function __tmRefreshAfterWake(reason) {
         if (Number.isNaN(d.getTime())) return '';
         const pad = (n) => String(n).padStart(2, '0');
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function __tmParseTaskRepeatJson(value) {
+        if (!value) return null;
+        if (typeof value === 'string') {
+            const raw = String(value || '').trim();
+            if (!raw) return null;
+            try { return JSON.parse(raw); } catch (e) { return null; }
+        }
+        return (typeof value === 'object' && !Array.isArray(value)) ? value : null;
+    }
+
+    function __tmNormalizeTaskRepeatTrigger(value) {
+        return String(value || '').trim().toLowerCase() === 'complete' ? 'complete' : 'due';
+    }
+
+    function __tmNormalizeTaskRepeatType(value) {
+        const raw = String(value || '').trim().toLowerCase();
+        if (!raw || raw === 'none' || raw === 'once') return 'none';
+        if (raw === 'weekday' || raw === 'weekdays') return 'workday';
+        if (raw === 'everyday') return 'daily';
+        if (raw === 'daily' || raw === 'workday' || raw === 'weekly' || raw === 'monthly' || raw === 'yearly') return raw;
+        return 'none';
+    }
+
+    function __tmNormalizeTaskRepeatEvery(value, repeatType) {
+        if (__tmNormalizeTaskRepeatType(repeatType) === 'none') return 1;
+        const n = parseInt(value, 10);
+        if (!Number.isFinite(n) || n <= 0) return 1;
+        return Math.min(3650, Math.max(1, n));
+    }
+
+    function __tmNormalizeTaskRepeatMonthlyMode(value, repeatType) {
+        if (__tmNormalizeTaskRepeatType(repeatType) !== 'monthly') return 'date';
+        return String(value || '').trim().toLowerCase() === 'weekday' ? 'weekday' : 'date';
+    }
+
+    function __tmNormalizeTaskRepeatUntil(value) {
+        return __tmNormalizeDateOnly(value);
+    }
+
+    function __tmNormalizeTaskRepeatState(value) {
+        const raw = __tmParseTaskRepeatJson(value) || {};
+        return {
+            version: 1,
+            lastCompletedAt: String(raw.lastCompletedAt || '').trim(),
+            lastAdvancedAt: String(raw.lastAdvancedAt || '').trim(),
+            lastInstanceStart: __tmNormalizeDateOnly(raw.lastInstanceStart || ''),
+            lastInstanceDue: __tmNormalizeDateOnly(raw.lastInstanceDue || ''),
+        };
+    }
+
+    function __tmNormalizeTaskRepeatHistory(value) {
+        const raw = (() => {
+            if (Array.isArray(value)) return value;
+            if (typeof value === 'string') {
+                const text = String(value || '').trim();
+                if (!text) return [];
+                try {
+                    const parsed = JSON.parse(text);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+            return [];
+        })();
+        return raw.map((item) => {
+            const entry = (item && typeof item === 'object' && !Array.isArray(item)) ? item : {};
+            return {
+                completedAt: String(entry.completedAt || '').trim(),
+                sourceStart: __tmNormalizeDateOnly(entry.sourceStart || ''),
+                sourceDue: __tmNormalizeDateOnly(entry.sourceDue || ''),
+                nextStart: __tmNormalizeDateOnly(entry.nextStart || ''),
+                nextDue: __tmNormalizeDateOnly(entry.nextDue || ''),
+                content: String(entry.content || '').trim(),
+                docId: String(entry.docId || '').trim(),
+                docName: String(entry.docName || '').trim(),
+                h2: String(entry.h2 || '').trim(),
+                h2Id: String(entry.h2Id || '').trim(),
+                h2Path: String(entry.h2Path || '').trim(),
+                priority: String(entry.priority || '').trim(),
+                customStatus: String(entry.customStatus || '').trim(),
+                duration: String(entry.duration || '').trim(),
+                remark: String(entry.remark || '').trim(),
+                docSeq: Number.isFinite(Number(entry.docSeq)) ? Number(entry.docSeq) : Number.NaN,
+            };
+        }).filter((item) => item.completedAt || item.sourceStart || item.sourceDue || item.nextStart || item.nextDue)
+            .slice(0, 30);
+    }
+
+    function __tmNormalizeTaskRepeatRule(value, options = {}) {
+        const opts = (options && typeof options === 'object') ? options : {};
+        const raw = __tmParseTaskRepeatJson(value) || {};
+        const type = __tmNormalizeTaskRepeatType(raw.type || raw.repeatType || raw.interval || '');
+        const enabledRaw = raw.enabled;
+        const enabled = enabledRaw === undefined
+            ? (type !== 'none')
+            : !!enabledRaw;
+        const fallbackAnchor = __tmNormalizeDateOnly(
+            opts.anchorDate
+            || raw.anchorDate
+            || opts.startDate
+            || opts.completionTime
+            || new Date()
+        );
+        return {
+            version: 1,
+            enabled: enabled && type !== 'none',
+            trigger: __tmNormalizeTaskRepeatTrigger(raw.trigger || opts.trigger || ''),
+            type: enabled ? type : 'none',
+            every: __tmNormalizeTaskRepeatEvery(raw.every, type),
+            monthlyMode: __tmNormalizeTaskRepeatMonthlyMode(raw.monthlyMode, type),
+            until: enabled ? __tmNormalizeTaskRepeatUntil(raw.until || raw.repeatUntil || '') : '',
+            anchorDate: fallbackAnchor,
+        };
+    }
+
+    function __tmFormatDateKeyFromDate(date) {
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
+    function __tmBuildLocalNoonDateFromKey(value) {
+        const key = __tmNormalizeDateOnly(value);
+        if (!key) return null;
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+        if (!m) return null;
+        const dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0, 0);
+        return Number.isNaN(dt.getTime()) ? null : dt;
+    }
+
+    function __tmGetTaskRepeatMonthWeekOrdinal(dateLike) {
+        const dt = (dateLike instanceof Date) ? dateLike : __tmBuildLocalNoonDateFromKey(dateLike);
+        if (!(dt instanceof Date) || Number.isNaN(dt.getTime())) return 1;
+        return Math.max(1, Math.min(5, Math.floor((dt.getDate() - 1) / 7) + 1));
+    }
+
+    function __tmBuildTaskRepeatMonthlyWeekdayDate(baseDate, deltaMonths) {
+        const base = (baseDate instanceof Date) ? new Date(baseDate.getTime()) : __tmBuildLocalNoonDateFromKey(baseDate);
+        if (!(base instanceof Date) || Number.isNaN(base.getTime())) return null;
+        const months = Number(deltaMonths) || 0;
+        const total = base.getFullYear() * 12 + base.getMonth() + months;
+        const year = Math.floor(total / 12);
+        const month = ((total % 12) + 12) % 12;
+        const weekday = base.getDay();
+        const ordinal = __tmGetTaskRepeatMonthWeekOrdinal(base);
+        const firstDay = new Date(year, month, 1, 12, 0, 0, 0);
+        const firstWeekday = firstDay.getDay();
+        const offset = (weekday - firstWeekday + 7) % 7;
+        const day = 1 + offset + (ordinal - 1) * 7;
+        const lastDay = new Date(year, month + 1, 0, 12, 0, 0, 0).getDate();
+        if (day > lastDay) return null;
+        return new Date(year, month, day, 12, 0, 0, 0);
+    }
+
+    function __tmBuildTaskRepeatMonthlyDate(baseDate, deltaMonths) {
+        const base = (baseDate instanceof Date) ? new Date(baseDate.getTime()) : __tmBuildLocalNoonDateFromKey(baseDate);
+        if (!(base instanceof Date) || Number.isNaN(base.getTime())) return null;
+        const months = Number(deltaMonths) || 0;
+        const total = base.getFullYear() * 12 + base.getMonth() + months;
+        const year = Math.floor(total / 12);
+        const month = ((total % 12) + 12) % 12;
+        const lastDay = new Date(year, month + 1, 0, 12, 0, 0, 0).getDate();
+        const day = Math.min(base.getDate(), lastDay);
+        return new Date(year, month, day, 12, 0, 0, 0);
+    }
+
+    function __tmBuildTaskRepeatYearlyDate(baseDate, deltaYears) {
+        const base = (baseDate instanceof Date) ? new Date(baseDate.getTime()) : __tmBuildLocalNoonDateFromKey(baseDate);
+        if (!(base instanceof Date) || Number.isNaN(base.getTime())) return null;
+        const year = base.getFullYear() + (Number(deltaYears) || 0);
+        const month = base.getMonth();
+        const lastDay = new Date(year, month + 1, 0, 12, 0, 0, 0).getDate();
+        const day = Math.min(base.getDate(), lastDay);
+        return new Date(year, month, day, 12, 0, 0, 0);
+    }
+
+    function __tmAdvanceTaskRepeatDateKey(dateKey, ruleInput) {
+        const key = __tmNormalizeDateOnly(dateKey);
+        if (!key) return '';
+        const rule = __tmNormalizeTaskRepeatRule(ruleInput, { anchorDate: key });
+        if (!rule.enabled || rule.type === 'none') return key;
+        const base = __tmBuildLocalNoonDateFromKey(key);
+        if (!(base instanceof Date) || Number.isNaN(base.getTime())) return key;
+        let next = null;
+        if (rule.type === 'daily') {
+            next = new Date(base.getTime());
+            next.setDate(next.getDate() + rule.every);
+        } else if (rule.type === 'workday') {
+            next = new Date(base.getTime());
+            let remaining = rule.every;
+            while (remaining > 0) {
+                next.setDate(next.getDate() + 1);
+                const weekday = next.getDay();
+                if (weekday !== 0 && weekday !== 6) remaining -= 1;
+            }
+        } else if (rule.type === 'weekly') {
+            next = new Date(base.getTime());
+            next.setDate(next.getDate() + rule.every * 7);
+        } else if (rule.type === 'monthly') {
+            next = rule.monthlyMode === 'weekday'
+                ? __tmBuildTaskRepeatMonthlyWeekdayDate(base, rule.every)
+                : __tmBuildTaskRepeatMonthlyDate(base, rule.every);
+        } else if (rule.type === 'yearly') {
+            next = __tmBuildTaskRepeatYearlyDate(base, rule.every);
+        }
+        const nextKey = __tmFormatDateKeyFromDate(next);
+        if (!nextKey) return key;
+        if (rule.until && nextKey > rule.until) return '';
+        return nextKey;
+    }
+
+    function __tmBuildTaskRepeatAdvancePatch(taskLike, ruleInput, options = {}) {
+        const task = (taskLike && typeof taskLike === 'object') ? taskLike : {};
+        const rule = __tmNormalizeTaskRepeatRule(ruleInput, {
+            anchorDate: task?.completionTime || task?.startDate || new Date(),
+            startDate: task?.startDate,
+            completionTime: task?.completionTime,
+        });
+        if (!rule.enabled || rule.type === 'none') return null;
+        const prevStart = __tmNormalizeDateOnly(task?.startDate || '');
+        const prevDue = __tmNormalizeDateOnly(task?.completionTime || '');
+        const fallbackBase = prevDue || prevStart || rule.anchorDate || __tmNormalizeDateOnly(new Date());
+        const nextStart = prevStart ? __tmAdvanceTaskRepeatDateKey(prevStart, rule) : '';
+        let nextDue = prevDue ? __tmAdvanceTaskRepeatDateKey(prevDue, rule) : '';
+        if (!nextDue && !prevStart && !prevDue && fallbackBase) {
+            nextDue = __tmAdvanceTaskRepeatDateKey(fallbackBase, rule);
+        }
+        if (prevStart && !nextStart) return null;
+        if (prevDue && !nextDue) return null;
+        const nowIso = String(options.advancedAt || new Date().toISOString()).trim();
+        const repeatState = __tmNormalizeTaskRepeatState({
+            ...(task?.repeatState && typeof task.repeatState === 'object' ? task.repeatState : {}),
+            lastCompletedAt: String(options.completedAt || '').trim() || String(task?.repeatState?.lastCompletedAt || '').trim(),
+            lastAdvancedAt: nowIso,
+            lastInstanceStart: nextStart,
+            lastInstanceDue: nextDue,
+        });
+        return {
+            startDate: nextStart,
+            completionTime: nextDue,
+            repeatState,
+        };
+    }
+
+    function __tmGetTaskRepeatUnitLabel(type, every) {
+        const repeatType = __tmNormalizeTaskRepeatType(type);
+        const n = __tmNormalizeTaskRepeatEvery(every, repeatType);
+        if (repeatType === 'daily') return n > 1 ? `每${n}天` : '每天';
+        if (repeatType === 'workday') return n > 1 ? `每${n}个工作日` : '每个工作日';
+        if (repeatType === 'weekly') return n > 1 ? `每${n}周` : '每周';
+        if (repeatType === 'monthly') return n > 1 ? `每${n}个月` : '每月';
+        if (repeatType === 'yearly') return n > 1 ? `每${n}年` : '每年';
+        return '不循环';
+    }
+
+    function __tmGetTaskRepeatSummary(ruleInput, options = {}) {
+        const rule = __tmNormalizeTaskRepeatRule(ruleInput, options);
+        if (!rule.enabled || rule.type === 'none') return '';
+        const triggerText = rule.trigger === 'complete' ? '完成后' : '到期后';
+        const unitText = __tmGetTaskRepeatUnitLabel(rule.type, rule.every);
+        const untilText = rule.until ? ` · 至 ${rule.until}` : '';
+        return `${triggerText}${unitText}${untilText}`;
+    }
+
+    function __tmGetTaskRepeatWeekdayLabel(dateLike) {
+        const dt = (dateLike instanceof Date) ? dateLike : __tmBuildLocalNoonDateFromKey(dateLike);
+        if (!(dt instanceof Date) || Number.isNaN(dt.getTime())) return '周?';
+        return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][dt.getDay()] || '周?';
+    }
+
+    function __tmGetTaskRepeatMonthlyModeCaption(mode, anchorDateLike) {
+        const anchorDate = __tmBuildLocalNoonDateFromKey(anchorDateLike);
+        if (!(anchorDate instanceof Date) || Number.isNaN(anchorDate.getTime())) {
+            return mode === 'weekday' ? '按星期' : '按日期';
+        }
+        if (String(mode || '').trim() === 'weekday') {
+            return `按星期（第${__tmGetTaskRepeatMonthWeekOrdinal(anchorDate)}个${__tmGetTaskRepeatWeekdayLabel(anchorDate)}）`;
+        }
+        return `按日期（${anchorDate.getDate()}日）`;
+    }
+
+    function __tmIsRecurringInstanceTask(task) {
+        return !!(task && typeof task === 'object' && task.isRecurringInstance === true);
+    }
+
+    function __tmBuildRecurringInstanceTask(sourceTask, historyItem, orderIndex = 0) {
+        const source = (sourceTask && typeof sourceTask === 'object') ? sourceTask : null;
+        const history = __tmNormalizeTaskRepeatHistory([historyItem])[0] || null;
+        if (!source || !history) return null;
+        const completedAt = String(history.completedAt || '').trim();
+        const completedStamp = completedAt ? completedAt.replace(/[^0-9]/g, '').slice(0, 14) : `${Date.now()}_${orderIndex}`;
+        const taskId = String(source.id || '').trim();
+        if (!taskId) return null;
+        const virtualId = `repeatinst:${taskId}:${completedStamp || orderIndex}`;
+        const next = {
+            ...source,
+            id: virtualId,
+            attrHostId: '',
+            attr_host_id: '',
+            sourceTaskId: taskId,
+            recurringSourceTaskId: taskId,
+            recurringCompletedAt: completedAt,
+            isRecurringInstance: true,
+            isRecurringInstanceReadOnly: true,
+            done: true,
+            content: String(history.content || source.content || '').trim() || String(source.content || '').trim() || '(无内容)',
+            raw_content: String(history.content || source.content || '').trim() || String(source.content || '').trim() || '(无内容)',
+            markdown: `- [x] ${String(history.content || source.content || '').trim() || '(无内容)'}`,
+            root_id: String(history.docId || source.root_id || source.docId || '').trim(),
+            docId: String(history.docId || source.root_id || source.docId || '').trim(),
+            docName: String(history.docName || source.docName || '').trim() || '未命名文档',
+            h2: String(history.h2 || source.h2 || '').trim(),
+            h2Id: String(history.h2Id || source.h2Id || '').trim(),
+            h2Path: String(history.h2Path || source.h2Path || '').trim(),
+            priority: String(history.priority || source.priority || '').trim(),
+            custom_priority: String(history.priority || source.priority || '').trim(),
+            customStatus: String(history.customStatus || source.customStatus || '').trim(),
+            custom_status: String(history.customStatus || source.customStatus || '').trim(),
+            duration: String(history.duration || source.duration || '').trim(),
+            custom_duration: String(history.duration || source.duration || '').trim(),
+            remark: String(history.remark || source.remark || '').trim(),
+            custom_remark: String(history.remark || source.remark || '').trim(),
+            startDate: __tmNormalizeDateOnly(history.sourceStart || ''),
+            start_date: __tmNormalizeDateOnly(history.sourceStart || ''),
+            completionTime: completedAt || __tmNormalizeDateOnly(history.sourceDue || ''),
+            completion_time: completedAt || __tmNormalizeDateOnly(history.sourceDue || ''),
+            parentTaskId: '',
+            parent_id: '',
+            children: [],
+            level: 0,
+            created: completedAt || String(source.created || '').trim(),
+            updated: completedAt || String(source.updated || '').trim(),
+            docSeq: Number.isFinite(history.docSeq) ? (history.docSeq + ((orderIndex + 1) / 1000)) : (Number(source.docSeq) || Number.POSITIVE_INFINITY),
+            repeatHistory: [],
+            repeatRule: { enabled: false, type: 'none' },
+            repeatState: __tmNormalizeTaskRepeatState(null),
+        };
+        try { normalizeTaskFields(next, next.docName || source.docName || '未命名文档'); } catch (e) {}
+        return next;
+    }
+
+    function __tmRenderRecurringInstanceBadge(task, options = {}) {
+        if (!__tmIsRecurringInstanceTask(task)) return '';
+        const cls = String(options?.className || '').trim();
+        const classes = ['tm-recurring-instance-badge'];
+        if (cls) classes.push(cls);
+        return `<span class="${classes.join(' ')}">循环记录</span>`;
+    }
+
+    function __tmRenderRecurringTaskInlineIcon(task, options = {}) {
+        if (!task || typeof task !== 'object' || __tmIsRecurringInstanceTask(task)) return '';
+        const rule = __tmGetTaskRepeatRule(task, {
+            startDate: task?.startDate,
+            completionTime: task?.completionTime,
+        });
+        if (!rule.enabled || rule.type === 'none') return '';
+        const cls = String(options?.className || '').trim();
+        const classes = ['tm-recurring-task-icon'];
+        if (cls) classes.push(cls);
+        const summary = __tmGetTaskRepeatSummary(rule, {
+            startDate: task?.startDate,
+            completionTime: task?.completionTime,
+        });
+        const tooltip = summary ? `循环任务：${summary}` : '循环任务';
+        return `<span class="${classes.join(' ')}"${__tmBuildTooltipAttrs(tooltip, { side: String(options?.tooltipSide || 'bottom').trim() || 'bottom', ariaLabel: false })}>${__tmRenderLucideIcon('repeat')}</span>`;
+    }
+
+    function __tmPurgeRecurringInstanceTasks(sourceTaskId, completedAtList = []) {
+        const sid = String(sourceTaskId || '').trim();
+        if (!sid) return 0;
+        const completedSet = new Set((Array.isArray(completedAtList) ? completedAtList : [completedAtList])
+            .map((item) => String(item || '').trim())
+            .filter(Boolean));
+        const shouldRemove = (task) => {
+            if (!__tmIsRecurringInstanceTask(task)) return false;
+            const sourceId = String(task?.sourceTaskId || task?.recurringSourceTaskId || '').trim();
+            if (sourceId !== sid) return false;
+            if (!completedSet.size) return true;
+            return completedSet.has(String(task?.recurringCompletedAt || '').trim());
+        };
+        let removed = 0;
+        try {
+            Object.keys(state.flatTasks || {}).forEach((taskId) => {
+                const task = state.flatTasks?.[taskId];
+                if (!shouldRemove(task)) return;
+                delete state.flatTasks[taskId];
+                removed += 1;
+            });
+        } catch (e) {}
+        try {
+            Object.keys(state.pendingInsertedTasks || {}).forEach((taskId) => {
+                const task = state.pendingInsertedTasks?.[taskId];
+                if (!shouldRemove(task)) return;
+                delete state.pendingInsertedTasks[taskId];
+            });
+        } catch (e) {}
+        const filterTree = (list) => (Array.isArray(list) ? list : []).reduce((acc, item) => {
+            if (!item || shouldRemove(item)) return acc;
+            const next = { ...item };
+            if (Array.isArray(next.children) && next.children.length > 0) {
+                next.children = filterTree(next.children);
+            }
+            acc.push(next);
+            return acc;
+        }, []);
+        try {
+            state.taskTree = (Array.isArray(state.taskTree) ? state.taskTree : []).map((doc) => ({
+                ...doc,
+                tasks: filterTree(doc.tasks),
+            }));
+        } catch (e) {}
+        try {
+            state.otherBlocks = filterTree(state.otherBlocks);
+        } catch (e) {}
+        try {
+            state.filteredTasks = (Array.isArray(state.filteredTasks) ? state.filteredTasks : []).filter((task) => !shouldRemove(task));
+        } catch (e) {}
+        return removed;
+    }
+
+    function __tmCollectTaskRepeatPreviewDates(taskLike, options = {}) {
+        const task = (taskLike && typeof taskLike === 'object') ? taskLike : {};
+        const rule = __tmGetTaskRepeatRule(task, {
+            startDate: task?.startDate,
+            completionTime: task?.completionTime,
+        });
+        if (!rule.enabled || rule.type === 'none') return [];
+        const limit = Math.max(1, Math.min(8, Number(options.limit) || 5));
+        const out = [];
+        let cursorTask = {
+            ...task,
+            startDate: __tmNormalizeDateOnly(task?.startDate || ''),
+            completionTime: __tmNormalizeDateOnly(task?.completionTime || ''),
+            repeatState: __tmNormalizeTaskRepeatState(task?.repeatState),
+        };
+        for (let i = 0; i < limit; i += 1) {
+            const patch = __tmBuildTaskRepeatAdvancePatch(cursorTask, rule, {
+                advancedAt: String(options.advancedAt || new Date().toISOString()).trim() || new Date().toISOString(),
+                completedAt: String(cursorTask?.repeatState?.lastCompletedAt || '').trim(),
+            });
+            if (!patch) break;
+            const nextDate = __tmNormalizeDateOnly(patch.completionTime || patch.startDate || '');
+            if (!nextDate) break;
+            out.push(nextDate);
+            cursorTask = {
+                ...cursorTask,
+                startDate: __tmNormalizeDateOnly(patch.startDate || ''),
+                completionTime: __tmNormalizeDateOnly(patch.completionTime || ''),
+                repeatState: __tmNormalizeTaskRepeatState(patch.repeatState),
+            };
+        }
+        return out;
     }
 
     function __tmGetPriorityJiraInfo(value) {
@@ -48519,6 +50319,10 @@ async function __tmRefreshAfterWake(reason) {
         if (withFilters) applyFilters();
         if (!state.modal || !document.body.contains(state.modal)) {
             render();
+            return;
+        }
+        if (state.viewMode === 'calendar') {
+            if (!__tmRerenderCurrentViewInPlace(state.modal)) render();
             return;
         }
         if (state.viewMode === 'timeline') {
@@ -49661,9 +51465,13 @@ async function __tmRefreshAfterWake(reason) {
         }
         const taskId = String(id || '').trim();
         if (!taskId) return false;
+        const jumpTask = state.flatTasks?.[taskId] || null;
+        const targetTaskId = __tmIsRecurringInstanceTask(jumpTask)
+            ? String(jumpTask?.sourceTaskId || jumpTask?.recurringSourceTaskId || '').trim() || taskId
+            : taskId;
         if (__tmShouldOpenTaskDetailPageOnAnyTitleClick(event)) {
             try {
-                await window.tmOpenTaskDetail?.(taskId, event);
+                await window.tmOpenTaskDetail?.(targetTaskId, event);
                 return true;
             } catch (e) {}
         }
@@ -49672,7 +51480,7 @@ async function __tmRefreshAfterWake(reason) {
                 ? event.target.closest('.tm-checklist-item[data-id], #tmTimelineLeftTable tbody tr[data-id], #tmTaskTable tbody tr[data-id], .tm-kanban-card[data-id], .tm-whiteboard-stream-task-head[data-id], .tm-whiteboard-stream-task-node[data-id]')
                 : null;
             const ownerId = String(ownerRow?.getAttribute?.('data-id') || '').trim();
-            const targetId = taskId;
+            const targetId = targetTaskId;
             if (targetId && ownerId && ownerId === targetId) {
                 __tmToggleTaskMultiSelection(targetId);
                 return false;
@@ -49694,15 +51502,15 @@ async function __tmRefreshAfterWake(reason) {
         const openMobile = getOpenMobileFn();
         if (isNativeMobile && typeof openMobile === 'function') {
             try {
-                let docId = taskId;
+                let docId = targetTaskId;
                 try {
-                    const sql = `SELECT root_id FROM blocks WHERE id = '${taskId}' LIMIT 1`;
+                    const sql = `SELECT root_id FROM blocks WHERE id = '${targetTaskId}' LIMIT 1`;
                     const res = await API.call('/api/query/sql', { stmt: sql });
                     const rows = (res && res.code === 0) ? res.data : [];
-                    docId = (rows && rows[0] && rows[0].root_id) ? rows[0].root_id : taskId;
+                    docId = (rows && rows[0] && rows[0].root_id) ? rows[0].root_id : targetTaskId;
                 } catch (e) {}
                 openMobile(app, docId);
-                setTimeout(() => __tmScheduleScrollToBlock(taskId, 24), 650);
+                setTimeout(() => __tmScheduleScrollToBlock(targetTaskId, 24), 650);
                 closeAfterJump();
                 return true;
             } catch (e) {}
@@ -49711,22 +51519,22 @@ async function __tmRefreshAfterWake(reason) {
         const openTab = getOpenTabFn();
         if (typeof openTab === 'function') {
             try {
-                const sql = `SELECT root_id FROM blocks WHERE id = '${taskId}' LIMIT 1`;
+                const sql = `SELECT root_id FROM blocks WHERE id = '${targetTaskId}' LIMIT 1`;
                 const res = await API.call('/api/query/sql', { stmt: sql });
                 const rows = (res && res.code === 0) ? res.data : [];
-                const docId = (rows && rows[0]) ? rows[0].root_id : taskId;
+                const docId = (rows && rows[0]) ? rows[0].root_id : targetTaskId;
 
                 const params = { 
                     app, 
                     doc: { id: docId }
                 };
                 
-                if (docId !== taskId) {
-                    params.block = { id: taskId, mode: 0 };
+                if (docId !== targetTaskId) {
+                    params.block = { id: targetTaskId, mode: 0 };
                 }
 
                 openTab(params);
-                __tmScheduleScrollToBlock(taskId);
+                __tmScheduleScrollToBlock(targetTaskId);
                 closeAfterJump();
                 
                 return true;
@@ -50329,6 +52137,10 @@ async function __tmRefreshAfterWake(reason) {
         if (kind === 'reminder') {
             return __tmRenderLucideIcon('alarm-clock', 'tm-task-detail-core-chip__icon');
         }
+        if (kind === 'repeat') {
+            const icon = __tmRenderLucideIcon('repeat', 'tm-task-detail-core-chip__icon');
+            return value ? `${icon}<span class="tm-task-detail-core-chip__text">${esc(value)}</span>` : icon;
+        }
         if (kind === 'pinned') {
             return __tmRenderLucideIcon('pin', 'tm-task-detail-core-chip__icon');
         }
@@ -50439,6 +52251,45 @@ async function __tmRefreshAfterWake(reason) {
         `;
     }
 
+    function __tmBuildTaskRepeatHistorySectionHtml(task) {
+        const history = __tmNormalizeTaskRepeatHistory(task?.repeatHistory || task?.repeat_history || '');
+        if (!history.length) return '';
+        const itemsHtml = history.map((item, index) => {
+            const completedAt = String(item?.completedAt || '').trim();
+            const sourceStart = __tmNormalizeDateOnly(item?.sourceStart || '');
+            const sourceDue = __tmNormalizeDateOnly(item?.sourceDue || '');
+            const nextStart = __tmNormalizeDateOnly(item?.nextStart || '');
+            const nextDue = __tmNormalizeDateOnly(item?.nextDue || '');
+            const sourceText = sourceStart && sourceDue
+                ? `${__tmFormatTaskTimeCompact(sourceStart)} - ${__tmFormatTaskTimeCompact(sourceDue)}`
+                : (sourceDue ? `截止 ${__tmFormatTaskTimeCompact(sourceDue)}` : (sourceStart ? `开始 ${__tmFormatTaskTimeCompact(sourceStart)}` : '当前实例'));
+            const nextText = nextStart && nextDue
+                ? `${__tmFormatTaskTimeCompact(nextStart)} - ${__tmFormatTaskTimeCompact(nextDue)}`
+                : (nextDue ? `截止 ${__tmFormatTaskTimeCompact(nextDue)}` : (nextStart ? `开始 ${__tmFormatTaskTimeCompact(nextStart)}` : '未推进'));
+            return `
+                <div class="tm-task-detail-history-item">
+                    <div class="tm-task-detail-history-head">
+                        <div class="tm-task-detail-history-main">${esc(completedAt ? `完成于 ${__tmFormatTaskTime(completedAt)}` : '已完成')}</div>
+                        <button type="button" class="tm-task-detail-history-delete" data-tm-detail-repeat-history-delete="${esc(completedAt || String(index))}">删除</button>
+                    </div>
+                    <div class="tm-task-detail-history-sub">本次：${esc(sourceText)}</div>
+                    <div class="tm-task-detail-history-sub">已推进到：${esc(nextText)}</div>
+                </div>
+            `;
+        }).join('');
+        return `
+            <section class="tm-task-detail-section">
+                <div class="tm-task-detail-section-head">
+                    <div class="tm-task-detail-section-title">循环完成记录</div>
+                    <div class="tm-task-detail-section-tools">
+                        <span class="tm-task-detail-section-count">${history.length}</span>
+                    </div>
+                </div>
+                <div class="tm-task-detail-history-list">${itemsHtml}</div>
+            </section>
+        `;
+    }
+
     function __tmBuildTaskDetailInnerHtml(task, options = {}) {
         const opts = (options && typeof options === 'object') ? options : {};
         const embedded = !!opts.embedded;
@@ -50456,6 +52307,11 @@ async function __tmRefreshAfterWake(reason) {
         const curPinned = !!task?.pinned;
         const tomatoEnabled = !!SettingsStore.data.enableTomatoIntegration;
         const curHasReminder = tomatoEnabled && __tmHasReminderMark(task);
+        const curRepeatRule = __tmGetTaskRepeatRule(task);
+        const curRepeatSummary = __tmGetTaskRepeatSummary(curRepeatRule, {
+            startDate: task?.startDate,
+            completionTime: task?.completionTime,
+        });
         const startValue = __tmNormalizeDateOnly(String(task?.startDate || '').trim());
         const endValue = __tmNormalizeDateOnly(String(task?.completionTime || '').trim());
         const durationValue = String(task?.duration || '').trim();
@@ -50652,6 +52508,7 @@ async function __tmRefreshAfterWake(reason) {
 
                 ${__tmBuildTaskDetailRemarkSectionHtml(remarkValue, detailTip)}
                 ${textCustomFieldsHtml}
+                ${__tmBuildTaskRepeatHistorySectionHtml(task)}
             </div>
         `;
     }
@@ -50729,6 +52586,27 @@ async function __tmRefreshAfterWake(reason) {
         const readReminderValue = () => {
             const task = getBoundTask();
             return !!(task && __tmHasReminderMark(task));
+        };
+        const readRepeatSummaryValue = () => {
+            const task = getBoundTask();
+            if (!task) return '';
+            return __tmGetTaskRepeatSummary(__tmGetTaskRepeatRule(task), {
+                startDate: task?.startDate,
+                completionTime: task?.completionTime,
+            });
+        };
+        const syncRepeatChipFace = () => {
+            const summary = readRepeatSummaryValue();
+            const repeatFace = root.querySelector('[data-tm-detail-chip-face="repeat"]');
+            if (repeatFace instanceof HTMLElement) repeatFace.innerHTML = __tmBuildTaskDetailCoreChipFace('repeat', summary);
+            const repeatBtn = root.querySelector('[data-tm-detail-repeat-trigger]');
+            if (repeatBtn instanceof HTMLElement) {
+                repeatBtn.classList.toggle('has-value', !!summary);
+                const label = summary || '循环';
+                try { __tmApplyTooltipAttrsToElement(repeatBtn, label, { side: 'bottom' }); } catch (e) {}
+                try { repeatBtn.setAttribute('aria-label', label); } catch (e) {}
+                try { repeatBtn.removeAttribute('title'); } catch (e) {}
+            }
         };
         const syncReminderChipFace = () => {
             const reminder = readReminderValue();
@@ -50844,7 +52722,7 @@ async function __tmRefreshAfterWake(reason) {
             const modal = state.modal instanceof Element ? state.modal : null;
             if (!(modal instanceof Element) || !embedded) return null;
             if (String(state.viewMode || '').trim() !== 'checklist' && String(state.viewMode || '').trim() !== 'whiteboard') return null;
-            const panel = modal.querySelector(__tmChecklistUseSheetMode(modal) ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+            const panel = __tmResolveChecklistDetailPanel(modal).panel;
             if (!(panel instanceof HTMLElement)) return null;
             return {
                 top: Number(panel.scrollTop || 0),
@@ -50856,7 +52734,7 @@ async function __tmRefreshAfterWake(reason) {
             const restore = () => {
                 const modal = state.modal instanceof Element ? state.modal : null;
                 if (!(modal instanceof Element)) return;
-                const panel = modal.querySelector(__tmChecklistUseSheetMode(modal) ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+                const panel = __tmResolveChecklistDetailPanel(modal).panel;
                 if (!(panel instanceof HTMLElement)) return;
                 try {
                     panel.scrollTop = Number(snapshot.top || 0);
@@ -50888,6 +52766,7 @@ async function __tmRefreshAfterWake(reason) {
             const durationBtn = root.querySelector('[data-tm-detail-duration-trigger]');
             if (durationBtn instanceof HTMLElement) durationBtn.classList.toggle('has-value', !!durationValue);
 
+            syncRepeatChipFace();
             syncReminderChipFace();
 
             const pinnedFace = root.querySelector('[data-tm-detail-chip-face="pinned"]');
@@ -50987,6 +52866,25 @@ async function __tmRefreshAfterWake(reason) {
                     setHiddenInputValue('duration', String(nextTask.duration || '').trim());
                     syncMetaChipFaces();
                     break;
+                case __TM_TASK_REPEAT_RULE_ATTR:
+                    nextTask.repeatRule = __tmNormalizeTaskRepeatRule(value, {
+                        startDate: nextTask?.startDate,
+                        completionTime: nextTask?.completionTime,
+                    });
+                    nextTask.repeat_rule = nextTask.repeatRule;
+                    nextTask = __tmCacheTaskInState(nextTask, {
+                        docNameFallback: nextTask.doc_name || nextTask.docName || '未命名文档'
+                    }) || nextTask;
+                    syncMetaChipFaces();
+                    break;
+                case __TM_TASK_REPEAT_STATE_ATTR:
+                    nextTask.repeatState = __tmNormalizeTaskRepeatState(value);
+                    nextTask.repeat_state = nextTask.repeatState;
+                    nextTask = __tmCacheTaskInState(nextTask, {
+                        docNameFallback: nextTask.doc_name || nextTask.docName || '未命名文档'
+                    }) || nextTask;
+                    syncMetaChipFaces();
+                    break;
                 case 'custom-remark':
                     nextTask.remark = __tmNormalizeRemarkMarkdown(value);
                     nextTask = __tmCacheTaskInState(nextTask, {
@@ -51059,7 +52957,8 @@ async function __tmRefreshAfterWake(reason) {
         };
         on(root.querySelector('[data-tm-detail="close"]'), 'click', close);
         on(root.querySelector('[data-tm-detail="cancel"]'), 'click', close);
-        on(root.querySelector('[data-tm-detail="jump"]'), 'click', async (ev) => {
+        const jumpBtn = root.querySelector('[data-tm-detail="jump"]');
+        on(jumpBtn, 'click', async (ev) => {
             try { ev.preventDefault(); } catch (e) {}
             try {
                 const jumped = await tmJumpToTask(taskId, ev);
@@ -51167,6 +53066,17 @@ async function __tmRefreshAfterWake(reason) {
                     duration: nextDuration,
                     remark: nextRemark
                 };
+                const repeatRule = __tmGetTaskRepeatRule(task, {
+                    startDate: nextStart,
+                    completionTime: nextEnd,
+                });
+                if (repeatRule.enabled) {
+                    patch.repeatState = __tmNormalizeTaskRepeatState({
+                        ...(task?.repeatState && typeof task.repeatState === 'object' ? task.repeatState : {}),
+                        lastInstanceStart: nextStart,
+                        lastInstanceDue: nextEnd,
+                    });
+                }
                 if (nextCustomFieldTextValues && typeof nextCustomFieldTextValues === 'object' && Object.keys(nextCustomFieldTextValues).length) {
                     patch.customFieldValues = nextCustomFieldTextValues;
                 }
@@ -51179,6 +53089,7 @@ async function __tmRefreshAfterWake(reason) {
                 task.pinned = nextPinned;
                 task.startDate = nextStart;
                 task.completionTime = nextEnd;
+                if (patch.repeatState) task.repeatState = __tmNormalizeTaskRepeatState(patch.repeatState);
                 task.duration = nextDuration;
                 task.remark = __tmNormalizeRemarkMarkdown(nextRemark);
                 Object.entries(nextCustomFieldTextValues || {}).forEach(([fieldId, fieldValue]) => {
@@ -51414,6 +53325,191 @@ async function __tmRefreshAfterWake(reason) {
                 try { ev.preventDefault(); } catch (e) {}
                 try { ev.stopPropagation(); } catch (e) {}
                 await commit();
+            });
+        };
+        const openTaskDateSheetPopover = (trigger, field) => {
+            if (!(trigger instanceof HTMLElement)) return;
+            if (inlinePopoverCommitting) return;
+            if (activeInlinePopover && activeInlinePopoverTrigger === trigger) {
+                closeInlinePopover();
+                return;
+            }
+            closeInlinePopover();
+            const popover = document.createElement('div');
+            popover.className = 'tm-task-detail-inline-popover tm-task-detail-inline-popover--date-sheet';
+            const title = field === 'startDate' ? '开始日期' : '截止日期';
+            const currentValue = readHiddenInputValue(field);
+            const task = getBoundTask();
+            const renderRepeatSummary = () => {
+                const boundTask = getBoundTask() || task || {};
+                const summary = __tmGetTaskRepeatSummary(__tmGetTaskRepeatRule(boundTask), {
+                    startDate: boundTask?.startDate,
+                    completionTime: boundTask?.completionTime,
+                });
+                return summary || '不重复';
+            };
+            const renderRepeatUntilSummary = () => {
+                const boundTask = getBoundTask() || task || {};
+                const rule = __tmGetTaskRepeatRule(boundTask);
+                if (!rule.enabled || rule.type === 'none') return '未设置';
+                return rule.until ? `结束于 ${rule.until}` : '永不结束';
+            };
+            const renderRepeatPreviewHtml = () => {
+                const boundTask = getBoundTask() || task || {};
+                const list = __tmCollectTaskRepeatPreviewDates(boundTask, { limit: 5 });
+                if (!list.length) return '<span class="tm-task-detail-inline-popover__preview-chip">未设置循环</span>';
+                return list.map((item) => `<span class="tm-task-detail-inline-popover__preview-chip">${esc(__tmFormatTaskTimeCompact(item))}</span>`).join('');
+            };
+            popover.innerHTML = `
+                <div class="tm-task-detail-inline-popover__title">${esc(title)}</div>
+                <div class="tm-task-detail-inline-popover__section">
+                    <input class="tm-input tm-task-detail-inline-popover__input" data-tm-detail-inline-popover-input type="date" value="${esc(currentValue)}">
+                </div>
+                ${field === 'completionTime' ? `
+                    <div class="tm-task-detail-inline-popover__section">
+                        <button type="button" class="tm-task-detail-inline-popover__row-btn" data-tm-detail-date-repeat-open>
+                            <span class="tm-task-detail-inline-popover__row-main">
+                                <span class="tm-task-detail-inline-popover__row-icon">${__tmRenderLucideIcon('repeat')}</span>
+                                <span class="tm-task-detail-inline-popover__row-text">
+                                    <span class="tm-task-detail-inline-popover__row-title">循环</span>
+                                    <span class="tm-task-detail-inline-popover__row-desc" data-tm-detail-date-repeat-summary>${esc(renderRepeatSummary())}</span>
+                                </span>
+                            </span>
+                            <span class="tm-task-detail-inline-popover__row-trailing">${__tmRenderLucideIcon('chevron-right')}</span>
+                        </button>
+                        <button type="button" class="tm-task-detail-inline-popover__row-btn" data-tm-detail-date-repeat-until-open>
+                            <span class="tm-task-detail-inline-popover__row-main">
+                                <span class="tm-task-detail-inline-popover__row-icon">${__tmRenderLucideIcon('calendar-check')}</span>
+                                <span class="tm-task-detail-inline-popover__row-text">
+                                    <span class="tm-task-detail-inline-popover__row-title">结束方式</span>
+                                    <span class="tm-task-detail-inline-popover__row-desc" data-tm-detail-date-repeat-until>${esc(renderRepeatUntilSummary())}</span>
+                                </span>
+                            </span>
+                            <span class="tm-task-detail-inline-popover__row-trailing">${__tmRenderLucideIcon('chevron-right')}</span>
+                        </button>
+                        <div class="tm-task-detail-inline-popover__preview" data-tm-detail-date-repeat-preview>${renderRepeatPreviewHtml()}</div>
+                    </div>
+                ` : ''}
+                <div class="tm-task-detail-inline-popover__actions">
+                    <button type="button" class="tm-btn tm-btn-secondary" data-tm-detail-inline-popover-clear>清空</button>
+                    <button type="button" class="tm-btn tm-btn-primary" data-tm-detail-inline-popover-apply>确定</button>
+                </div>
+            `;
+            document.body.appendChild(popover);
+            activeInlinePopover = popover;
+            activeInlinePopoverTrigger = trigger;
+            try { trigger.classList.add('is-open'); } catch (e) {}
+            positionInlinePopover();
+            try { __tmAnimatePopupIn(popover, { origin: 'top-left', duration: 150 }); } catch (e) {}
+            const input = popover.querySelector('[data-tm-detail-inline-popover-input]');
+            const clearBtn = popover.querySelector('[data-tm-detail-inline-popover-clear]');
+            const applyBtn = popover.querySelector('[data-tm-detail-inline-popover-apply]');
+            const repeatOpenBtn = popover.querySelector('[data-tm-detail-date-repeat-open]');
+            const repeatUntilBtn = popover.querySelector('[data-tm-detail-date-repeat-until-open]');
+            const syncRepeatRows = () => {
+                const summaryEl = popover.querySelector('[data-tm-detail-date-repeat-summary]');
+                const untilEl = popover.querySelector('[data-tm-detail-date-repeat-until]');
+                const previewEl = popover.querySelector('[data-tm-detail-date-repeat-preview]');
+                if (summaryEl instanceof HTMLElement) summaryEl.textContent = renderRepeatSummary();
+                if (untilEl instanceof HTMLElement) untilEl.textContent = renderRepeatUntilSummary();
+                if (previewEl instanceof HTMLElement) previewEl.innerHTML = renderRepeatPreviewHtml();
+            };
+            const commit = async (rawValue = null) => {
+                if (inlinePopoverCommitting) return;
+                const inputValue = rawValue == null && input instanceof HTMLInputElement
+                    ? input.value
+                    : String(rawValue ?? '');
+                const nextValue = inputValue ? __tmNormalizeDateOnly(inputValue) : '';
+                try {
+                    setInlinePopoverBusyState(true, popover);
+                    setHiddenInputValue(field, nextValue);
+                    syncMetaChipFaces();
+                    const commitResult = await flushAutoSaveNow({
+                        showHint: false,
+                        closeAfterSave: false,
+                        preserveFocus: true,
+                        skipRerender: true,
+                    });
+                    if (commitResult === false) return;
+                    closeInlinePopover(true);
+                    try { trigger.focus(); } catch (e) {}
+                } catch (e) {
+                    hint(`❌ 更新失败: ${e.message}`, 'error');
+                } finally {
+                    setInlinePopoverBusyState(false);
+                }
+            };
+            if (input instanceof HTMLInputElement) {
+                try {
+                    requestAnimationFrame(() => {
+                        try { input.focus(); } catch (e) {}
+                        try {
+                            if (typeof input.showPicker === 'function') input.showPicker();
+                        } catch (e) {}
+                    });
+                } catch (e) {}
+                on(input, 'keydown', async (ev) => {
+                    if (ev.key === 'Escape') {
+                        try { ev.preventDefault(); } catch (e) {}
+                        closeInlinePopover();
+                        try { trigger.focus(); } catch (e) {}
+                        return;
+                    }
+                    if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) {
+                        try { ev.preventDefault(); } catch (e) {}
+                        await commit();
+                    }
+                });
+            }
+            on(clearBtn, 'click', async (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                await commit('');
+            });
+            on(applyBtn, 'click', async (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                await commit();
+            });
+            on(repeatOpenBtn, 'click', async (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                const result = await window.tmEditTaskRepeatRule?.(taskId, { task: getBoundTask() });
+                if (!result) return;
+                const refreshedTask = await __tmResolveTaskForRepeat(taskId);
+                if (refreshedTask) {
+                    try { root.__tmTaskDetailTask = refreshedTask; } catch (e) {}
+                }
+                syncRepeatRows();
+                syncMetaChipFaces();
+                syncSerializedSnapshot();
+                positionInlinePopover();
+            });
+            on(repeatUntilBtn, 'click', async (ev) => {
+                try { ev.preventDefault(); } catch (e) {}
+                try { ev.stopPropagation(); } catch (e) {}
+                const currentTask = getBoundTask();
+                const currentRule = __tmGetTaskRepeatRule(currentTask);
+                if (!currentRule.enabled || currentRule.type === 'none') {
+                    hint('⚠ 请先设置循环规则', 'warning');
+                    return;
+                }
+                const nextUntil = await showDatePrompt('循环截止日期（留空表示永不结束）', currentRule.until || '');
+                if (nextUntil === null) return;
+                const result = await window.tmSetTaskRepeatRule?.(taskId, {
+                    ...currentRule,
+                    until: nextUntil || '',
+                    anchorDate: currentTask?.completionTime || currentTask?.startDate || __tmNormalizeDateOnly(new Date()),
+                }, { source: 'task-repeat-until-inline' });
+                if (!result) return;
+                const refreshedTask = await __tmResolveTaskForRepeat(taskId);
+                if (refreshedTask) {
+                    try { root.__tmTaskDetailTask = refreshedTask; } catch (e) {}
+                }
+                syncRepeatRows();
+                syncMetaChipFaces();
+                syncSerializedSnapshot();
+                positionInlinePopover();
             });
         };
         on(document, 'pointerdown', (ev) => {
@@ -51863,6 +53959,10 @@ async function __tmRefreshAfterWake(reason) {
                     try { ev.stopPropagation(); } catch (e) {}
                     const field = String(btn.getAttribute('data-tm-detail-date-trigger') || '').trim();
                     if (!field) return;
+                    if (field === 'completionTime') {
+                        openTaskDateSheetPopover(btn, field);
+                        return;
+                    }
                     const title = field === 'startDate' ? '开始日期' : '截止日期';
                     openInlinePopover(btn, {
                         mode: 'date',
@@ -51938,6 +54038,28 @@ async function __tmRefreshAfterWake(reason) {
                     const subtaskId = String(row.getAttribute('data-tm-detail-subtask-menu') || '').trim();
                     if (!subtaskId) return;
                     try { tmShowTaskContextMenu(ev, subtaskId); } catch (e) {}
+                });
+            });
+            root.querySelectorAll('[data-tm-detail-repeat-history-delete]').forEach((btn) => {
+                if (!(btn instanceof HTMLButtonElement)) return;
+                on(btn, 'click', async (ev) => {
+                    try { ev.preventDefault(); } catch (e) {}
+                    try { ev.stopPropagation(); } catch (e) {}
+                    const completedAt = String(btn.getAttribute('data-tm-detail-repeat-history-delete') || '').trim();
+                    if (!completedAt) return;
+                    const ok = await showConfirm('删除循环记录', '删除后该条循环完成记录会从插件内移除。是否继续？');
+                    if (!ok) return;
+                    try {
+                        await __tmDeleteTaskRepeatHistoryEntry(taskId, completedAt, { source: 'detail-repeat-history-delete' });
+                        const refreshedTask = await __tmResolveTaskForRepeat(taskId);
+                        if (refreshedTask) {
+                            try { root.__tmTaskDetailTask = refreshedTask; } catch (e) {}
+                        }
+                        refreshBoundDetail(taskId);
+                        try { hint('✅ 已删除循环记录', 'success'); } catch (e) {}
+                    } catch (e) {
+                        try { hint(`❌ 删除失败: ${String(e?.message || e || '')}`, 'error'); } catch (e2) {}
+                    }
                 });
             });
             on(root.querySelector('[data-tm-detail="create-subtask"]'), 'click', (ev) => {
@@ -52036,7 +54158,7 @@ async function __tmRefreshAfterWake(reason) {
             const getDetailScrollContainer = () => {
                 if (embedded) {
                     const modal = state.modal instanceof Element ? state.modal : null;
-                    const panel = modal?.querySelector?.(__tmChecklistUseSheetMode(modal) ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+                    const panel = __tmResolveChecklistDetailPanel(modal).panel;
                     if (panel instanceof HTMLElement) return panel;
                 }
                 const standalone = root.closest?.('.tm-task-detail');
@@ -52359,7 +54481,8 @@ async function __tmRefreshAfterWake(reason) {
         if (!__tmIsChecklistSelectionContext(modal)) return false;
         const selectedId = String(state.detailTaskId || '').trim();
         const multiSelectedSet = __tmGetMultiSelectedTaskIdSet();
-        const sheetMode = __tmChecklistUseSheetMode(modal);
+        const panelState = __tmResolveChecklistDetailPanel(modal, { preferSheetMode: __tmChecklistUseSheetMode(modal) });
+        const sheetMode = !!panelState.sheetMode;
         const items = modal.querySelectorAll('.tm-checklist-item[data-id]');
         items.forEach((item) => {
             if (!(item instanceof HTMLElement)) return;
@@ -52367,7 +54490,7 @@ async function __tmRefreshAfterWake(reason) {
             item.classList.toggle('tm-checklist-item--active', !!selectedId && id === selectedId);
             item.classList.toggle('tm-task-row--multi-selected', !!id && multiSelectedSet.has(id));
         });
-        const panel = modal.querySelector(sheetMode ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+        const panel = panelState.panel;
         if (!(panel instanceof HTMLElement)) return false;
         const prevTaskId = String(panel.__tmTaskDetailTask?.id || '').trim();
         const detailScrollSnapshot = prevTaskId && prevTaskId === selectedId
@@ -52604,6 +54727,30 @@ async function __tmRefreshAfterWake(reason) {
         return (Number(window.innerWidth || 0) > 0) ? window.innerWidth <= 960 : false;
     }
 
+    function __tmResolveChecklistDetailPanel(modalEl, options = {}) {
+        const modal = modalEl instanceof Element ? modalEl : state.modal;
+        if (!(modal instanceof Element)) {
+            return { panel: null, sheetMode: false, preferredSheetMode: false };
+        }
+        const preferredSheetMode = options && Object.prototype.hasOwnProperty.call(options, 'preferSheetMode')
+            ? !!options.preferSheetMode
+            : __tmChecklistUseSheetMode(modal);
+        let panel = modal.querySelector(preferredSheetMode ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+        let sheetMode = preferredSheetMode;
+        if (!(panel instanceof HTMLElement)) {
+            const fallback = modal.querySelector(preferredSheetMode ? '#tmChecklistDetailPanel' : '#tmChecklistSheetPanel');
+            if (fallback instanceof HTMLElement) {
+                panel = fallback;
+                sheetMode = String(fallback.id || '').trim() === 'tmChecklistSheetPanel';
+            }
+        }
+        return {
+            panel: panel instanceof HTMLElement ? panel : null,
+            sheetMode,
+            preferredSheetMode,
+        };
+    }
+
 // 渲染任务列表（支持跨文档全局排序）
     function renderTaskList() {
         if (state.filteredTasks.length === 0) {
@@ -52834,7 +54981,7 @@ async function __tmRefreshAfterWake(reason) {
                             </span>
                             <span class="tm-task-text ${done ? 'tm-task-done' : ''}"
                                   data-level="${depth}">
-                                <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)"${__tmBuildTooltipAttrs(String(content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, content)}${__tmHasReminderMark(task) ? __tmRenderReminderIcon() : ''}</span>
+                                <span class="tm-task-content-clickable" onclick="tmJumpToTask('${task.id}', event)"${__tmBuildTooltipAttrs(String(content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${API.renderTaskContentHtml(task.markdown, content)}${__tmRenderRecurringTaskInlineIcon(task)}${__tmHasReminderMark(task) ? __tmRenderReminderIcon() : ''}${__tmRenderRecurringInstanceBadge(task, { className: 'tm-recurring-instance-badge--inline' })}</span>
                             </span>
                             <button class="tm-subtask-create-btn"
                                     type="button"
@@ -54001,6 +56148,17 @@ async function __tmRefreshAfterWake(reason) {
                     try { hint(__tmBuildTaskDoneSuccessHint(!!done, '✅ 任务已完成'), 'success'); } catch (e) {}
                 }
                 if (targetDone && opts.force !== true) __tmQueueTaskDoneDelight(id, { done: true, suppressHint: opts.suppressHint, source: opts.source });
+                if (targetDone) {
+                    try {
+                        __tmScheduleRecurringTaskAdvanceAfterCompletion(id, {
+                            source: opts.source,
+                            completedAt: new Date().toISOString(),
+                            scheduleId: String(opts.scheduleId || '').trim(),
+                        });
+                    } catch (e) {}
+                } else {
+                    try { __tmClearRecurringTaskAdvanceTimer(id); } catch (e) {}
+                }
                 if (useCalendarLocalRefresh) {
                     try { globalThis.__tmCalendar?.syncTaskDoneInPlace?.(id, !!done, { allowRefetch: true }); } catch (e) {}
                 } else {
@@ -54318,6 +56476,17 @@ async function __tmRefreshAfterWake(reason) {
                 if (statusSyncError) hint(`${__tmBuildTaskDoneSuccessHint(!!actualDone, '✅ 任务已完成')}，但状态同步失败`, 'warning');
                 else hint(__tmBuildTaskDoneSuccessHint(!!actualDone, '✅ 任务已完成'), 'success');
             }
+            if (actualDone) {
+                try {
+                    __tmScheduleRecurringTaskAdvanceAfterCompletion(id, {
+                        source: opts.source,
+                        completedAt: new Date().toISOString(),
+                        scheduleId: String(opts.scheduleId || '').trim(),
+                    });
+                } catch (e) {}
+            } else {
+                try { __tmClearRecurringTaskAdvanceTimer(id); } catch (e) {}
+            }
 
         } catch (err) {
             console.error('[完成操作失败]', err);
@@ -54372,6 +56541,13 @@ async function __tmRefreshAfterWake(reason) {
         }
         const tid = String(id || '').trim();
         let task = state.flatTasks?.[tid] || null;
+        if (__tmIsRecurringInstanceTask(task)) {
+            if (opts.suppressHint !== true) hint('⚠️ 循环完成实例为只读记录，请在原任务中继续操作', 'warning');
+            if (ev?.target) {
+                try { ev.target.checked = true; } catch (e) {}
+            }
+            return false;
+        }
         if (!task) {
             try { task = await __tmEnsureTaskInStateById(tid); } catch (e) { task = null; }
         }
@@ -54398,6 +56574,7 @@ async function __tmRefreshAfterWake(reason) {
                     statusPatch: statusPatch && Object.keys(statusPatch).length > 0 ? { ...statusPatch } : null,
                     suppressHint: opts.suppressHint === true,
                     source: String(opts.source || '').trim(),
+                    scheduleId: String(opts.scheduleId || '').trim(),
                 },
                 inversePatch,
             }, { wait: true });
@@ -55188,6 +57365,12 @@ async function __tmRefreshAfterWake(reason) {
             try { hint('⚠️ 未找到任务数据，无法打开详情', 'warning'); } catch (e) {}
             return false;
         }
+        if (__tmIsRecurringInstanceTask(task)) {
+            const sourceTaskId = String(task?.sourceTaskId || task?.recurringSourceTaskId || '').trim();
+            if (sourceTaskId) {
+                return await window.tmOpenTaskDetail(sourceTaskId, ev);
+            }
+        }
         try {
             task = __tmCacheTaskInState(task, {
                 docNameFallback: task.doc_name || task.docName || '未命名文档'
@@ -55444,7 +57627,7 @@ async function __tmRefreshAfterWake(reason) {
             if (!(modal instanceof Element)) return null;
             const selectedId = String(state.detailTaskId || '').trim();
             if (!selectedId) return null;
-            const panel = modal.querySelector(__tmChecklistUseSheetMode(modal) ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+            const panel = __tmResolveChecklistDetailPanel(modal).panel;
             if (!(panel instanceof HTMLElement)) return null;
             return {
                 top: Number(panel.scrollTop || 0),
@@ -55464,7 +57647,7 @@ async function __tmRefreshAfterWake(reason) {
                 if (!(modal instanceof Element)) return;
                 if (String(state.viewMode || '').trim() !== 'checklist' && String(state.viewMode || '').trim() !== 'whiteboard') return;
                 if (String(state.detailTaskId || '').trim() !== String(snapshot.selectedId || '').trim()) return;
-                const panel = modal.querySelector(__tmChecklistUseSheetMode(modal) ? '#tmChecklistSheetPanel' : '#tmChecklistDetailPanel');
+                const panel = __tmResolveChecklistDetailPanel(modal).panel;
                 if (!(panel instanceof HTMLElement)) return;
                 panel.scrollTop = Number(snapshot.top || 0);
                 panel.scrollLeft = Number(snapshot.left || 0);
@@ -55924,7 +58107,31 @@ async function __tmRefreshAfterWake(reason) {
         if (tomatoEnabled) {
             menu.appendChild(createItem(__tmRenderContextMenuLabel('alarm-clock', '提醒'), () => tmReminder(taskId)));
         }
-        menu.appendChild(createItem(__tmRenderContextMenuLabel('trash-2', '删除任务'), () => tmDelete(taskId), true));
+        if (__tmIsRecurringInstanceTask(task)) {
+            menu.appendChild(createItem(__tmRenderContextMenuLabel('trash-2', '删除记录'), async () => {
+                const completedAt = String(task?.recurringCompletedAt || '').trim();
+                const sourceTaskId = String(task?.sourceTaskId || task?.recurringSourceTaskId || '').trim();
+                if (!completedAt || !sourceTaskId) {
+                    hint('⚠️ 未找到可删除的循环记录', 'warning');
+                    return;
+                }
+                let ok = false;
+                try {
+                    ok = await showConfirm('删除循环记录', '确定要删除这条循环记录吗？此操作不可恢复。');
+                } catch (e) {
+                    ok = false;
+                }
+                if (!ok) return;
+                try {
+                    await __tmDeleteTaskRepeatHistoryEntry(sourceTaskId, completedAt, { source: 'context-repeat-history-delete' });
+                    hint('✅ 已删除循环记录', 'success');
+                } catch (e) {
+                    hint(`❌ 删除失败: ${String(e?.message || e || '')}`, 'error');
+                }
+            }, true));
+        } else {
+            menu.appendChild(createItem(__tmRenderContextMenuLabel('trash-2', '删除任务'), () => tmDelete(taskId), true));
+        }
 
         document.body.appendChild(menu);
         requestAnimationFrame(() => {
@@ -57800,6 +60007,7 @@ async function __tmRefreshAfterWake(reason) {
         const includeQuickAddDoc = opts.includeQuickAddDoc !== false;
         const forceRefreshScope = !!opts.forceRefreshScope;
         const quickAddDocId = includeQuickAddDoc ? String(SettingsStore.data.newTaskDocId || '').trim() : '';
+        const currentGroupExcludedDocIds = __tmGetExcludedDocIdsForGroup(currentGroupId);
         
         let targetDocs = [];
         
@@ -57842,6 +60050,7 @@ async function __tmRefreshAfterWake(reason) {
         const resolveCacheKey = [
             currentGroupId,
             quickAddDocId,
+            currentGroupExcludedDocIds.join(','),
             ...normalizedDocs.map((doc) => `${doc.kind}:${doc.id}:${doc.recursive ? 1 : 0}:${__tmNormalizeDocGroupExcludedDocIds(doc?.excludedDocIds).join(',')}`)
         ].join('|');
         const resolveCacheEnt = __tmResolvedDocIdsCache;
@@ -57867,7 +60076,13 @@ async function __tmRefreshAfterWake(reason) {
             seen.add(id);
             finalIds.push(id);
         };
-        const quickAddExcluded = currentGroupId !== 'all' && __tmIsDocExcludedInGroup(quickAddDocId, currentGroupId);
+        const excludeCurrentGroupDocs = (ids) => {
+            const list = Array.isArray(ids) ? ids : [];
+            if (!currentGroupExcludedDocIds.length) return list.slice();
+            const excludedSet = new Set(currentGroupExcludedDocIds);
+            return list.filter((id0) => !excludedSet.has(String(id0 || '').trim()));
+        };
+        const quickAddExcluded = __tmIsDocExcludedInGroup(quickAddDocId, currentGroupId);
         if (quickAddDocId && quickAddDocId !== '__dailyNote__' && !quickAddExcluded) pushId(quickAddDocId);
 
         const resolvePromise = Promise.resolve().then(async () => {
@@ -57877,12 +60092,12 @@ async function __tmRefreshAfterWake(reason) {
                 const currentGroup = groups.find((g) => String(g?.id || '').trim() === String(currentGroupId || '').trim());
                 if (currentGroup) {
                     const out0 = await __tmApplyCalendarSearchOptimizationToDocIds(finalIds, currentGroup);
-                    const out1 = Array.isArray(out0) ? out0.slice() : [];
+                    const out1 = excludeCurrentGroupDocs(Array.isArray(out0) ? out0.slice() : []);
                     __tmResolvedDocIdsCache = { key: resolveCacheKey, ids: out1, t: Date.now() };
                     return out1;
                 }
             }
-            const out = finalIds.slice();
+            const out = excludeCurrentGroupDocs(finalIds);
             __tmResolvedDocIdsCache = { key: resolveCacheKey, ids: out, t: Date.now() };
             return out;
         });
@@ -58143,7 +60358,10 @@ async function __tmRefreshAfterWake(reason) {
             state.listRenderStep = loadBudget.enabled ? loadBudget.listStep : 100;
             
             // 2. 批量获取任务
-            const res = await API.getTasksByDocuments(allDocIds, effectiveQueryLimit, { doneOnly: !!state.__tmQueryDoneOnly });
+            // 循环完成实例挂在源任务历史上；如果只查询已完成原任务，会把已推进为未完成的源任务漏掉，
+            // 从而无法注入循环记录。这里先关闭 doneOnly 查询优化，筛选交给前端规则层处理。
+            const queryDoneOnly = false;
+            const res = await API.getTasksByDocuments(allDocIds, effectiveQueryLimit, { doneOnly: queryDoneOnly });
             
             if (token !== (Number(state.openToken) || 0)) {
                 finishPerfTrace({ cancelled: 1, reason: 'stale-token-after-query' });
@@ -58206,6 +60424,7 @@ async function __tmRefreshAfterWake(reason) {
                 taskCount: Array.isArray(res.tasks) ? res.tasks.length : 0,
                 queryTime: __tmRoundPerfMs(state.stats.queryTime),
                 fastBudget: loadBudget.enabled ? 1 : 0,
+                doneOnlyOptimized: queryDoneOnly ? 1 : 0,
             });
 
             const nextTaskTree = [];
@@ -58412,7 +60631,8 @@ async function __tmRefreshAfterWake(reason) {
                             remark: task.remark || '',
                             completionTime: task.completionTime || '',
                             customTime: task.customTime || '',
-                            content: task.content
+                            content: task.content,
+                            repeatHistory: task.repeatHistory || [],
                         });
                     }
                     
@@ -58424,6 +60644,16 @@ async function __tmRefreshAfterWake(reason) {
                     }
                     tasksByDoc.get(task.root_id).push(task);
                     nextFlatTasks[task.id] = task;
+                    const repeatHistory = __tmNormalizeTaskRepeatHistory(task.repeatHistory || task.repeat_history || '');
+                    if (repeatHistory.length > 0) {
+                        repeatHistory.forEach((historyItem, historyIndex) => {
+                            const virtualTask = __tmBuildRecurringInstanceTask(task, historyItem, historyIndex);
+                            if (!virtualTask?.id) return;
+                            if (!tasksByDoc.has(virtualTask.root_id)) tasksByDoc.set(virtualTask.root_id, []);
+                            tasksByDoc.get(virtualTask.root_id).push(virtualTask);
+                            nextFlatTasks[virtualTask.id] = virtualTask;
+                        });
+                    }
                 });
                 let parentLinkStats = {
                     rounds: 0,
@@ -58503,6 +60733,11 @@ async function __tmRefreshAfterWake(reason) {
                 state.flatTasks = nextFlatTasks;
                 try { __tmUpsertWhiteboardTaskSnapshots(Object.values(state.flatTasks || {}), { persist: false }); } catch (e) {}
                 state.flatTasks = __tmMergeOtherBlocksIntoFlatTasks(state.flatTasks);
+                try {
+                    await __tmReconcileRecurringTasksOnLoad(Object.keys(state.flatTasks || {}), {
+                        todayKey: __tmNormalizeDateOnly(new Date()),
+                    });
+                } catch (e) {}
                 try { recalcStats(); } catch (e) {}
                 __tmPerfTraceMark(perfTrace, 'enhance', {
                     taskCount: Array.isArray(res.tasks) ? res.tasks.length : 0,
@@ -58883,7 +61118,7 @@ async function __tmRefreshAfterWake(reason) {
             ? null
             : (groups.find((g) => String(g?.id || '').trim() === String(currentGroupId || '').trim()) || null);
         const currentGroupCalendarOptimization = __tmGetGroupCalendarSearchOptimization(currentGroup);
-        const currentGroupExcludedDocIds = currentGroup ? __tmGetGroupExcludedDocIds(currentGroup) : [];
+        const currentGroupExcludedDocIds = __tmGetExcludedDocIdsForGroup(currentGroupId);
         
         // 渲染分组选择器
         const renderGroupSelector = () => {
@@ -59125,7 +61360,7 @@ async function __tmRefreshAfterWake(reason) {
                         </div>
                         <div class="tm-checklist-item-main" ondblclick="tmChecklistItemDblClick('${escSq(String(task.id || ''))}', event)">
                             <div class="${titleRowClass}">
-                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span${titleDragAttrs} onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${esc(String(task.content || '').trim() || '(无内容)')}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
+                                <div class="tm-checklist-title-main"><div class="tm-checklist-title"><span class="tm-checklist-title-button"><span${titleDragAttrs} onclick="tmChecklistTitleClick('${escSq(String(task.id || ''))}', event)"${__tmBuildTooltipAttrs(String(task.content || '').trim() || '(无内容)', { side: 'bottom', ariaLabel: false })}>${esc(String(task.content || '').trim() || '(无内容)')}${__tmRenderRecurringTaskInlineIcon(task)}${__tmRenderRecurringInstanceBadge(task, { className: 'tm-recurring-instance-badge--inline' })}</span></span>${reminderHtml}${remarkIconHtml}</div></div>
                                 ${compactMeta}
                                 ${showCompactStatusTag ? `<span class="tm-status-tag" style="${statusChipStyle}">${esc(String(statusOption?.name || currentStatus || ''))}</span>` : ''}
                                 ${task.pinned ? `<span class="tm-checklist-meta-chip" title="置顶">${__tmRenderLucideIcon('pin')}</span>` : ''}
@@ -59802,22 +62037,22 @@ async function __tmRefreshAfterWake(reason) {
                             `<input class="b3-switch fn__flex-center" type="checkbox" ${SettingsStore.data.mobileChecklistCompactTitleJump ? 'checked' : ''} onchange="updateMobileChecklistCompactTitleJump(this.checked)">`,
                             { style: 'margin-bottom:10px;' }
                         )}
-                        <div style="margin-bottom:10px;opacity:${SettingsStore.data.dockSidebarEnabled !== false ? 1 : 0.6};">
+                        ` : ''}
+                        <div style="margin-bottom:10px;">
                             ${renderSingleFieldSetting(
                                 'Dock 及移动端紧凑右侧字段',
                                 '控制 Dock 侧边栏、移动端清单紧凑视图，以及日历视图侧边栏任务清单里任务右侧显示哪些信息。默认显示完成时间和状态标签。',
                                 (() => {
                                     const selected = new Set(__tmNormalizeCompactChecklistMetaFields(SettingsStore.data.dockChecklistCompactMetaFields));
                                     return `<div style="display:flex;gap:8px;flex-wrap:wrap;">${__TM_CHECKLIST_COMPACT_META_FIELD_OPTIONS.map((item) => `
-                                        <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--tm-border-color);border-radius:999px;background:var(--tm-card-bg);cursor:${SettingsStore.data.dockSidebarEnabled !== false ? 'pointer' : 'not-allowed'};opacity:${SettingsStore.data.dockSidebarEnabled !== false ? 1 : 0.6};">
-                                            <input class="b3-switch fn__flex-center" type="checkbox" ${selected.has(item.key) ? 'checked' : ''} ${SettingsStore.data.dockSidebarEnabled !== false ? '' : 'disabled'} onchange="updateChecklistCompactMetaFieldVisibility('dock', '${item.key}', this.checked)">
+                                        <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--tm-border-color);border-radius:999px;background:var(--tm-card-bg);cursor:pointer;">
+                                            <input class="b3-switch fn__flex-center" type="checkbox" ${selected.has(item.key) ? 'checked' : ''} onchange="updateChecklistCompactMetaFieldVisibility('dock', '${item.key}', this.checked)">
                                             <span>${item.label}</span>
                                         </label>
                                     `).join('')}</div>`;
                                 })()
                             )}
                         </div>
-                        ` : ''}
                         ${renderSingleFieldSetting(
                             '桌面端紧凑右侧字段',
                             '控制桌面端清单紧凑视图里任务右侧显示哪些信息。默认显示完成时间和状态标签，文档名仅在全部页签下显示。',
@@ -60275,13 +62510,14 @@ async function __tmRefreshAfterWake(reason) {
                             </div>
                         ` : '<div style="color: var(--tm-secondary-text); font-size: 13px; padding: 10px; background: var(--tm-rule-group-bg); border-radius: 8px;">暂无文档，请添加</div>'}
                     </div>
-                    ${currentGroupId !== 'all' ? `
                     <div style="margin-top: 16px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="font-weight: 600;">🚫 排除文档（${currentGroupExcludedDocIds.length} 个）</span>
                         </div>
                         <div style="font-size: 12px; color: var(--tm-secondary-text); line-height: 1.7; margin-bottom: 8px;">
-                            右击文档页签可快速排除。恢复显示请从这里移出排除列表。
+                            ${currentGroupId === 'all'
+                                ? '右击文档页签可快速排除。这里只影响“全部文档”视图，恢复显示请从这里移出排除列表。'
+                                : '右击文档页签可快速排除。恢复显示请从这里移出排除列表。'}
                         </div>
                         ${currentGroupExcludedDocIds.length > 0 ? `
                             <div style="max-height: min(32vh, 240px); overflow-y: auto; border: 1px solid var(--tm-border-color); border-radius: 8px; padding: 8px;">
@@ -60304,7 +62540,6 @@ async function __tmRefreshAfterWake(reason) {
                             </div>
                         ` : '<div style="color: var(--tm-secondary-text); font-size: 13px; padding: 10px; background: var(--tm-rule-group-bg); border-radius: 8px;">暂无排除文档</div>'}
                     </div>
-                    ` : ''}
                     ` : ''}
                 </div>
                     </div>
@@ -65065,7 +67300,6 @@ async function __tmRefreshAfterWake(reason) {
 
     window.removeExcludedDocFromCurrentGroup = async function(docId) {
         const currentId = String(SettingsStore.data.currentGroupId || 'all').trim() || 'all';
-        if (currentId === 'all') return;
         const result = await __tmSetDocExcludedForGroup(docId, false, currentId);
         if (!result?.changed) {
             hint('⚠ 该文档不在排除列表中', 'warning');
@@ -65108,6 +67342,15 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
 
         try {
+            const excludedAll = __tmGetAllDocsExcludedDocIds();
+            const nextExcludedAll = excludedAll.filter((item) => item !== id);
+            if (nextExcludedAll.length !== excludedAll.length) {
+                SettingsStore.data.allDocsExcludedDocIds = nextExcludedAll;
+                changed = true;
+            }
+        } catch (e) {}
+
+        try {
             const pinMap = (SettingsStore.data.docPinnedByGroup && typeof SettingsStore.data.docPinnedByGroup === 'object')
                 ? SettingsStore.data.docPinnedByGroup
                 : {};
@@ -65122,6 +67365,13 @@ async function __tmRefreshAfterWake(reason) {
             });
             if (pinChanged) {
                 SettingsStore.data.docPinnedByGroup = pinMap;
+                changed = true;
+            }
+        } catch (e) {}
+
+        try {
+            if (String(SettingsStore.data.defaultDocId || '').trim() === id) {
+                SettingsStore.data.defaultDocId = '';
                 changed = true;
             }
         } catch (e) {}
@@ -67883,6 +70133,16 @@ async function __tmRefreshAfterWake(reason) {
             } catch (e) {}
             try { globalThis.__taskHorizonQuickbarRefreshInline?.(); } catch (e) {}
             try { globalThis.__taskHorizonQuickbarRefresh?.(); } catch (e) {}
+            if (domDone) {
+                try {
+                    __tmScheduleRecurringTaskAdvanceAfterCompletion(tid, {
+                        source: 'native-doc-checkbox-sync',
+                        completedAt: new Date().toISOString(),
+                    });
+                } catch (e) {}
+            } else {
+                try { __tmClearRecurringTaskAdvanceTimer(tid); } catch (e) {}
+            }
             return true;
         }
 
@@ -67924,6 +70184,16 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
         try { globalThis.__taskHorizonQuickbarRefreshInline?.(); } catch (e) {}
         try { globalThis.__taskHorizonQuickbarRefresh?.(); } catch (e) {}
+        if (domDone) {
+            try {
+                __tmScheduleRecurringTaskAdvanceAfterCompletion(tid, {
+                    source: 'native-doc-checkbox-sync',
+                    completedAt: new Date().toISOString(),
+                });
+            } catch (e) {}
+        } else {
+            try { __tmClearRecurringTaskAdvanceTimer(tid); } catch (e) {}
+        }
         __tmScheduleNativeDocCheckboxStatusReconcile(rawId, tid, statusPatch, !!domDone, syncVersion);
         return true;
     }
@@ -69980,28 +72250,56 @@ async function __tmRefreshAfterWake(reason) {
             return new Date(targetY, targetM, Math.min(d, lastDay), 0, 0, 0, 0).getTime();
         }
     
-        function computeAutoRangeTs(taskItems, paddingDays) {
+        function computeAutoRangeTs(taskItems, paddingDays, options = {}) {
+            const anchorByStartDate = options?.anchorByStartDate === true;
+            const extraFutureMonthsRaw = Number(options?.extraFutureMonths);
+            const extraFutureMonths = Number.isFinite(extraFutureMonthsRaw)
+                ? Math.max(0, Math.round(extraFutureMonthsRaw))
+                : TIMELINE_EXTRA_FUTURE_MONTHS;
             let minTs = 0;
             let maxTs = 0;
+            let latestStartTs = 0;
+            let latestTaskEndTs = 0;
             for (const t of taskItems) {
                 const sTs = parseDateOnlyToTs(t?.startDate);
                 const eTs = parseDateOnlyToTs(t?.completionTime);
+                if (anchorByStartDate) {
+                    if (!sTs) continue;
+                    const taskEndTs = eTs || sTs;
+                    if (!minTs || sTs < minTs) minTs = sTs;
+                    if (!latestStartTs || sTs > latestStartTs || (sTs === latestStartTs && taskEndTs > latestTaskEndTs)) {
+                        latestStartTs = sTs;
+                        latestTaskEndTs = taskEndTs;
+                    }
+                    continue;
+                }
                 const a = sTs || eTs;
                 const b = eTs || sTs;
                 if (!a || !b) continue;
                 if (!minTs || a < minTs) minTs = a;
                 if (!maxTs || b > maxTs) maxTs = b;
             }
+            if (anchorByStartDate && latestStartTs) {
+                maxTs = latestTaskEndTs || latestStartTs;
+            } else if (anchorByStartDate && !latestStartTs) {
+                return computeAutoRangeTs(taskItems, paddingDays, { extraFutureMonths });
+            }
             const now = Date.now();
             if (!minTs || !maxTs) {
                 const today = startOfDayTs(now);
                 const start = today - 7 * DAY_MS;
-                const end = extendTimelineEndTs(today + 21 * DAY_MS);
+                const endBase = startOfDayTs(today + 21 * DAY_MS);
+                const end = extraFutureMonths > 0
+                    ? extendTimelineEndTs(endBase, extraFutureMonths)
+                    : endBase;
                 return { startTs: start, endTs: end };
             }
             const pad = Math.max(0, Number(paddingDays) || 0) * DAY_MS;
             const startTs = startOfDayTs(minTs - pad);
-            const endTs = extendTimelineEndTs(maxTs + pad);
+            const endBaseTs = startOfDayTs(maxTs + pad);
+            const endTs = extraFutureMonths > 0
+                ? extendTimelineEndTs(endBaseTs, extraFutureMonths)
+                : endBaseTs;
             return { startTs, endTs };
         }
     
@@ -71373,6 +73671,7 @@ async function __tmRefreshAfterWake(reason) {
     
         globalThis.__TaskHorizonGanttView = {
             render: renderGantt,
+            computeRangeTs: computeAutoRangeTs,
             parseDateOnlyToTs,
             formatDateOnlyFromTs,
             formatTimelineHintDate,

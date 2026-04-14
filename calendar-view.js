@@ -1577,6 +1577,88 @@
         try { inputEl.style.marginLeft = isBlockLike ? '-2px' : '0'; } catch (e) {}
     }
 
+    function isPointInsideElement(clientX, clientY, el) {
+        if (!(el instanceof Element)) return false;
+        const x = Number(clientX);
+        const y = Number(clientY);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+        const rect = el.getBoundingClientRect?.();
+        if (!rect) return false;
+        return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }
+
+    function collectCalendarEventHitCandidates(target, clientX, clientY, preferredEventEl = null) {
+        const x = Number(clientX);
+        const y = Number(clientY);
+        const seen = new Set();
+        const list = [];
+        const pushEvent = (input) => {
+            const base = input instanceof Element ? input : null;
+            if (!base) return;
+            const eventEl = base.matches?.('.fc-event')
+                ? base
+                : (base.closest?.('[data-tm-cal-event-id]') || base.closest?.('.fc-event'));
+            if (!(eventEl instanceof Element)) return;
+            if (seen.has(eventEl)) return;
+            seen.add(eventEl);
+            list.push(eventEl);
+        };
+        pushEvent(preferredEventEl);
+        pushEvent(target);
+        if (Number.isFinite(x) && Number.isFinite(y) && typeof document.elementsFromPoint === 'function') {
+            const stack = document.elementsFromPoint(x, y);
+            for (const el of stack || []) pushEvent(el);
+        }
+        const scopeBase = target instanceof Element
+            ? target
+            : (preferredEventEl instanceof Element ? preferredEventEl : null);
+        const scope = scopeBase?.closest?.('.fc-popover')
+            || scopeBase?.closest?.('.tm-calendar-host')
+            || scopeBase?.closest?.('#tmCalendarSideDockTimeline')
+            || null;
+        if (scope instanceof Element) {
+            const nodes = scope.querySelectorAll?.('[data-tm-cal-event-id].fc-event, .fc-event');
+            nodes?.forEach?.((el) => {
+                if (!(el instanceof Element)) return;
+                const checkEl = el.querySelector?.('.tm-cal-task-event-check') || null;
+                const titleEl = el.querySelector?.('.tm-cal-task-event-title-text')
+                    || el.querySelector?.('.tm-cal-task-event-title')
+                    || null;
+                if (isPointInsideElement(x, y, checkEl)
+                    || isPointInsideElement(x, y, titleEl)
+                    || isPointInsideElement(x, y, el)) {
+                    pushEvent(el);
+                }
+            });
+        }
+        return list;
+    }
+
+    function resolveCalendarEventInteractiveHit(pointerEvent, options = {}) {
+        const evt = pointerEvent && typeof pointerEvent === 'object' ? pointerEvent : null;
+        const target = evt?.target;
+        const x = Number(evt?.clientX);
+        const y = Number(evt?.clientY);
+        const preferredEventEl = options?.preferredEventEl instanceof Element ? options.preferredEventEl : null;
+        const candidates = collectCalendarEventHitCandidates(target, x, y, preferredEventEl);
+        const fallbackEventEl = candidates[0] || (preferredEventEl instanceof Element ? preferredEventEl : null);
+        for (const eventEl of candidates) {
+            const checkboxEl = eventEl.querySelector?.('.tm-cal-task-event-check') || null;
+            if (isPointInsideElement(x, y, checkboxEl)) {
+                return { kind: 'checkbox', eventEl, checkboxEl };
+            }
+        }
+        for (const eventEl of candidates) {
+            const titleEl = eventEl.querySelector?.('.tm-cal-task-event-title-text')
+                || eventEl.querySelector?.('.tm-cal-task-event-title')
+                || null;
+            if (isPointInsideElement(x, y, titleEl)) {
+                return { kind: 'title', eventEl, titleEl };
+            }
+        }
+        return fallbackEventEl ? { kind: 'event', eventEl: fallbackEventEl } : null;
+    }
+
     function overlap(s1, e1, s2, e2) {
         if (!Number.isFinite(s1) || !Number.isFinite(e1) || !Number.isFinite(s2) || !Number.isFinite(e2)) return false;
         return s1 < e2 && e1 > s2;
@@ -2450,11 +2532,104 @@
         });
     }
 
-    function isCalendarEnabled(calendarId, settings) {
+    function getCalendarConfigEntry(calendarId, settings) {
+        const id = String(calendarId || '').trim();
+        if (!id) return null;
         const cfg = settings?.calendarsConfig || {};
-        const entry = cfg?.[calendarId];
-        if (!entry || typeof entry !== 'object') return true;
+        const entry = cfg?.[id];
+        return (entry && typeof entry === 'object' && !Array.isArray(entry)) ? entry : null;
+    }
+
+    function isCalendarEnabled(calendarId, settings) {
+        const entry = getCalendarConfigEntry(calendarId, settings);
+        if (!entry) return true;
         if ('enabled' in entry) return !!entry.enabled;
+        return true;
+    }
+
+    function isCalendarDocEnabled(calendarId, docId, settings) {
+        if (!settings?.scheduleFollowDocColor) return true;
+        const cid = String(calendarId || '').trim();
+        const did = String(docId || '').trim();
+        if (!cid || !did) return true;
+        const entry = getCalendarConfigEntry(cid, settings);
+        const docsEnabled = (entry?.docsEnabled && typeof entry.docsEnabled === 'object' && !Array.isArray(entry.docsEnabled))
+            ? entry.docsEnabled
+            : null;
+        if (!docsEnabled) return true;
+        if (!(did in docsEnabled)) return true;
+        return docsEnabled[did] !== false;
+    }
+
+    function getCalendarSidebarDocItems(settings) {
+        if (!settings?.scheduleFollowDocColor) return null;
+        let cached = null;
+        try {
+            const getter = window.tmCalendarGetSidebarDocItems;
+            if (typeof getter === 'function') cached = getter() || null;
+        } catch (e) {}
+        const cachedKey = String(cached?.key || '').trim();
+        try {
+            const warmer = window.tmCalendarWarmSidebarDocItems;
+            if (typeof warmer === 'function') {
+                Promise.resolve()
+                    .then(() => warmer())
+                    .then((next) => {
+                        const nextKey = String(next?.key || '').trim();
+                        if (!nextKey || nextKey === cachedKey) return;
+                        const root = state.wrapEl;
+                        if (!(root instanceof Element)) return;
+                        try { renderSidebar(root, getSettings()); } catch (e2) {}
+                    })
+                    .catch(() => null);
+            }
+        } catch (e) {}
+        return (cached && typeof cached === 'object') ? cached : null;
+    }
+
+    function getCalendarDocsToGroupMapSnapshot() {
+        const cached = window.__tmCalendarDocsToGroupCache?.map;
+        if (cached instanceof Map) return cached;
+        try {
+            const warmer = window.tmCalendarWarmDocsToGroupCache;
+            if (typeof warmer === 'function') {
+                Promise.resolve().then(() => warmer()).catch(() => null);
+            }
+        } catch (e) {}
+        const out = new Map();
+        const groups = state.settingsStore?.data?.docGroups || state.sideDay?.settingsStore?.data?.docGroups;
+        if (Array.isArray(groups)) {
+            for (const g of groups) {
+                const gid = String(g?.id || '').trim();
+                if (!gid) continue;
+                const docs = Array.isArray(g?.docs) ? g.docs : [];
+                for (const doc of docs) {
+                    const did = String((typeof doc === 'object' ? doc?.id : doc) || '').trim();
+                    if (!did || out.has(did)) continue;
+                    out.set(did, gid);
+                }
+            }
+        }
+        return out;
+    }
+
+    function resolveDocOwnerCalendarId(docId) {
+        const did = String(docId || '').trim();
+        if (!did) return 'default';
+        const map = getCalendarDocsToGroupMapSnapshot();
+        const gid = String(map?.get?.(did) || '').trim();
+        return gid ? calendarIdForGroup(gid) : 'default';
+    }
+
+    function isCalendarDocVisibleForEvent(calendarId, docId, settings) {
+        const did = String(docId || '').trim();
+        if (!did) return true;
+        const eventCalendarId = String(calendarId || 'default').trim() || 'default';
+        if (!isCalendarDocEnabled(eventCalendarId, did, settings)) return false;
+        const ownerCalendarId = resolveDocOwnerCalendarId(did);
+        if (eventCalendarId === 'default' && ownerCalendarId !== 'default' && !isCalendarDocEnabled(ownerCalendarId, did, settings)) {
+            return false;
+        }
         return true;
     }
 
@@ -2480,6 +2655,8 @@
         const taskDatesCanCustomize = !settings.scheduleFollowDocColor && String(settings.taskDateColorMode || 'group').trim() !== 'group';
         const taskDatesDot = taskDatesCanCustomize ? (settings.taskDatesColor || '#6b7280') : '#6b7280';
         const showTomato = !!settings.linkDockTomato;
+        const sidebarDocItems = getCalendarSidebarDocItems(settings);
+        const showDocRows = !!settings.scheduleFollowDocColor && !!sidebarDocItems?.calendars;
 
         if (calList) {
             const calItems = [];
@@ -2529,6 +2706,28 @@
                             </label>
                         </div>
                     `);
+                    if (showDocRows) {
+                        const docs = Array.isArray(sidebarDocItems?.calendars?.[d.id]) ? sidebarDocItems.calendars[d.id] : [];
+                        const childDisabled = !showSchedule || !enabled;
+                        for (const doc of docs) {
+                            const docId = String(doc?.id || '').trim();
+                            const docName = String(doc?.name || docId || '未命名文档').trim() || '未命名文档';
+                            if (!docId) continue;
+                            const docEnabled = isCalendarDocEnabled(d.id, docId, settings);
+                            const docColor = resolveCalendarDocColor(docId, d.color || 'var(--tm-primary-color)') || d.color || 'var(--tm-primary-color)';
+                            calItems.push(`
+                                <div class="tm-calendar-nav-item-row tm-calendar-nav-item--indent tm-calendar-nav-item--indent2 ${childDisabled ? 'tm-calendar-nav-item--disabled' : ''}">
+                                    <label class="tm-calendar-nav-item tm-calendar-nav-item--grow ${childDisabled ? 'tm-calendar-nav-item--disabled' : ''}">
+                                        <span class="tm-calendar-nav-left">
+                                            <span class="tm-calendar-nav-dot" style="background:${esc(docColor)};"></span>
+                                            <span class="tm-calendar-nav-label" title="${esc(docName)}">${esc(docName)}</span>
+                                        </span>
+                                        <input class="tm-calendar-nav-check" type="checkbox" data-tm-cal-calendar-doc="${esc(d.id)}" data-tm-cal-doc-id="${esc(docId)}" ${docEnabled ? 'checked' : ''} ${childDisabled ? 'disabled' : ''}>
+                                    </label>
+                                </div>
+                            `);
+                        }
+                    }
                 }
             }
             calList.innerHTML = calItems.join('');
@@ -7699,7 +7898,10 @@
                             const nextDone = cb.checked === true;
                             applyTaskDoneVisual(wrapEl, titleText, nextDone);
                             try {
-                                const r = window.tmSetDone(tid, nextDone, null, { source: 'calendar' });
+                                const scheduleId = source === 'schedule'
+                                    ? String(ext.__tmScheduleId || '').trim()
+                                    : '';
+                                const r = window.tmSetDone(tid, nextDone, null, { source: 'calendar', scheduleId });
                                 if (r && typeof r.then === 'function') await r;
                             } catch (e) {
                                 cb.checked = !nextDone;
@@ -7951,39 +8153,59 @@
                 }
             },
             eventClick: (arg) => {
-                const target = arg?.jsEvent?.target;
+                const jsEvent = arg?.jsEvent || null;
+                const target = jsEvent?.target;
+                const interactiveHit = resolveCalendarEventInteractiveHit(jsEvent, { preferredEventEl: arg?.el });
+                const hitEventEl = interactiveHit?.eventEl instanceof Element ? interactiveHit.eventEl : null;
+                const hitEventId = String(hitEventEl?.getAttribute?.('data-tm-cal-event-id') || '').trim();
+                const activeEvent = hitEventId ? (cal?.getEventById?.(hitEventId) || arg?.event || null) : (arg?.event || null);
                 try {
-                    if (target instanceof Element) {
-                        if (target.closest('.tm-cal-task-event-check')) return;
+                    if (interactiveHit?.kind === 'checkbox') {
+                        const checkboxEl = interactiveHit.checkboxEl;
+                        if (checkboxEl && target !== checkboxEl && !(target instanceof Element && target.closest('.tm-cal-task-event-check'))) {
+                            jsEvent?.preventDefault?.();
+                            checkboxEl.click?.();
+                        }
+                        return;
                     }
                 } catch (e0) {}
-                const ext = arg?.event?.extendedProps || {};
+                try {
+                    if (target instanceof Element && target.closest('.tm-cal-task-event-check')) return;
+                } catch (e0) {}
+                const ext = activeEvent?.extendedProps || {};
                 const source = String(ext.__tmSource || '').trim();
                 if (source === 'taskdate') {
                     const tid = String(ext.__tmTaskId || '').trim();
                     try {
-                        if (tid) openCalendarLinkedTask(tid, arg?.jsEvent);
+                        if (tid) openCalendarLinkedTask(tid, jsEvent);
                     } catch (e) {}
                     return;
                 }
                 if (source === 'reminder') {
                     const tid = String(ext.__tmReminderBlockId || '').trim();
                     try {
-                        if (tid) openCalendarLinkedTask(tid, arg?.jsEvent);
+                        if (tid) openCalendarLinkedTask(tid, jsEvent);
                     } catch (e) {}
                     return;
+                }
+                if (interactiveHit?.kind === 'title') {
+                    const tid = String(ext.__tmTaskId || '').trim();
+                    if (source === 'schedule' && tid) {
+                        try { openCalendarLinkedTask(tid, jsEvent); } catch (e) {}
+                        return;
+                    }
                 }
                 if (source === 'schedule') {
                     try {
                         const baseStart = String(ext.__tmScheduleBaseStart || '').trim();
                         const baseEnd = String(ext.__tmScheduleBaseEnd || '').trim();
                         openScheduleModal({
-                            id: String(ext.__tmScheduleId || arg?.event?.id || ''),
-                            title: String(arg?.event?.title || ''),
-                            start: baseStart ? new Date(baseStart) : arg?.event?.start,
-                            end: baseEnd ? new Date(baseEnd) : arg?.event?.end,
-                            allDay: arg?.event?.allDay === true,
-                            color: String(arg?.event?.backgroundColor || arg?.event?.borderColor || 'var(--tm-primary-color)'),
+                            id: String(ext.__tmScheduleId || activeEvent?.id || ''),
+                            title: String(activeEvent?.title || ''),
+                            start: baseStart ? new Date(baseStart) : activeEvent?.start,
+                            end: baseEnd ? new Date(baseEnd) : activeEvent?.end,
+                            allDay: activeEvent?.allDay === true,
+                            color: String(activeEvent?.backgroundColor || activeEvent?.borderColor || 'var(--tm-primary-color)'),
                             calendarId: String(ext.calendarId || 'default'),
                             taskId: String(ext.__tmTaskId || ''),
                             reminderMode: String(ext.__tmReminderMode || ''),
@@ -8406,6 +8628,7 @@
                 || (blockId ? docIdMap?.get(blockId) : '')
                 || ''
             ).trim();
+            if (!isCalendarDocVisibleForEvent(calendarId, linkedDocId, settings)) continue;
             const docColor = (settings.scheduleFollowDocColor && linkedDocId)
                 ? resolveCalendarDocColor(linkedDocId, '')
                 : '';
@@ -8542,6 +8765,7 @@
             const docId = String(it?.docId || it?.rootId || it?.root_id || '').trim();
             if (!taskId || !startKey || !endExKey) return null;
             if (!isCalendarEnabled(calendarId, settings)) return null;
+            if (!isCalendarDocVisibleForEvent(calendarId, docId, settings)) return null;
             if (hasTaskScheduleOverlapInDateRange(taskId, startKey, endExKey, scheduleTaskDaySet)) return null;
             const calColor = defMap.get(calendarId)?.color || '#6b7280';
             const mode = String(settings.taskDateColorMode || 'group').trim() || 'group';
@@ -10933,7 +11157,10 @@
                             const nextDone = cb.checked === true;
                             applyTaskDoneVisual(wrapEl, titleText, nextDone);
                             try {
-                                const r = window.tmSetDone(tid, nextDone, null, { source: 'calendar' });
+                                const scheduleId = source === 'schedule'
+                                    ? String(ext.__tmScheduleId || '').trim()
+                                    : '';
+                                const r = window.tmSetDone(tid, nextDone, null, { source: 'calendar', scheduleId });
                                 if (r && typeof r.then === 'function') await r;
                             } catch (e) {
                                 cb.checked = !nextDone;
@@ -11150,9 +11377,9 @@
             eventStartEditable: true,
             eventDurationEditable: true,
             eventResizableFromStart: true,
-            longPressDelay: isMobileDevice ? 150 : undefined,
-            eventLongPressDelay: isMobileDevice ? 150 : undefined,
-            selectLongPressDelay: isMobileDevice ? 150 : undefined,
+            longPressDelay: isMobileDevice ? 1000 : undefined,
+            eventLongPressDelay: isMobileDevice ? 1000 : undefined,
+            selectLongPressDelay: isMobileDevice ? 1000 : undefined,
             eventDragMinDistance: isMobileDevice ? 0 : undefined,
             selectable: true,
             selectMirror: true,
@@ -11314,16 +11541,22 @@
                 }
             },
             eventClick: (arg) => {
+                const jsEvent = arg?.jsEvent || null;
+                const target = jsEvent?.target;
+                const interactiveHit = resolveCalendarEventInteractiveHit(jsEvent, { preferredEventEl: arg?.el });
+                const hitEventEl = interactiveHit?.eventEl instanceof Element ? interactiveHit.eventEl : null;
+                const hitEventId = String(hitEventEl?.getAttribute?.('data-tm-cal-event-id') || '').trim();
+                const activeEvent = hitEventId ? (calendar?.getEventById?.(hitEventId) || arg?.event || null) : (arg?.event || null);
                 try {
-                    if (arg?.jsEvent) {
-                        arg.jsEvent.__tmCalHandled = true;
-                        arg.jsEvent.preventDefault?.();
+                    if (jsEvent) {
+                        jsEvent.__tmCalHandled = true;
+                        jsEvent.preventDefault?.();
                     }
                 } catch (e0) {}
-                if (_tmClickTracker && _tmClickTracker.ts > 0 && arg?.jsEvent) {
+                if (_tmClickTracker && _tmClickTracker.ts > 0 && jsEvent) {
                     const dur = Date.now() - _tmClickTracker.ts;
-                    const x = Number(arg.jsEvent.clientX);
-                    const y = Number(arg.jsEvent.clientY);
+                    const x = Number(jsEvent.clientX);
+                    const y = Number(jsEvent.clientY);
                     if (Number.isFinite(x) && Number.isFinite(y)) {
                         const dx = Math.abs(x - _tmClickTracker.x);
                         const dy = Math.abs(y - _tmClickTracker.y);
@@ -11331,7 +11564,20 @@
                         if (dur > 500 || dist > 5) return;
                     }
                 }
-                const ext = arg?.event?.extendedProps || {};
+                if (interactiveHit?.kind === 'checkbox') {
+                    const checkboxEl = interactiveHit.checkboxEl;
+                    try {
+                        if (checkboxEl && target !== checkboxEl && !(target instanceof Element && target.closest('.tm-cal-task-event-check'))) {
+                            jsEvent?.preventDefault?.();
+                            checkboxEl.click?.();
+                        }
+                    } catch (e0) {}
+                    return;
+                }
+                try {
+                    if (target instanceof Element && target.closest('.tm-cal-task-event-check')) return;
+                } catch (e0) {}
+                const ext = activeEvent?.extendedProps || {};
                 const aggDay = String(ext.__tmAggregateDay || '').trim();
                 if (aggDay) {
                     try {
@@ -11346,28 +11592,35 @@
                 if (source === 'taskdate') {
                     const tid = String(ext.__tmTaskId || '').trim();
                     try {
-                        if (tid) openCalendarLinkedTask(tid, arg?.jsEvent);
+                        if (tid) openCalendarLinkedTask(tid, jsEvent);
                     } catch (e) {}
                     return;
                 }
                 if (source === 'reminder') {
                     const tid = String(ext.__tmReminderBlockId || '').trim();
                     try {
-                        if (tid) openCalendarLinkedTask(tid, arg?.jsEvent);
+                        if (tid) openCalendarLinkedTask(tid, jsEvent);
                     } catch (e) {}
                     return;
+                }
+                if (interactiveHit?.kind === 'title') {
+                    const tid = String(ext.__tmTaskId || '').trim();
+                    if (source === 'schedule' && tid) {
+                        try { openCalendarLinkedTask(tid, jsEvent); } catch (e) {}
+                        return;
+                    }
                 }
                 if (source === 'schedule') {
                     try {
                         const baseStart = String(ext.__tmScheduleBaseStart || '').trim();
                         const baseEnd = String(ext.__tmScheduleBaseEnd || '').trim();
                         openScheduleModal({
-                            id: String(ext.__tmScheduleId || arg?.event?.id || ''),
-                            title: String(arg?.event?.title || ''),
-                            start: baseStart ? new Date(baseStart) : arg?.event?.start,
-                            end: baseEnd ? new Date(baseEnd) : arg?.event?.end,
-                            allDay: arg?.event?.allDay === true,
-                            color: String(arg?.event?.backgroundColor || arg?.event?.borderColor || 'var(--tm-primary-color)'),
+                            id: String(ext.__tmScheduleId || activeEvent?.id || ''),
+                            title: String(activeEvent?.title || ''),
+                            start: baseStart ? new Date(baseStart) : activeEvent?.start,
+                            end: baseEnd ? new Date(baseEnd) : activeEvent?.end,
+                            allDay: activeEvent?.allDay === true,
+                            color: String(activeEvent?.backgroundColor || activeEvent?.borderColor || 'var(--tm-primary-color)'),
                             calendarId: String(ext.calendarId || 'default'),
                             taskId: String(ext.__tmTaskId || ''),
                             reminderMode: String(ext.__tmReminderMode || ''),
@@ -11385,7 +11638,7 @@
                     return;
                 }
                 try {
-                    openRecordModal(arg.event);
+                    openRecordModal(activeEvent || arg.event);
                 } catch (e2) {
                     try { toast(`❌ 打开记录窗失败：${String(e2?.message || e2 || '')}`, 'error'); } catch (e3) {}
                 }
@@ -11397,6 +11650,10 @@
                         info.jsEvent.preventDefault?.();
                     }
                 } catch (e0) {}
+                if (isMobileDevice) {
+                    const viewType = String(calendar?.view?.type || '').trim();
+                    if (viewType.startsWith('timeGrid')) return;
+                }
                 const d = info?.date instanceof Date ? info.date : null;
                 if (!d || Number.isNaN(d.getTime())) return;
                 const start = new Date(d.getTime());
@@ -11816,66 +12073,8 @@
                 if (target.classList.contains('fc-more-link')) return;
                 if (target.classList.contains('fc-more')) return;
                 // 注意：不拦截 .fc-popover，因为弹出窗口内部的事件需要支持点击跳转
-                let eventEl = target.closest('[data-tm-cal-event-id]') || target.closest('.fc-event');
-                if (!eventEl) {
-                    const x = Number(e?.clientX);
-                    const y = Number(e?.clientY);
-                    if (Number.isFinite(x) && Number.isFinite(y) && typeof document.elementsFromPoint === 'function') {
-                        const stack = document.elementsFromPoint(x, y);
-                        for (const el of stack || []) {
-                            if (!(el instanceof Element)) continue;
-                            const evEl = el.closest?.('[data-tm-cal-event-id]') || el.closest?.('.fc-event');
-                            if (evEl) {
-                                eventEl = evEl;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (!eventEl) {
-                    const x = Number(e?.clientX);
-                    const y = Number(e?.clientY);
-                    let dateEl = target.closest('[data-date]');
-                    if (!dateEl && Number.isFinite(x) && Number.isFinite(y) && typeof document.elementsFromPoint === 'function') {
-                        const stack = document.elementsFromPoint(x, y);
-                        for (const el of stack || []) {
-                            if (!(el instanceof Element)) continue;
-                            const de = el.closest?.('[data-date]');
-                            if (de) {
-                                dateEl = de;
-                                break;
-                            }
-                        }
-                    }
-                    if (dateEl) {
-                        const candidates = Array.from(dateEl.querySelectorAll('[data-tm-cal-event-id].fc-event, .fc-event')).filter((el) => {
-                            if (!(el instanceof Element)) return false;
-                            return !!el.closest('.tm-calendar-host') || !!el.closest('.fc-popover');
-                        });
-                        if (candidates.length) {
-                            const hit = (el) => {
-                                if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
-                                const r = el.getBoundingClientRect?.();
-                                if (!r) return false;
-                                return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
-                            };
-                            eventEl = candidates.find(hit) || (candidates.length === 1 ? candidates[0] : null);
-                            if (!eventEl && Number.isFinite(x) && Number.isFinite(y)) {
-                                const dist2 = (el) => {
-                                    const r = el.getBoundingClientRect?.();
-                                    if (!r) return Infinity;
-                                    const cx = (x < r.left) ? r.left : (x > r.right ? r.right : x);
-                                    const cy = (y < r.top) ? r.top : (y > r.bottom ? r.bottom : y);
-                                    const dx = x - cx;
-                                    const dy = y - cy;
-                                    return dx * dx + dy * dy;
-                                };
-                                candidates.sort((a, b) => dist2(a) - dist2(b));
-                                eventEl = candidates[0] || null;
-                            }
-                        }
-                    }
-                }
+                const interactiveHit = resolveCalendarEventInteractiveHit(e);
+                const eventEl = interactiveHit?.eventEl instanceof Element ? interactiveHit.eventEl : null;
                 if (!eventEl) {
                     return;
                 }
@@ -11896,25 +12095,15 @@
                 const tid = String(eventEl.getAttribute('data-tm-cal-task-id') || ext.__tmTaskId || '').trim();
                 const rid = String(eventEl.getAttribute('data-tm-cal-reminder-id') || ext.__tmReminderBlockId || '').trim();
                 if (tid) {
-                    const x = Number(e?.clientX);
-                    const y = Number(e?.clientY);
-                    const checkEl = eventEl.querySelector?.('.tm-cal-task-event-check') || null;
-                    const titleEl = eventEl.querySelector?.('.tm-cal-task-event-title-text') || eventEl.querySelector?.('.tm-cal-task-event-title') || null;
-                    const hitRect = (el) => {
-                        if (!el || !(el instanceof Element)) return false;
-                        if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
-                        const r = el.getBoundingClientRect?.();
-                        if (!r) return false;
-                        return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
-                    };
-                    if (hitRect(checkEl)) {
+                    if (interactiveHit?.kind === 'checkbox') {
+                        const checkEl = interactiveHit.checkboxEl;
                         if (target !== checkEl && !target.closest('.tm-cal-task-event-check')) {
                             try { e.preventDefault?.(); } catch (e2) {}
                             try { checkEl.click?.(); } catch (e2) {}
                         }
                         return;
                     }
-                    if (hitRect(titleEl)) {
+                    if (interactiveHit?.kind === 'title') {
                         try { e.preventDefault?.(); } catch (e2) {}
                         try { openCalendarLinkedTask(tid, e); } catch (e2) {}
                         return;
@@ -12179,6 +12368,27 @@
                 return;
             }
             const checked = !!el.checked;
+            const docCalId = String(el.getAttribute('data-tm-cal-calendar-doc') || '').trim();
+            const docId = String(el.getAttribute('data-tm-cal-doc-id') || '').trim();
+            if (docCalId && docId) {
+                const prev = (store.data.calendarCalendarsConfig && typeof store.data.calendarCalendarsConfig === 'object' && !Array.isArray(store.data.calendarCalendarsConfig))
+                    ? store.data.calendarCalendarsConfig
+                    : {};
+                const entry = (prev[docCalId] && typeof prev[docCalId] === 'object') ? prev[docCalId] : {};
+                const nextDocsEnabled = (entry.docsEnabled && typeof entry.docsEnabled === 'object' && !Array.isArray(entry.docsEnabled))
+                    ? { ...entry.docsEnabled }
+                    : {};
+                if (checked) delete nextDocsEnabled[docId];
+                else nextDocsEnabled[docId] = false;
+                const nextEntry = { ...entry };
+                if (Object.keys(nextDocsEnabled).length > 0) nextEntry.docsEnabled = nextDocsEnabled;
+                else delete nextEntry.docsEnabled;
+                store.data.calendarCalendarsConfig = { ...prev, [docCalId]: nextEntry };
+                try { await store.save(); } catch (e2) {}
+                try { renderSidebar(wrap, getSettings()); } catch (e2) {}
+                try { refetchAllCalendars(); } catch (e2) {}
+                return;
+            }
             const master = String(el.getAttribute('data-tm-cal-master') || '').trim();
             if (master) {
                 if (master === 'schedule') store.data.calendarShowSchedule = checked;
@@ -12885,6 +13095,29 @@
         return true;
     }
 
+    async function reassignScheduleLinkedTask(scheduleId, nextTaskId, options = {}) {
+        const id = String(scheduleId || '').trim();
+        const taskId = String(nextTaskId || '').trim();
+        if (!id || !taskId) return false;
+        const opts = (options && typeof options === 'object') ? options : {};
+        const list = await loadScheduleAll();
+        const idx = list.findIndex((item) => String(item?.id || '').trim() === id);
+        if (idx < 0) return false;
+        const prevItem = (list[idx] && typeof list[idx] === 'object') ? list[idx] : {};
+        list[idx] = {
+            ...prevItem,
+            taskId,
+            task_id: taskId,
+            linkedTaskId: taskId,
+            linked_task_id: taskId,
+        };
+        await saveScheduleAll(list);
+        if (opts.refetch !== false) {
+            try { refetchAllCalendars(); } catch (e) {}
+        }
+        return true;
+    }
+
     function showScheduleEventContextMenu(event, meta = {}) {
         const scheduleId = String(meta?.scheduleId || '').trim();
         if (!scheduleId) return false;
@@ -13028,6 +13261,7 @@
         openScheduleEditorById,
         openScheduleEditorByTaskId,
         deleteScheduleById,
+        reassignScheduleLinkedTask,
         setSettingsStore,
         refreshInPlace,
         syncTaskDoneInPlace,
