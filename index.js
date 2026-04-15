@@ -411,6 +411,7 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         await loadScriptText(CALENDAR_VIEW_SCRIPT_PATH, "calendar-view.js");
         await loadStyleText(CALENDAR_VIEW_CSS_PATH, "calendar-view.css");
         this.mountExistingTabs();
+        this.scheduleTaskDockRecovery("post-load", { delayMs: 60 });
     }
 
     ensureCustomTab() {
@@ -650,6 +651,73 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         Promise.resolve().then(() => this.remountBestTaskHorizonTab()).catch(() => null);
     }
 
+    cancelTaskDockRecovery() {
+        try {
+            if (this._taskDockRecoveryTimer) {
+                clearTimeout(this._taskDockRecoveryTimer);
+                this._taskDockRecoveryTimer = null;
+            }
+        } catch (e) {}
+        this._taskDockRecoveryToken = "";
+    }
+
+    resolveTaskDockElement(preferred = null) {
+        const direct = preferred instanceof HTMLElement ? preferred : null;
+        if (direct && document.body.contains(direct)) return direct;
+        const cached = this._taskDockElement instanceof HTMLElement ? this._taskDockElement : null;
+        if (cached && document.body.contains(cached)) return cached;
+        try {
+            const nodes = Array.from(document.querySelectorAll(`[data-type="${TASK_DOCK_TYPE}"]`));
+            const target = nodes.find((node) => node instanceof HTMLElement && document.body.contains(node)) || null;
+            if (target instanceof HTMLElement) return target;
+        } catch (e) {}
+        return null;
+    }
+
+    scheduleTaskDockRecovery(reason = "manual", options = {}) {
+        if (this.isRuntimeMobileClient()) return;
+        if (readTaskDockSettings().enabled === false) {
+            this.cancelTaskDockRecovery();
+            return;
+        }
+        const attempt = Math.max(0, Number(options?.attempt) || 0);
+        const maxAttempts = Math.max(1, Number(options?.maxAttempts) || 5);
+        if (attempt >= maxAttempts) return;
+        const delayMs = Math.max(60, Number(options?.delayMs) || (attempt === 0 ? 120 : Math.min(1800, 180 * (attempt + 1))));
+        const element = options?.element instanceof HTMLElement ? options.element : null;
+        const token = `${Date.now()}:${Math.random()}:${reason}:${attempt}`;
+        this.cancelTaskDockRecovery();
+        this._taskDockRecoveryToken = token;
+        this._taskDockRecoveryTimer = setTimeout(() => {
+            if (this._taskDockRecoveryToken !== token) return;
+            this._taskDockRecoveryTimer = null;
+            if (this.isRuntimeMobileClient()) return;
+            if (readTaskDockSettings().enabled === false) return;
+            const target = this.resolveTaskDockElement(element);
+            if (!(target instanceof HTMLElement)) {
+                this.scheduleTaskDockRecovery(reason, {
+                    attempt: attempt + 1,
+                    maxAttempts,
+                    delayMs: Math.min(2200, delayMs * 2),
+                });
+                return;
+            }
+            const mounted = this.mountTaskDockElement(target, {
+                reactivate: true,
+                reason: `recover:${reason}:${attempt + 1}`,
+                fromRecovery: true,
+            });
+            if (!mounted) {
+                this.scheduleTaskDockRecovery(reason, {
+                    element: target,
+                    attempt: attempt + 1,
+                    maxAttempts,
+                    delayMs: Math.min(2200, Math.round(delayMs * 1.8)),
+                });
+            }
+        }, delayMs);
+    }
+
     initTaskDock() {
         if (this.isRuntimeMobileClient()) return;
         this._taskDockSettingsHandler = () => {
@@ -712,19 +780,28 @@ module.exports = class TaskHorizonPlugin extends Plugin {
             init() {
                 plugin._taskDockElement = this.element || null;
                 plugin._taskDockOpen = true;
-                plugin.mountTaskDockElement(this.element || null);
+                const mounted = plugin.mountTaskDockElement(this.element || null);
+                if (!mounted) {
+                    plugin.scheduleTaskDockRecovery("dock-init", { element: this.element || null });
+                }
                 setTimeout(() => plugin.syncTaskDockVisibility(), 0);
             },
             update() {
                 plugin._taskDockElement = this.element || null;
                 plugin._taskDockOpen = true;
-                plugin.mountTaskDockElement(this.element || null, { reactivate: false });
+                const mounted = plugin.mountTaskDockElement(this.element || null, { reactivate: false, reason: "update" });
+                if (!mounted) {
+                    plugin.scheduleTaskDockRecovery("dock-update", { element: this.element || null });
+                }
                 setTimeout(() => plugin.syncTaskDockVisibility(), 0);
             },
             resize() {
                 plugin._taskDockElement = this.element || null;
                 plugin._taskDockOpen = true;
-                plugin.mountTaskDockElement(this.element || null, { reactivate: false });
+                const mounted = plugin.mountTaskDockElement(this.element || null, { reactivate: false, reason: "resize" });
+                if (!mounted) {
+                    plugin.scheduleTaskDockRecovery("dock-resize", { element: this.element || null, delayMs: 180 });
+                }
             },
             destroy() {
                 if (plugin._taskDockElement === (this.element || null)) {
@@ -824,6 +901,7 @@ module.exports = class TaskHorizonPlugin extends Plugin {
     }
 
     destroyTaskDockFrame(element) {
+        this.cancelTaskDockRecovery();
         const host = element instanceof HTMLElement ? element : this._taskDockElement;
         try {
             if (host instanceof HTMLElement) host.replaceChildren();
@@ -892,9 +970,10 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         return root;
     }
 
-    async mountTaskDockElement(element, options = {}) {
+    mountTaskDockElement(element, options = {}) {
         if (!(element instanceof HTMLElement)) return false;
         const reactivate = options?.reactivate !== false;
+        const fromRecovery = options?.fromRecovery === true;
         this._taskDockElement = element;
         this._taskDockOpen = true;
         const settings = readTaskDockSettings();
@@ -918,6 +997,7 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         const hasLiveModal = !!root.querySelector(`.tm-modal.tm-modal--dock:not([${TASK_DOCK_SNAPSHOT_ATTR}="1"])`);
         const hasSnapshot = !!root.querySelector(`[${TASK_DOCK_SNAPSHOT_ATTR}="1"]`);
         if (hasLiveModal) {
+            this.cancelTaskDockRecovery();
             return true;
         }
         if (!reactivate) {
@@ -929,10 +1009,16 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         const mountFn = globalThis.__taskHorizonMount;
         if (typeof mountFn !== "function") {
             this.renderTaskDockNotice(element, "任务 Dock 加载中", "正在等待任务管理器入口挂载。");
+            if (!fromRecovery) {
+                this.scheduleTaskDockRecovery(String(options?.reason || "mount-waiting"));
+            }
             return false;
         }
         try {
             mountFn(root);
+            if (!fromRecovery) {
+                this.scheduleTaskDockRecovery(String(options?.reason || "mount-post"));
+            }
             return true;
         } catch (e) {
             console.error("[task-horizon] native dock mount failed", e);
@@ -951,14 +1037,21 @@ module.exports = class TaskHorizonPlugin extends Plugin {
                     },
                 ],
             );
+            if (!fromRecovery) {
+                this.scheduleTaskDockRecovery(String(options?.reason || "mount-error"), { delayMs: 260 });
+            }
             return false;
         }
     }
 
     reloadTaskDockFrame() {
-        if (!(this._taskDockElement instanceof HTMLElement)) return;
-        this.destroyTaskDockFrame(this._taskDockElement);
-        this.mountTaskDockElement(this._taskDockElement, { reactivate: true });
+        const element = this.resolveTaskDockElement();
+        if (!(element instanceof HTMLElement)) return;
+        this.destroyTaskDockFrame(element);
+        const mounted = this.mountTaskDockElement(element, { reactivate: true, reason: "reload" });
+        if (!mounted) {
+            this.scheduleTaskDockRecovery("dock-reload", { element });
+        }
     }
 
     onunload() {
@@ -988,6 +1081,7 @@ module.exports = class TaskHorizonPlugin extends Plugin {
                 this._taskDockStorageHandler = null;
             }
         } catch (e) {}
+        try { this.cancelTaskDockRecovery(); } catch (e) {}
         try { this.destroyTaskDockFrame(); } catch (e) {}
         try { globalThis.__TaskManagerCleanup?.(); } catch (e) {}
         try { globalThis.__taskHorizonAiCleanup?.(); } catch (e) {}

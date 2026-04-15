@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.2.2
+// @version      2.2.3
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -44734,7 +44734,7 @@ async function __tmRefreshAfterWake(reason) {
         } catch (e) {}
         if (!task?.id || !task.done) return false;
         const repeatRule = __tmGetTaskRepeatRule(task);
-        if (!repeatRule.enabled || repeatRule.trigger !== 'complete' || repeatRule.type === 'none') return false;
+        if (!repeatRule.enabled || repeatRule.type === 'none') return false;
         const completedAt = String(opts.completedAt || new Date().toISOString()).trim() || new Date().toISOString();
         const nextPatch = __tmBuildTaskRepeatAdvancePatch(task, repeatRule, { completedAt });
         if (!nextPatch) return false;
@@ -52787,7 +52787,6 @@ async function __tmRefreshAfterWake(reason) {
         };
         const shouldDeferAutoSaveWhileFocused = () => {
             try {
-                if (!__tmIsMobileDevice()) return false;
                 const active = document.activeElement;
                 if (!(active instanceof Element) || !root.contains(active)) return false;
                 return !!active.closest?.('[data-tm-detail="remark"]');
