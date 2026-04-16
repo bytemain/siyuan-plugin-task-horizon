@@ -1,5 +1,5 @@
 // @name         思源笔记任务管理器
-// @version      2.2.4
+// @version      2.2.5
 // @description  任务管理器，支持自定义筛选规则分组和排序
 // @author       5KYFKR
 
@@ -17325,16 +17325,16 @@
         return normalized === ' ' ? '空格' : normalized;
     }
 
-    function __tmGuessStatusOptionDefaultMarker(optionLike, fallback = 'X') {
+    function __tmGuessStatusOptionDefaultMarker(optionLike, fallback = ' ') {
         const option = (optionLike && typeof optionLike === 'object') ? optionLike : {};
         const id = String(option?.id || '').trim().toLowerCase();
         const name = String(option?.name || '').trim().toLowerCase();
         const source = `${id} ${name}`;
-        if (!source) return __tmNormalizeTaskStatusMarker(fallback, 'X');
-        if (id === 'todo' || id === 'undone' || id === 'blocked' || id === 'review' || source.includes('待办') || source.includes('未完成') || source.includes('阻塞') || source.includes('审核')) return ' ';
+        if (!source) return __tmNormalizeTaskStatusMarker(fallback, ' ');
+        if (id === 'todo' || id === 'undone' || id === 'in_progress' || id === 'blocked' || id === 'review' || source.includes('待办') || source.includes('未完成') || source.includes('进行中') || source.includes('阻塞') || source.includes('审核')) return ' ';
         if (id === 'cancelled' || id === 'canceled' || id === 'cancel' || source.includes('取消') || source.includes('放弃')) return '-';
         if (id === 'done' || source.includes('完成')) return 'X';
-        return __tmNormalizeTaskStatusMarker(fallback, 'X');
+        return __tmNormalizeTaskStatusMarker(fallback, ' ');
     }
 
     function __tmNormalizeTaskStatusMarker(value, fallback = 'X') {
@@ -17362,7 +17362,7 @@
         if (!id) return null;
         const name = String(source?.name || id).trim() || id;
         const color = __tmNormalizeHexColor(source?.color, __tmGetStatusPresetColor(index)) || __tmGetStatusPresetColor(index);
-        const markerFallback = __tmGuessStatusOptionDefaultMarker({ id, name }, 'X');
+        const markerFallback = __tmGuessStatusOptionDefaultMarker({ id, name }, ' ');
         const marker = __tmNormalizeTaskStatusMarker(Object.prototype.hasOwnProperty.call(source, 'marker') ? source.marker : markerFallback, markerFallback);
         return { id, name, color, marker };
     }
