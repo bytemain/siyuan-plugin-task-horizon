@@ -4134,6 +4134,7 @@
             quickbarDisposed = true;
             try { stopQuickbar(); } catch (e) {}
             try { stopInlineMeta(); } catch (e) {}
+            try { stopTaskIconPatch(); } catch (e) {}
             try { if (__tmQBStatusRenderStorageHandler) window.removeEventListener('storage', __tmQBStatusRenderStorageHandler); } catch (e) {}
             __tmQBStatusRenderStorageHandler = null;
             try { document.removeEventListener('contextmenu', __tmQBOnContextmenuCapture, true); } catch (e) {}
@@ -4151,6 +4152,90 @@
         else stopQuickbar();
         refreshInlineMetaMode(true);
     }
+
+    // ==================== Task Icon Patch ====================
+    // data-task="-" 的任务项，图标应显示为 iconTaskCancelled 而非 iconCheck
+    const taskIconMap = {
+        '-': 'iconTaskCancelled',
+    };
+    let taskIconPatchObserver = null;
+    let taskIconPatchEbHandlers = [];
+
+    function patchTaskIcons(root) {
+        const scope = root || document;
+        try {
+            scope.querySelectorAll('.li[data-task]').forEach((li) => {
+                const marker = li.getAttribute('data-task');
+                const targetIcon = taskIconMap[marker];
+                const use = li.querySelector(':scope > .protyle-action--task use');
+                if (!use) return;
+                const current = use.getAttribute('xlink:href');
+                if (targetIcon) {
+                    if (current !== '#' + targetIcon) use.setAttribute('xlink:href', '#' + targetIcon);
+                } else {
+                    const isPatched = Object.values(taskIconMap).some((icon) => current === '#' + icon);
+                    if (isPatched) use.setAttribute('xlink:href', marker === ' ' ? '#iconUncheck' : '#iconCheck');
+                }
+            });
+        } catch (e) {}
+    }
+
+    function startTaskIconPatch() {
+        patchTaskIcons(document);
+        try {
+            taskIconPatchObserver = new MutationObserver((mutations) => {
+                let needPatch = false;
+                for (const m of mutations) {
+                    if (m.type === 'attributes' && m.attributeName === 'data-task') {
+                        needPatch = true;
+                        break;
+                    }
+                    if (m.type === 'childList') {
+                        const nodes = [...m.addedNodes];
+                        if (nodes.some((n) => n.nodeType === Node.ELEMENT_NODE && (n.matches?.('[data-task]') || n.querySelector?.('[data-task]')))) {
+                            needPatch = true;
+                            break;
+                        }
+                    }
+                }
+                if (needPatch) patchTaskIcons(document);
+            });
+            document.querySelectorAll('.protyle-wysiwyg').forEach((root) => {
+                taskIconPatchObserver.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-task'] });
+            });
+        } catch (e) {}
+        try {
+            const eb = globalThis.__taskHorizonPluginInstance?.eventBus || window.siyuan?.eventBus;
+            if (eb && typeof eb.on === 'function') {
+                const onStatic = (e) => {
+                    const protyle = e?.protyle || e?.detail?.protyle;
+                    const root = protyle?.wysiwyg?.element;
+                    setTimeout(() => patchTaskIcons(root || document), 20);
+                };
+                const onDynamic = (e) => {
+                    const protyle = e?.protyle || e?.detail?.protyle;
+                    const root = protyle?.wysiwyg?.element;
+                    setTimeout(() => patchTaskIcons(root || document), 20);
+                };
+                eb.on('loaded-protyle-static', onStatic);
+                eb.on('loaded-protyle-dynamic', onDynamic);
+                taskIconPatchEbHandlers.push({ eb, event: 'loaded-protyle-static', handler: onStatic });
+                taskIconPatchEbHandlers.push({ eb, event: 'loaded-protyle-dynamic', handler: onDynamic });
+            }
+        } catch (e) {}
+    }
+
+    function stopTaskIconPatch() {
+        try { taskIconPatchObserver?.disconnect?.(); } catch (e) {}
+        taskIconPatchObserver = null;
+        taskIconPatchEbHandlers.forEach(({ eb, event, handler }) => {
+            try { eb.off(event, handler); } catch (e) {}
+        });
+        taskIconPatchEbHandlers = [];
+    }
+
+    // 启动 task icon patch
+    startTaskIconPatch();
 
     // 思源笔记 API 请求封装
     async function requestApi(url, data, method = 'POST') {

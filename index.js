@@ -412,6 +412,13 @@ module.exports = class TaskHorizonPlugin extends Plugin {
         await loadStyleText(CALENDAR_VIEW_CSS_PATH, "calendar-view.css");
         this.mountExistingTabs();
         this.scheduleTaskDockRecovery("post-load", { delayMs: 60 });
+
+        this.addIcons(`
+            <symbol id="iconTaskCancelled" viewBox="0 0 32 32">
+                <path d="M28.444 0h-24.889c-1.956 0-3.556 1.6-3.556 3.556v24.889c0 1.956 1.6 3.556 3.556 3.556h24.889c1.956 0 3.556-1.6 3.556-3.556v-24.889c0-1.956-1.6-3.556-3.556-3.556zM28.444 28.445h-24.889v-24.889h24.889v24.889z"></path>
+                <path d="M24.485 10.343l-2.828-2.828-5.657 5.657-5.657-5.657-2.828 2.828 5.657 5.657-5.657 5.657 2.828 2.828 5.657-5.657 5.657 5.657 2.828-2.828-5.657-5.657z"></path>
+            </symbol>
+        `);
     }
 
     ensureCustomTab() {
