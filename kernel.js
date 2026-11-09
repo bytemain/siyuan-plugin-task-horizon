@@ -8529,6 +8529,9 @@
             } else {
                 const movePlan = await buildMovePlan(taskID, command.moveInput, before);
                 await api('/api/block/moveBlock', movePlan.payload);
+                // A cross-document move can temporarily remove the task from the
+                // SQL index. Flush before resolving its authoritative placement.
+                await api('/api/sqlite/flushTransaction', {});
                 const placement = await confirmMovePlanPlacement(taskID, movePlan);
                 moved = {
                     task: applyPlacementToTaskDTO(await taskDTO(beforeTask || preparedTaskRow), placement),

@@ -114,6 +114,7 @@ function createHarness(options = {}) {
     let failNextTransaction = false;
     let skipNextTransaction = false;
     let skipNextMove = false;
+    let unindexedMovedTask = '';
     let createdBlockSequence = 0;
     let createdDocumentSequence = 0;
 
@@ -350,6 +351,7 @@ function createHarness(options = {}) {
         }
         const taskMatch = statement.match(/WHERE task\.id = '([^']+)'/);
         if (taskMatch) {
+            if (taskMatch[1] === unindexedMovedTask) return [];
             const row = taskRow(taskMatch[1]);
             const override = options.taskRowOverrides?.[taskMatch[1]];
             return row ? [{ ...row, ...(override || {}) }] : [];
@@ -591,6 +593,7 @@ function createHarness(options = {}) {
                 return null;
             }
             moveBlock(body);
+            if (options.hideMovedTaskUntilFlush && blocks.get(body.id)?.type === 'i') unindexedMovedTask = body.id;
             return null;
         }
         if (pathname === '/api/block/insertBlock') {
@@ -636,7 +639,7 @@ function createHarness(options = {}) {
             });
             return [{ doOperations: [{ id: listID }] }];
         }
-        if (pathname === '/api/sqlite/flushTransaction') return null;
+        if (pathname === '/api/sqlite/flushTransaction') { unindexedMovedTask = ''; return null; }
         if (pathname === '/api/block/appendBlock') {
             const parent = blocks.get(body.parentID);
             if (!parent) throw new Error('append parent not found');
@@ -774,6 +777,16 @@ function createHarness(options = {}) {
 }
 
 async function run() {
+    {
+        const delayedIndex = createHarness({ hideMovedTaskUntilFlush: true });
+        await delayedIndex.start();
+        const moved = await delayedIndex.call('taskHorizonMutateTask', {
+            action: 'move', taskID: IDS.firstTask, parentID: IDS.otherList,
+            authoritative: true, recordUndo: false,
+        });
+        assert.equal(moved.data.outcome, 'committed', 'a cross-document move must wait for its SQL index before reading the task');
+        assert.equal(delayedIndex.blocks.get(IDS.firstTask).root_id, IDS.otherDoc);
+    }
     // Calendar date-follow writes can arrive before the SQL parent index
     // catches up with the live block tree. Only attributes may change here.
     for (const taskID of [IDS.singleTask, IDS.childTask]) {

@@ -6123,62 +6123,109 @@ return Number(state.contextInteractionQuietUntil || 0);
 
         const notebookId = await __tmResolveDailyNoteNotebookIdForBlocks(movableIds, options);
         if (!notebookId) throw new Error(__tmT("task.unableToDetermineTheDailyNoteSNotebook"));
-        const targetDocId = await API.createDailyNote(notebookId);
+        const targetDocId = String(await API.createDailyNote(notebookId) || '').trim();
+        if (!targetDocId) throw new Error(__tmT("task.failedToGetTheDailyNoteDocument"));
         const appendToBottom = SettingsStore.data.newTaskDailyNoteAppendToBottom === true;
-        const targetTopListId = String(await API.getFirstDirectChildListIdOfDoc(targetDocId).catch(() => '') || '').trim();
         const sourceDocIds = new Set([String(targetDocId || '').trim()]);
         movableRows.forEach((row) => {
             const rootId = String(row?.root_id || '').trim();
             if (rootId) sourceDocIds.add(rootId);
         });
 
-        const isTaskRow = (row) => String(row?.type || '').trim().toLowerCase() === 'i' && String(row?.subtype || '').trim().toLowerCase() === 't';
+        const rowType = (row) => String(row?.type || '').trim().toLowerCase();
+        const rowSubtype = (row) => String(row?.subtype || row?.subType || '').trim().toLowerCase();
+        const listItems = movableRows.filter((row) => rowType(row) === 'i');
+        // 无法识别的列表项不能直接放到文档根节点，否则思源会因无效块结构重载界面。
+        if (listItems.some((row) => !['t', 'u', 'o'].includes(rowSubtype(row)))) {
+            throw new Error(__tmT("task.failedToMoveTheBlock"));
+        }
         const moveRowToParent = async (row, targetParentId, anchors) => {
             const blockId = String(row?.id || '').trim();
             const parentId = String(targetParentId || '').trim();
             if (!blockId || !parentId) throw new Error(__tmT("task.moveFailedMissingTargetContainer"));
-            if (appendToBottom) {
-                if (anchors.previousID) await __tmMoveBlockViaBackendAdapter(blockId, { previousID: anchors.previousID, parentID: parentId });
-                else await __tmMoveBlockViaBackendAdapter(blockId, { parentID: parentId });
-                anchors.previousID = blockId;
-                return;
-            }
-            if (anchors.nextID) {
-                await __tmMoveBlockViaBackendAdapter(blockId, { nextID: anchors.nextID, parentID: parentId });
-                return;
-            }
             if (anchors.previousID) await __tmMoveBlockViaBackendAdapter(blockId, { previousID: anchors.previousID, parentID: parentId });
             else await __tmMoveBlockViaBackendAdapter(blockId, { parentID: parentId });
             anchors.previousID = blockId;
         };
 
-        const docAnchors = appendToBottom
-            ? {
-                previousID: String(await __tmFindDirectChildAnchorExcluding(targetDocId, 'last', movableIds).catch(() => '') || '').trim(),
-                nextID: ''
-            }
-            : {
-                previousID: '',
-                nextID: String(await __tmFindDirectChildAnchorExcluding(targetDocId, 'first', movableIds).catch(() => '') || '').trim()
-            };
-        const taskAnchors = targetTopListId
-            ? (appendToBottom
-                ? {
-                    previousID: String(await __tmFindDirectChildAnchorExcluding(targetTopListId, 'last', movableIds).catch(() => '') || '').trim(),
-                    nextID: ''
+        // 前插使用 parentID（放在首位），之后始终接在上一个块后，避免依赖 SQL 推断 nextID 的位置。
+        const docAnchors = { previousID: appendToBottom
+            ? String(await __tmFindDirectChildAnchorExcluding(targetDocId, 'last', movableIds) || '').trim()
+            : '' };
+        let placedAny = false;
+        let activeList = null;
+        const getOrCreateList = async (subtype) => {
+            if (activeList?.subtype === subtype) return activeList;
+            const children = await API.getChildBlocks(targetDocId);
+            const available = children.filter((child) => {
+                const id = String(child?.id || '').trim();
+                return id === docAnchors.previousID || !movableIds.includes(id);
+            });
+            const previousIndex = available.findIndex((child) => String(child?.id || '').trim() === docAnchors.previousID);
+            const reuseLast = appendToBottom && !placedAny && previousIndex >= 0;
+            const candidate = reuseLast ? available[previousIndex] : available[previousIndex + 1];
+            const existing = rowType(candidate) === 'l' && rowSubtype(candidate) === subtype ? candidate : null;
+            let listId = String(existing?.id || '').trim();
+            let placeholderId = '';
+            if (!listId) {
+                const adapter = globalThis.__tmTaskHorizonBackendAdapter;
+                if (!adapter || typeof adapter.insertBlock !== 'function' || typeof adapter.deleteBlock !== 'function') {
+                    throw new Error(__tmT("task.failedToMoveTheBlock"));
                 }
-                : {
-                    previousID: '',
-                    nextID: String(await __tmFindDirectChildAnchorExcluding(targetTopListId, 'first', movableIds).catch(() => '') || '').trim()
-                })
-            : null;
+                const markdown = subtype === 't' ? '- [ ] task-horizon-placeholder'
+                    : subtype === 'o' ? '1. task-horizon-placeholder' : '- task-horizon-placeholder';
+                listId = String(await __tmRunInTaskWriterContext('move-block-to-daily-note', () => adapter.insertBlock(
+                    targetDocId, markdown, { parentID: targetDocId, ...docAnchors }
+                )) || '').trim();
+                if (!listId) throw new Error(__tmT("task.failedToMoveTheBlock"));
+                const listChildren = await API.getChildBlocks(listId);
+                if (listChildren.length !== 1 || rowType(listChildren[0]) !== 'i' || rowSubtype(listChildren[0]) !== subtype) {
+                    throw new Error(__tmT("task.failedToMoveTheBlock"));
+                }
+                placeholderId = String(listChildren[0]?.id || '').trim();
+                if (!placeholderId) throw new Error(__tmT("task.failedToMoveTheBlock"));
+            }
+            const anchors = reuseLast && existing
+                ? { previousID: String(await __tmFindDirectChildAnchorExcluding(listId, 'last', movableIds) || '').trim() }
+                : { previousID: '' };
+            docAnchors.previousID = listId;
+            activeList = { subtype, listId, placeholderId, anchors };
+            return activeList;
+        };
 
         for (const row of movableRows) {
-            if (isTaskRow(row) && targetTopListId) {
-                await moveRowToParent(row, targetTopListId, taskAnchors);
+            if (rowType(row) === 'i') {
+                const entry = await getOrCreateList(rowSubtype(row));
+                // 写入失败可能只是响应丢失，不能删除整个容器：移动可能已经完成或仍在执行。
+                if (rowSubtype(row) === 't') {
+                    const taskId = String(row.id || '').trim();
+                    const placement = entry.anchors.previousID
+                        ? { previousID: entry.anchors.previousID }
+                        : { parentID: entry.listId };
+                    // 任务内核负责移动及属性迁移，防止继承属性丢失。
+                    await __tmExecuteTaskCommandGateway({
+                        action: 'move', taskID: taskId, ...placement,
+                        authoritative: true, recordUndo: false, laneID: taskId,
+                    }, __tmT("task.taskMove"));
+                } else {
+                    await moveRowToParent(row, entry.listId, entry.anchors);
+                }
+                const children = await API.getChildBlocks(entry.listId);
+                if (!children.some((child) => String(child?.id || '').trim() === String(row.id || '').trim())) {
+                    throw new Error(__tmT("task.failedToMoveTheBlock"));
+                }
+                // 前插多项时后续项排在上一个已移动项后，保持原选择顺序。
+                entry.anchors.previousID = String(row.id || '').trim();
+                if (entry.placeholderId) {
+                    const adapter = globalThis.__tmTaskHorizonBackendAdapter;
+                    await __tmRunInTaskWriterContext('move-block-to-daily-note', () => adapter.deleteBlock(entry.placeholderId));
+                    entry.placeholderId = '';
+                }
             } else {
+                activeList = null;
                 await moveRowToParent(row, targetDocId, docAnchors);
             }
+            placedAny = true;
         }
 
         try {

@@ -27,6 +27,7 @@
     "parent-task-date-rollup.test.js",
     "kernel-settings-persistence.test.js",
     "task-lifecycle-contract.test.js",
+    "daily-note-move-list-behavior.test.js",
     "task-template-core.test.js",
     "task-template-sync.test.js",
     "task-public-api-behavior.test.js",
